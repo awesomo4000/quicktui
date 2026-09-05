@@ -2,6 +2,8 @@
 
 ## Unreleased - 09/05/2026
 
+- Add seven Phosphor glyph sets with six-region shape matching on the native worker and G selection in the graphics lab.
+
 - Add 1–120 FPS controls and delivered-frame statistics; rate-limit native rendering under key repeat and advance animation by elapsed time.
 
 - Extend the graphics lab with a 4D hypercube, Mandelbrot explorer, half-block and braille output, brightness/contrast controls, and Bayer comparison.

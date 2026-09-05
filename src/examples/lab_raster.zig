@@ -3,7 +3,7 @@ const dither = @import("dither3d.zig");
 pub const width = 240;
 pub const height = 160;
 pub const byte_count = width * height * 4;
-pub const Scene = struct { shape: u32 = 0, angle: f32 = 0, tilt: f32 = 0.7, zoom: f32 = 0.82, wire: bool = false, palette: u32 = 0, playing: bool = true, fps: u32 = 10, tone: u32 = 0, brightness: f32 = 0, contrast: f32 = 1, dot_scale: f32 = 4, fractal_zoom: f64 = 1, center_x: f64 = -0.65, center_y: f64 = 0 };
+pub const Scene = struct { shape: u32 = 0, angle: f32 = 0, tilt: f32 = 0.7, zoom: f32 = 0.82, wire: bool = false, palette: u32 = 0, playing: bool = true, fps: u32 = 10, charset: u32 = 0, cols: u32 = 60, rows: u32 = 20, tone: u32 = 0, brightness: f32 = 0, contrast: f32 = 1, dot_scale: f32 = 4, fractal_zoom: f64 = 1, center_x: f64 = -0.65, center_y: f64 = 0 };
 const V = struct { x: f32, y: f32, z: f32, wx: f32, wy: f32, uv: dither.UV = .{ 0, 0 }, inv_w: f32 = 1 };
 fn f(n: anytype) f32 {
     return @floatFromInt(n);

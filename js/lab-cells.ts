@@ -5,10 +5,20 @@ const FG=RGBA.fromHex("#eee9dc"),BG=RGBA.fromHex("#000000");
 export class LabCells extends Renderable {
   private _pixels:Uint8Array|null=null;
   private _mode="half";
-  constructor(ctx:any,options:any){super(ctx,options);this._pixels=options.pixels;this._mode=options.mode??"half"}
+  public glyphs="";
+  public glyphCols=0;
+  public glyphRows=0;
+  constructor(ctx:any,options:any){super(ctx,options);this._pixels=options.pixels;this._mode=options.mode??"half";this.glyphs=options.glyphs??"";this.glyphCols=options.glyphCols??0;this.glyphRows=options.glyphRows??0}
   set pixels(value:Uint8Array){this._pixels=value;this.requestRender()}
   set mode(value:string){this._mode=value;this.requestRender()}
   protected renderSelf(buffer:any){
+    if(this._mode==="glyphs"){
+      const left=this.x+Math.max(0,Math.floor((this.width-this.glyphCols)/2));
+      const top=this.y+Math.max(0,Math.floor((this.height-this.glyphRows)/2));
+      const lines=this.glyphs.split("\n");
+      for(let y=0;y<Math.min(this.height,this.glyphRows);y++)buffer.drawText(lines[y]??"",left,top+y,FG,BG);
+      return;
+    }
     const data=this._pixels;if(!data)return;
     const cols=Math.max(1,Math.min(this.width,Math.floor(this.height*3)));
     const rows=Math.max(1,Math.min(this.height,Math.floor(cols/3)));

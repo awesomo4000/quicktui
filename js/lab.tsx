@@ -4,8 +4,8 @@ import {Renderable} from "../vendor/opentui/packages/core/src/Renderable";
 import {NativeImage} from "../vendor/opentui/packages/core/src/image";
 import {mountDemo,keys,graphicsState} from "./platform/demo";
 const WIDTH=240,HEIGHT=160;
-type Scene={shape:number,angle:number,tilt:number,zoom:number,wire:boolean,palette:number,playing:boolean,fps:number,tone:number,brightness:number,contrast:number,dot_scale:number,fractal_zoom:number,center_x:number,center_y:number};
-type Frame={image:NativeImage,pixels:Uint8Array,ms:number,index:number,dropped:number,serial:number};
+type Scene={shape:number,angle:number,tilt:number,zoom:number,wire:boolean,palette:number,playing:boolean,fps:number,charset:number,cols:number,rows:number,tone:number,brightness:number,contrast:number,dot_scale:number,fractal_zoom:number,center_x:number,center_y:number};
+type Frame={image:NativeImage,pixels:Uint8Array,glyphs:string,cols:number,rows:number,charset:number,ms:number,index:number,dropped:number,serial:number};
 const ownedImages=new Map<NativeImage,number>();
 function releaseBefore<T extends {dispose():void}>(images:Map<T,number>,committed:number){
   // A delayed effect must never release a newer frame waiting for its commit.
@@ -19,22 +19,24 @@ Object.assign(globalThis,{__message(message:string){
   if(event.type!=="frame-ready")return;
   const bytes=__host.takeBuffer(event.id);
   if(!bytes)return; // The worker may already have replaced a stale frame.
-  const image=NativeImage.fromRgba(new Uint8Array(bytes),event.width,event.height);
+  const image=NativeImage.fromRgba(new Uint8Array(bytes,0,WIDTH*HEIGHT*4),event.width,event.height);
   framesReceived++;
   deliveries.push(Date.now());
   if(deliveries.length>240)deliveries.splice(0,deliveries.length-240);
   if(frameListeners.size===0){image.dispose();return;}
   ownedImages.set(image,framesReceived);
-  for(const listener of frameListeners)listener({image,pixels:new Uint8Array(bytes),ms:event.ms,index:event.id,dropped:event.dropped,serial:framesReceived});
+  for(const listener of frameListeners)listener({image,pixels:new Uint8Array(bytes,0,WIDTH*HEIGHT*4),glyphs:new TextDecoder().decode(new Uint8Array(bytes,WIDTH*HEIGHT*4)),cols:event.cols,rows:event.rows,charset:event.charset,ms:event.ms,index:event.id,dropped:event.dropped,serial:framesReceived});
 }});
 declare const __host:{headless:boolean,postMessage(text:string):boolean,takeBuffer(id:number):ArrayBuffer|null};
 const names=["Torus","Orb","Sheet","4D hypercube","Mandelbrot"];
+const glyphNames=["","ASCII","Shades","Quadrants","Braille + punctuation","ASCII + braille","Box drawing","Blocks"];
 const tones=["Color","Grayscale","Screen Bayer","Surface fractal"];
 function App(){
-  const scene=useRef<Scene>({shape:3,angle:0,tilt:.7,zoom:.82,wire:false,palette:0,playing:true,fps:10,tone:0,brightness:0,contrast:1,dot_scale:4,fractal_zoom:1,center_x:-.65,center_y:0});
+  const scene=useRef<Scene>({shape:3,angle:0,tilt:.7,zoom:.82,wire:false,palette:0,playing:true,fps:10,charset:0,cols:60,rows:20,tone:0,brightness:0,contrast:1,dot_scale:4,fractal_zoom:1,center_x:-.65,center_y:0});
   const playing=useRef(true),drag=useRef<{x:number,y:number}|null>(null);
   const [frame,setFrame]=useState<Frame|null>(null);
   const [fps,setFps]=useState(0);
+  const outputRef=useRef(0),glyphRef=useRef(1);
   const [output,setOutput]=useState(0);
   const [kitty,setKitty]=useState(graphicsState.confirmed);
   const [,refresh]=useState(0);
@@ -50,6 +52,12 @@ function App(){
   useEffect(()=>()=>{for(const image of ownedImages.keys())image.dispose();ownedImages.clear()},[]);
   useEffect(()=>{
     const timer=setInterval(()=>{
+      const canvas=[...Renderable.renderablesByNumber.values()].find(node=>node.id==="lab-canvas");
+      if(canvas){
+        const cols=Math.max(1,Math.min(240,canvas.width,Math.floor(canvas.height*3)));
+        const rows=Math.max(1,Math.min(80,canvas.height,Math.floor(cols/3)));
+        if(cols!==scene.current.cols||rows!==scene.current.rows){scene.current.cols=cols;scene.current.rows=rows;draw()}
+      }
       const cutoff=Date.now()-1000;
       while(deliveries.length&&deliveries[0]<cutoff)deliveries.shift();
       setFps(deliveries.length);
@@ -64,7 +72,12 @@ function App(){
         const index=rates.indexOf(scene.current.fps);
         scene.current.fps=rates[Math.max(0,Math.min(rates.length-1,index+(name==="="?1:-1)))];
       }
-      if(name==="m")setOutput(value=>(value+1)%3);
+      if(name==="m"){outputRef.current=(outputRef.current+1)%4;setOutput(outputRef.current)}
+      if(name==="g"){
+        if(outputRef.current===3)glyphRef.current=glyphRef.current%7+1;
+        outputRef.current=3;setOutput(3);
+      }
+      scene.current.charset=outputRef.current===3?glyphRef.current:0;
       if(name==="d")scene.current.tone=(scene.current.tone+1)%4;
       if(name==="b")scene.current.brightness=Math.min(1,scene.current.brightness+.1);
       if(name==="n")scene.current.brightness=Math.max(-1,scene.current.brightness-.1);
@@ -114,12 +127,12 @@ function App(){
         onMouseUp={()=>{drag.current=null;draw()}}
         onMouseScroll={(e:any)=>{if(scene.current.shape===4)scene.current.fractal_zoom=Math.max(.5,Math.min(1e10,scene.current.fractal_zoom*(e.scroll.direction==="up"?1.25:.8)));
           else scene.current.zoom=Math.max(.3,Math.min(1.4,scene.current.zoom+(e.scroll.direction==="up"?.07:-.07)));draw()}}>
-        {frame?(output===0?<image source={frame.image} width="100%" height="100%" protocol={kitty?"kitty":"blocks"} onError={(error:any)=>{throw error}}/>:React.createElement("labCells",{pixels:frame.pixels,mode:output===1?"half":"braille",width:"100%",height:"100%"})):<text fg="#718b99">Waiting for native frame…</text>}
+        {frame?(output===0?<image source={frame.image} width="100%" height="100%" protocol={kitty?"kitty":"blocks"} onError={(error:any)=>{throw error}}/>:React.createElement("labCells",{pixels:frame.pixels,mode:output===1?"half":output===2?"braille":"glyphs",glyphs:frame.glyphs,glyphCols:frame.cols,glyphRows:frame.rows,width:"100%",height:"100%"})):<text fg="#718b99">Waiting for native frame…</text>}
       </box>
       <text height={1} flexShrink={0} fg="#c2ced5">{names[scene.current.shape]} · {scene.current.wire?"wireframe":"shaded"} · {playing.current?"playing":"paused"} · {fps} FPS delivered · -/= target {scene.current.fps} · {frame?.ms??0} ms CPU · drop {frame?.dropped??0}</text>
       <text height={1} flexShrink={0} fg="#718b99">Drag rotate/pan · scroll zoom · W wire · C palette · P pause · R reset · T fractal target · Q exit</text>
       <text height={1} flexShrink={0} fg="#c2ced5">D {tones[scene.current.tone]} · B/N brightness {scene.current.brightness.toFixed(1)} · K/J contrast {scene.current.contrast.toFixed(2)} · O/I dots {scene.current.dot_scale.toFixed(2)}</text>
-      <text height={1} flexShrink={0} fg="#526b78">M {output===1?"Half blocks":output===2?"Braille":kitty?"Kitty pixels":"Block fallback"} · {WIDTH} × {HEIGHT} · {scene.current.shape===4?scene.current.fractal_zoom.toFixed(1)+"× zoom":"Zig CPU worker → React → terminal"}</text>
+      <text height={1} flexShrink={0} fg="#526b78">M {output===1?"Half blocks":output===2?"Braille":output===3?glyphNames[glyphRef.current]+" · G charset":kitty?"Kitty pixels":"Block fallback"} · {WIDTH} × {HEIGHT} · {scene.current.shape===4?scene.current.fractal_zoom.toFixed(1)+"× zoom":"Zig CPU worker → React → terminal"}</text>
     </box>
   </box>;
 }
@@ -149,11 +162,18 @@ if(__host.headless)Object.assign(globalThis,{async __selfTest(){
   }
   await wait();
   if(framesReceived<=before)throw new Error("Zoom must keep receiving native frames");
-  for(const [key,label] of [["=","target 15"],["-","target 10"],["4","4D hypercube"],["5","Mandelbrot"],["t","250.0× zoom"],["d","Grayscale"],["d","Screen Bayer"],["d","Surface fractal"],["m","Half blocks"],["m","Braille"],["m","Block fallback"]]){
+  for(const [key,label] of [["=","target 15"],["-","target 10"],["4","4D hypercube"],["5","Mandelbrot"],["t","250.0× zoom"],["d","Grayscale"],["d","Screen Bayer"],["d","Surface fractal"],["m","Half blocks"],["m","Braille"],["m","G charset"],["g","Shades"],["g","Quadrants"],["g","Braille + punctuation"],["g","ASCII + braille"],["g","Box drawing"],["g","Blocks"],["m","Block fallback"]]){
     host.__input(new TextEncoder().encode(key).buffer);await wait();
     if(!host.__snapshot().includes(label))throw new Error("Missing lab control state: "+label);
     if(label==="Half blocks"&&!host.__snapshot().includes("▀"))throw new Error("Half-block canvas must draw cells");
     if(label==="Braille"&&!/[\u2801-\u28ff]/.test(host.__snapshot()))throw new Error("Braille canvas must draw dots");
   }
+  host.__input(new TextEncoder().encode("g").buffer);
+  await new Promise(resolve=>setTimeout(resolve,250));
+  const glyphNode=[...Renderable.renderablesByNumber.values()].find((node:any)=>node.glyphCols>0) as any;
+  if(!glyphNode||!glyphNode.glyphs.trim())throw new Error("Native glyph rows must reach the canvas");
+  host.__resize(60,18);
+  await new Promise(resolve=>setTimeout(resolve,700));
+  if(glyphNode.glyphCols>glyphNode.width||glyphNode.glyphRows>glyphNode.height)throw new Error("Native glyph dimensions must follow resize");
   if(__host.takeBuffer(0)!==null)throw new Error("Unknown frame IDs must not expose pixels");
 }});
