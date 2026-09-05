@@ -2,7 +2,7 @@
 
 ## Unreleased - 09/05/2026
 
-- Add 1–60 FPS controls and delivered-frame statistics; rate-limit native rendering under key repeat and advance animation by elapsed time.
+- Add 1–120 FPS controls and delivered-frame statistics; rate-limit native rendering under key repeat and advance animation by elapsed time.
 
 - Extend the graphics lab with a 4D hypercube, Mandelbrot explorer, half-block and braille output, brightness/contrast controls, and Bayer comparison.
 - Vendor Dither3D at a pinned revision and adapt its grayscale surface fractal dithering to the Zig CPU renderer, with the original lookup textures and MPL-2.0 attribution.

@@ -57,7 +57,7 @@ pub const Worker = struct {
         const parsed = std.json.parseFromSlice(cpu.Scene, std.heap.c_allocator, bytes[0..len], .{}) catch return 0;
         defer parsed.deinit();
         const scene = parsed.value;
-        if (scene.fps < 1 or scene.fps > 60 or scene.shape > 4 or scene.palette > 2 or !std.math.isFinite(scene.angle) or !std.math.isFinite(scene.tilt) or !std.math.isFinite(scene.zoom) or scene.zoom < 0.3 or scene.zoom > 1.4) return 0;
+        if (scene.fps < 1 or scene.fps > 120 or scene.shape > 4 or scene.palette > 2 or !std.math.isFinite(scene.angle) or !std.math.isFinite(scene.tilt) or !std.math.isFinite(scene.zoom) or scene.zoom < 0.3 or scene.zoom > 1.4) return 0;
         if (scene.tone > 3 or !std.math.isFinite(scene.brightness) or @abs(scene.brightness) > 1 or
             !std.math.isFinite(scene.contrast) or scene.contrast < 0.25 or scene.contrast > 4 or
             !std.math.isFinite(scene.dot_scale) or scene.dot_scale < 0 or scene.dot_scale > 5 or

@@ -22,7 +22,7 @@ Object.assign(globalThis,{__message(message:string){
   const image=NativeImage.fromRgba(new Uint8Array(bytes),event.width,event.height);
   framesReceived++;
   deliveries.push(Date.now());
-  if(deliveries.length>120)deliveries.splice(0,deliveries.length-120);
+  if(deliveries.length>240)deliveries.splice(0,deliveries.length-240);
   if(frameListeners.size===0){image.dispose();return;}
   ownedImages.set(image,framesReceived);
   for(const listener of frameListeners)listener({image,pixels:new Uint8Array(bytes),ms:event.ms,index:event.id,dropped:event.dropped,serial:framesReceived});
@@ -60,7 +60,7 @@ function App(){
     const key=(name:string)=>{
       if(["1","2","3","4","5"].includes(name))scene.current.shape=Number(name)-1;
       if(name==="-"||name==="="){
-        const rates=[1,5,10,15,20,30,45,60];
+        const rates=[1,5,10,15,20,30,45,60,90,120];
         const index=rates.indexOf(scene.current.fps);
         scene.current.fps=rates[Math.max(0,Math.min(rates.length-1,index+(name==="="?1:-1)))];
       }

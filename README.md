@@ -233,7 +233,7 @@ as `--messages`.
 - **B / N** raises/lowers brightness; **K / J** raises/lowers contrast.
 - **O / I** enlarges/shrinks surface dither dots.
 - **W** toggles wireframe; **C** changes palette; **P** pauses animation.
-- **- / =** lowers/raises the target frame rate through 1, 5, 10, 15, 20, 30, 45, and 60 FPS.
+- **- / =** lowers/raises the target frame rate through 1, 5, 10, 15, 20, 30, 45, 60, 90, and 120 FPS.
   The delivered FPS counter measures native frames received by JS in the last second,
   not physical terminal presentation. Rotation follows elapsed time, independently
   of key repeats and the selected frame rate.
