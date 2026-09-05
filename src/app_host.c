@@ -163,7 +163,13 @@ int quicktui_app(const char *source,size_t length,int headless) {
         JSValue custom_test=JS_GetPropertyStr(ctx,test_global,"__selfTest");
         int has_custom_test=JS_IsFunction(ctx,custom_test);
         JS_FreeValue(ctx,custom_test);JS_FreeValue(ctx,test_global);
-        if(has_custom_test){call_void(ctx,"__selfTest");goto cleanup;}
+        if(has_custom_test){
+            JSValue test_result=call(ctx,"__selfTest",0,NULL);
+            for(int i=0;i<10000&&!host.failed&&JS_PromiseState(ctx,test_result)==JS_PROMISE_PENDING;i++)step(ctx,runtime);
+            if(!host.failed&&JS_PromiseState(ctx,test_result)==JS_PROMISE_PENDING){diagnostic(ctx,"Example self-test did not settle\n");host.failed=1;}
+            if(!host.failed&&JS_PromiseState(ctx,test_result)==JS_PROMISE_REJECTED){JS_Throw(ctx,JS_PromiseResult(ctx,test_result));exception(ctx);}
+            JS_FreeValue(ctx,test_result);goto cleanup;
+        }
         for(int i=0;i<4;i++)step(ctx,runtime);
         if(!expect_text(ctx,"Count: 0"))host.failed=1;
         if(!expect_text(ctx,"日本語")||!expect_text(ctx,"👩‍💻")||!expect_text(ctx,"é"))host.failed=1;

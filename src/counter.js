@@ -182,6 +182,83 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+diff
+BSD 3-Clause License
+
+Copyright (c) 2009-2015, Kevin Decker <kpdecker@gmail.com>
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+marked
+# License information
+
+## Contribution License Agreement
+
+If you contribute code to this project, you are implicitly allowing your code
+to be distributed under the MIT license. You are also implicitly verifying that
+all code is your original work. `</legalese>`
+
+## Marked
+
+Copyright (c) 2018+, MarkedJS (https://github.com/markedjs/)
+Copyright (c) 2011-2018, Christopher Jeffrey (https://github.com/chjj/)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+## Markdown
+
+Copyright © 2004, John Gruber
+http://daringfireball.net/
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+* Neither the name “Markdown” nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+This software is provided by the copyright holders and contributors “as is” and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.
+
 OpenTUI
 MIT License
 
@@ -2449,7 +2526,7 @@ SOFTWARE.
       return import_buffer.Buffer.from(value.buffer ?? value, value.byteOffset ?? 0, value.byteLength).toString("utf8");
     }
   }
-  var process = Object.assign(new import_events.EventEmitter, { env: __host.env, arch: __host.arch, platform: __host.platform, versions: { quickjs: "2026-06-04" }, cwd: () => ".", hrtime: Object.assign(() => {
+  var process = Object.assign(new import_events.EventEmitter, { env: __host.env, arch: __host.arch, platform: __host.platform, versions: { quickjs: "2026-06-04" }, cwd: () => ".", nextTick: (fn, ...args) => Promise.resolve().then(() => fn(...args)), hrtime: Object.assign(() => {
     const n = __host.now();
     return [Math.floor(n / 1000), Math.floor(n % 1000 * 1e6)];
   }, { bigint: () => BigInt(Math.floor(__host.now() * 1e6)) }) });
@@ -2480,7 +2557,14 @@ SOFTWARE.
       timers.set(id, { due: __host.now() + Math.max(0, Number(delay) || 0), fn, args });
       return id;
     },
-    clearTimeout: (id) => timers.delete(id)
+    clearTimeout: (id) => timers.delete(id),
+    setInterval: (fn, delay = 0, ...args) => {
+      const id = nextTimer++;
+      const interval = Math.max(1, Number(delay) || 0);
+      timers.set(id, { due: __host.now() + interval, fn, args, interval });
+      return id;
+    },
+    clearInterval: (id) => timers.delete(id)
   });
   Object.assign(globalThis, { __timers: {
     tick() {
@@ -2488,6 +2572,8 @@ SOFTWARE.
       let count = 0;
       for (const [id, t] of [...timers])
         if (t.due <= now && timers.delete(id)) {
+          if (t.interval)
+            timers.set(id, { ...t, due: now + t.interval });
           t.fn(...t.args);
           if (++count === 128)
             break;
@@ -12261,8 +12347,25 @@ No matching component was found for:
 
   // vendor/js/node_modules/strip-ansi/index.js
   var regex = ansiRegex();
+  function stripAnsi(string) {
+    if (typeof string !== "string") {
+      throw new TypeError(`Expected a \`string\`, got \`${typeof string}\``);
+    }
+    return string.replace(regex, "");
+  }
 
   // js/platform/runtime.ts
+  function stringWidth(text) {
+    const lib = resolveRenderLib();
+    const encoded = lib.encodeUnicode(stripAnsi(text), "unicode");
+    if (!encoded)
+      return 0;
+    try {
+      return encoded.data.reduce((sum, cell) => sum + cell.width, 0);
+    } finally {
+      lib.freeUnicode(encoded);
+    }
+  }
   function writeFile() {
     throw new Error("File writing is not supported by the counter profile");
   }
@@ -12662,6 +12765,725 @@ No matching component was found for:
       text: content
     };
     return new StyledText([chunk]);
+  }
+  // vendor/opentui/packages/core/src/lib/extmarks-history.ts
+  class ExtmarksHistory {
+    undoStack = [];
+    redoStack = [];
+    saveSnapshot(extmarks, nextId) {
+      const snapshot = {
+        extmarks: new Map(Array.from(extmarks.entries()).map(([id, extmark]) => [id, { ...extmark }])),
+        nextId
+      };
+      this.undoStack.push(snapshot);
+      this.redoStack = [];
+    }
+    undo() {
+      if (this.undoStack.length === 0)
+        return null;
+      return this.undoStack.pop();
+    }
+    redo() {
+      if (this.redoStack.length === 0)
+        return null;
+      return this.redoStack.pop();
+    }
+    pushRedo(snapshot) {
+      this.redoStack.push(snapshot);
+    }
+    pushUndo(snapshot) {
+      this.undoStack.push(snapshot);
+    }
+    clear() {
+      this.undoStack = [];
+      this.redoStack = [];
+    }
+    canUndo() {
+      return this.undoStack.length > 0;
+    }
+    canRedo() {
+      return this.redoStack.length > 0;
+    }
+  }
+
+  // vendor/opentui/packages/core/src/lib/extmarks.ts
+  class ExtmarksController {
+    editBuffer;
+    editorView;
+    extmarks = new Map;
+    extmarksByTypeId = new Map;
+    metadata = new Map;
+    nextId = 1;
+    destroyed = false;
+    history = new ExtmarksHistory;
+    typeNameToId = new Map;
+    typeIdToName = new Map;
+    nextTypeId = 1;
+    originalMoveCursorLeft;
+    originalMoveCursorRight;
+    originalSetCursorByOffset;
+    originalMoveUpVisual;
+    originalMoveDownVisual;
+    originalDeleteCharBackward;
+    originalDeleteChar;
+    originalInsertText;
+    originalInsertChar;
+    originalDeleteRange;
+    originalSetText;
+    originalReplaceText;
+    originalClear;
+    originalNewLine;
+    originalDeleteLine;
+    originalEditorViewDeleteSelectedText;
+    originalUndo;
+    originalRedo;
+    constructor(editBuffer, editorView) {
+      this.editBuffer = editBuffer;
+      this.editorView = editorView;
+      this.originalMoveCursorLeft = editBuffer.moveCursorLeft.bind(editBuffer);
+      this.originalMoveCursorRight = editBuffer.moveCursorRight.bind(editBuffer);
+      this.originalSetCursorByOffset = editBuffer.setCursorByOffset.bind(editBuffer);
+      this.originalMoveUpVisual = editorView.moveUpVisual.bind(editorView);
+      this.originalMoveDownVisual = editorView.moveDownVisual.bind(editorView);
+      this.originalDeleteCharBackward = editBuffer.deleteCharBackward.bind(editBuffer);
+      this.originalDeleteChar = editBuffer.deleteChar.bind(editBuffer);
+      this.originalInsertText = editBuffer.insertText.bind(editBuffer);
+      this.originalInsertChar = editBuffer.insertChar.bind(editBuffer);
+      this.originalDeleteRange = editBuffer.deleteRange.bind(editBuffer);
+      this.originalSetText = editBuffer.setText.bind(editBuffer);
+      this.originalReplaceText = editBuffer.replaceText.bind(editBuffer);
+      this.originalClear = editBuffer.clear.bind(editBuffer);
+      this.originalNewLine = editBuffer.newLine.bind(editBuffer);
+      this.originalDeleteLine = editBuffer.deleteLine.bind(editBuffer);
+      this.originalEditorViewDeleteSelectedText = editorView.deleteSelectedText.bind(editorView);
+      this.originalUndo = editBuffer.undo.bind(editBuffer);
+      this.originalRedo = editBuffer.redo.bind(editBuffer);
+      this.wrapCursorMovement();
+      this.wrapDeletion();
+      this.wrapInsertion();
+      this.wrapEditorViewDeleteSelectedText();
+      this.wrapUndoRedo();
+      this.setupContentChangeListener();
+    }
+    wrapCursorMovement() {
+      this.editBuffer.moveCursorLeft = () => {
+        if (this.destroyed) {
+          this.originalMoveCursorLeft();
+          return;
+        }
+        const currentOffset = this.editorView.getVisualCursor().offset;
+        const hasSelection = this.editorView.hasSelection();
+        if (hasSelection) {
+          this.originalMoveCursorLeft();
+          return;
+        }
+        const targetOffset = currentOffset - 1;
+        if (targetOffset < 0) {
+          this.originalMoveCursorLeft();
+          return;
+        }
+        const virtualExtmark = this.findVirtualExtmarkContaining(targetOffset);
+        if (virtualExtmark && currentOffset >= virtualExtmark.end) {
+          this.editBuffer.setCursorByOffset(virtualExtmark.start - 1);
+          return;
+        }
+        this.originalMoveCursorLeft();
+      };
+      this.editBuffer.moveCursorRight = () => {
+        if (this.destroyed) {
+          this.originalMoveCursorRight();
+          return;
+        }
+        const currentOffset = this.editorView.getVisualCursor().offset;
+        const hasSelection = this.editorView.hasSelection();
+        if (hasSelection) {
+          this.originalMoveCursorRight();
+          return;
+        }
+        const targetOffset = currentOffset + 1;
+        const textLength = this.editBuffer.getText().length;
+        if (targetOffset > textLength) {
+          this.originalMoveCursorRight();
+          return;
+        }
+        const virtualExtmark = this.findVirtualExtmarkContaining(targetOffset);
+        if (virtualExtmark && currentOffset <= virtualExtmark.start) {
+          this.editBuffer.setCursorByOffset(virtualExtmark.end);
+          return;
+        }
+        this.originalMoveCursorRight();
+      };
+      this.editorView.moveUpVisual = () => {
+        if (this.destroyed) {
+          this.originalMoveUpVisual();
+          return;
+        }
+        const hasSelection = this.editorView.hasSelection();
+        if (hasSelection) {
+          this.originalMoveUpVisual();
+          return;
+        }
+        const currentOffset = this.editorView.getVisualCursor().offset;
+        this.originalMoveUpVisual();
+        const newOffset = this.editorView.getVisualCursor().offset;
+        const virtualExtmark = this.findVirtualExtmarkContaining(newOffset);
+        if (virtualExtmark) {
+          const distanceToStart = newOffset - virtualExtmark.start;
+          const distanceToEnd = virtualExtmark.end - newOffset;
+          if (distanceToStart < distanceToEnd) {
+            this.editorView.setCursorByOffset(virtualExtmark.start - 1);
+          } else {
+            this.editorView.setCursorByOffset(virtualExtmark.end);
+          }
+        }
+      };
+      this.editorView.moveDownVisual = () => {
+        if (this.destroyed) {
+          this.originalMoveDownVisual();
+          return;
+        }
+        const hasSelection = this.editorView.hasSelection();
+        if (hasSelection) {
+          this.originalMoveDownVisual();
+          return;
+        }
+        const currentOffset = this.editorView.getVisualCursor().offset;
+        this.originalMoveDownVisual();
+        const newOffset = this.editorView.getVisualCursor().offset;
+        const virtualExtmark = this.findVirtualExtmarkContaining(newOffset);
+        if (virtualExtmark) {
+          const distanceToStart = newOffset - virtualExtmark.start;
+          const distanceToEnd = virtualExtmark.end - newOffset;
+          if (distanceToStart < distanceToEnd) {
+            const adjustedOffset = virtualExtmark.start - 1;
+            const targetOffset = adjustedOffset <= currentOffset ? virtualExtmark.end : adjustedOffset;
+            this.editorView.setCursorByOffset(targetOffset);
+          } else {
+            this.editorView.setCursorByOffset(virtualExtmark.end);
+          }
+        }
+      };
+      this.editBuffer.setCursorByOffset = (offset) => {
+        if (this.destroyed) {
+          this.originalSetCursorByOffset(offset);
+          return;
+        }
+        const currentOffset = this.editorView.getVisualCursor().offset;
+        const hasSelection = this.editorView.hasSelection();
+        if (hasSelection) {
+          this.originalSetCursorByOffset(offset);
+          return;
+        }
+        const movingForward = offset > currentOffset;
+        if (movingForward) {
+          const virtualExtmark = this.findVirtualExtmarkContaining(offset);
+          if (virtualExtmark && currentOffset <= virtualExtmark.start) {
+            this.originalSetCursorByOffset(virtualExtmark.end);
+            return;
+          }
+        } else {
+          for (const extmark of this.extmarks.values()) {
+            if (extmark.virtual && currentOffset >= extmark.end && offset < extmark.end && offset >= extmark.start) {
+              this.originalSetCursorByOffset(extmark.start - 1);
+              return;
+            }
+          }
+        }
+        this.originalSetCursorByOffset(offset);
+      };
+    }
+    wrapDeletion() {
+      this.editBuffer.deleteCharBackward = () => {
+        if (this.destroyed) {
+          this.originalDeleteCharBackward();
+          return;
+        }
+        this.saveSnapshot();
+        const currentOffset = this.editorView.getVisualCursor().offset;
+        const hadSelection = this.editorView.hasSelection();
+        if (currentOffset === 0) {
+          this.originalDeleteCharBackward();
+          return;
+        }
+        if (hadSelection) {
+          this.originalDeleteCharBackward();
+          return;
+        }
+        const targetOffset = currentOffset - 1;
+        const virtualExtmark = this.findVirtualExtmarkContaining(targetOffset);
+        if (virtualExtmark && currentOffset === virtualExtmark.end) {
+          const startCursor = this.offsetToPosition(virtualExtmark.start);
+          const endCursor = this.offsetToPosition(virtualExtmark.end);
+          const deleteOffset2 = virtualExtmark.start;
+          const deleteLength2 = virtualExtmark.end - virtualExtmark.start;
+          this.deleteExtmarkById(virtualExtmark.id);
+          this.originalDeleteRange(startCursor.row, startCursor.col, endCursor.row, endCursor.col);
+          this.adjustExtmarksAfterDeletion(deleteOffset2, deleteLength2);
+          this.updateHighlights();
+          return;
+        }
+        this.originalDeleteCharBackward();
+        const deleteOffset = this.editorView.getVisualCursor().offset;
+        const deleteLength = currentOffset - deleteOffset;
+        if (deleteLength > 0) {
+          this.adjustExtmarksAfterDeletion(deleteOffset, deleteLength);
+        }
+      };
+      this.editBuffer.deleteChar = () => {
+        if (this.destroyed) {
+          this.originalDeleteChar();
+          return;
+        }
+        this.saveSnapshot();
+        const currentOffset = this.editorView.getVisualCursor().offset;
+        const hadSelection = this.editorView.hasSelection();
+        if (hadSelection) {
+          this.originalDeleteChar();
+          return;
+        }
+        const targetOffset = currentOffset;
+        const virtualExtmark = this.findVirtualExtmarkContaining(targetOffset);
+        if (virtualExtmark && currentOffset === virtualExtmark.start) {
+          const startCursor = this.offsetToPosition(virtualExtmark.start);
+          const endCursor = this.offsetToPosition(virtualExtmark.end);
+          const deleteOffset = virtualExtmark.start;
+          const deleteLength2 = virtualExtmark.end - virtualExtmark.start;
+          this.deleteExtmarkById(virtualExtmark.id);
+          this.originalDeleteRange(startCursor.row, startCursor.col, endCursor.row, endCursor.col);
+          this.adjustExtmarksAfterDeletion(deleteOffset, deleteLength2);
+          this.updateHighlights();
+          return;
+        }
+        const deleteEndOffset = this.getNextCursorOffset(currentOffset);
+        const deleteLength = deleteEndOffset - currentOffset;
+        this.originalDeleteChar();
+        if (deleteLength > 0) {
+          this.adjustExtmarksAfterDeletion(currentOffset, deleteLength);
+        }
+      };
+      this.editBuffer.deleteRange = (startLine, startCol, endLine, endCol) => {
+        if (this.destroyed) {
+          this.originalDeleteRange(startLine, startCol, endLine, endCol);
+          return;
+        }
+        this.saveSnapshot();
+        const startOffset = this.positionToOffset(startLine, startCol);
+        const endOffset = this.positionToOffset(endLine, endCol);
+        const length = endOffset - startOffset;
+        this.originalDeleteRange(startLine, startCol, endLine, endCol);
+        this.adjustExtmarksAfterDeletion(startOffset, length);
+      };
+      this.editBuffer.deleteLine = () => {
+        if (this.destroyed) {
+          this.originalDeleteLine();
+          return;
+        }
+        this.saveSnapshot();
+        const text = this.editBuffer.getText();
+        const currentOffset = this.editorView.getVisualCursor().offset;
+        let lineStart = 0;
+        for (let i = currentOffset - 1;i >= 0; i--) {
+          if (text[i] === `
+`) {
+            lineStart = i + 1;
+            break;
+          }
+        }
+        let lineEnd = text.length;
+        for (let i = currentOffset;i < text.length; i++) {
+          if (text[i] === `
+`) {
+            lineEnd = i + 1;
+            break;
+          }
+        }
+        const deleteLength = lineEnd - lineStart;
+        this.originalDeleteLine();
+        this.adjustExtmarksAfterDeletion(lineStart, deleteLength);
+      };
+    }
+    wrapInsertion() {
+      this.editBuffer.insertText = (text) => {
+        if (this.destroyed) {
+          this.originalInsertText(text);
+          return;
+        }
+        this.saveSnapshot();
+        const currentOffset = this.editorView.getVisualCursor().offset;
+        this.originalInsertText(text);
+        const insertLength = this.editorView.getVisualCursor().offset - currentOffset;
+        if (insertLength > 0) {
+          this.adjustExtmarksAfterInsertion(currentOffset, insertLength);
+        }
+      };
+      this.editBuffer.insertChar = (char) => {
+        if (this.destroyed) {
+          this.originalInsertChar(char);
+          return;
+        }
+        this.saveSnapshot();
+        const currentOffset = this.editorView.getVisualCursor().offset;
+        this.originalInsertChar(char);
+        const insertLength = this.editorView.getVisualCursor().offset - currentOffset;
+        if (insertLength > 0) {
+          this.adjustExtmarksAfterInsertion(currentOffset, insertLength);
+        }
+      };
+      this.editBuffer.setText = (text) => {
+        if (this.destroyed) {
+          this.originalSetText(text);
+          return;
+        }
+        this.clear();
+        this.originalSetText(text);
+      };
+      this.editBuffer.replaceText = (text) => {
+        if (this.destroyed) {
+          this.originalReplaceText(text);
+          return;
+        }
+        this.saveSnapshot();
+        this.clear();
+        this.originalReplaceText(text);
+      };
+      this.editBuffer.clear = () => {
+        if (this.destroyed) {
+          this.originalClear();
+          return;
+        }
+        this.saveSnapshot();
+        this.clear();
+        this.originalClear();
+      };
+      this.editBuffer.newLine = () => {
+        if (this.destroyed) {
+          this.originalNewLine();
+          return;
+        }
+        this.saveSnapshot();
+        const currentOffset = this.editorView.getVisualCursor().offset;
+        this.originalNewLine();
+        this.adjustExtmarksAfterInsertion(currentOffset, 1);
+      };
+    }
+    wrapEditorViewDeleteSelectedText() {
+      this.editorView.deleteSelectedText = () => {
+        if (this.destroyed) {
+          this.originalEditorViewDeleteSelectedText();
+          return;
+        }
+        this.saveSnapshot();
+        const selection = this.editorView.getSelection();
+        if (!selection) {
+          this.originalEditorViewDeleteSelectedText();
+          return;
+        }
+        const deleteOffset = Math.min(selection.start, selection.end);
+        const deleteLength = Math.abs(selection.end - selection.start);
+        this.originalEditorViewDeleteSelectedText();
+        if (deleteLength > 0) {
+          this.adjustExtmarksAfterDeletion(deleteOffset, deleteLength);
+        }
+      };
+    }
+    setupContentChangeListener() {
+      this.editBuffer.on("content-changed", () => {
+        if (this.destroyed)
+          return;
+        this.updateHighlights();
+      });
+    }
+    deleteExtmarkById(id) {
+      const extmark = this.extmarks.get(id);
+      if (extmark) {
+        this.extmarks.delete(id);
+        this.extmarksByTypeId.get(extmark.typeId)?.delete(id);
+        this.metadata.delete(id);
+      }
+    }
+    findVirtualExtmarkContaining(offset) {
+      for (const extmark of this.extmarks.values()) {
+        if (extmark.virtual && offset >= extmark.start && offset < extmark.end) {
+          return extmark;
+        }
+      }
+      return null;
+    }
+    adjustExtmarksAfterInsertion(insertOffset, length) {
+      for (const extmark of this.extmarks.values()) {
+        if (extmark.start >= insertOffset) {
+          extmark.start += length;
+          extmark.end += length;
+        } else if (extmark.end > insertOffset) {
+          extmark.end += length;
+        }
+      }
+      this.updateHighlights();
+    }
+    adjustExtmarksAfterDeletion(deleteOffset, length) {
+      const toDelete = [];
+      for (const extmark of this.extmarks.values()) {
+        if (extmark.end <= deleteOffset) {
+          continue;
+        }
+        if (extmark.start >= deleteOffset + length) {
+          extmark.start -= length;
+          extmark.end -= length;
+        } else if (extmark.start >= deleteOffset && extmark.end <= deleteOffset + length) {
+          toDelete.push(extmark.id);
+        } else if (extmark.start < deleteOffset && extmark.end > deleteOffset + length) {
+          extmark.end -= length;
+        } else if (extmark.start < deleteOffset && extmark.end > deleteOffset) {
+          extmark.end -= Math.min(extmark.end, deleteOffset + length) - deleteOffset;
+        } else if (extmark.start < deleteOffset + length && extmark.end > deleteOffset + length) {
+          const overlap = deleteOffset + length - extmark.start;
+          extmark.start = deleteOffset;
+          extmark.end -= length;
+        }
+      }
+      for (const id of toDelete) {
+        this.deleteExtmarkById(id);
+      }
+      this.updateHighlights();
+    }
+    offsetToPosition(offset) {
+      const result = this.editBuffer.offsetToPosition(offset);
+      if (!result) {
+        return { row: 0, col: 0 };
+      }
+      return result;
+    }
+    positionToOffset(row, col) {
+      return this.editBuffer.positionToOffset(row, col);
+    }
+    getNextCursorOffset(currentOffset) {
+      this.originalMoveCursorRight();
+      const nextOffset = this.editorView.getVisualCursor().offset;
+      this.originalSetCursorByOffset(currentOffset);
+      return nextOffset;
+    }
+    updateHighlights() {
+      this.editBuffer.clearAllHighlights();
+      for (const extmark of this.extmarks.values()) {
+        if (extmark.styleId !== undefined) {
+          const startWithoutNewlines = this.offsetExcludingNewlines(extmark.start);
+          const endWithoutNewlines = this.offsetExcludingNewlines(extmark.end);
+          this.editBuffer.addHighlightByCharRange({
+            start: startWithoutNewlines,
+            end: endWithoutNewlines,
+            styleId: extmark.styleId,
+            priority: extmark.priority ?? 0,
+            hlRef: extmark.id
+          });
+        }
+      }
+    }
+    offsetExcludingNewlines(offset) {
+      const text = this.editBuffer.getText();
+      let displayWidthSoFar = 0;
+      let newlineCount = 0;
+      let i = 0;
+      while (i < text.length && displayWidthSoFar < offset) {
+        if (text[i] === `
+`) {
+          displayWidthSoFar++;
+          newlineCount++;
+          i++;
+        } else {
+          let j = i;
+          while (j < text.length && text[j] !== `
+`) {
+            j++;
+          }
+          const chunk = text.substring(i, j);
+          const chunkWidth = stringWidth(chunk);
+          if (displayWidthSoFar + chunkWidth < offset) {
+            displayWidthSoFar += chunkWidth;
+            i = j;
+          } else {
+            for (let k = i;k < j && displayWidthSoFar < offset; k++) {
+              const charWidth = stringWidth(text[k]);
+              displayWidthSoFar += charWidth;
+            }
+            break;
+          }
+        }
+      }
+      return offset - newlineCount;
+    }
+    create(options) {
+      if (this.destroyed) {
+        throw new Error("ExtmarksController is destroyed");
+      }
+      const id = this.nextId++;
+      const typeId = options.typeId ?? 0;
+      const extmark = {
+        id,
+        start: options.start,
+        end: options.end,
+        virtual: options.virtual ?? false,
+        styleId: options.styleId,
+        priority: options.priority,
+        data: options.data,
+        typeId
+      };
+      this.extmarks.set(id, extmark);
+      if (!this.extmarksByTypeId.has(typeId)) {
+        this.extmarksByTypeId.set(typeId, new Set);
+      }
+      this.extmarksByTypeId.get(typeId).add(id);
+      if (options.metadata !== undefined) {
+        this.metadata.set(id, options.metadata);
+      }
+      this.updateHighlights();
+      return id;
+    }
+    delete(id) {
+      if (this.destroyed) {
+        throw new Error("ExtmarksController is destroyed");
+      }
+      const extmark = this.extmarks.get(id);
+      if (!extmark)
+        return false;
+      this.deleteExtmarkById(id);
+      this.updateHighlights();
+      return true;
+    }
+    get(id) {
+      if (this.destroyed)
+        return null;
+      return this.extmarks.get(id) ?? null;
+    }
+    getAll() {
+      if (this.destroyed)
+        return [];
+      return Array.from(this.extmarks.values());
+    }
+    getVirtual() {
+      if (this.destroyed)
+        return [];
+      return Array.from(this.extmarks.values()).filter((e) => e.virtual);
+    }
+    getAtOffset(offset) {
+      if (this.destroyed)
+        return [];
+      return Array.from(this.extmarks.values()).filter((e) => offset >= e.start && offset < e.end);
+    }
+    getAllForTypeId(typeId) {
+      if (this.destroyed)
+        return [];
+      const ids = this.extmarksByTypeId.get(typeId);
+      if (!ids)
+        return [];
+      return Array.from(ids).map((id) => this.extmarks.get(id)).filter((e) => e !== undefined);
+    }
+    clear() {
+      if (this.destroyed)
+        return;
+      this.extmarks.clear();
+      this.extmarksByTypeId.clear();
+      this.metadata.clear();
+      this.updateHighlights();
+    }
+    saveSnapshot() {
+      this.history.saveSnapshot(this.extmarks, this.nextId);
+    }
+    restoreSnapshot(snapshot) {
+      this.extmarks = new Map(Array.from(snapshot.extmarks.entries()).map(([id, extmark]) => [id, { ...extmark }]));
+      this.nextId = snapshot.nextId;
+      this.updateHighlights();
+    }
+    wrapUndoRedo() {
+      this.editBuffer.undo = () => {
+        if (this.destroyed) {
+          return this.originalUndo();
+        }
+        if (!this.history.canUndo()) {
+          return this.originalUndo();
+        }
+        const currentSnapshot = {
+          extmarks: new Map(Array.from(this.extmarks.entries()).map(([id, extmark]) => [id, { ...extmark }])),
+          nextId: this.nextId
+        };
+        this.history.pushRedo(currentSnapshot);
+        const snapshot = this.history.undo();
+        this.restoreSnapshot(snapshot);
+        return this.originalUndo();
+      };
+      this.editBuffer.redo = () => {
+        if (this.destroyed) {
+          return this.originalRedo();
+        }
+        if (!this.history.canRedo()) {
+          return this.originalRedo();
+        }
+        const currentSnapshot = {
+          extmarks: new Map(Array.from(this.extmarks.entries()).map(([id, extmark]) => [id, { ...extmark }])),
+          nextId: this.nextId
+        };
+        this.history.pushUndo(currentSnapshot);
+        const snapshot = this.history.redo();
+        this.restoreSnapshot(snapshot);
+        return this.originalRedo();
+      };
+    }
+    registerType(typeName) {
+      if (this.destroyed) {
+        throw new Error("ExtmarksController is destroyed");
+      }
+      const existing = this.typeNameToId.get(typeName);
+      if (existing !== undefined) {
+        return existing;
+      }
+      const typeId = this.nextTypeId++;
+      this.typeNameToId.set(typeName, typeId);
+      this.typeIdToName.set(typeId, typeName);
+      return typeId;
+    }
+    getTypeId(typeName) {
+      if (this.destroyed)
+        return null;
+      return this.typeNameToId.get(typeName) ?? null;
+    }
+    getTypeName(typeId) {
+      if (this.destroyed)
+        return null;
+      return this.typeIdToName.get(typeId) ?? null;
+    }
+    getMetadataFor(extmarkId) {
+      if (this.destroyed)
+        return;
+      return this.metadata.get(extmarkId);
+    }
+    destroy() {
+      if (this.destroyed)
+        return;
+      this.editBuffer.moveCursorLeft = this.originalMoveCursorLeft;
+      this.editBuffer.moveCursorRight = this.originalMoveCursorRight;
+      this.editBuffer.setCursorByOffset = this.originalSetCursorByOffset;
+      this.editorView.moveUpVisual = this.originalMoveUpVisual;
+      this.editorView.moveDownVisual = this.originalMoveDownVisual;
+      this.editBuffer.deleteCharBackward = this.originalDeleteCharBackward;
+      this.editBuffer.deleteChar = this.originalDeleteChar;
+      this.editBuffer.insertText = this.originalInsertText;
+      this.editBuffer.insertChar = this.originalInsertChar;
+      this.editBuffer.deleteRange = this.originalDeleteRange;
+      this.editBuffer.setText = this.originalSetText;
+      this.editBuffer.replaceText = this.originalReplaceText;
+      this.editBuffer.clear = this.originalClear;
+      this.editBuffer.newLine = this.originalNewLine;
+      this.editBuffer.deleteLine = this.originalDeleteLine;
+      this.editorView.deleteSelectedText = this.originalEditorViewDeleteSelectedText;
+      this.editBuffer.undo = this.originalUndo;
+      this.editBuffer.redo = this.originalRedo;
+      this.extmarks.clear();
+      this.extmarksByTypeId.clear();
+      this.metadata.clear();
+      this.typeNameToId.clear();
+      this.typeIdToName.clear();
+      this.history.clear();
+      this.destroyed = true;
+    }
   }
   // vendor/opentui/packages/core/src/buffer.ts
   function requireInteger(value, name, min, max) {

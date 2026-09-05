@@ -2,6 +2,11 @@
 
 ## Unreleased - 09/05/2026
 
+- Add an eight-page widget gallery covering the remaining React widgets plus sliders and tables.
+- Support focus traversal, paste, text editing, selection, cursor display, framebuffer widgets, and scrolling.
+- Keep code rendering plain; use bundled Marked tokens for Markdown style/conceal captures and preserve native diff colors without a worker runtime.
+- Add gallery interaction and terminal cleanup tests; keep the original dragon and mouse examples available.
+
 - Preserve the dragon demo as example 01 and add a separate mouse playground via `--mouse`.
 - Connect native hit testing to React hover, button, drag, and wheel handlers with press-target capture.
 - Test split mouse reports, all three buttons, wheel input, release outside the target, resizing, and terminal cleanup.

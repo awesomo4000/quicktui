@@ -106,6 +106,36 @@ static JSValue wrap_getCurrentBuffer(JSContext *ctx, JSValueConst self, int argc
 uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
 uint32_t value = getCurrentBuffer((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
 }
+extern uint32_t createOptimizedBuffer(uint32_t a0, uint32_t a1, uint8_t a2, uint8_t a3, void * a4, uint32_t a5);
+static JSValue wrap_createOptimizedBuffer(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 6) return JS_ThrowTypeError(ctx, "createOptimizedBuffer: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+void *a4; if (qt_pointer(ctx, argv[4], &a4) < 0) return JS_EXCEPTION;
+uint32_t a5; if (JS_ToUint32(ctx, &a5, argv[5]) < 0) return JS_EXCEPTION;
+uint32_t value = createOptimizedBuffer((uint32_t)a0, (uint32_t)a1, (uint8_t)a2, (uint8_t)a3, (void *)a4, (uint32_t)a5); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern void destroyOptimizedBuffer(uint32_t a0);
+static JSValue wrap_destroyOptimizedBuffer(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "destroyOptimizedBuffer: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+destroyOptimizedBuffer((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void drawFrameBuffer(uint32_t a0, int32_t a1, int32_t a2, uint32_t a3, uint32_t a4, uint32_t a5, uint32_t a6, uint32_t a7);
+static JSValue wrap_drawFrameBuffer(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 8) return JS_ThrowTypeError(ctx, "drawFrameBuffer: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+int32_t a1; if (JS_ToInt32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+int32_t a2; if (JS_ToInt32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+uint32_t a4; if (JS_ToUint32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+uint32_t a5; if (JS_ToUint32(ctx, &a5, argv[5]) < 0) return JS_EXCEPTION;
+uint32_t a6; if (JS_ToUint32(ctx, &a6, argv[6]) < 0) return JS_EXCEPTION;
+uint32_t a7; if (JS_ToUint32(ctx, &a7, argv[7]) < 0) return JS_EXCEPTION;
+drawFrameBuffer((uint32_t)a0, (int32_t)a1, (int32_t)a2, (uint32_t)a3, (uint32_t)a4, (uint32_t)a5, (uint32_t)a6, (uint32_t)a7); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
 extern uint32_t getBufferWidth(uint32_t a0);
 static JSValue wrap_getBufferWidth(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "getBufferWidth: wrong argument count");
@@ -131,6 +161,51 @@ uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
 void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
 bufferClear((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
+extern void * bufferGetCharPtr(uint32_t a0);
+static JSValue wrap_bufferGetCharPtr(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "bufferGetCharPtr: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void * value = bufferGetCharPtr((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBigUint64(ctx, (uintptr_t)value);
+}
+extern void * bufferGetFgPtr(uint32_t a0);
+static JSValue wrap_bufferGetFgPtr(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "bufferGetFgPtr: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void * value = bufferGetFgPtr((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBigUint64(ctx, (uintptr_t)value);
+}
+extern void * bufferGetBgPtr(uint32_t a0);
+static JSValue wrap_bufferGetBgPtr(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "bufferGetBgPtr: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void * value = bufferGetBgPtr((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBigUint64(ctx, (uintptr_t)value);
+}
+extern void * bufferGetAttributesPtr(uint32_t a0);
+static JSValue wrap_bufferGetAttributesPtr(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "bufferGetAttributesPtr: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void * value = bufferGetAttributesPtr((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBigUint64(ctx, (uintptr_t)value);
+}
+extern bool bufferGetRespectAlpha(uint32_t a0);
+static JSValue wrap_bufferGetRespectAlpha(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "bufferGetRespectAlpha: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+bool value = bufferGetRespectAlpha((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBool(ctx, value);
+}
+extern void bufferSetRespectAlpha(uint32_t a0, bool a1);
+static JSValue wrap_bufferSetRespectAlpha(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "bufferSetRespectAlpha: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+int a1 = JS_ToBool(ctx, argv[1]); if (a1 < 0) return JS_EXCEPTION;
+bufferSetRespectAlpha((uint32_t)a0, (bool)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint32_t bufferGetId(uint32_t a0, void * a1, uint32_t a2);
+static JSValue wrap_bufferGetId(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "bufferGetId: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t value = bufferGetId((uint32_t)a0, (void *)a1, (uint32_t)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
 extern uint32_t bufferGetRealCharSize(uint32_t a0);
 static JSValue wrap_bufferGetRealCharSize(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "bufferGetRealCharSize: wrong argument count");
@@ -146,6 +221,82 @@ uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
 int a3 = JS_ToBool(ctx, argv[3]); if (a3 < 0) return JS_EXCEPTION;
 uint32_t value = bufferWriteResolvedChars((uint32_t)a0, (void *)a1, (uint32_t)a2, (bool)a3); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
 }
+extern void bufferDrawText(uint32_t a0, void * a1, uint32_t a2, uint32_t a3, uint32_t a4, void * a5, void * a6, uint32_t a7);
+static JSValue wrap_bufferDrawText(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 8) return JS_ThrowTypeError(ctx, "bufferDrawText: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+uint32_t a4; if (JS_ToUint32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+void *a5; if (qt_pointer(ctx, argv[5], &a5) < 0) return JS_EXCEPTION;
+void *a6; if (qt_pointer(ctx, argv[6], &a6) < 0) return JS_EXCEPTION;
+uint32_t a7; if (JS_ToUint32(ctx, &a7, argv[7]) < 0) return JS_EXCEPTION;
+bufferDrawText((uint32_t)a0, (void *)a1, (uint32_t)a2, (uint32_t)a3, (uint32_t)a4, (void *)a5, (void *)a6, (uint32_t)a7); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void bufferSetCellWithAlphaBlending(uint32_t a0, uint32_t a1, uint32_t a2, uint32_t a3, void * a4, void * a5, uint32_t a6);
+static JSValue wrap_bufferSetCellWithAlphaBlending(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 7) return JS_ThrowTypeError(ctx, "bufferSetCellWithAlphaBlending: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+void *a4; if (qt_pointer(ctx, argv[4], &a4) < 0) return JS_EXCEPTION;
+void *a5; if (qt_pointer(ctx, argv[5], &a5) < 0) return JS_EXCEPTION;
+uint32_t a6; if (JS_ToUint32(ctx, &a6, argv[6]) < 0) return JS_EXCEPTION;
+bufferSetCellWithAlphaBlending((uint32_t)a0, (uint32_t)a1, (uint32_t)a2, (uint32_t)a3, (void *)a4, (void *)a5, (uint32_t)a6); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void bufferSetCell(uint32_t a0, uint32_t a1, uint32_t a2, uint32_t a3, void * a4, void * a5, uint32_t a6);
+static JSValue wrap_bufferSetCell(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 7) return JS_ThrowTypeError(ctx, "bufferSetCell: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+void *a4; if (qt_pointer(ctx, argv[4], &a4) < 0) return JS_EXCEPTION;
+void *a5; if (qt_pointer(ctx, argv[5], &a5) < 0) return JS_EXCEPTION;
+uint32_t a6; if (JS_ToUint32(ctx, &a6, argv[6]) < 0) return JS_EXCEPTION;
+bufferSetCell((uint32_t)a0, (uint32_t)a1, (uint32_t)a2, (uint32_t)a3, (void *)a4, (void *)a5, (uint32_t)a6); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void bufferFillRect(uint32_t a0, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, void * a5);
+static JSValue wrap_bufferFillRect(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 6) return JS_ThrowTypeError(ctx, "bufferFillRect: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+uint32_t a4; if (JS_ToUint32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+void *a5; if (qt_pointer(ctx, argv[5], &a5) < 0) return JS_EXCEPTION;
+bufferFillRect((uint32_t)a0, (uint32_t)a1, (uint32_t)a2, (uint32_t)a3, (uint32_t)a4, (void *)a5); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void bufferColorMatrix(uint32_t a0, void * a1, void * a2, uint32_t a3, float a4, uint8_t a5);
+static JSValue wrap_bufferColorMatrix(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 6) return JS_ThrowTypeError(ctx, "bufferColorMatrix: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+void *a2; if (qt_pointer(ctx, argv[2], &a2) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+double a4; if (JS_ToFloat64(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+uint32_t a5; if (JS_ToUint32(ctx, &a5, argv[5]) < 0) return JS_EXCEPTION;
+bufferColorMatrix((uint32_t)a0, (void *)a1, (void *)a2, (uint32_t)a3, (float)a4, (uint8_t)a5); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void bufferColorMatrixUniform(uint32_t a0, void * a1, float a2, uint8_t a3);
+static JSValue wrap_bufferColorMatrixUniform(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 4) return JS_ThrowTypeError(ctx, "bufferColorMatrixUniform: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+double a2; if (JS_ToFloat64(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+bufferColorMatrixUniform((uint32_t)a0, (void *)a1, (float)a2, (uint8_t)a3); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void bufferResize(uint32_t a0, uint32_t a1, uint32_t a2);
+static JSValue wrap_bufferResize(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "bufferResize: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+bufferResize((uint32_t)a0, (uint32_t)a1, (uint32_t)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
 extern void resizeRenderer(uint32_t a0, uint32_t a1, uint32_t a2);
 static JSValue wrap_resizeRenderer(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "resizeRenderer: wrong argument count");
@@ -154,6 +305,41 @@ uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
 uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
 resizeRenderer((uint32_t)a0, (uint32_t)a1, (uint32_t)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
+extern void setCursorPosition(uint32_t a0, int32_t a1, int32_t a2, bool a3);
+static JSValue wrap_setCursorPosition(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 4) return JS_ThrowTypeError(ctx, "setCursorPosition: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+int32_t a1; if (JS_ToInt32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+int32_t a2; if (JS_ToInt32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+int a3 = JS_ToBool(ctx, argv[3]); if (a3 < 0) return JS_EXCEPTION;
+setCursorPosition((uint32_t)a0, (int32_t)a1, (int32_t)a2, (bool)a3); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void setCursorColor(uint32_t a0, void * a1);
+static JSValue wrap_setCursorColor(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "setCursorColor: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+setCursorColor((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void setCursorStyleOptions(uint32_t a0, void * a1);
+static JSValue wrap_setCursorStyleOptions(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "setCursorStyleOptions: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+setCursorStyleOptions((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void bufferDrawSuperSampleBuffer(uint32_t a0, uint32_t a1, uint32_t a2, void * a3, uint32_t a4, uint8_t a5, uint32_t a6);
+static JSValue wrap_bufferDrawSuperSampleBuffer(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 7) return JS_ThrowTypeError(ctx, "bufferDrawSuperSampleBuffer: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+void *a3; if (qt_pointer(ctx, argv[3], &a3) < 0) return JS_EXCEPTION;
+uint32_t a4; if (JS_ToUint32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+uint32_t a5; if (JS_ToUint32(ctx, &a5, argv[5]) < 0) return JS_EXCEPTION;
+uint32_t a6; if (JS_ToUint32(ctx, &a6, argv[6]) < 0) return JS_EXCEPTION;
+bufferDrawSuperSampleBuffer((uint32_t)a0, (uint32_t)a1, (uint32_t)a2, (void *)a3, (uint32_t)a4, (uint8_t)a5, (uint32_t)a6); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
 extern uint8_t bufferDrawImage(uint32_t a0, uint32_t a1, void * a2);
 static JSValue wrap_bufferDrawImage(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "bufferDrawImage: wrong argument count");
@@ -161,6 +347,58 @@ uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
 uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
 void *a2; if (qt_pointer(ctx, argv[2], &a2) < 0) return JS_EXCEPTION;
 uint8_t value = bufferDrawImage((uint32_t)a0, (uint32_t)a1, (void *)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern void bufferDrawPackedBuffer(uint32_t a0, void * a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5, uint32_t a6);
+static JSValue wrap_bufferDrawPackedBuffer(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 7) return JS_ThrowTypeError(ctx, "bufferDrawPackedBuffer: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+uint32_t a4; if (JS_ToUint32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+uint32_t a5; if (JS_ToUint32(ctx, &a5, argv[5]) < 0) return JS_EXCEPTION;
+uint32_t a6; if (JS_ToUint32(ctx, &a6, argv[6]) < 0) return JS_EXCEPTION;
+bufferDrawPackedBuffer((uint32_t)a0, (void *)a1, (uint32_t)a2, (uint32_t)a3, (uint32_t)a4, (uint32_t)a5, (uint32_t)a6); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void bufferDrawGrayscaleBuffer(uint32_t a0, int32_t a1, int32_t a2, void * a3, uint32_t a4, uint32_t a5, void * a6, void * a7);
+static JSValue wrap_bufferDrawGrayscaleBuffer(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 8) return JS_ThrowTypeError(ctx, "bufferDrawGrayscaleBuffer: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+int32_t a1; if (JS_ToInt32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+int32_t a2; if (JS_ToInt32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+void *a3; if (qt_pointer(ctx, argv[3], &a3) < 0) return JS_EXCEPTION;
+uint32_t a4; if (JS_ToUint32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+uint32_t a5; if (JS_ToUint32(ctx, &a5, argv[5]) < 0) return JS_EXCEPTION;
+void *a6; if (qt_pointer(ctx, argv[6], &a6) < 0) return JS_EXCEPTION;
+void *a7; if (qt_pointer(ctx, argv[7], &a7) < 0) return JS_EXCEPTION;
+bufferDrawGrayscaleBuffer((uint32_t)a0, (int32_t)a1, (int32_t)a2, (void *)a3, (uint32_t)a4, (uint32_t)a5, (void *)a6, (void *)a7); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void bufferDrawGrayscaleBufferSupersampled(uint32_t a0, int32_t a1, int32_t a2, void * a3, uint32_t a4, uint32_t a5, void * a6, void * a7);
+static JSValue wrap_bufferDrawGrayscaleBufferSupersampled(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 8) return JS_ThrowTypeError(ctx, "bufferDrawGrayscaleBufferSupersampled: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+int32_t a1; if (JS_ToInt32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+int32_t a2; if (JS_ToInt32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+void *a3; if (qt_pointer(ctx, argv[3], &a3) < 0) return JS_EXCEPTION;
+uint32_t a4; if (JS_ToUint32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+uint32_t a5; if (JS_ToUint32(ctx, &a5, argv[5]) < 0) return JS_EXCEPTION;
+void *a6; if (qt_pointer(ctx, argv[6], &a6) < 0) return JS_EXCEPTION;
+void *a7; if (qt_pointer(ctx, argv[7], &a7) < 0) return JS_EXCEPTION;
+bufferDrawGrayscaleBufferSupersampled((uint32_t)a0, (int32_t)a1, (int32_t)a2, (void *)a3, (uint32_t)a4, (uint32_t)a5, (void *)a6, (void *)a7); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void bufferDrawGrid(uint32_t a0, void * a1, void * a2, void * a3, void * a4, uint32_t a5, void * a6, uint32_t a7, void * a8);
+static JSValue wrap_bufferDrawGrid(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 9) return JS_ThrowTypeError(ctx, "bufferDrawGrid: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+void *a2; if (qt_pointer(ctx, argv[2], &a2) < 0) return JS_EXCEPTION;
+void *a3; if (qt_pointer(ctx, argv[3], &a3) < 0) return JS_EXCEPTION;
+void *a4; if (qt_pointer(ctx, argv[4], &a4) < 0) return JS_EXCEPTION;
+uint32_t a5; if (JS_ToUint32(ctx, &a5, argv[5]) < 0) return JS_EXCEPTION;
+void *a6; if (qt_pointer(ctx, argv[6], &a6) < 0) return JS_EXCEPTION;
+uint32_t a7; if (JS_ToUint32(ctx, &a7, argv[7]) < 0) return JS_EXCEPTION;
+void *a8; if (qt_pointer(ctx, argv[8], &a8) < 0) return JS_EXCEPTION;
+bufferDrawGrid((uint32_t)a0, (void *)a1, (void *)a2, (void *)a3, (void *)a4, (uint32_t)a5, (void *)a6, (uint32_t)a7, (void *)a8); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
 extern void bufferDrawBox(uint32_t a0, int32_t a1, int32_t a2, uint32_t a3, uint32_t a4, void * a5, uint32_t a6, void * a7, void * a8, void * a9, void * a10, uint32_t a11, void * a12, uint32_t a13);
 static JSValue wrap_bufferDrawBox(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
@@ -180,6 +418,53 @@ uint32_t a11; if (JS_ToUint32(ctx, &a11, argv[11]) < 0) return JS_EXCEPTION;
 void *a12; if (qt_pointer(ctx, argv[12], &a12) < 0) return JS_EXCEPTION;
 uint32_t a13; if (JS_ToUint32(ctx, &a13, argv[13]) < 0) return JS_EXCEPTION;
 bufferDrawBox((uint32_t)a0, (int32_t)a1, (int32_t)a2, (uint32_t)a3, (uint32_t)a4, (void *)a5, (uint32_t)a6, (void *)a7, (void *)a8, (void *)a9, (void *)a10, (uint32_t)a11, (void *)a12, (uint32_t)a13); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void bufferPushScissorRect(uint32_t a0, int32_t a1, int32_t a2, uint32_t a3, uint32_t a4);
+static JSValue wrap_bufferPushScissorRect(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 5) return JS_ThrowTypeError(ctx, "bufferPushScissorRect: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+int32_t a1; if (JS_ToInt32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+int32_t a2; if (JS_ToInt32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+uint32_t a4; if (JS_ToUint32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+bufferPushScissorRect((uint32_t)a0, (int32_t)a1, (int32_t)a2, (uint32_t)a3, (uint32_t)a4); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void bufferPopScissorRect(uint32_t a0);
+static JSValue wrap_bufferPopScissorRect(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "bufferPopScissorRect: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+bufferPopScissorRect((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void bufferClearScissorRects(uint32_t a0);
+static JSValue wrap_bufferClearScissorRects(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "bufferClearScissorRects: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+bufferClearScissorRects((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void bufferPushOpacity(uint32_t a0, float a1);
+static JSValue wrap_bufferPushOpacity(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "bufferPushOpacity: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+double a1; if (JS_ToFloat64(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+bufferPushOpacity((uint32_t)a0, (float)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void bufferPopOpacity(uint32_t a0);
+static JSValue wrap_bufferPopOpacity(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "bufferPopOpacity: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+bufferPopOpacity((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern float bufferGetCurrentOpacity(uint32_t a0);
+static JSValue wrap_bufferGetCurrentOpacity(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "bufferGetCurrentOpacity: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+float value = bufferGetCurrentOpacity((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewFloat64(ctx, value);
+}
+extern void bufferClearOpacity(uint32_t a0);
+static JSValue wrap_bufferClearOpacity(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "bufferClearOpacity: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+bufferClearOpacity((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
 extern void addToHitGrid(uint32_t a0, int32_t a1, int32_t a2, uint32_t a3, uint32_t a4, uint32_t a5);
 static JSValue wrap_addToHitGrid(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
@@ -266,6 +551,18 @@ static JSValue wrap_textBufferGetByteSize(JSContext *ctx, JSValueConst self, int
 uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
 uint32_t value = textBufferGetByteSize((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
 }
+extern void textBufferReset(uint32_t a0);
+static JSValue wrap_textBufferReset(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "textBufferReset: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+textBufferReset((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void textBufferClear(uint32_t a0);
+static JSValue wrap_textBufferClear(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "textBufferClear: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+textBufferClear((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
 extern void textBufferSetDefaultFg(uint32_t a0, void * a1);
 static JSValue wrap_textBufferSetDefaultFg(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "textBufferSetDefaultFg: wrong argument count");
@@ -287,6 +584,72 @@ uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
 void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
 textBufferSetDefaultAttributes((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
+extern void textBufferResetDefaults(uint32_t a0);
+static JSValue wrap_textBufferResetDefaults(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "textBufferResetDefaults: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+textBufferResetDefaults((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint8_t textBufferGetTabWidth(uint32_t a0);
+static JSValue wrap_textBufferGetTabWidth(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "textBufferGetTabWidth: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint8_t value = textBufferGetTabWidth((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern void textBufferSetTabWidth(uint32_t a0, uint8_t a1);
+static JSValue wrap_textBufferSetTabWidth(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "textBufferSetTabWidth: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+textBufferSetTabWidth((uint32_t)a0, (uint8_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint16_t textBufferRegisterMemBuffer(uint32_t a0, void * a1, uint32_t a2, bool a3);
+static JSValue wrap_textBufferRegisterMemBuffer(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 4) return JS_ThrowTypeError(ctx, "textBufferRegisterMemBuffer: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+int a3 = JS_ToBool(ctx, argv[3]); if (a3 < 0) return JS_EXCEPTION;
+uint16_t value = textBufferRegisterMemBuffer((uint32_t)a0, (void *)a1, (uint32_t)a2, (bool)a3); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern bool textBufferReplaceMemBuffer(uint32_t a0, uint8_t a1, void * a2, uint32_t a3, bool a4);
+static JSValue wrap_textBufferReplaceMemBuffer(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 5) return JS_ThrowTypeError(ctx, "textBufferReplaceMemBuffer: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+void *a2; if (qt_pointer(ctx, argv[2], &a2) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+int a4 = JS_ToBool(ctx, argv[4]); if (a4 < 0) return JS_EXCEPTION;
+bool value = textBufferReplaceMemBuffer((uint32_t)a0, (uint8_t)a1, (void *)a2, (uint32_t)a3, (bool)a4); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBool(ctx, value);
+}
+extern void textBufferClearMemRegistry(uint32_t a0);
+static JSValue wrap_textBufferClearMemRegistry(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "textBufferClearMemRegistry: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+textBufferClearMemRegistry((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void textBufferSetTextFromMem(uint32_t a0, uint8_t a1);
+static JSValue wrap_textBufferSetTextFromMem(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "textBufferSetTextFromMem: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+textBufferSetTextFromMem((uint32_t)a0, (uint8_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void textBufferAppend(uint32_t a0, void * a1, uint32_t a2);
+static JSValue wrap_textBufferAppend(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "textBufferAppend: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+textBufferAppend((uint32_t)a0, (void *)a1, (uint32_t)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void textBufferAppendFromMemId(uint32_t a0, uint8_t a1);
+static JSValue wrap_textBufferAppendFromMemId(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "textBufferAppendFromMemId: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+textBufferAppendFromMemId((uint32_t)a0, (uint8_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
 extern void textBufferSetStyledText(uint32_t a0, void * a1, uint32_t a2);
 static JSValue wrap_textBufferSetStyledText(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "textBufferSetStyledText: wrong argument count");
@@ -295,12 +658,104 @@ void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
 uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
 textBufferSetStyledText((uint32_t)a0, (void *)a1, (uint32_t)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
+extern uint32_t textBufferGetLineCount(uint32_t a0);
+static JSValue wrap_textBufferGetLineCount(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "textBufferGetLineCount: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t value = textBufferGetLineCount((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern uint32_t textBufferGetPlainText(uint32_t a0, void * a1, uint32_t a2);
+static JSValue wrap_textBufferGetPlainText(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "textBufferGetPlainText: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t value = textBufferGetPlainText((uint32_t)a0, (void *)a1, (uint32_t)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern void textBufferAddHighlightByCharRange(uint32_t a0, void * a1);
+static JSValue wrap_textBufferAddHighlightByCharRange(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "textBufferAddHighlightByCharRange: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+textBufferAddHighlightByCharRange((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void textBufferAddHighlight(uint32_t a0, uint32_t a1, void * a2);
+static JSValue wrap_textBufferAddHighlight(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "textBufferAddHighlight: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+void *a2; if (qt_pointer(ctx, argv[2], &a2) < 0) return JS_EXCEPTION;
+textBufferAddHighlight((uint32_t)a0, (uint32_t)a1, (void *)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void textBufferRemoveHighlightsByRef(uint32_t a0, uint16_t a1);
+static JSValue wrap_textBufferRemoveHighlightsByRef(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "textBufferRemoveHighlightsByRef: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+textBufferRemoveHighlightsByRef((uint32_t)a0, (uint16_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void textBufferClearLineHighlights(uint32_t a0, uint32_t a1);
+static JSValue wrap_textBufferClearLineHighlights(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "textBufferClearLineHighlights: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+textBufferClearLineHighlights((uint32_t)a0, (uint32_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void textBufferClearAllHighlights(uint32_t a0);
+static JSValue wrap_textBufferClearAllHighlights(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "textBufferClearAllHighlights: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+textBufferClearAllHighlights((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
 extern bool textBufferSetSyntaxStyle(uint32_t a0, uint32_t a1);
 static JSValue wrap_textBufferSetSyntaxStyle(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "textBufferSetSyntaxStyle: wrong argument count");
 uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
 uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
 bool value = textBufferSetSyntaxStyle((uint32_t)a0, (uint32_t)a1); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBool(ctx, value);
+}
+extern void * textBufferGetLineHighlightsPtr(uint32_t a0, uint32_t a1, void * a2);
+static JSValue wrap_textBufferGetLineHighlightsPtr(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "textBufferGetLineHighlightsPtr: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+void *a2; if (qt_pointer(ctx, argv[2], &a2) < 0) return JS_EXCEPTION;
+void * value = textBufferGetLineHighlightsPtr((uint32_t)a0, (uint32_t)a1, (void *)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBigUint64(ctx, (uintptr_t)value);
+}
+extern void textBufferFreeLineHighlights(void * a0, uint32_t a1);
+static JSValue wrap_textBufferFreeLineHighlights(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "textBufferFreeLineHighlights: wrong argument count");
+void *a0; if (qt_pointer(ctx, argv[0], &a0) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+textBufferFreeLineHighlights((void *)a0, (uint32_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint32_t textBufferGetHighlightCount(uint32_t a0);
+static JSValue wrap_textBufferGetHighlightCount(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "textBufferGetHighlightCount: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t value = textBufferGetHighlightCount((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern uint32_t textBufferGetTextRange(uint32_t a0, uint32_t a1, uint32_t a2, void * a3, uint32_t a4);
+static JSValue wrap_textBufferGetTextRange(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 5) return JS_ThrowTypeError(ctx, "textBufferGetTextRange: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+void *a3; if (qt_pointer(ctx, argv[3], &a3) < 0) return JS_EXCEPTION;
+uint32_t a4; if (JS_ToUint32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+uint32_t value = textBufferGetTextRange((uint32_t)a0, (uint32_t)a1, (uint32_t)a2, (void *)a3, (uint32_t)a4); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern uint32_t textBufferGetTextRangeByCoords(uint32_t a0, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, void * a5, uint32_t a6);
+static JSValue wrap_textBufferGetTextRangeByCoords(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 7) return JS_ThrowTypeError(ctx, "textBufferGetTextRangeByCoords: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+uint32_t a4; if (JS_ToUint32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+void *a5; if (qt_pointer(ctx, argv[5], &a5) < 0) return JS_EXCEPTION;
+uint32_t a6; if (JS_ToUint32(ctx, &a6, argv[6]) < 0) return JS_EXCEPTION;
+uint32_t value = textBufferGetTextRangeByCoords((uint32_t)a0, (uint32_t)a1, (uint32_t)a2, (uint32_t)a3, (uint32_t)a4, (void *)a5, (uint32_t)a6); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
 }
 extern uint32_t createTextBufferView(uint32_t a0);
 static JSValue wrap_createTextBufferView(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
@@ -313,6 +768,89 @@ static JSValue wrap_destroyTextBufferView(JSContext *ctx, JSValueConst self, int
 (void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "destroyTextBufferView: wrong argument count");
 uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
 destroyTextBufferView((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void textBufferViewSetSelection(uint32_t a0, uint32_t a1, uint32_t a2, void * a3, void * a4);
+static JSValue wrap_textBufferViewSetSelection(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 5) return JS_ThrowTypeError(ctx, "textBufferViewSetSelection: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+void *a3; if (qt_pointer(ctx, argv[3], &a3) < 0) return JS_EXCEPTION;
+void *a4; if (qt_pointer(ctx, argv[4], &a4) < 0) return JS_EXCEPTION;
+textBufferViewSetSelection((uint32_t)a0, (uint32_t)a1, (uint32_t)a2, (void *)a3, (void *)a4); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void textBufferViewResetSelection(uint32_t a0);
+static JSValue wrap_textBufferViewResetSelection(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "textBufferViewResetSelection: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+textBufferViewResetSelection((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint64_t textBufferViewGetSelectionInfo(uint32_t a0);
+static JSValue wrap_textBufferViewGetSelectionInfo(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "textBufferViewGetSelectionInfo: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint64_t value = textBufferViewGetSelectionInfo((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBigUint64(ctx, value);
+}
+extern bool textBufferViewSetLocalSelection(uint32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, void * a5, void * a6, uint8_t a7);
+static JSValue wrap_textBufferViewSetLocalSelection(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 8) return JS_ThrowTypeError(ctx, "textBufferViewSetLocalSelection: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+int32_t a1; if (JS_ToInt32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+int32_t a2; if (JS_ToInt32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+int32_t a3; if (JS_ToInt32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+int32_t a4; if (JS_ToInt32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+void *a5; if (qt_pointer(ctx, argv[5], &a5) < 0) return JS_EXCEPTION;
+void *a6; if (qt_pointer(ctx, argv[6], &a6) < 0) return JS_EXCEPTION;
+uint32_t a7; if (JS_ToUint32(ctx, &a7, argv[7]) < 0) return JS_EXCEPTION;
+bool value = textBufferViewSetLocalSelection((uint32_t)a0, (int32_t)a1, (int32_t)a2, (int32_t)a3, (int32_t)a4, (void *)a5, (void *)a6, (uint8_t)a7); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBool(ctx, value);
+}
+extern void textBufferViewUpdateSelection(uint32_t a0, uint32_t a1, void * a2, void * a3);
+static JSValue wrap_textBufferViewUpdateSelection(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 4) return JS_ThrowTypeError(ctx, "textBufferViewUpdateSelection: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+void *a2; if (qt_pointer(ctx, argv[2], &a2) < 0) return JS_EXCEPTION;
+void *a3; if (qt_pointer(ctx, argv[3], &a3) < 0) return JS_EXCEPTION;
+textBufferViewUpdateSelection((uint32_t)a0, (uint32_t)a1, (void *)a2, (void *)a3); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern bool textBufferViewUpdateLocalSelection(uint32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, void * a5, void * a6, uint8_t a7);
+static JSValue wrap_textBufferViewUpdateLocalSelection(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 8) return JS_ThrowTypeError(ctx, "textBufferViewUpdateLocalSelection: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+int32_t a1; if (JS_ToInt32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+int32_t a2; if (JS_ToInt32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+int32_t a3; if (JS_ToInt32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+int32_t a4; if (JS_ToInt32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+void *a5; if (qt_pointer(ctx, argv[5], &a5) < 0) return JS_EXCEPTION;
+void *a6; if (qt_pointer(ctx, argv[6], &a6) < 0) return JS_EXCEPTION;
+uint32_t a7; if (JS_ToUint32(ctx, &a7, argv[7]) < 0) return JS_EXCEPTION;
+bool value = textBufferViewUpdateLocalSelection((uint32_t)a0, (int32_t)a1, (int32_t)a2, (int32_t)a3, (int32_t)a4, (void *)a5, (void *)a6, (uint8_t)a7); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBool(ctx, value);
+}
+extern void textBufferViewResetLocalSelection(uint32_t a0);
+static JSValue wrap_textBufferViewResetLocalSelection(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "textBufferViewResetLocalSelection: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+textBufferViewResetLocalSelection((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void textBufferViewSetSelectionOccupancy(uint32_t a0, uint8_t a1);
+static JSValue wrap_textBufferViewSetSelectionOccupancy(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "textBufferViewSetSelectionOccupancy: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+textBufferViewSetSelectionOccupancy((uint32_t)a0, (uint8_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint8_t textBufferViewGetSelectionOccupancy(uint32_t a0);
+static JSValue wrap_textBufferViewGetSelectionOccupancy(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "textBufferViewGetSelectionOccupancy: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint8_t value = textBufferViewGetSelectionOccupancy((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern void textBufferViewSetWrapWidth(uint32_t a0, uint32_t a1);
+static JSValue wrap_textBufferViewSetWrapWidth(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "textBufferViewSetWrapWidth: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+textBufferViewSetWrapWidth((uint32_t)a0, (uint32_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
 extern void textBufferViewSetWrapMode(uint32_t a0, uint8_t a1);
 static JSValue wrap_textBufferViewSetWrapMode(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
@@ -327,6 +865,14 @@ static JSValue wrap_textBufferViewSetFirstLineOffset(JSContext *ctx, JSValueCons
 uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
 uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
 textBufferViewSetFirstLineOffset((uint32_t)a0, (uint32_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void textBufferViewSetViewportSize(uint32_t a0, uint32_t a1, uint32_t a2);
+static JSValue wrap_textBufferViewSetViewportSize(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "textBufferViewSetViewportSize: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+textBufferViewSetViewportSize((uint32_t)a0, (uint32_t)a1, (uint32_t)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
 extern void textBufferViewSetViewport(uint32_t a0, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4);
 static JSValue wrap_textBufferViewSetViewport(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
@@ -344,6 +890,13 @@ static JSValue wrap_textBufferViewGetVirtualLineCount(JSContext *ctx, JSValueCon
 uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
 uint32_t value = textBufferViewGetVirtualLineCount((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
 }
+extern void textBufferViewGetLineInfoDirect(uint32_t a0, void * a1);
+static JSValue wrap_textBufferViewGetLineInfoDirect(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "textBufferViewGetLineInfoDirect: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+textBufferViewGetLineInfoDirect((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
 extern void textBufferViewGetLogicalLineInfoDirect(uint32_t a0, void * a1);
 static JSValue wrap_textBufferViewGetLogicalLineInfoDirect(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "textBufferViewGetLogicalLineInfoDirect: wrong argument count");
@@ -351,12 +904,51 @@ uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
 void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
 textBufferViewGetLogicalLineInfoDirect((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
+extern uint32_t textBufferViewGetSelectedText(uint32_t a0, void * a1, uint32_t a2);
+static JSValue wrap_textBufferViewGetSelectedText(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "textBufferViewGetSelectedText: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t value = textBufferViewGetSelectedText((uint32_t)a0, (void *)a1, (uint32_t)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern uint32_t textBufferViewGetPlainText(uint32_t a0, void * a1, uint32_t a2);
+static JSValue wrap_textBufferViewGetPlainText(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "textBufferViewGetPlainText: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t value = textBufferViewGetPlainText((uint32_t)a0, (void *)a1, (uint32_t)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern void textBufferViewSetTabIndicator(uint32_t a0, uint32_t a1);
+static JSValue wrap_textBufferViewSetTabIndicator(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "textBufferViewSetTabIndicator: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+textBufferViewSetTabIndicator((uint32_t)a0, (uint32_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void textBufferViewSetTabIndicatorColor(uint32_t a0, void * a1);
+static JSValue wrap_textBufferViewSetTabIndicatorColor(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "textBufferViewSetTabIndicatorColor: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+textBufferViewSetTabIndicatorColor((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
 extern void textBufferViewSetTruncate(uint32_t a0, bool a1);
 static JSValue wrap_textBufferViewSetTruncate(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "textBufferViewSetTruncate: wrong argument count");
 uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
 int a1 = JS_ToBool(ctx, argv[1]); if (a1 < 0) return JS_EXCEPTION;
 textBufferViewSetTruncate((uint32_t)a0, (bool)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern bool textBufferViewMeasureForDimensions(uint32_t a0, uint32_t a1, uint32_t a2, void * a3);
+static JSValue wrap_textBufferViewMeasureForDimensions(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 4) return JS_ThrowTypeError(ctx, "textBufferViewMeasureForDimensions: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+void *a3; if (qt_pointer(ctx, argv[3], &a3) < 0) return JS_EXCEPTION;
+bool value = textBufferViewMeasureForDimensions((uint32_t)a0, (uint32_t)a1, (uint32_t)a2, (void *)a3); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBool(ctx, value);
 }
 extern void bufferDrawTextBufferView(uint32_t a0, uint32_t a1, int32_t a2, int32_t a3);
 static JSValue wrap_bufferDrawTextBufferView(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
@@ -366,6 +958,610 @@ uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
 int32_t a2; if (JS_ToInt32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
 int32_t a3; if (JS_ToInt32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
 bufferDrawTextBufferView((uint32_t)a0, (uint32_t)a1, (int32_t)a2, (int32_t)a3); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void bufferDrawEditorView(uint32_t a0, uint32_t a1, int32_t a2, int32_t a3);
+static JSValue wrap_bufferDrawEditorView(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 4) return JS_ThrowTypeError(ctx, "bufferDrawEditorView: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+int32_t a2; if (JS_ToInt32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+int32_t a3; if (JS_ToInt32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+bufferDrawEditorView((uint32_t)a0, (uint32_t)a1, (int32_t)a2, (int32_t)a3); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint32_t createEditorView(uint32_t a0, uint32_t a1, uint32_t a2);
+static JSValue wrap_createEditorView(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "createEditorView: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t value = createEditorView((uint32_t)a0, (uint32_t)a1, (uint32_t)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern void destroyEditorView(uint32_t a0);
+static JSValue wrap_destroyEditorView(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "destroyEditorView: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+destroyEditorView((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewSetViewportSize(uint32_t a0, uint32_t a1, uint32_t a2);
+static JSValue wrap_editorViewSetViewportSize(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "editorViewSetViewportSize: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+editorViewSetViewportSize((uint32_t)a0, (uint32_t)a1, (uint32_t)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewSetViewport(uint32_t a0, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, bool a5);
+static JSValue wrap_editorViewSetViewport(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 6) return JS_ThrowTypeError(ctx, "editorViewSetViewport: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+uint32_t a4; if (JS_ToUint32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+int a5 = JS_ToBool(ctx, argv[5]); if (a5 < 0) return JS_EXCEPTION;
+editorViewSetViewport((uint32_t)a0, (uint32_t)a1, (uint32_t)a2, (uint32_t)a3, (uint32_t)a4, (bool)a5); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern bool editorViewGetViewport(uint32_t a0, void * a1, void * a2, void * a3, void * a4);
+static JSValue wrap_editorViewGetViewport(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 5) return JS_ThrowTypeError(ctx, "editorViewGetViewport: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+void *a2; if (qt_pointer(ctx, argv[2], &a2) < 0) return JS_EXCEPTION;
+void *a3; if (qt_pointer(ctx, argv[3], &a3) < 0) return JS_EXCEPTION;
+void *a4; if (qt_pointer(ctx, argv[4], &a4) < 0) return JS_EXCEPTION;
+bool value = editorViewGetViewport((uint32_t)a0, (void *)a1, (void *)a2, (void *)a3, (void *)a4); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBool(ctx, value);
+}
+extern void editorViewSetScrollMargin(uint32_t a0, float a1);
+static JSValue wrap_editorViewSetScrollMargin(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editorViewSetScrollMargin: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+double a1; if (JS_ToFloat64(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+editorViewSetScrollMargin((uint32_t)a0, (float)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewSetWrapMode(uint32_t a0, uint8_t a1);
+static JSValue wrap_editorViewSetWrapMode(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editorViewSetWrapMode: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+editorViewSetWrapMode((uint32_t)a0, (uint8_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint32_t editorViewGetVirtualLineCount(uint32_t a0);
+static JSValue wrap_editorViewGetVirtualLineCount(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editorViewGetVirtualLineCount: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t value = editorViewGetVirtualLineCount((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern uint32_t editorViewGetTotalVirtualLineCount(uint32_t a0);
+static JSValue wrap_editorViewGetTotalVirtualLineCount(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editorViewGetTotalVirtualLineCount: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t value = editorViewGetTotalVirtualLineCount((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern uint32_t editorViewGetTextBufferView(uint32_t a0);
+static JSValue wrap_editorViewGetTextBufferView(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editorViewGetTextBufferView: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t value = editorViewGetTextBufferView((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern void editorViewGetLineInfoDirect(uint32_t a0, void * a1);
+static JSValue wrap_editorViewGetLineInfoDirect(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editorViewGetLineInfoDirect: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+editorViewGetLineInfoDirect((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewGetLogicalLineInfoDirect(uint32_t a0, void * a1);
+static JSValue wrap_editorViewGetLogicalLineInfoDirect(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editorViewGetLogicalLineInfoDirect: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+editorViewGetLogicalLineInfoDirect((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint32_t createEditBuffer(uint8_t a0, uint32_t a1);
+static JSValue wrap_createEditBuffer(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "createEditBuffer: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t value = createEditBuffer((uint8_t)a0, (uint32_t)a1); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern void destroyEditBuffer(uint32_t a0);
+static JSValue wrap_destroyEditBuffer(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "destroyEditBuffer: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+destroyEditBuffer((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferSetText(uint32_t a0, void * a1, uint32_t a2);
+static JSValue wrap_editBufferSetText(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "editBufferSetText: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+editBufferSetText((uint32_t)a0, (void *)a1, (uint32_t)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferSetTextFromMem(uint32_t a0, uint8_t a1);
+static JSValue wrap_editBufferSetTextFromMem(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editBufferSetTextFromMem: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+editBufferSetTextFromMem((uint32_t)a0, (uint8_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferReplaceText(uint32_t a0, void * a1, uint32_t a2);
+static JSValue wrap_editBufferReplaceText(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "editBufferReplaceText: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+editBufferReplaceText((uint32_t)a0, (void *)a1, (uint32_t)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferReplaceTextFromMem(uint32_t a0, uint8_t a1);
+static JSValue wrap_editBufferReplaceTextFromMem(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editBufferReplaceTextFromMem: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+editBufferReplaceTextFromMem((uint32_t)a0, (uint8_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint32_t editBufferGetText(uint32_t a0, void * a1, uint32_t a2);
+static JSValue wrap_editBufferGetText(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "editBufferGetText: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t value = editBufferGetText((uint32_t)a0, (void *)a1, (uint32_t)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern void editBufferInsertChar(uint32_t a0, void * a1, uint32_t a2);
+static JSValue wrap_editBufferInsertChar(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "editBufferInsertChar: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+editBufferInsertChar((uint32_t)a0, (void *)a1, (uint32_t)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferInsertText(uint32_t a0, void * a1, uint32_t a2);
+static JSValue wrap_editBufferInsertText(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "editBufferInsertText: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+editBufferInsertText((uint32_t)a0, (void *)a1, (uint32_t)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferDeleteChar(uint32_t a0);
+static JSValue wrap_editBufferDeleteChar(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editBufferDeleteChar: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+editBufferDeleteChar((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferDeleteCharBackward(uint32_t a0);
+static JSValue wrap_editBufferDeleteCharBackward(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editBufferDeleteCharBackward: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+editBufferDeleteCharBackward((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferDeleteRange(uint32_t a0, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4);
+static JSValue wrap_editBufferDeleteRange(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 5) return JS_ThrowTypeError(ctx, "editBufferDeleteRange: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+uint32_t a4; if (JS_ToUint32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+editBufferDeleteRange((uint32_t)a0, (uint32_t)a1, (uint32_t)a2, (uint32_t)a3, (uint32_t)a4); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferNewLine(uint32_t a0);
+static JSValue wrap_editBufferNewLine(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editBufferNewLine: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+editBufferNewLine((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferDeleteLine(uint32_t a0);
+static JSValue wrap_editBufferDeleteLine(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editBufferDeleteLine: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+editBufferDeleteLine((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferMoveCursorLeft(uint32_t a0);
+static JSValue wrap_editBufferMoveCursorLeft(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editBufferMoveCursorLeft: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+editBufferMoveCursorLeft((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferMoveCursorRight(uint32_t a0);
+static JSValue wrap_editBufferMoveCursorRight(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editBufferMoveCursorRight: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+editBufferMoveCursorRight((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferMoveCursorUp(uint32_t a0);
+static JSValue wrap_editBufferMoveCursorUp(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editBufferMoveCursorUp: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+editBufferMoveCursorUp((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferMoveCursorDown(uint32_t a0);
+static JSValue wrap_editBufferMoveCursorDown(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editBufferMoveCursorDown: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+editBufferMoveCursorDown((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferGotoLine(uint32_t a0, uint32_t a1);
+static JSValue wrap_editBufferGotoLine(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editBufferGotoLine: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+editBufferGotoLine((uint32_t)a0, (uint32_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferSetCursor(uint32_t a0, uint32_t a1, uint32_t a2);
+static JSValue wrap_editBufferSetCursor(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "editBufferSetCursor: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+editBufferSetCursor((uint32_t)a0, (uint32_t)a1, (uint32_t)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferSetCursorToLineCol(uint32_t a0, uint32_t a1, uint32_t a2);
+static JSValue wrap_editBufferSetCursorToLineCol(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "editBufferSetCursorToLineCol: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+editBufferSetCursorToLineCol((uint32_t)a0, (uint32_t)a1, (uint32_t)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferSetCursorByOffset(uint32_t a0, uint32_t a1);
+static JSValue wrap_editBufferSetCursorByOffset(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editBufferSetCursorByOffset: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+editBufferSetCursorByOffset((uint32_t)a0, (uint32_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferGetCursorPosition(uint32_t a0, void * a1);
+static JSValue wrap_editBufferGetCursorPosition(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editBufferGetCursorPosition: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+editBufferGetCursorPosition((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint16_t editBufferGetId(uint32_t a0);
+static JSValue wrap_editBufferGetId(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editBufferGetId: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint16_t value = editBufferGetId((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern uint32_t editBufferGetTextBuffer(uint32_t a0);
+static JSValue wrap_editBufferGetTextBuffer(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editBufferGetTextBuffer: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t value = editBufferGetTextBuffer((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern void editBufferSetTabWidth(uint32_t a0, uint8_t a1);
+static JSValue wrap_editBufferSetTabWidth(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editBufferSetTabWidth: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+editBufferSetTabWidth((uint32_t)a0, (uint8_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferDebugLogRope(uint32_t a0);
+static JSValue wrap_editBufferDebugLogRope(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editBufferDebugLogRope: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+editBufferDebugLogRope((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint32_t editBufferUndo(uint32_t a0, void * a1, uint32_t a2);
+static JSValue wrap_editBufferUndo(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "editBufferUndo: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t value = editBufferUndo((uint32_t)a0, (void *)a1, (uint32_t)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern uint32_t editBufferRedo(uint32_t a0, void * a1, uint32_t a2);
+static JSValue wrap_editBufferRedo(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "editBufferRedo: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t value = editBufferRedo((uint32_t)a0, (void *)a1, (uint32_t)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern bool editBufferCanUndo(uint32_t a0);
+static JSValue wrap_editBufferCanUndo(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editBufferCanUndo: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+bool value = editBufferCanUndo((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBool(ctx, value);
+}
+extern bool editBufferCanRedo(uint32_t a0);
+static JSValue wrap_editBufferCanRedo(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editBufferCanRedo: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+bool value = editBufferCanRedo((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBool(ctx, value);
+}
+extern void editBufferClearHistory(uint32_t a0);
+static JSValue wrap_editBufferClearHistory(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editBufferClearHistory: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+editBufferClearHistory((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferClear(uint32_t a0);
+static JSValue wrap_editBufferClear(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editBufferClear: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+editBufferClear((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferGetNextWordBoundary(uint32_t a0, void * a1);
+static JSValue wrap_editBufferGetNextWordBoundary(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editBufferGetNextWordBoundary: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+editBufferGetNextWordBoundary((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferGetPrevWordBoundary(uint32_t a0, void * a1);
+static JSValue wrap_editBufferGetPrevWordBoundary(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editBufferGetPrevWordBoundary: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+editBufferGetPrevWordBoundary((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editBufferGetEOL(uint32_t a0, void * a1);
+static JSValue wrap_editBufferGetEOL(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editBufferGetEOL: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+editBufferGetEOL((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern bool editBufferOffsetToPosition(uint32_t a0, uint32_t a1, void * a2);
+static JSValue wrap_editBufferOffsetToPosition(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "editBufferOffsetToPosition: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+void *a2; if (qt_pointer(ctx, argv[2], &a2) < 0) return JS_EXCEPTION;
+bool value = editBufferOffsetToPosition((uint32_t)a0, (uint32_t)a1, (void *)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBool(ctx, value);
+}
+extern uint32_t editBufferPositionToOffset(uint32_t a0, uint32_t a1, uint32_t a2);
+static JSValue wrap_editBufferPositionToOffset(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "editBufferPositionToOffset: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t value = editBufferPositionToOffset((uint32_t)a0, (uint32_t)a1, (uint32_t)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern uint32_t editBufferGetLineStartOffset(uint32_t a0, uint32_t a1);
+static JSValue wrap_editBufferGetLineStartOffset(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editBufferGetLineStartOffset: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t value = editBufferGetLineStartOffset((uint32_t)a0, (uint32_t)a1); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern uint32_t editBufferGetTextRange(uint32_t a0, uint32_t a1, uint32_t a2, void * a3, uint32_t a4);
+static JSValue wrap_editBufferGetTextRange(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 5) return JS_ThrowTypeError(ctx, "editBufferGetTextRange: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+void *a3; if (qt_pointer(ctx, argv[3], &a3) < 0) return JS_EXCEPTION;
+uint32_t a4; if (JS_ToUint32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+uint32_t value = editBufferGetTextRange((uint32_t)a0, (uint32_t)a1, (uint32_t)a2, (void *)a3, (uint32_t)a4); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern uint32_t editBufferGetTextRangeByCoords(uint32_t a0, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, void * a5, uint32_t a6);
+static JSValue wrap_editBufferGetTextRangeByCoords(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 7) return JS_ThrowTypeError(ctx, "editBufferGetTextRangeByCoords: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+uint32_t a4; if (JS_ToUint32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+void *a5; if (qt_pointer(ctx, argv[5], &a5) < 0) return JS_EXCEPTION;
+uint32_t a6; if (JS_ToUint32(ctx, &a6, argv[6]) < 0) return JS_EXCEPTION;
+uint32_t value = editBufferGetTextRangeByCoords((uint32_t)a0, (uint32_t)a1, (uint32_t)a2, (uint32_t)a3, (uint32_t)a4, (void *)a5, (uint32_t)a6); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern void editorViewSetSelection(uint32_t a0, uint32_t a1, uint32_t a2, void * a3, void * a4);
+static JSValue wrap_editorViewSetSelection(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 5) return JS_ThrowTypeError(ctx, "editorViewSetSelection: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+void *a3; if (qt_pointer(ctx, argv[3], &a3) < 0) return JS_EXCEPTION;
+void *a4; if (qt_pointer(ctx, argv[4], &a4) < 0) return JS_EXCEPTION;
+editorViewSetSelection((uint32_t)a0, (uint32_t)a1, (uint32_t)a2, (void *)a3, (void *)a4); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewResetSelection(uint32_t a0);
+static JSValue wrap_editorViewResetSelection(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editorViewResetSelection: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+editorViewResetSelection((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint64_t editorViewGetSelection(uint32_t a0);
+static JSValue wrap_editorViewGetSelection(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editorViewGetSelection: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint64_t value = editorViewGetSelection((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBigUint64(ctx, value);
+}
+extern bool editorViewSetLocalSelection(uint32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, void * a5, void * a6, uint8_t a7);
+static JSValue wrap_editorViewSetLocalSelection(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 8) return JS_ThrowTypeError(ctx, "editorViewSetLocalSelection: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+int32_t a1; if (JS_ToInt32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+int32_t a2; if (JS_ToInt32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+int32_t a3; if (JS_ToInt32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+int32_t a4; if (JS_ToInt32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+void *a5; if (qt_pointer(ctx, argv[5], &a5) < 0) return JS_EXCEPTION;
+void *a6; if (qt_pointer(ctx, argv[6], &a6) < 0) return JS_EXCEPTION;
+uint32_t a7; if (JS_ToUint32(ctx, &a7, argv[7]) < 0) return JS_EXCEPTION;
+bool value = editorViewSetLocalSelection((uint32_t)a0, (int32_t)a1, (int32_t)a2, (int32_t)a3, (int32_t)a4, (void *)a5, (void *)a6, (uint8_t)a7); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBool(ctx, value);
+}
+extern void editorViewUpdateSelection(uint32_t a0, uint32_t a1, void * a2, void * a3);
+static JSValue wrap_editorViewUpdateSelection(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 4) return JS_ThrowTypeError(ctx, "editorViewUpdateSelection: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+void *a2; if (qt_pointer(ctx, argv[2], &a2) < 0) return JS_EXCEPTION;
+void *a3; if (qt_pointer(ctx, argv[3], &a3) < 0) return JS_EXCEPTION;
+editorViewUpdateSelection((uint32_t)a0, (uint32_t)a1, (void *)a2, (void *)a3); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern bool editorViewUpdateLocalSelection(uint32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, void * a5, void * a6, uint8_t a7);
+static JSValue wrap_editorViewUpdateLocalSelection(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 8) return JS_ThrowTypeError(ctx, "editorViewUpdateLocalSelection: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+int32_t a1; if (JS_ToInt32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+int32_t a2; if (JS_ToInt32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+int32_t a3; if (JS_ToInt32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+int32_t a4; if (JS_ToInt32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+void *a5; if (qt_pointer(ctx, argv[5], &a5) < 0) return JS_EXCEPTION;
+void *a6; if (qt_pointer(ctx, argv[6], &a6) < 0) return JS_EXCEPTION;
+uint32_t a7; if (JS_ToUint32(ctx, &a7, argv[7]) < 0) return JS_EXCEPTION;
+bool value = editorViewUpdateLocalSelection((uint32_t)a0, (int32_t)a1, (int32_t)a2, (int32_t)a3, (int32_t)a4, (void *)a5, (void *)a6, (uint8_t)a7); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBool(ctx, value);
+}
+extern void editorViewResetLocalSelection(uint32_t a0);
+static JSValue wrap_editorViewResetLocalSelection(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editorViewResetLocalSelection: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+editorViewResetLocalSelection((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern bool editorViewConvertSelectionToCell(uint32_t a0);
+static JSValue wrap_editorViewConvertSelectionToCell(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editorViewConvertSelectionToCell: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+bool value = editorViewConvertSelectionToCell((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBool(ctx, value);
+}
+extern void editorViewSetSelectionOccupancy(uint32_t a0, uint8_t a1);
+static JSValue wrap_editorViewSetSelectionOccupancy(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editorViewSetSelectionOccupancy: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+editorViewSetSelectionOccupancy((uint32_t)a0, (uint8_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewSetSelectionInclusive(uint32_t a0, uint32_t a1, uint32_t a2, void * a3, void * a4);
+static JSValue wrap_editorViewSetSelectionInclusive(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 5) return JS_ThrowTypeError(ctx, "editorViewSetSelectionInclusive: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+void *a3; if (qt_pointer(ctx, argv[3], &a3) < 0) return JS_EXCEPTION;
+void *a4; if (qt_pointer(ctx, argv[4], &a4) < 0) return JS_EXCEPTION;
+editorViewSetSelectionInclusive((uint32_t)a0, (uint32_t)a1, (uint32_t)a2, (void *)a3, (void *)a4); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewSetSelectionColors(uint32_t a0, void * a1, void * a2);
+static JSValue wrap_editorViewSetSelectionColors(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "editorViewSetSelectionColors: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+void *a2; if (qt_pointer(ctx, argv[2], &a2) < 0) return JS_EXCEPTION;
+editorViewSetSelectionColors((uint32_t)a0, (void *)a1, (void *)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint32_t editorViewGetSelectedTextBytes(uint32_t a0, void * a1, uint32_t a2);
+static JSValue wrap_editorViewGetSelectedTextBytes(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "editorViewGetSelectedTextBytes: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t value = editorViewGetSelectedTextBytes((uint32_t)a0, (void *)a1, (uint32_t)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern void editorViewGetCursor(uint32_t a0, void * a1, void * a2);
+static JSValue wrap_editorViewGetCursor(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "editorViewGetCursor: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+void *a2; if (qt_pointer(ctx, argv[2], &a2) < 0) return JS_EXCEPTION;
+editorViewGetCursor((uint32_t)a0, (void *)a1, (void *)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint32_t editorViewGetText(uint32_t a0, void * a1, uint32_t a2);
+static JSValue wrap_editorViewGetText(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "editorViewGetText: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t value = editorViewGetText((uint32_t)a0, (void *)a1, (uint32_t)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern void editorViewGetVisualCursor(uint32_t a0, void * a1);
+static JSValue wrap_editorViewGetVisualCursor(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editorViewGetVisualCursor: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+editorViewGetVisualCursor((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewMoveUpVisual(uint32_t a0);
+static JSValue wrap_editorViewMoveUpVisual(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editorViewMoveUpVisual: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+editorViewMoveUpVisual((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewMoveDownVisual(uint32_t a0);
+static JSValue wrap_editorViewMoveDownVisual(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editorViewMoveDownVisual: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+editorViewMoveDownVisual((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewDeleteSelectedText(uint32_t a0);
+static JSValue wrap_editorViewDeleteSelectedText(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editorViewDeleteSelectedText: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+editorViewDeleteSelectedText((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewSetCursorByOffset(uint32_t a0, uint32_t a1);
+static JSValue wrap_editorViewSetCursorByOffset(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editorViewSetCursorByOffset: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+editorViewSetCursorByOffset((uint32_t)a0, (uint32_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewGetNextWordBoundary(uint32_t a0, void * a1);
+static JSValue wrap_editorViewGetNextWordBoundary(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editorViewGetNextWordBoundary: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+editorViewGetNextWordBoundary((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewGetPrevWordBoundary(uint32_t a0, void * a1);
+static JSValue wrap_editorViewGetPrevWordBoundary(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editorViewGetPrevWordBoundary: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+editorViewGetPrevWordBoundary((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewGetEOL(uint32_t a0, void * a1);
+static JSValue wrap_editorViewGetEOL(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editorViewGetEOL: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+editorViewGetEOL((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewGetVisualSOL(uint32_t a0, void * a1);
+static JSValue wrap_editorViewGetVisualSOL(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editorViewGetVisualSOL: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+editorViewGetVisualSOL((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewGetVisualEOL(uint32_t a0, void * a1);
+static JSValue wrap_editorViewGetVisualEOL(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editorViewGetVisualEOL: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+editorViewGetVisualEOL((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewGotoVisualLineEnd(uint32_t a0);
+static JSValue wrap_editorViewGotoVisualLineEnd(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "editorViewGotoVisualLineEnd: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+editorViewGotoVisualLineEnd((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewSetPlaceholderStyledText(uint32_t a0, void * a1, uint32_t a2);
+static JSValue wrap_editorViewSetPlaceholderStyledText(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "editorViewSetPlaceholderStyledText: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+editorViewSetPlaceholderStyledText((uint32_t)a0, (void *)a1, (uint32_t)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewSetTabIndicator(uint32_t a0, uint32_t a1);
+static JSValue wrap_editorViewSetTabIndicator(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editorViewSetTabIndicator: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+editorViewSetTabIndicator((uint32_t)a0, (uint32_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void editorViewSetTabIndicatorColor(uint32_t a0, void * a1);
+static JSValue wrap_editorViewSetTabIndicatorColor(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "editorViewSetTabIndicatorColor: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+editorViewSetTabIndicatorColor((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
 extern uint32_t createSyntaxStyle(void);
 static JSValue wrap_createSyntaxStyle(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
@@ -377,6 +1573,31 @@ static JSValue wrap_destroySyntaxStyle(JSContext *ctx, JSValueConst self, int ar
 (void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "destroySyntaxStyle: wrong argument count");
 uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
 destroySyntaxStyle((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint32_t syntaxStyleRegister(uint32_t a0, void * a1, uint32_t a2, void * a3, void * a4, uint32_t a5);
+static JSValue wrap_syntaxStyleRegister(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 6) return JS_ThrowTypeError(ctx, "syntaxStyleRegister: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+void *a3; if (qt_pointer(ctx, argv[3], &a3) < 0) return JS_EXCEPTION;
+void *a4; if (qt_pointer(ctx, argv[4], &a4) < 0) return JS_EXCEPTION;
+uint32_t a5; if (JS_ToUint32(ctx, &a5, argv[5]) < 0) return JS_EXCEPTION;
+uint32_t value = syntaxStyleRegister((uint32_t)a0, (void *)a1, (uint32_t)a2, (void *)a3, (void *)a4, (uint32_t)a5); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern uint32_t syntaxStyleResolveByName(uint32_t a0, void * a1, uint32_t a2);
+static JSValue wrap_syntaxStyleResolveByName(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "syntaxStyleResolveByName: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t value = syntaxStyleResolveByName((uint32_t)a0, (void *)a1, (uint32_t)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern uint32_t syntaxStyleGetStyleCount(uint32_t a0);
+static JSValue wrap_syntaxStyleGetStyleCount(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "syntaxStyleGetStyleCount: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t value = syntaxStyleGetStyleCount((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
 }
 extern void imageRetainIccCache(void);
 static JSValue wrap_imageRetainIccCache(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
@@ -459,6 +1680,18 @@ void *a0; if (qt_pointer(ctx, argv[0], &a0) < 0) return JS_EXCEPTION;
 uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
 freeUnicode((void *)a0, (uint32_t)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
+extern void bufferDrawChar(uint32_t a0, uint32_t a1, uint32_t a2, uint32_t a3, void * a4, void * a5, uint32_t a6);
+static JSValue wrap_bufferDrawChar(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 7) return JS_ThrowTypeError(ctx, "bufferDrawChar: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+void *a4; if (qt_pointer(ctx, argv[4], &a4) < 0) return JS_EXCEPTION;
+void *a5; if (qt_pointer(ctx, argv[5], &a5) < 0) return JS_EXCEPTION;
+uint32_t a6; if (JS_ToUint32(ctx, &a6, argv[6]) < 0) return JS_EXCEPTION;
+bufferDrawChar((uint32_t)a0, (uint32_t)a1, (uint32_t)a2, (uint32_t)a3, (void *)a4, (void *)a5, (uint32_t)a6); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
 extern void * yogaNodeCreateForOpenTUI(void);
 static JSValue wrap_yogaNodeCreateForOpenTUI(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 0) return JS_ThrowTypeError(ctx, "yogaNodeCreateForOpenTUI: wrong argument count");
@@ -526,6 +1759,14 @@ void *a0; if (qt_pointer(ctx, argv[0], &a0) < 0) return JS_EXCEPTION;
 void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
 yogaNodeGetComputedLayout((void *)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
+extern float yogaNodeLayoutGetEdge(void * a0, uint32_t a1, uint32_t a2);
+static JSValue wrap_yogaNodeLayoutGetEdge(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "yogaNodeLayoutGetEdge: wrong argument count");
+void *a0; if (qt_pointer(ctx, argv[0], &a0) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+float value = yogaNodeLayoutGetEdge((void *)a0, (uint32_t)a1, (uint32_t)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewFloat64(ctx, value);
+}
 extern void yogaNodeStyleSetEnum(void * a0, uint32_t a1, uint32_t a2);
 static JSValue wrap_yogaNodeStyleSetEnum(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "yogaNodeStyleSetEnum: wrong argument count");
@@ -533,6 +1774,13 @@ void *a0; if (qt_pointer(ctx, argv[0], &a0) < 0) return JS_EXCEPTION;
 uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
 uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
 yogaNodeStyleSetEnum((void *)a0, (uint32_t)a1, (uint32_t)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint32_t yogaNodeStyleGetEnum(void * a0, uint32_t a1);
+static JSValue wrap_yogaNodeStyleGetEnum(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "yogaNodeStyleGetEnum: wrong argument count");
+void *a0; if (qt_pointer(ctx, argv[0], &a0) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t value = yogaNodeStyleGetEnum((void *)a0, (uint32_t)a1); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
 }
 extern void yogaNodeStyleSetFloat(void * a0, uint32_t a1, float a2);
 static JSValue wrap_yogaNodeStyleSetFloat(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
@@ -542,6 +1790,13 @@ uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
 double a2; if (JS_ToFloat64(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
 yogaNodeStyleSetFloat((void *)a0, (uint32_t)a1, (float)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
+extern float yogaNodeStyleGetFloat(void * a0, uint32_t a1);
+static JSValue wrap_yogaNodeStyleGetFloat(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "yogaNodeStyleGetFloat: wrong argument count");
+void *a0; if (qt_pointer(ctx, argv[0], &a0) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+float value = yogaNodeStyleGetFloat((void *)a0, (uint32_t)a1); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewFloat64(ctx, value);
+}
 extern void yogaNodeStyleSetBorder(void * a0, uint32_t a1, float a2);
 static JSValue wrap_yogaNodeStyleSetBorder(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "yogaNodeStyleSetBorder: wrong argument count");
@@ -549,6 +1804,13 @@ void *a0; if (qt_pointer(ctx, argv[0], &a0) < 0) return JS_EXCEPTION;
 uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
 double a2; if (JS_ToFloat64(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
 yogaNodeStyleSetBorder((void *)a0, (uint32_t)a1, (float)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern float yogaNodeStyleGetBorder(void * a0, uint32_t a1);
+static JSValue wrap_yogaNodeStyleGetBorder(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "yogaNodeStyleGetBorder: wrong argument count");
+void *a0; if (qt_pointer(ctx, argv[0], &a0) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+float value = yogaNodeStyleGetBorder((void *)a0, (uint32_t)a1); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewFloat64(ctx, value);
 }
 extern void yogaNodeStyleSetValue(void * a0, uint32_t a1, uint32_t a2, uint32_t a3, float a4);
 static JSValue wrap_yogaNodeStyleSetValue(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
@@ -560,17 +1822,45 @@ uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
 double a4; if (JS_ToFloat64(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
 yogaNodeStyleSetValue((void *)a0, (uint32_t)a1, (uint32_t)a2, (uint32_t)a3, (float)a4); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
+extern uint64_t yogaNodeStyleGetValue(void * a0, uint32_t a1, uint32_t a2);
+static JSValue wrap_yogaNodeStyleGetValue(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "yogaNodeStyleGetValue: wrong argument count");
+void *a0; if (qt_pointer(ctx, argv[0], &a0) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint64_t value = yogaNodeStyleGetValue((void *)a0, (uint32_t)a1, (uint32_t)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBigUint64(ctx, value);
+}
+extern void yogaNodeSetMeasureFunc(void * a0, bool a1);
+static JSValue wrap_yogaNodeSetMeasureFunc(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "yogaNodeSetMeasureFunc: wrong argument count");
+void *a0; if (qt_pointer(ctx, argv[0], &a0) < 0) return JS_EXCEPTION;
+int a1 = JS_ToBool(ctx, argv[1]); if (a1 < 0) return JS_EXCEPTION;
+yogaNodeSetMeasureFunc((void *)a0, (bool)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
 extern void yogaNodeUnsetMeasureFunc(void * a0);
 static JSValue wrap_yogaNodeUnsetMeasureFunc(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "yogaNodeUnsetMeasureFunc: wrong argument count");
 void *a0; if (qt_pointer(ctx, argv[0], &a0) < 0) return JS_EXCEPTION;
 yogaNodeUnsetMeasureFunc((void *)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
+extern bool yogaNodeHasMeasureFunc(void * a0);
+static JSValue wrap_yogaNodeHasMeasureFunc(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "yogaNodeHasMeasureFunc: wrong argument count");
+void *a0; if (qt_pointer(ctx, argv[0], &a0) < 0) return JS_EXCEPTION;
+bool value = yogaNodeHasMeasureFunc((void *)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBool(ctx, value);
+}
 extern void yogaNodeUnsetDirtiedFunc(void * a0);
 static JSValue wrap_yogaNodeUnsetDirtiedFunc(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "yogaNodeUnsetDirtiedFunc: wrong argument count");
 void *a0; if (qt_pointer(ctx, argv[0], &a0) < 0) return JS_EXCEPTION;
 yogaNodeUnsetDirtiedFunc((void *)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void yogaStoreMeasureResult(float a0, float a1);
+static JSValue wrap_yogaStoreMeasureResult(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "yogaStoreMeasureResult: wrong argument count");
+double a0; if (JS_ToFloat64(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+double a1; if (JS_ToFloat64(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+yogaStoreMeasureResult((float)a0, (float)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
 extern void yogaSetMeasureCallback(void * a0);
 static JSValue wrap_yogaSetMeasureCallback(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
@@ -601,15 +1891,47 @@ if (JS_SetPropertyStr(ctx, symbols, "setBackgroundColor", JS_NewCFunction(ctx, w
 if (JS_SetPropertyStr(ctx, symbols, "render", JS_NewCFunction(ctx, wrap_render, "render", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "getNextBuffer", JS_NewCFunction(ctx, wrap_getNextBuffer, "getNextBuffer", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "getCurrentBuffer", JS_NewCFunction(ctx, wrap_getCurrentBuffer, "getCurrentBuffer", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "createOptimizedBuffer", JS_NewCFunction(ctx, wrap_createOptimizedBuffer, "createOptimizedBuffer", 6)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "destroyOptimizedBuffer", JS_NewCFunction(ctx, wrap_destroyOptimizedBuffer, "destroyOptimizedBuffer", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "drawFrameBuffer", JS_NewCFunction(ctx, wrap_drawFrameBuffer, "drawFrameBuffer", 8)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "getBufferWidth", JS_NewCFunction(ctx, wrap_getBufferWidth, "getBufferWidth", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "getBufferHeight", JS_NewCFunction(ctx, wrap_getBufferHeight, "getBufferHeight", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "getBufferWidthMethod", JS_NewCFunction(ctx, wrap_getBufferWidthMethod, "getBufferWidthMethod", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "bufferClear", JS_NewCFunction(ctx, wrap_bufferClear, "bufferClear", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferGetCharPtr", JS_NewCFunction(ctx, wrap_bufferGetCharPtr, "bufferGetCharPtr", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferGetFgPtr", JS_NewCFunction(ctx, wrap_bufferGetFgPtr, "bufferGetFgPtr", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferGetBgPtr", JS_NewCFunction(ctx, wrap_bufferGetBgPtr, "bufferGetBgPtr", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferGetAttributesPtr", JS_NewCFunction(ctx, wrap_bufferGetAttributesPtr, "bufferGetAttributesPtr", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferGetRespectAlpha", JS_NewCFunction(ctx, wrap_bufferGetRespectAlpha, "bufferGetRespectAlpha", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferSetRespectAlpha", JS_NewCFunction(ctx, wrap_bufferSetRespectAlpha, "bufferSetRespectAlpha", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferGetId", JS_NewCFunction(ctx, wrap_bufferGetId, "bufferGetId", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "bufferGetRealCharSize", JS_NewCFunction(ctx, wrap_bufferGetRealCharSize, "bufferGetRealCharSize", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "bufferWriteResolvedChars", JS_NewCFunction(ctx, wrap_bufferWriteResolvedChars, "bufferWriteResolvedChars", 4)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferDrawText", JS_NewCFunction(ctx, wrap_bufferDrawText, "bufferDrawText", 8)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferSetCellWithAlphaBlending", JS_NewCFunction(ctx, wrap_bufferSetCellWithAlphaBlending, "bufferSetCellWithAlphaBlending", 7)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferSetCell", JS_NewCFunction(ctx, wrap_bufferSetCell, "bufferSetCell", 7)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferFillRect", JS_NewCFunction(ctx, wrap_bufferFillRect, "bufferFillRect", 6)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferColorMatrix", JS_NewCFunction(ctx, wrap_bufferColorMatrix, "bufferColorMatrix", 6)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferColorMatrixUniform", JS_NewCFunction(ctx, wrap_bufferColorMatrixUniform, "bufferColorMatrixUniform", 4)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferResize", JS_NewCFunction(ctx, wrap_bufferResize, "bufferResize", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "resizeRenderer", JS_NewCFunction(ctx, wrap_resizeRenderer, "resizeRenderer", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "setCursorPosition", JS_NewCFunction(ctx, wrap_setCursorPosition, "setCursorPosition", 4)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "setCursorColor", JS_NewCFunction(ctx, wrap_setCursorColor, "setCursorColor", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "setCursorStyleOptions", JS_NewCFunction(ctx, wrap_setCursorStyleOptions, "setCursorStyleOptions", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferDrawSuperSampleBuffer", JS_NewCFunction(ctx, wrap_bufferDrawSuperSampleBuffer, "bufferDrawSuperSampleBuffer", 7)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "bufferDrawImage", JS_NewCFunction(ctx, wrap_bufferDrawImage, "bufferDrawImage", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferDrawPackedBuffer", JS_NewCFunction(ctx, wrap_bufferDrawPackedBuffer, "bufferDrawPackedBuffer", 7)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferDrawGrayscaleBuffer", JS_NewCFunction(ctx, wrap_bufferDrawGrayscaleBuffer, "bufferDrawGrayscaleBuffer", 8)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferDrawGrayscaleBufferSupersampled", JS_NewCFunction(ctx, wrap_bufferDrawGrayscaleBufferSupersampled, "bufferDrawGrayscaleBufferSupersampled", 8)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferDrawGrid", JS_NewCFunction(ctx, wrap_bufferDrawGrid, "bufferDrawGrid", 9)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "bufferDrawBox", JS_NewCFunction(ctx, wrap_bufferDrawBox, "bufferDrawBox", 14)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferPushScissorRect", JS_NewCFunction(ctx, wrap_bufferPushScissorRect, "bufferPushScissorRect", 5)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferPopScissorRect", JS_NewCFunction(ctx, wrap_bufferPopScissorRect, "bufferPopScissorRect", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferClearScissorRects", JS_NewCFunction(ctx, wrap_bufferClearScissorRects, "bufferClearScissorRects", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferPushOpacity", JS_NewCFunction(ctx, wrap_bufferPushOpacity, "bufferPushOpacity", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferPopOpacity", JS_NewCFunction(ctx, wrap_bufferPopOpacity, "bufferPopOpacity", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferGetCurrentOpacity", JS_NewCFunction(ctx, wrap_bufferGetCurrentOpacity, "bufferGetCurrentOpacity", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferClearOpacity", JS_NewCFunction(ctx, wrap_bufferClearOpacity, "bufferClearOpacity", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "addToHitGrid", JS_NewCFunction(ctx, wrap_addToHitGrid, "addToHitGrid", 6)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "hitGridPushScissorRect", JS_NewCFunction(ctx, wrap_hitGridPushScissorRect, "hitGridPushScissorRect", 5)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "hitGridPopScissorRect", JS_NewCFunction(ctx, wrap_hitGridPopScissorRect, "hitGridPopScissorRect", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
@@ -622,22 +1944,147 @@ if (JS_SetPropertyStr(ctx, symbols, "createTextBuffer", JS_NewCFunction(ctx, wra
 if (JS_SetPropertyStr(ctx, symbols, "destroyTextBuffer", JS_NewCFunction(ctx, wrap_destroyTextBuffer, "destroyTextBuffer", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "textBufferGetLength", JS_NewCFunction(ctx, wrap_textBufferGetLength, "textBufferGetLength", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "textBufferGetByteSize", JS_NewCFunction(ctx, wrap_textBufferGetByteSize, "textBufferGetByteSize", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferReset", JS_NewCFunction(ctx, wrap_textBufferReset, "textBufferReset", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferClear", JS_NewCFunction(ctx, wrap_textBufferClear, "textBufferClear", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "textBufferSetDefaultFg", JS_NewCFunction(ctx, wrap_textBufferSetDefaultFg, "textBufferSetDefaultFg", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "textBufferSetDefaultBg", JS_NewCFunction(ctx, wrap_textBufferSetDefaultBg, "textBufferSetDefaultBg", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "textBufferSetDefaultAttributes", JS_NewCFunction(ctx, wrap_textBufferSetDefaultAttributes, "textBufferSetDefaultAttributes", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferResetDefaults", JS_NewCFunction(ctx, wrap_textBufferResetDefaults, "textBufferResetDefaults", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferGetTabWidth", JS_NewCFunction(ctx, wrap_textBufferGetTabWidth, "textBufferGetTabWidth", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferSetTabWidth", JS_NewCFunction(ctx, wrap_textBufferSetTabWidth, "textBufferSetTabWidth", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferRegisterMemBuffer", JS_NewCFunction(ctx, wrap_textBufferRegisterMemBuffer, "textBufferRegisterMemBuffer", 4)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferReplaceMemBuffer", JS_NewCFunction(ctx, wrap_textBufferReplaceMemBuffer, "textBufferReplaceMemBuffer", 5)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferClearMemRegistry", JS_NewCFunction(ctx, wrap_textBufferClearMemRegistry, "textBufferClearMemRegistry", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferSetTextFromMem", JS_NewCFunction(ctx, wrap_textBufferSetTextFromMem, "textBufferSetTextFromMem", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferAppend", JS_NewCFunction(ctx, wrap_textBufferAppend, "textBufferAppend", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferAppendFromMemId", JS_NewCFunction(ctx, wrap_textBufferAppendFromMemId, "textBufferAppendFromMemId", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "textBufferSetStyledText", JS_NewCFunction(ctx, wrap_textBufferSetStyledText, "textBufferSetStyledText", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferGetLineCount", JS_NewCFunction(ctx, wrap_textBufferGetLineCount, "textBufferGetLineCount", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferGetPlainText", JS_NewCFunction(ctx, wrap_textBufferGetPlainText, "textBufferGetPlainText", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferAddHighlightByCharRange", JS_NewCFunction(ctx, wrap_textBufferAddHighlightByCharRange, "textBufferAddHighlightByCharRange", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferAddHighlight", JS_NewCFunction(ctx, wrap_textBufferAddHighlight, "textBufferAddHighlight", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferRemoveHighlightsByRef", JS_NewCFunction(ctx, wrap_textBufferRemoveHighlightsByRef, "textBufferRemoveHighlightsByRef", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferClearLineHighlights", JS_NewCFunction(ctx, wrap_textBufferClearLineHighlights, "textBufferClearLineHighlights", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferClearAllHighlights", JS_NewCFunction(ctx, wrap_textBufferClearAllHighlights, "textBufferClearAllHighlights", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "textBufferSetSyntaxStyle", JS_NewCFunction(ctx, wrap_textBufferSetSyntaxStyle, "textBufferSetSyntaxStyle", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferGetLineHighlightsPtr", JS_NewCFunction(ctx, wrap_textBufferGetLineHighlightsPtr, "textBufferGetLineHighlightsPtr", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferFreeLineHighlights", JS_NewCFunction(ctx, wrap_textBufferFreeLineHighlights, "textBufferFreeLineHighlights", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferGetHighlightCount", JS_NewCFunction(ctx, wrap_textBufferGetHighlightCount, "textBufferGetHighlightCount", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferGetTextRange", JS_NewCFunction(ctx, wrap_textBufferGetTextRange, "textBufferGetTextRange", 5)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferGetTextRangeByCoords", JS_NewCFunction(ctx, wrap_textBufferGetTextRangeByCoords, "textBufferGetTextRangeByCoords", 7)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "createTextBufferView", JS_NewCFunction(ctx, wrap_createTextBufferView, "createTextBufferView", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "destroyTextBufferView", JS_NewCFunction(ctx, wrap_destroyTextBufferView, "destroyTextBufferView", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewSetSelection", JS_NewCFunction(ctx, wrap_textBufferViewSetSelection, "textBufferViewSetSelection", 5)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewResetSelection", JS_NewCFunction(ctx, wrap_textBufferViewResetSelection, "textBufferViewResetSelection", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewGetSelectionInfo", JS_NewCFunction(ctx, wrap_textBufferViewGetSelectionInfo, "textBufferViewGetSelectionInfo", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewSetLocalSelection", JS_NewCFunction(ctx, wrap_textBufferViewSetLocalSelection, "textBufferViewSetLocalSelection", 8)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewUpdateSelection", JS_NewCFunction(ctx, wrap_textBufferViewUpdateSelection, "textBufferViewUpdateSelection", 4)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewUpdateLocalSelection", JS_NewCFunction(ctx, wrap_textBufferViewUpdateLocalSelection, "textBufferViewUpdateLocalSelection", 8)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewResetLocalSelection", JS_NewCFunction(ctx, wrap_textBufferViewResetLocalSelection, "textBufferViewResetLocalSelection", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewSetSelectionOccupancy", JS_NewCFunction(ctx, wrap_textBufferViewSetSelectionOccupancy, "textBufferViewSetSelectionOccupancy", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewGetSelectionOccupancy", JS_NewCFunction(ctx, wrap_textBufferViewGetSelectionOccupancy, "textBufferViewGetSelectionOccupancy", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewSetWrapWidth", JS_NewCFunction(ctx, wrap_textBufferViewSetWrapWidth, "textBufferViewSetWrapWidth", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "textBufferViewSetWrapMode", JS_NewCFunction(ctx, wrap_textBufferViewSetWrapMode, "textBufferViewSetWrapMode", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "textBufferViewSetFirstLineOffset", JS_NewCFunction(ctx, wrap_textBufferViewSetFirstLineOffset, "textBufferViewSetFirstLineOffset", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewSetViewportSize", JS_NewCFunction(ctx, wrap_textBufferViewSetViewportSize, "textBufferViewSetViewportSize", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "textBufferViewSetViewport", JS_NewCFunction(ctx, wrap_textBufferViewSetViewport, "textBufferViewSetViewport", 5)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "textBufferViewGetVirtualLineCount", JS_NewCFunction(ctx, wrap_textBufferViewGetVirtualLineCount, "textBufferViewGetVirtualLineCount", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewGetLineInfoDirect", JS_NewCFunction(ctx, wrap_textBufferViewGetLineInfoDirect, "textBufferViewGetLineInfoDirect", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "textBufferViewGetLogicalLineInfoDirect", JS_NewCFunction(ctx, wrap_textBufferViewGetLogicalLineInfoDirect, "textBufferViewGetLogicalLineInfoDirect", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewGetSelectedText", JS_NewCFunction(ctx, wrap_textBufferViewGetSelectedText, "textBufferViewGetSelectedText", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewGetPlainText", JS_NewCFunction(ctx, wrap_textBufferViewGetPlainText, "textBufferViewGetPlainText", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewSetTabIndicator", JS_NewCFunction(ctx, wrap_textBufferViewSetTabIndicator, "textBufferViewSetTabIndicator", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewSetTabIndicatorColor", JS_NewCFunction(ctx, wrap_textBufferViewSetTabIndicatorColor, "textBufferViewSetTabIndicatorColor", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "textBufferViewSetTruncate", JS_NewCFunction(ctx, wrap_textBufferViewSetTruncate, "textBufferViewSetTruncate", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewMeasureForDimensions", JS_NewCFunction(ctx, wrap_textBufferViewMeasureForDimensions, "textBufferViewMeasureForDimensions", 4)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "bufferDrawTextBufferView", JS_NewCFunction(ctx, wrap_bufferDrawTextBufferView, "bufferDrawTextBufferView", 4)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferDrawEditorView", JS_NewCFunction(ctx, wrap_bufferDrawEditorView, "bufferDrawEditorView", 4)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "createEditorView", JS_NewCFunction(ctx, wrap_createEditorView, "createEditorView", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "destroyEditorView", JS_NewCFunction(ctx, wrap_destroyEditorView, "destroyEditorView", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewSetViewportSize", JS_NewCFunction(ctx, wrap_editorViewSetViewportSize, "editorViewSetViewportSize", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewSetViewport", JS_NewCFunction(ctx, wrap_editorViewSetViewport, "editorViewSetViewport", 6)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewGetViewport", JS_NewCFunction(ctx, wrap_editorViewGetViewport, "editorViewGetViewport", 5)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewSetScrollMargin", JS_NewCFunction(ctx, wrap_editorViewSetScrollMargin, "editorViewSetScrollMargin", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewSetWrapMode", JS_NewCFunction(ctx, wrap_editorViewSetWrapMode, "editorViewSetWrapMode", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewGetVirtualLineCount", JS_NewCFunction(ctx, wrap_editorViewGetVirtualLineCount, "editorViewGetVirtualLineCount", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewGetTotalVirtualLineCount", JS_NewCFunction(ctx, wrap_editorViewGetTotalVirtualLineCount, "editorViewGetTotalVirtualLineCount", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewGetTextBufferView", JS_NewCFunction(ctx, wrap_editorViewGetTextBufferView, "editorViewGetTextBufferView", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewGetLineInfoDirect", JS_NewCFunction(ctx, wrap_editorViewGetLineInfoDirect, "editorViewGetLineInfoDirect", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewGetLogicalLineInfoDirect", JS_NewCFunction(ctx, wrap_editorViewGetLogicalLineInfoDirect, "editorViewGetLogicalLineInfoDirect", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "createEditBuffer", JS_NewCFunction(ctx, wrap_createEditBuffer, "createEditBuffer", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "destroyEditBuffer", JS_NewCFunction(ctx, wrap_destroyEditBuffer, "destroyEditBuffer", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferSetText", JS_NewCFunction(ctx, wrap_editBufferSetText, "editBufferSetText", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferSetTextFromMem", JS_NewCFunction(ctx, wrap_editBufferSetTextFromMem, "editBufferSetTextFromMem", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferReplaceText", JS_NewCFunction(ctx, wrap_editBufferReplaceText, "editBufferReplaceText", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferReplaceTextFromMem", JS_NewCFunction(ctx, wrap_editBufferReplaceTextFromMem, "editBufferReplaceTextFromMem", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferGetText", JS_NewCFunction(ctx, wrap_editBufferGetText, "editBufferGetText", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferInsertChar", JS_NewCFunction(ctx, wrap_editBufferInsertChar, "editBufferInsertChar", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferInsertText", JS_NewCFunction(ctx, wrap_editBufferInsertText, "editBufferInsertText", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferDeleteChar", JS_NewCFunction(ctx, wrap_editBufferDeleteChar, "editBufferDeleteChar", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferDeleteCharBackward", JS_NewCFunction(ctx, wrap_editBufferDeleteCharBackward, "editBufferDeleteCharBackward", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferDeleteRange", JS_NewCFunction(ctx, wrap_editBufferDeleteRange, "editBufferDeleteRange", 5)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferNewLine", JS_NewCFunction(ctx, wrap_editBufferNewLine, "editBufferNewLine", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferDeleteLine", JS_NewCFunction(ctx, wrap_editBufferDeleteLine, "editBufferDeleteLine", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferMoveCursorLeft", JS_NewCFunction(ctx, wrap_editBufferMoveCursorLeft, "editBufferMoveCursorLeft", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferMoveCursorRight", JS_NewCFunction(ctx, wrap_editBufferMoveCursorRight, "editBufferMoveCursorRight", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferMoveCursorUp", JS_NewCFunction(ctx, wrap_editBufferMoveCursorUp, "editBufferMoveCursorUp", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferMoveCursorDown", JS_NewCFunction(ctx, wrap_editBufferMoveCursorDown, "editBufferMoveCursorDown", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferGotoLine", JS_NewCFunction(ctx, wrap_editBufferGotoLine, "editBufferGotoLine", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferSetCursor", JS_NewCFunction(ctx, wrap_editBufferSetCursor, "editBufferSetCursor", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferSetCursorToLineCol", JS_NewCFunction(ctx, wrap_editBufferSetCursorToLineCol, "editBufferSetCursorToLineCol", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferSetCursorByOffset", JS_NewCFunction(ctx, wrap_editBufferSetCursorByOffset, "editBufferSetCursorByOffset", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferGetCursorPosition", JS_NewCFunction(ctx, wrap_editBufferGetCursorPosition, "editBufferGetCursorPosition", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferGetId", JS_NewCFunction(ctx, wrap_editBufferGetId, "editBufferGetId", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferGetTextBuffer", JS_NewCFunction(ctx, wrap_editBufferGetTextBuffer, "editBufferGetTextBuffer", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferSetTabWidth", JS_NewCFunction(ctx, wrap_editBufferSetTabWidth, "editBufferSetTabWidth", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferDebugLogRope", JS_NewCFunction(ctx, wrap_editBufferDebugLogRope, "editBufferDebugLogRope", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferUndo", JS_NewCFunction(ctx, wrap_editBufferUndo, "editBufferUndo", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferRedo", JS_NewCFunction(ctx, wrap_editBufferRedo, "editBufferRedo", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferCanUndo", JS_NewCFunction(ctx, wrap_editBufferCanUndo, "editBufferCanUndo", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferCanRedo", JS_NewCFunction(ctx, wrap_editBufferCanRedo, "editBufferCanRedo", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferClearHistory", JS_NewCFunction(ctx, wrap_editBufferClearHistory, "editBufferClearHistory", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferClear", JS_NewCFunction(ctx, wrap_editBufferClear, "editBufferClear", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferGetNextWordBoundary", JS_NewCFunction(ctx, wrap_editBufferGetNextWordBoundary, "editBufferGetNextWordBoundary", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferGetPrevWordBoundary", JS_NewCFunction(ctx, wrap_editBufferGetPrevWordBoundary, "editBufferGetPrevWordBoundary", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferGetEOL", JS_NewCFunction(ctx, wrap_editBufferGetEOL, "editBufferGetEOL", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferOffsetToPosition", JS_NewCFunction(ctx, wrap_editBufferOffsetToPosition, "editBufferOffsetToPosition", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferPositionToOffset", JS_NewCFunction(ctx, wrap_editBufferPositionToOffset, "editBufferPositionToOffset", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferGetLineStartOffset", JS_NewCFunction(ctx, wrap_editBufferGetLineStartOffset, "editBufferGetLineStartOffset", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferGetTextRange", JS_NewCFunction(ctx, wrap_editBufferGetTextRange, "editBufferGetTextRange", 5)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editBufferGetTextRangeByCoords", JS_NewCFunction(ctx, wrap_editBufferGetTextRangeByCoords, "editBufferGetTextRangeByCoords", 7)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewSetSelection", JS_NewCFunction(ctx, wrap_editorViewSetSelection, "editorViewSetSelection", 5)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewResetSelection", JS_NewCFunction(ctx, wrap_editorViewResetSelection, "editorViewResetSelection", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewGetSelection", JS_NewCFunction(ctx, wrap_editorViewGetSelection, "editorViewGetSelection", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewSetLocalSelection", JS_NewCFunction(ctx, wrap_editorViewSetLocalSelection, "editorViewSetLocalSelection", 8)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewUpdateSelection", JS_NewCFunction(ctx, wrap_editorViewUpdateSelection, "editorViewUpdateSelection", 4)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewUpdateLocalSelection", JS_NewCFunction(ctx, wrap_editorViewUpdateLocalSelection, "editorViewUpdateLocalSelection", 8)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewResetLocalSelection", JS_NewCFunction(ctx, wrap_editorViewResetLocalSelection, "editorViewResetLocalSelection", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewConvertSelectionToCell", JS_NewCFunction(ctx, wrap_editorViewConvertSelectionToCell, "editorViewConvertSelectionToCell", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewSetSelectionOccupancy", JS_NewCFunction(ctx, wrap_editorViewSetSelectionOccupancy, "editorViewSetSelectionOccupancy", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewSetSelectionInclusive", JS_NewCFunction(ctx, wrap_editorViewSetSelectionInclusive, "editorViewSetSelectionInclusive", 5)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewSetSelectionColors", JS_NewCFunction(ctx, wrap_editorViewSetSelectionColors, "editorViewSetSelectionColors", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewGetSelectedTextBytes", JS_NewCFunction(ctx, wrap_editorViewGetSelectedTextBytes, "editorViewGetSelectedTextBytes", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewGetCursor", JS_NewCFunction(ctx, wrap_editorViewGetCursor, "editorViewGetCursor", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewGetText", JS_NewCFunction(ctx, wrap_editorViewGetText, "editorViewGetText", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewGetVisualCursor", JS_NewCFunction(ctx, wrap_editorViewGetVisualCursor, "editorViewGetVisualCursor", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewMoveUpVisual", JS_NewCFunction(ctx, wrap_editorViewMoveUpVisual, "editorViewMoveUpVisual", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewMoveDownVisual", JS_NewCFunction(ctx, wrap_editorViewMoveDownVisual, "editorViewMoveDownVisual", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewDeleteSelectedText", JS_NewCFunction(ctx, wrap_editorViewDeleteSelectedText, "editorViewDeleteSelectedText", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewSetCursorByOffset", JS_NewCFunction(ctx, wrap_editorViewSetCursorByOffset, "editorViewSetCursorByOffset", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewGetNextWordBoundary", JS_NewCFunction(ctx, wrap_editorViewGetNextWordBoundary, "editorViewGetNextWordBoundary", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewGetPrevWordBoundary", JS_NewCFunction(ctx, wrap_editorViewGetPrevWordBoundary, "editorViewGetPrevWordBoundary", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewGetEOL", JS_NewCFunction(ctx, wrap_editorViewGetEOL, "editorViewGetEOL", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewGetVisualSOL", JS_NewCFunction(ctx, wrap_editorViewGetVisualSOL, "editorViewGetVisualSOL", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewGetVisualEOL", JS_NewCFunction(ctx, wrap_editorViewGetVisualEOL, "editorViewGetVisualEOL", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewGotoVisualLineEnd", JS_NewCFunction(ctx, wrap_editorViewGotoVisualLineEnd, "editorViewGotoVisualLineEnd", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewSetPlaceholderStyledText", JS_NewCFunction(ctx, wrap_editorViewSetPlaceholderStyledText, "editorViewSetPlaceholderStyledText", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewSetTabIndicator", JS_NewCFunction(ctx, wrap_editorViewSetTabIndicator, "editorViewSetTabIndicator", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "editorViewSetTabIndicatorColor", JS_NewCFunction(ctx, wrap_editorViewSetTabIndicatorColor, "editorViewSetTabIndicatorColor", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "createSyntaxStyle", JS_NewCFunction(ctx, wrap_createSyntaxStyle, "createSyntaxStyle", 0)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "destroySyntaxStyle", JS_NewCFunction(ctx, wrap_destroySyntaxStyle, "destroySyntaxStyle", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "syntaxStyleRegister", JS_NewCFunction(ctx, wrap_syntaxStyleRegister, "syntaxStyleRegister", 6)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "syntaxStyleResolveByName", JS_NewCFunction(ctx, wrap_syntaxStyleResolveByName, "syntaxStyleResolveByName", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "syntaxStyleGetStyleCount", JS_NewCFunction(ctx, wrap_syntaxStyleGetStyleCount, "syntaxStyleGetStyleCount", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "imageRetainIccCache", JS_NewCFunction(ctx, wrap_imageRetainIccCache, "imageRetainIccCache", 0)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "imageReleaseIccCache", JS_NewCFunction(ctx, wrap_imageReleaseIccCache, "imageReleaseIccCache", 0)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "imageDecode", JS_NewCFunction(ctx, wrap_imageDecode, "imageDecode", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
@@ -649,6 +2096,7 @@ if (JS_SetPropertyStr(ctx, symbols, "getTerminalCapabilities", JS_NewCFunction(c
 if (JS_SetPropertyStr(ctx, symbols, "processCapabilityResponse", JS_NewCFunction(ctx, wrap_processCapabilityResponse, "processCapabilityResponse", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "encodeUnicode", JS_NewCFunction(ctx, wrap_encodeUnicode, "encodeUnicode", 5)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "freeUnicode", JS_NewCFunction(ctx, wrap_freeUnicode, "freeUnicode", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "bufferDrawChar", JS_NewCFunction(ctx, wrap_bufferDrawChar, "bufferDrawChar", 7)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "yogaNodeCreateForOpenTUI", JS_NewCFunction(ctx, wrap_yogaNodeCreateForOpenTUI, "yogaNodeCreateForOpenTUI", 0)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "yogaNodeFree", JS_NewCFunction(ctx, wrap_yogaNodeFree, "yogaNodeFree", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "yogaNodeInsertChild", JS_NewCFunction(ctx, wrap_yogaNodeInsertChild, "yogaNodeInsertChild", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
@@ -659,12 +2107,20 @@ if (JS_SetPropertyStr(ctx, symbols, "yogaNodeMarkDirty", JS_NewCFunction(ctx, wr
 if (JS_SetPropertyStr(ctx, symbols, "yogaNodeGetHasNewLayout", JS_NewCFunction(ctx, wrap_yogaNodeGetHasNewLayout, "yogaNodeGetHasNewLayout", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "yogaNodeSetHasNewLayout", JS_NewCFunction(ctx, wrap_yogaNodeSetHasNewLayout, "yogaNodeSetHasNewLayout", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "yogaNodeGetComputedLayout", JS_NewCFunction(ctx, wrap_yogaNodeGetComputedLayout, "yogaNodeGetComputedLayout", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "yogaNodeLayoutGetEdge", JS_NewCFunction(ctx, wrap_yogaNodeLayoutGetEdge, "yogaNodeLayoutGetEdge", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "yogaNodeStyleSetEnum", JS_NewCFunction(ctx, wrap_yogaNodeStyleSetEnum, "yogaNodeStyleSetEnum", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "yogaNodeStyleGetEnum", JS_NewCFunction(ctx, wrap_yogaNodeStyleGetEnum, "yogaNodeStyleGetEnum", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "yogaNodeStyleSetFloat", JS_NewCFunction(ctx, wrap_yogaNodeStyleSetFloat, "yogaNodeStyleSetFloat", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "yogaNodeStyleGetFloat", JS_NewCFunction(ctx, wrap_yogaNodeStyleGetFloat, "yogaNodeStyleGetFloat", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "yogaNodeStyleSetBorder", JS_NewCFunction(ctx, wrap_yogaNodeStyleSetBorder, "yogaNodeStyleSetBorder", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "yogaNodeStyleGetBorder", JS_NewCFunction(ctx, wrap_yogaNodeStyleGetBorder, "yogaNodeStyleGetBorder", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "yogaNodeStyleSetValue", JS_NewCFunction(ctx, wrap_yogaNodeStyleSetValue, "yogaNodeStyleSetValue", 5)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "yogaNodeStyleGetValue", JS_NewCFunction(ctx, wrap_yogaNodeStyleGetValue, "yogaNodeStyleGetValue", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "yogaNodeSetMeasureFunc", JS_NewCFunction(ctx, wrap_yogaNodeSetMeasureFunc, "yogaNodeSetMeasureFunc", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "yogaNodeUnsetMeasureFunc", JS_NewCFunction(ctx, wrap_yogaNodeUnsetMeasureFunc, "yogaNodeUnsetMeasureFunc", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "yogaNodeHasMeasureFunc", JS_NewCFunction(ctx, wrap_yogaNodeHasMeasureFunc, "yogaNodeHasMeasureFunc", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "yogaNodeUnsetDirtiedFunc", JS_NewCFunction(ctx, wrap_yogaNodeUnsetDirtiedFunc, "yogaNodeUnsetDirtiedFunc", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "yogaStoreMeasureResult", JS_NewCFunction(ctx, wrap_yogaStoreMeasureResult, "yogaStoreMeasureResult", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "yogaSetMeasureCallback", JS_NewCFunction(ctx, wrap_yogaSetMeasureCallback, "yogaSetMeasureCallback", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "yogaSetDirtiedCallback", JS_NewCFunction(ctx, wrap_yogaSetDirtiedCallback, "yogaSetDirtiedCallback", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 return JS_SetPropertyStr(ctx, global, "__native", symbols);

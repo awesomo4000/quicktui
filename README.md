@@ -105,9 +105,37 @@ shortcuts can intercept modified clicks.
 `zig build test` includes the mouse example's real parser/rendering test.
 `zig build test-mouse` checks mouse mode setup and restoration in disposable PTYs.
 
+## Widget gallery
+
+```sh
+zig build run -- --gallery
+```
+
+Click a page in the sidebar or press F1/F2 to move between pages. Click an input
+or press Tab/Shift+Tab to move focus. Escape or Ctrl+C exits; ordinary letters,
+including Q, can be typed in fields.
+
+| Page | Widgets and interactions |
+| --- | --- |
+| Text & layout | Inline styles, links, Unicode, borders, flex layout |
+| Input & textarea | Typing, paste, submit, multiline editing, keyboard selection |
+| Select & tabs | Focus with Tab or a click, arrows to move, Enter to choose |
+| Scroll & sliders | Trackpad/wheel scrolling, scrollbar dragging, altitude slider |
+| ASCII fonts | Tiny, block, and shade fonts using framebuffers |
+| Code & lines | Code text with a line-number gutter |
+| Diff | Click to switch between unified and split views |
+| Markdown & tables | Headings, emphasis, lists, quotes, and a bordered table |
+
+Each page scrolls when its contents exceed the available terminal height.
+The dragon and mouse examples remain available without flags and with `--mouse`.
+
+`zig build test` visits every gallery page and checks editing, paste, selection,
+list/tab navigation, scrolling, sliders, diff switching, Markdown, and resizing.
+`zig build test-gallery` checks terminal setup and cleanup in disposable PTYs.
+
 ## Editing the example
 
-Edit `js/counter.tsx` or `js/mouse.tsx`, then regenerate the checked-in bundles with Bun:
+Edit `js/counter.tsx`, `js/mouse.tsx`, or `js/gallery-app.tsx`, then regenerate the checked-in bundles with Bun:
 
 ```sh
 zig build bundle
@@ -134,17 +162,21 @@ See [the binding contract](js/platform/README.md) and
 
 ## Current scope
 
-This implements the first interactive counter from [the spec](specs/00-quickjs-opentui-spec.md).
-The supported catalogue contains boxes, text, inline text modifiers, and images
-decoded from embedded image bytes or created from native RGBA pixel buffers. Unsupported
-components and native operations throw errors. It is not yet a general OpenTUI
-runtime: focusable widgets, input fields, selection lists, general scrolling widgets and application-native service APIs remain future work.
-Timer-driven animation and basic mouse routing are demonstrated in the examples.
+The three examples demonstrate the complete built-in React widget catalogue:
+boxes, styled text and links, images, input, textarea, select, tab-select,
+scrollbox, ASCII fonts, code, line numbers, diff, and Markdown. The gallery also
+registers the core slider and table widgets; scrollboxes demonstrate scrollbars.
 
-The host provides the scheduling and UTF-8 behavior used by this example, rather
-than general Node/Bun compatibility. Text uses OpenTUI's native Unicode facilities.
-Native rendering stays on the owning thread; enabling the renderer worker is rejected.
-Diagnostics are buffered and printed after terminal restoration.
+The gallery adds single-widget text selection, focus traversal, bracketed paste,
+cursor display, and native editing operations. Code blocks render as plain text;
+the worker/WASM Tree-sitter syntax service is not enabled. Markdown formatting and
+diff colors work independently of syntax highlighting. Embedded-terminal hosting
+and application-specific filesystem/network services are not part of these demos.
+
+The host implements the scheduling and UTF-8 facilities used by these examples,
+not general Node/Bun compatibility. `process.nextTick` uses the QuickJS promise
+queue. Native rendering and callbacks stay on the owning thread. This runtime
+executes trusted bundled code and is not a sandbox.
 
 The native library still includes the full upstream dependency set. Restricting
 the JavaScript registry has not yet removed media and embedded-terminal code from

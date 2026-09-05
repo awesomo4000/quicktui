@@ -2,13 +2,17 @@
 
 `symbols.json` is the counter profile's allowlist. `bindings.json` records the
 FFI declaration, checked native argument and return types, and source location
-for each of its 81 functions. `scripts/generate-bindings.ts` refuses unknown
+for each of its 247 functions. `scripts/generate-bindings.ts` refuses unknown
 native types and signature mismatches, then writes fixed C calls. Pointer-taking
 arguments use the platform C pointer ABI; native object handles remain `u32`.
 
 The allowlist comes from tracing mount, rendering, updates, resize, and teardown,
-plus terminal setup/replies, native Unicode encoding, native images, and mouse hit testing. It excludes file access,
-retained external text-memory registration, native output feeds, and worker APIs.
+plus terminal setup/replies, native Unicode encoding, native images, and mouse hit testing. It excludes file access, native output feeds, and worker APIs.
+
+The gallery enables the upstream text/edit-buffer operation families, framebuffers,
+selection, cursor controls, and Yoga measurement callbacks. Text/edit buffers retain
+their encoded JavaScript arrays while native memory registrations borrow them; the
+upstream owner releases these registrations before discarding the arrays.
 
 ## Storage ownership
 
@@ -70,3 +74,20 @@ Under tmux, the native renderer creates virtual Kitty placements and emits
 Unicode placeholders as ordinary text. Each cell carries the image ID, placement
 ID, row, and column, so tmux can retain it across redraws and clipping. Placements
 larger than the protocol diacritic table use block fallback.
+
+## Gallery profile
+
+`gallery-core.ts` and `gallery-catalogue.ts` expose the full built-in React widget
+catalogue plus slider and table. The first two examples retain their smaller
+catalogue. The gallery uses upstream keyboard events, widget focus subscriptions,
+and selection conversion; selection is confined to its initiating widget.
+
+`plain-code.ts` uses Marked tokens to supply Markdown style/conceal captures and
+returns no captures for programming-language code. It does not claim Tree-sitter
+support or launch workers. The bundler adapts only the POSIX
+basename lookup in the filetype resolver. Diff and Marked licenses are embedded
+alongside the other bundled package licenses.
+
+The host supports synchronous or promise-returning example self-tests, with a
+bounded job/frame loop. Gallery checks traverse all pages and exercise real parser
+bytes against React state and native cell buffers.

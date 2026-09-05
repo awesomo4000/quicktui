@@ -12,9 +12,12 @@ pub fn main(init: std.process.Init) !void {
     if (args.len == 2 and std.mem.eql(u8, args[1], "--mouse-self-test")) {
         return runtime.runCounter(@embedFile("mouse.js"), true);
     }
+    if (args.len == 2 and (std.mem.eql(u8, args[1], "--gallery") or std.mem.eql(u8, args[1], "--gallery-self-test"))) {
+        return runtime.runCounter(@embedFile("gallery.js"), std.mem.eql(u8, args[1], "--gallery-self-test"));
+    }
     const headless = args.len == 2 and std.mem.eql(u8, args[1], "--self-test");
     if (args.len > 1 and !headless) {
-        std.debug.print("Usage: quicktui [--mouse | --self-test | --smoke]\n", .{});
+        std.debug.print("Usage: quicktui [--gallery | --mouse | --self-test | --smoke]\n", .{});
         return error.InvalidArguments;
     }
     try runtime.runCounter(@embedFile("counter.js"), headless);

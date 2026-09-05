@@ -14,3 +14,12 @@ that pixel graphics are visible. Keep other panes out of the saved crop.
 
 `herdr-wP-p3.png` shows the blank PNG sprite. `herdr-wP-p3-rgba.png` shows
 frame 1 using raw RGBA, and `herdr-wP-p3-animation.png` shows frame 3 during playback.
+
+## Widget gallery
+
+- `herdr-gallery.png`: live Text & layout page.
+- `herdr-gallery-markdown.png`: live Markdown emphasis, heading, quote, and table after the Marked adapter fix.
+
+The pane split changed during gallery testing: `wP:p3` moved to cell x=101 with
+width=104, y=1, height=36. The updated Retina crop was
+`2684x2036+2640+152`. Re-query the layout before reusing it.
