@@ -37,7 +37,7 @@ archive already contains upstream integration patches and reduced build scripts;
 QuickTUI uses those as shipped in the pinned archive.
 
 The interactive counter also applies build-time JavaScript adaptations in
-`scripts/counter-bundle.ts`. These replace runtime discovery and broad catalogues
+`scripts/bundle.ts`. These replace runtime discovery and broad catalogues
 without editing the vendored files. See `js/platform/README.md` for the binding
 and storage contracts. Its generated bundle includes the bundled JavaScript
 packages' license texts and OpenTUI's license.
@@ -53,5 +53,5 @@ fe3429d4359d9689a6f1225cb50b14769c8f84fe98ede470b72418027adb7368  opentui-758197
 To update OpenTUI, fetch a reviewed source revision, reapply or adapt the recorded
 patch, and extract its native dependency archive. To update JavaScript packages,
 change the exact versions in `js/package.json`, regenerate the npm lockfile with
-scripts disabled, and include the resulting package files. Regenerate `src/app.js`
+scripts disabled, and include the resulting package files. Regenerate `src/examples.js`
 with `zig build bundle`, then run `zig build test` and rebuild both target artifacts.

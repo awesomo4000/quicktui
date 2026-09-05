@@ -21,8 +21,13 @@ for action in [b'\x1b' if example=='--gallery' else b'q', signal.SIGTERM]:
                         if e.errno!=errno.EIO: raise
                 if predicate(): return
             raise AssertionError(repr(output[-1500:]))
-        receive(lambda:(b'Widget gallery' if example=='--gallery' else b'Wheel value:') in output)
+        receive(lambda:({'--gallery':b'Widget gallery','--messages':b'Native messages'}.get(example,b'Wheel value:')) in output)
         assert b'\x1b[?1003h' in output and b'\x1b[?1006h' in output
+        if example=='--messages':
+            # Pause the UI timer, then require a worker reply to wake the host.
+            os.write(master,b'ps')
+            receive(lambda:b'done' in output)
+            os.write(master,b'b')  # Quit with native work pending.
         if isinstance(action,bytes):os.write(master,action)
         else:process.send_signal(action)
         receive(lambda:process.poll() is not None)

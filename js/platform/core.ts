@@ -1,11 +1,22 @@
 export { Renderable, RootRenderable, isRenderable } from "../../vendor/opentui/packages/core/src/Renderable";
+export { TextAttributes } from "../../vendor/opentui/packages/core/src/types";
 export { BoxRenderable } from "../../vendor/opentui/packages/core/src/renderables/Box";
 export { TextRenderable } from "../../vendor/opentui/packages/core/src/renderables/Text";
 export { TextNodeRenderable } from "../../vendor/opentui/packages/core/src/renderables/TextNode";
-export { TextAttributes } from "../../vendor/opentui/packages/core/src/types";
 export { ImageRenderable } from "../../vendor/opentui/packages/core/src/renderables/Image";
-// These types only occur in guarded branches of the upstream host config and
-// property setter. They are absent from the component catalogue, and fail if used.
-class UnsupportedRenderable { constructor(){throw new Error("Unsupported component in counter profile")} }
-export { UnsupportedRenderable as InputRenderable, UnsupportedRenderable as SelectRenderable, UnsupportedRenderable as TabSelectRenderable, UnsupportedRenderable as TextareaRenderable };
-export const InputRenderableEvents = {}, SelectRenderableEvents = {}, TabSelectRenderableEvents = {};
+export { InputRenderable } from "../../vendor/opentui/packages/core/src/renderables/Input";
+export { TextareaRenderable } from "../../vendor/opentui/packages/core/src/renderables/Textarea";
+export { SelectRenderable } from "../../vendor/opentui/packages/core/src/renderables/Select";
+export { TabSelectRenderable } from "../../vendor/opentui/packages/core/src/renderables/TabSelect";
+export { ScrollBoxRenderable } from "../../vendor/opentui/packages/core/src/renderables/ScrollBox";
+export { ASCIIFontRenderable } from "../../vendor/opentui/packages/core/src/renderables/ASCIIFont";
+export { CodeRenderable } from "../../vendor/opentui/packages/core/src/renderables/Code";
+export { DiffRenderable } from "../../vendor/opentui/packages/core/src/renderables/Diff";
+export { MarkdownRenderable } from "../../vendor/opentui/packages/core/src/renderables/Markdown";
+export { LineNumberRenderable } from "../../vendor/opentui/packages/core/src/renderables/LineNumberRenderable";
+export { SliderRenderable } from "../../vendor/opentui/packages/core/src/renderables/Slider";
+export { ScrollBarRenderable } from "../../vendor/opentui/packages/core/src/renderables/ScrollBar";
+export { TextTableRenderable } from "../../vendor/opentui/packages/core/src/renderables/TextTable";
+export { InputRenderableEvents } from "../../vendor/opentui/packages/core/src/renderables/Input";
+export { SelectRenderableEvents } from "../../vendor/opentui/packages/core/src/renderables/Select";
+export { TabSelectRenderableEvents } from "../../vendor/opentui/packages/core/src/renderables/TabSelect";

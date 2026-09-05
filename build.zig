@@ -64,9 +64,24 @@ pub fn build(b: *std.Build) void {
     self_test.addArg("--self-test");
     test_step.dependOn(&self_test.step);
 
+    const smoke_test = b.addRunArtifact(exe);
+    smoke_test.addArg("--smoke");
+    test_step.dependOn(&smoke_test.step);
     const gallery_test = b.addRunArtifact(exe);
     gallery_test.addArg("--gallery-self-test");
     test_step.dependOn(&gallery_test.step);
+    const messages_test = b.addRunArtifact(exe);
+    messages_test.addArg("--messages-self-test");
+    test_step.dependOn(&messages_test.step);
+    const worker_tests = b.addTest(.{ .root_module = b.createModule(.{
+        .root_source_file = b.path("src/examples/message_worker.zig"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+        .imports = &.{.{ .name = "quicktui", .module = runtime }},
+    }) });
+    const run_worker_tests = b.addRunArtifact(worker_tests);
+    test_step.dependOn(&run_worker_tests.step);
     const mouse_test = b.addRunArtifact(exe);
     mouse_test.addArg("--mouse-self-test");
     test_step.dependOn(&mouse_test.step);
@@ -94,6 +109,11 @@ pub fn build(b: *std.Build) void {
     gallery_terminal_test.addArtifactArg(exe);
     gallery_terminal_test.addArg("--gallery");
     b.step("test-gallery", "Check gallery mouse reporting and terminal cleanup").dependOn(&gallery_terminal_test.step);
+    const messages_terminal_test = b.addSystemCommand(&.{ "python3", "scripts/test-mouse.py" });
+    messages_terminal_test.setCwd(b.path("."));
+    messages_terminal_test.addArtifactArg(exe);
+    messages_terminal_test.addArg("--messages");
+    b.step("test-messages", "Check worker wakeups and terminal cleanup with queued work").dependOn(&messages_terminal_test.step);
     const tmux_test = b.addSystemCommand(&.{ "python3", "scripts/test-tmux.py" });
     tmux_test.setCwd(b.path("."));
     tmux_test.addArtifactArg(exe);
@@ -104,8 +124,5 @@ pub fn build(b: *std.Build) void {
     b.step("bundle", "Regenerate the checked-in JavaScript bundle using Bun").dependOn(&bundle.step);
     const bindings = b.addSystemCommand(&.{ "bun", "scripts/generate-bindings.ts" });
     bindings.setCwd(b.path("."));
-    const counter_bundle = b.addSystemCommand(&.{ "bun", "scripts/counter-bundle.ts" });
-    counter_bundle.setCwd(b.path("."));
-    counter_bundle.step.dependOn(&bindings.step);
-    bundle.step.dependOn(&counter_bundle.step);
+    bundle.step.dependOn(&bindings.step);
 }

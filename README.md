@@ -135,7 +135,7 @@ list/tab navigation, scrolling, sliders, diff switching, Markdown, and resizing.
 
 ## Editing the example
 
-Edit `js/counter.tsx`, `js/mouse.tsx`, or `js/gallery-app.tsx`, then regenerate the checked-in bundles with Bun:
+Edit `js/counter.tsx`, `js/mouse.tsx`, `js/gallery-app.tsx`, or `js/messages.tsx`, then regenerate the checked-in bundles with Bun:
 
 ```sh
 zig build bundle
@@ -147,14 +147,90 @@ Bundle regeneration was tested with Bun 1.3.14. It resolves packages from
 `vendor/js/node_modules`; no install step is needed. `bundle` also regenerates
 the fixed C wrappers and checks their signatures against the pinned native source.
 
+
+## Native messages example
+
+Run example 04 with `zig build run -- --messages`.
+Press **S** or click **Job** to enqueue work. **B** sends a burst of 12,
+and the command queue holds 256 waiting commands plus the active work.
+Several bursts can wait while a job runs. **Space** increments a local UI counter.
+**F** starts a spread of ten concurrent requests with a shared 500 ms wait.
+The spread is one atomic queue command containing ten logical requests, so all
+ten are admitted or rejected together. The worker models overlapping I/O waits
+on one thread; CPU work would require a worker pool for parallel execution.
+Ordinary jobs and spread batches are taken from the command queue in order.
+**R** runs a random batch of ten jobs, mixing concurrent waits with two or three
+serial pairs. Each runs for 1–2.2 seconds; the batch targets completion below
+five seconds after it starts. Batches queued behind earlier work wait their turn.
+**V** cycles solid, segmented, and thin progress bars. **C** clears completed
+requests and their replies, keeping queued and running work.
+Both panels retain the full session history. Scroll each with the trackpad or
+its scrollbar. At the bottom, it follows new entries; scroll up to browse older
+entries without being pulled back down. Panel titles show the total counts.
+**P** pauses the UI heartbeat, and **Q** exits. Native replies still arrive with
+the heartbeat paused because their pipe wakes the host poll loop.
+
+The React app is in `js/messages.tsx`; its Zig worker is in
+`src/examples/message_worker.zig`. The worker uses `std.Thread.spawn`, two
+mutex-protected bounded queues, a condition variable, and a nonblocking wake
+pipe. It sends progress every 100 ms, then a completion event. This is simulated
+work, with no sockets or nREPL dependencies.
+
+The library hook is `MessageEndpoint` in `src/root.zig`:
+
+```zig
+var worker: Worker = .{};
+try worker.start();
+defer worker.stop();
+const endpoint = worker.endpoint();
+try quicktui.runWithMessages(bundle, "messages", false, &endpoint);
+```
+
+JS calls `__host.postMessage(text)`, which returns false when the command queue
+is full. The host delivers replies to `globalThis.__message(text)` on the UI
+thread, where the demo updates React state. Strings are copied across the
+boundary, limited to 4096 UTF-8 bytes. The demo sends decimal request IDs and
+receives JSON progress events; the library treats the payload as opaque text.
+
+The endpoint callbacks must return promptly. `send` copies a command before
+returning; `receive` copies one event into the host buffer or returns -1 when
+empty. The endpoint owns its wake descriptor and keeps it readable while events
+remain queued. The host drains at most 32 messages per turn before servicing
+JS timers, promise jobs, and rendering. Native threads never enter QuickJS.
+
+The application owns worker startup and shutdown. On exit, this demo unmounts
+React, signals the worker to stop, discards unfinished demo jobs, joins the
+thread, and closes its pipe. A production backend can choose different shutdown
+and cancellation semantics.
+
+`zig build test` checks queue copying, capacity, FIFO order, streamed completion,
+React input, timers, and cleanup. `zig build test-messages` uses disposable PTYs
+to check native wakeups with the UI heartbeat paused and terminal restoration
+after Q or SIGTERM with work queued.
+
+## Shared JavaScript bundle
+
+`js/examples.ts` selects the demo and `scripts/bundle.ts` builds one dependency
+graph into `src/examples.js`. React, the reconciler, OpenTUI, and utility packages
+are included once. The native executable embeds that bundle once and passes the
+selected example name to the host. Lazy module initializers start only the chosen
+demo; the smoke check also reuses the same React modules.
+
+The matching macOS arm64 ReleaseSmall builds measured 10,273,000 bytes before
+sharing and 7,909,064 bytes after sharing. JS remains unminified, and dragon assets
+are unchanged.
+
+There are no runtime JS files to install. Regenerating the bundle checks that
+React, its reconciler, and the native-library adapter each occur once.
+
 ## Implementation
 
 - `src/main.zig` selects the interactive example or headless checks.
 - `src/app_host.c` owns the QuickJS runtime and POSIX terminal loop. It services input, resize signals, timers, and bounded batches of promise jobs, then sleeps in `poll` when idle. A self-pipe prevents lost signal wakeups.
 - `js/counter.tsx` supplies the React application and a minimal OpenTUI render context. OpenTUI's root render traversal determines layout and drawing after a dirty notification.
 - `js/platform/` provides the restricted component catalogue, scheduling and UTF-8 adapters, and native registry interface.
-- `src/native_bridge.c` handles pointers and fixed callback registrations. `src/native_generated.c` contains the 71 selected native wrappers.
-- `scripts/counter-bundle.ts` adapts upstream runtime imports at bundle time. The upstream React host configuration and box/text implementations remain in use.
+- `src/native_bridge.c` handles pointers and fixed callback registrations. `src/native_generated.c` contains the selected native wrappers.
+- `scripts/bundle.ts` adapts upstream runtime imports at bundle time. The upstream React host configuration and box/text implementations remain in use.
 - `vendor/` contains pinned sources, npm packages, licenses, and provenance.
 
 See [the binding contract](js/platform/README.md) and

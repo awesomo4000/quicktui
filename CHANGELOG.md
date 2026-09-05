@@ -2,6 +2,28 @@
 
 ## Unreleased - 09/05/2026
 
+- Increase the message demo command queue from 8 to 256 entries so repeated bursts can wait behind active work.
+
+- Add C to clear completed requests and their replies while preserving active work.
+
+- Keep complete request and reply histories in independently scrollable message panels, following new entries when at the bottom.
+
+- Add random message batches with mixed concurrent waits and serial pairs, varied durations, and completion timing checks.
+
+- Add V to cycle solid, segmented, and thin progress bars in the messages demo.
+
+- Expand message progress bars to fill each row and right-align their percentages.
+
+- Add a ten-request concurrent spread to the messages demo and label heartbeat pause explicitly.
+
+- Add a native messages demo with a Zig worker thread, bounded queues, streamed progress, and a responsive React counter.
+- Add an optional application-owned message endpoint to the host poll loop, with copied strings and UI-thread delivery.
+
+- Share one embedded JavaScript dependency graph across the dragon, mouse, gallery, and smoke examples instead of shipping duplicate framework bundles.
+- Initialize only the selected example and verify shared library modules occur once during bundling.
+
+- Tighten gallery sidebar spacing, pad labels on the left, add subtle hover shading, and show muted overflow arrows instead of a visible scrollbar track.
+
 - Add an eight-page widget gallery covering the remaining React widgets plus sliders and tables.
 - Support focus traversal, paste, text editing, selection, cursor display, framebuffer widgets, and scrolling.
 - Keep code rendering plain; use bundled Marked tokens for Markdown style/conceal captures and preserve native diff colors without a worker runtime.

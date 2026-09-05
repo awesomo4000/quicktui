@@ -1,10 +1,31 @@
 const std = @import("std");
 
 extern "c" fn quicktui_eval(source: [*:0]const u8, len: usize, diagnostics: c_int) c_int;
-extern "c" fn quicktui_app(source: [*:0]const u8, len: usize, headless: c_int) c_int;
+/// Optional application-owned transport. Callbacks run on the UI thread and must
+/// not block. send copies bytes before returning; receive copies into the host
+/// buffer. Return -1 for empty receive, 0 for rejected send, 1 for accepted send.
+/// wake_fd must stay readable while replies remain queued. receive consumes its
+/// wake notification along with the message. The host never reads or closes it.
+/// Messages are UTF-8 strings, at most 4096 bytes. The endpoint outlives runWithMessages.
+pub const MessageEndpoint = extern struct {
+    context: ?*anyopaque,
+    wake_fd: c_int,
+    send: *const fn (?*anyopaque, [*]const u8, usize) callconv(.c) c_int,
+    receive: *const fn (?*anyopaque, [*]u8, usize) callconv(.c) isize,
+};
+extern "c" fn quicktui_app_messages(source: [*:0]const u8, len: usize, headless: c_int, example: [*:0]const u8, endpoint: *const MessageEndpoint) c_int;
+pub fn runWithMessages(source: [:0]const u8, example: [:0]const u8, headless: bool, endpoint: *const MessageEndpoint) error{CounterFailed}!void {
+    if (quicktui_app_messages(source.ptr, source.len, @intFromBool(headless), example.ptr, endpoint) != 0) return error.CounterFailed;
+}
+
+extern "c" fn quicktui_app(source: [*:0]const u8, len: usize, headless: c_int, example: [*:0]const u8) c_int;
 
 pub fn runCounter(source: [:0]const u8, headless: bool) error{CounterFailed}!void {
-    if (quicktui_app(source.ptr, source.len, @intFromBool(headless)) != 0) return error.CounterFailed;
+    return runExample(source, "counter", headless);
+}
+
+pub fn runExample(source: [:0]const u8, example: [:0]const u8, headless: bool) error{CounterFailed}!void {
+    if (quicktui_app(source.ptr, source.len, @intFromBool(headless), example.ptr) != 0) return error.CounterFailed;
 }
 extern "c" fn createOptimizedBuffer(width: u32, height: u32, respect_alpha: u8, width_method: u8, id: ?[*]const u8, id_len: u32) u32;
 extern "c" fn destroyOptimizedBuffer(handle: u32) void;

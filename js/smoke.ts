@@ -11,5 +11,5 @@ if (!React.isValidElement(element) || typeof Reconciler !== "function") {
 if (nativeProbe() !== 32) throw new Error("OpenTUI native buffer probe failed");
 Promise.resolve().then(() => {
   print(`QuickTUI: React ${React.version}, QuickJS, and static OpenTUI are ready.`);
-  print("Build foundation verified. The OpenTUI JavaScript host adapter is not implemented yet.");
+  print("Shared React libraries and native buffer bindings verified.");
 });

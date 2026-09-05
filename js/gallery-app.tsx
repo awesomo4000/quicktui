@@ -73,11 +73,14 @@ function MarkdownDemo(){return <box gap={1}>
 const demos=[TextDemo,InputDemo,SelectDemo,ScrollDemo,FontDemo,CodeDemo,DiffDemo,MarkdownDemo];
 export function Gallery({page,changePage}:{page:number,changePage:(page:number)=>void}){
  const Demo=demos[page];
+ const [hovered,setHovered]=useState<number|null>(null);
  return <box width="100%" height="100%" backgroundColor="#101820" padding={1}>
   <box flexDirection="row" width="100%" height={2}><text fg={accent}><b>QuickTUI / Widget gallery</b></text></box>
   <box flexDirection="row" flexGrow={1} gap={1}>
-   <box width={24} border borderStyle="rounded" borderColor="#36535f" paddingX={1}>
-    {pages.map((name,i)=><box id={`gallery-nav-${i}`} key={name} height={2} backgroundColor={page===i?"#294650":"#101820"} onMouseDown={()=>changePage(i)}><text fg={page===i?accent:muted}>{i+1}. {name}</text></box>)}
+   <box width={26} border borderStyle="rounded" borderColor="#36535f" paddingX={1}>
+    <scrollbox flexGrow={1} width="100%" verticalScrollbarOptions={{width:1,showArrows:true,trackOptions:{backgroundColor:"#101820",foregroundColor:"#101820"},arrowOptions:{foregroundColor:"#526b78",backgroundColor:"#101820",arrowChars:{up:"↑",down:"↓"}}}}>
+    {pages.map((name,i)=><box id={`gallery-nav-${i}`} key={name} height={1} marginBottom={i===pages.length-1?0:1} flexShrink={0} paddingLeft={1} backgroundColor={page===i?(hovered===i?"#30505a":"#294650"):(hovered===i?"#192b35":"#101820")} onMouseOver={()=>setHovered(i)} onMouseOut={()=>setHovered(value=>value===i?null:value)} onMouseDown={()=>changePage(i)}><text fg={page===i?accent:muted}>{i+1}. {name}</text></box>)}
+    </scrollbox>
    </box>
    <box border borderStyle="rounded" borderColor={accent} title={` ${pages[page]} `} padding={1} flexGrow={1} minWidth={0}>
     <scrollbox key={page} flexGrow={1} width="100%" contentOptions={{paddingRight:1}}><Demo/></scrollbox>

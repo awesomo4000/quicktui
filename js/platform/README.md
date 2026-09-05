@@ -1,6 +1,6 @@
 # Counter binding contract
 
-`symbols.json` is the counter profile's allowlist. `bindings.json` records the
+`symbols.json` is the shared runtime allowlist. `bindings.json` records the
 FFI declaration, checked native argument and return types, and source location
 for each of its 247 functions. `scripts/generate-bindings.ts` refuses unknown
 native types and signature mismatches, then writes fixed C calls. Pointer-taking
@@ -77,9 +77,9 @@ larger than the protocol diacritic table use block fallback.
 
 ## Gallery profile
 
-`gallery-core.ts` and `gallery-catalogue.ts` expose the full built-in React widget
-catalogue plus slider and table. The first two examples retain their smaller
-catalogue. The gallery uses upstream keyboard events, widget focus subscriptions,
+`core.ts` and `catalogue.ts` expose the full built-in React widget
+catalogue plus slider and table. All examples share these modules in `src/examples.js`. Only the selected example
+initializes its renderer and assets. The gallery uses upstream keyboard events, widget focus subscriptions,
 and selection conversion; selection is confined to its initiating widget.
 
 `plain-code.ts` uses Marked tokens to supply Markdown style/conceal captures and
@@ -91,3 +91,8 @@ alongside the other bundled package licenses.
 The host supports synchronous or promise-returning example self-tests, with a
 bounded job/frame loop. Gallery checks traverse all pages and exercise real parser
 bytes against React state and native cell buffers.
+
+The messages demo uses `demo.tsx` for its small box/text React host. Native
+messages enter through `__message` on the UI thread. `__host.postMessage` copies
+UTF-8 text into an application-owned endpoint and reports queue backpressure.
+See the root README for endpoint ownership and wake descriptor rules.

@@ -1,7 +1,7 @@
 # Demo assets
 
 `dragon.jpg` is the dragon picture used by QuickTUI. It is embedded in the executable
-by `scripts/counter-bundle.ts`, so running the demo needs no external image files.
+by `scripts/bundle.ts`, so running the demo needs no external image files.
 
 Copied unchanged from `vendor/opentui/packages/examples/src/assets/dragon.jpg`
 at OpenTUI commit `7581976f4d2c917fd5ae5266c8bc61f0e44fc933`.
