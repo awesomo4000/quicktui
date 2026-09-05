@@ -12,6 +12,10 @@ pub const MessageEndpoint = extern struct {
     wake_fd: c_int,
     send: *const fn (?*anyopaque, [*]const u8, usize) callconv(.c) c_int,
     receive: *const fn (?*anyopaque, [*]u8, usize) callconv(.c) isize,
+    /// Optional binary payload lookup. Successful borrows must remain stable until
+    /// release_buffer. Host copies into a JS ArrayBuffer before releasing, max 4 MiB.
+    borrow_buffer: ?*const fn (?*anyopaque, u32, *usize) callconv(.c) ?[*]const u8 = null,
+    release_buffer: ?*const fn (?*anyopaque) callconv(.c) void = null,
 };
 extern "c" fn quicktui_app_messages(source: [*:0]const u8, len: usize, headless: c_int, example: [*:0]const u8, endpoint: *const MessageEndpoint) c_int;
 pub fn runWithMessages(source: [:0]const u8, example: [:0]const u8, headless: bool, endpoint: *const MessageEndpoint) error{CounterFailed}!void {

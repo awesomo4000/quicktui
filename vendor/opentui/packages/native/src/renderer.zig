@@ -2116,7 +2116,7 @@ pub const CliRenderer = struct {
             if (current.protocol != .kitty) continue;
             const placement_found = if (current.placement_id > 0 and current.placement_id <= next.len) blk: {
                 const placement = next[current.placement_id - 1];
-                break :blk placement.placement_id == current.placement_id and placement.image_handle == current.image_handle and
+                break :blk placement.placement_id == current.placement_id and
                     self.nextPlacementProtocol(placement) == .kitty;
             } else false;
             if (!placement_found) try terminal_image.writeKittyDelete(
@@ -2148,7 +2148,8 @@ pub const CliRenderer = struct {
                     (downscaled and (source_changed or committed.pixel_width != placement.pixel_width or committed.pixel_height != placement.pixel_height));
             } else false;
             if (previous == null or retransmit) {
-                if (retransmit) try terminal_image.writeKittyDelete(writer, image_id, null, true, tmux);
+                // Transmission replaces this stable ID. Keep its old pixels visible
+                // while the replacement payload is in flight instead of deleting early.
                 const transmit = try self.kittyPlacementTransmit(placement, .escape);
                 defer if (transmit.owned) transmit.image.deinit();
                 const directory = if (self.kittyTransport.mode == .file) self.kittyTempDirectory() else "";

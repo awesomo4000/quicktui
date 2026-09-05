@@ -21,7 +21,7 @@ for action in [b'\x1b' if example=='--gallery' else b'q', signal.SIGTERM]:
                         if e.errno!=errno.EIO: raise
                 if predicate(): return
             raise AssertionError(repr(output[-1500:]))
-        receive(lambda:({'--gallery':b'Widget gallery','--messages':b'Native messages'}.get(example,b'Wheel value:')) in output)
+        receive(lambda:({'--gallery':b'Widget gallery','--messages':b'Native messages','--lab':b'Graphics lab'}.get(example,b'Wheel value:')) in output)
         assert b'\x1b[?1003h' in output and b'\x1b[?1006h' in output
         if example=='--messages':
             # Pause the UI timer, then require a worker reply to wake the host.

@@ -221,6 +221,74 @@ React input, timers, and cleanup. `zig build test-messages` uses disposable PTYs
 to check native wakeups with the UI heartbeat paused and terminal restoration
 after Q or SIGTERM with work queued.
 
+## Graphics lab
+
+Run example 05 with `zig build run -- --lab`. The messages demo stays available
+as `--messages`.
+
+- **1–5** selects torus, orb, sheet, 4D hypercube, or Mandelbrot.
+- **Drag** rotates geometry or pans the fractal; **scroll** zooms.
+- **M** cycles Kitty/automatic fallback, Unicode half blocks, and braille.
+- **D** cycles color, grayscale, screen-space Bayer, and surface fractal dithering.
+- **B / N** raises/lowers brightness; **K / J** raises/lowers contrast.
+- **O / I** enlarges/shrinks surface dither dots.
+- **W** toggles wireframe; **C** changes palette; **P** pauses animation.
+- **- / =** lowers/raises the target frame rate through 1, 5, 10, 15, 20, 30, 45, and 60 FPS.
+  The delivered FPS counter measures native frames received by JS in the last second,
+  not physical terminal presentation. Rotation follows elapsed time, independently
+  of key repeats and the selected frame rate.
+- **T** visits a Mandelbrot detail; **R** resets view and tone adjustments.
+- Arrow keys rotate or pan; **Q** exits.
+
+The hypercube rotates in three 4D planes before perspective projection into 3D
+and then 2D. Shaded faces, visible edges, and dashed hidden edges expose its
+structure. Mandelbrot uses double-precision coordinates, smooth escape coloring,
+and a bounded 320-iteration calculation. Its zoom range ends at 10 billion;
+the fixed iteration budget limits detail near the set boundary.
+
+The Phosphor hypercube, Mandelbrot, and ASCII cube experiments inspired these
+demos. Their terminal loop is not imported.
+
+The surface dither is a partial CPU adaptation of Rune Skovbo Johansen's
+[Dither3D](https://github.com/runevision/Dither3D). Its pinned shader, original
+lookup textures, generator, and MPL-2.0 license live in `vendor/dither3d`.
+The adapted `src/examples/dither3d.zig` retains MPL-2.0 licensing. A standard
+Python script extracts the lookup bytes; the normal build needs neither Python
+nor Unity. It uses perspective-correct surface UVs and screen derivatives to
+choose self-similar texture layers. Grayscale hard 1-bit output is implemented;
+radial compensation, alternate seam UVs, and RGB/CMYK output are not. Low
+resolution and grazing angles can still alias. Mandelbrot uses complex-plane
+coordinates as its surface.
+
+Half blocks and braille use a custom OpenTUI renderable, so they participate in
+normal cell diffing and need no graphics protocol. Braille shares one foreground
+color across each cell's eight dots; it is most useful for wireframes. These
+modes currently resample the same 240 × 160 native frame.
+
+`src/examples/lab_raster.zig` performs CPU projection, triangle rasterization,
+depth buffering, and lighting on the worker in `src/examples/lab_worker.zig`.
+React sends scene settings through the message endpoint. The worker publishes a
+small `frame-ready` message and keeps the latest 240 × 160 RGBA frame in native
+memory. `__host.takeBuffer(id)` copies that frame into a JS ArrayBuffer under a
+short native lock, then releases it. Pixels never pass through JSON. This first
+version uses a binary copy rather than shared JS/native memory.
+
+React imports those pixels into a native image and displays it using Kitty
+graphics after a successful probe, or terminal blocks otherwise. The worker
+defaults to ten frames per second, enforces its deadline even under input floods, and coalesces both pending frames and scene updates,
+so a slow UI does not accumulate work. Superseded frame IDs return null. React
+releases replaced or skipped image handles. QuickJS and all OpenTUI image calls
+remain on the UI thread; only software rasterization runs on the worker.
+
+The graphics lab is CPU-only. This is a custom software renderer, not Three.js or WebGL. Browser DOM, Canvas,
+WebGL, and SVG elements are not provided by the current host. Three.js would need
+an adapted CPU renderer for this project. SVG would need a CPU rasterization or
+terminal drawing adapter. React hooks and composition work without those browser
+APIs, but libraries that depend on them cannot run unchanged.
+
+Run `zig build test-lab` for PTY cleanup checks. `zig build test` includes scene
+and control checks using the real QuickJS and native-image bridge.
+
 ## Shared JavaScript bundle
 
 `js/examples.ts` selects the demo and `scripts/bundle.ts` builds one dependency

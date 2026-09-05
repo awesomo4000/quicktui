@@ -108,7 +108,7 @@ test "renderer emits Kitty image once and leaves unchanged frame empty" {
     try std.testing.expect(try test_renderer.renderer.getNextBuffer().drawImage(value, image_handle, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, .auto));
     try std.testing.expectEqual(renderer.RenderStatus.rendered, test_renderer.renderer.render(true));
     try std.testing.expect(std.mem.find(u8, test_renderer.memory.lastWrite(), "\x1b_Ga=t,f=24,s=1,v=1,i=") != null);
-    try std.testing.expect(std.mem.find(u8, test_renderer.memory.lastWrite(), "c=1,r=1,x=0,y=0,w=1,h=1,C=1,z=-1499999999") != null);
+    try std.testing.expect(std.mem.find(u8, test_renderer.memory.lastWrite(), "c=1,r=1,x=0,y=0,w=1,h=1,C=1,z=-999999") != null);
 
     try std.testing.expect(try test_renderer.renderer.getNextBuffer().drawImage(value, image_handle, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, .auto));
     try std.testing.expectEqual(renderer.RenderStatus.rendered, test_renderer.renderer.render(false));
@@ -4315,14 +4315,14 @@ test "renderer scales kitty transmission alpha by placement opacity" {
     try std.testing.expectEqual(@as(u8, 50), transmitted[2]);
     try std.testing.expect(@abs(@as(i16, transmitted[3]) - 128) <= 1);
 
-    // Opacity changes retransmit under the same kitty id: delete then new data.
+    // Replace data under the same Kitty ID without an early blanking delete.
     next = test_renderer.renderer.getNextBuffer();
     try next.pushOpacity(0.25);
     try std.testing.expect(try next.drawImage(value, value_handle, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, .auto));
     next.popOpacity();
     try std.testing.expectEqual(renderer.RenderStatus.rendered, test_renderer.renderer.render(false));
     const second = test_renderer.memory.lastWrite();
-    try std.testing.expect(std.mem.find(u8, second, "a=d,d=I") != null);
+    try std.testing.expect(std.mem.find(u8, second, "a=d,d=I") == null);
     const second_start = std.mem.find(u8, second, "\x1b_Ga=t").?;
     const second_end = std.mem.findPos(u8, second, second_start, "\x1b\\").? + 2;
     const retransmitted = try terminal_image_test.decodeKittyChunks(second[second_start..second_end]);
@@ -4465,6 +4465,7 @@ test "renderer leaves clean text alone when graphics content changes" {
     try std.testing.expect(try next.drawImage(second, second_handle, 0, 0, 2, 2, 0, 0, 0, 0, 1, 1, .auto));
     try std.testing.expectEqual(renderer.RenderStatus.rendered, test_renderer.renderer.render(false));
     const output = test_renderer.memory.lastWrite();
+    try std.testing.expect(std.mem.find(u8, output, "a=d,") == null);
     try std.testing.expect(std.mem.find(u8, output, "\x1b_Ga=t") != null);
     try std.testing.expect(std.mem.find(u8, output, "HELLO") == null);
     try std.testing.expect(std.mem.find(u8, output, " ") == null);
@@ -4548,7 +4549,7 @@ test "renderer downscales large kitty stills to their placement pixel size" {
     try std.testing.expect(try next.drawImage(value, value_handle, 0, 0, 2, 2, 20, 20, 0, 0, 64, 64, .auto));
     try std.testing.expectEqual(renderer.RenderStatus.rendered, test_renderer.renderer.render(false));
     const second = test_renderer.memory.lastWrite();
-    try std.testing.expect(std.mem.find(u8, second, "a=d,d=I") != null);
+    try std.testing.expect(std.mem.find(u8, second, "a=d,d=I") == null);
     try std.testing.expect(std.mem.find(u8, second, "a=t,f=24,s=20,v=20") != null);
 }
 

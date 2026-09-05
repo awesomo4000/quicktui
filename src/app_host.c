@@ -18,6 +18,8 @@ typedef struct {
     int wake_fd;
     int (*send)(void *, const unsigned char *, size_t);
     ptrdiff_t (*receive)(void *, unsigned char *, size_t);
+    const unsigned char *(*borrow_buffer)(void *, uint32_t, size_t *);
+    void (*release_buffer)(void *);
 } MessageEndpoint;
 typedef struct {
     const MessageEndpoint *endpoint;
@@ -87,6 +89,21 @@ static JSValue post_message(JSContext *ctx,JSValueConst self,int argc,JSValueCon
     if(length>4096){JS_FreeCString(ctx,bytes);return JS_ThrowRangeError(ctx,"Message exceeds 4096 bytes");}
     int accepted=host->endpoint->send(host->endpoint->context,(const unsigned char *)bytes,length);
     JS_FreeCString(ctx,bytes);return JS_NewBool(ctx,accepted>0);
+}
+static JSValue take_buffer(JSContext *ctx,JSValueConst self,int argc,JSValueConst *argv) {
+    (void)self;
+    AppHost *host=JS_GetContextOpaque(ctx);
+    const MessageEndpoint *endpoint=host->endpoint;
+    if(!endpoint||!endpoint->borrow_buffer||!endpoint->release_buffer)return JS_ThrowTypeError(ctx,"No binary endpoint");
+    uint32_t id;
+    if(argc!=1)return JS_ThrowTypeError(ctx,"takeBuffer expects a buffer ID");
+    if(JS_ToUint32(ctx,&id,argv[0])<0)return JS_EXCEPTION;
+    size_t length=0;
+    const unsigned char *bytes=endpoint->borrow_buffer(endpoint->context,id,&length);
+    if(!bytes)return JS_NULL;
+    JSValue result=length<=4*1024*1024?JS_NewArrayBufferCopy(ctx,bytes,length):JS_ThrowRangeError(ctx,"Binary payload exceeds 4 MiB");
+    endpoint->release_buffer(endpoint->context);
+    return result;
 }
 static void messages(JSContext *ctx) {
     AppHost *host=JS_GetContextOpaque(ctx);
@@ -168,6 +185,7 @@ int quicktui_app_messages(const char *source,size_t length,int headless,const ch
     int width,height;dimensions(&width,&height);if(headless){width=80;height=24;}
     JSValue global=JS_GetGlobalObject(ctx), services=JS_NewObject(ctx), env=JS_NewObject(ctx);
     if(endpoint)JS_SetPropertyStr(ctx,services,"postMessage",JS_NewCFunction(ctx,post_message,"postMessage",1));
+    if(endpoint&&endpoint->borrow_buffer&&endpoint->release_buffer)JS_SetPropertyStr(ctx,services,"takeBuffer",JS_NewCFunction(ctx,take_buffer,"takeBuffer",1));
     JS_SetPropertyStr(ctx,services,"now",JS_NewCFunction(ctx,now,"now",0));
     JS_SetPropertyStr(ctx,services,"write",JS_NewCFunction(ctx,write_log,"write",1));
     JS_SetPropertyStr(ctx,services,"quit",JS_NewCFunction(ctx,quit,"quit",0));
@@ -203,7 +221,7 @@ int quicktui_app_messages(const char *source,size_t length,int headless,const ch
         JS_FreeValue(ctx,custom_test);JS_FreeValue(ctx,test_global);
         if(has_custom_test){
             JSValue test_result=call(ctx,"__selfTest",0,NULL);
-            for(int i=0;i<30000&&!host.failed&&JS_PromiseState(ctx,test_result)==JS_PROMISE_PENDING;i++){step(ctx,runtime); if(endpoint){struct pollfd fd={.fd=endpoint->wake_fd,.events=POLLIN};poll(&fd,1,1);}}
+            for(int i=0;i<30000&&!host.failed&&JS_PromiseState(ctx,test_result)==JS_PROMISE_PENDING;i++){step(ctx,runtime); {struct pollfd fd={.fd=endpoint?endpoint->wake_fd:-1,.events=POLLIN};poll(&fd,1,JS_IsJobPending(runtime)?0:1);}}
             if(!host.failed&&JS_PromiseState(ctx,test_result)==JS_PROMISE_PENDING){diagnostic(ctx,"Example self-test did not settle\n");host.failed=1;}
             if(!host.failed&&JS_PromiseState(ctx,test_result)==JS_PROMISE_REJECTED){JS_Throw(ctx,JS_PromiseResult(ctx,test_result));exception(ctx);}
             JS_FreeValue(ctx,test_result);goto cleanup;

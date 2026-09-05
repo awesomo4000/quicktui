@@ -420,3 +420,32 @@
 +        try writer.writeAll(bytes[0..len]);
 +    }
 +}
+diff --git a/packages/native/src/renderer.zig b/packages/native/src/renderer.zig
+index 4406d9c..684bcd7 100644
+--- a/packages/native/src/renderer.zig
++++ b/packages/native/src/renderer.zig
+@@ -2119 +2119 @@ pub const CliRenderer = struct {
+-                break :blk placement.placement_id == current.placement_id and placement.image_handle == current.image_handle and
++                break :blk placement.placement_id == current.placement_id and
+@@ -2151 +2151,2 @@ pub const CliRenderer = struct {
+-                if (retransmit) try terminal_image.writeKittyDelete(writer, image_id, null, true, tmux);
++                // Transmission replaces this stable ID. Keep its old pixels visible
++                // while the replacement payload is in flight instead of deleting early.
+diff --git a/packages/native/src/tests/renderer_test.zig b/packages/native/src/tests/renderer_test.zig
+index 8d8252c..d9c9542 100644
+--- a/packages/native/src/tests/renderer_test.zig
++++ b/packages/native/src/tests/renderer_test.zig
+@@ -111 +111 @@ test "renderer emits Kitty image once and leaves unchanged frame empty" {
+-    try std.testing.expect(std.mem.find(u8, test_renderer.memory.lastWrite(), "c=1,r=1,x=0,y=0,w=1,h=1,C=1,z=-1499999999") != null);
++    try std.testing.expect(std.mem.find(u8, test_renderer.memory.lastWrite(), "c=1,r=1,x=0,y=0,w=1,h=1,C=1,z=-999999") != null);
+@@ -4318 +4318 @@ test "renderer scales kitty transmission alpha by placement opacity" {
+-    // Opacity changes retransmit under the same kitty id: delete then new data.
++    // Replace data under the same Kitty ID without an early blanking delete.
+@@ -4325 +4325 @@ test "renderer scales kitty transmission alpha by placement opacity" {
+-    try std.testing.expect(std.mem.find(u8, second, "a=d,d=I") != null);
++    try std.testing.expect(std.mem.find(u8, second, "a=d,d=I") == null);
+@@ -4467,0 +4468 @@ test "renderer leaves clean text alone when graphics content changes" {
++    try std.testing.expect(std.mem.find(u8, output, "a=d,") == null);
+@@ -4551 +4552 @@ test "renderer downscales large kitty stills to their placement pixel size" {
+-    try std.testing.expect(std.mem.find(u8, second, "a=d,d=I") != null);
++    try std.testing.expect(std.mem.find(u8, second, "a=d,d=I") == null);

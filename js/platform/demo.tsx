@@ -19,6 +19,7 @@ let native:any;
 let root:RootRenderable;
 let lib:ReturnType<typeof resolveRenderLib>;
 export const keys=new EventEmitter();
+export const graphicsState={confirmed:false};
 const parser=new StdinParser({onTimeoutFlush:()=>drainInput()});
 function drainInput(){parser.drain(event=>{
   if(event.type==="key"){
@@ -28,6 +29,11 @@ function drainInput(){parser.drain(event=>{
     mouse.dispatch(event.event);
   } else if(event.type==="response"&&native){
     lib.processCapabilityResponse(native,event.sequence);
+    context.capabilities=lib.getTerminalCapabilities(native) as any;
+    const reply=event.sequence.match(/^\x1b_G([^;]*);([\s\S]*?)\x1b\\$/);
+    if(reply&&reply[1].split(",").includes("i=31337")&&reply[2]==="OK"){
+      graphicsState.confirmed=true;keys.emit("graphics",true);dirty=true;
+    }
   }
 })}
 const lifecycle=new Set<any>();

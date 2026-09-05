@@ -2,6 +2,17 @@
 
 ## Unreleased - 09/05/2026
 
+- Add 1–60 FPS controls and delivered-frame statistics; rate-limit native rendering under key repeat and advance animation by elapsed time.
+
+- Extend the graphics lab with a 4D hypercube, Mandelbrot explorer, half-block and braille output, brightness/contrast controls, and Bayer comparison.
+- Vendor Dither3D at a pinned revision and adapt its grayscale surface fractal dithering to the Zig CPU renderer, with the original lookup textures and MPL-2.0 attribution.
+
+- Prevent pending graphics frames from being disposed during zoom, and avoid deleting Kitty images before uploading replacement frames.
+
+- Add a separate graphics lab with software-rendered 3D surfaces, shaded and wireframe modes, palettes, mouse rotation, and zoom.
+- Render on a Zig CPU worker and deliver frame-ready messages with binary buffer lookup, dropping stale frames.
+- Display animated RGBA frames through native Kitty graphics with a terminal-block fallback.
+
 - Send unsolicited blink events from the native worker every random 1–5 seconds, including while idle.
 - Report grid dimensions to the native worker, which chooses 1–10 unique squares to flash twice together on each event.
 

@@ -70,6 +70,18 @@ pub fn build(b: *std.Build) void {
     const gallery_test = b.addRunArtifact(exe);
     gallery_test.addArg("--gallery-self-test");
     test_step.dependOn(&gallery_test.step);
+    const lab_test = b.addRunArtifact(exe);
+    lab_test.addArg("--lab-self-test");
+    test_step.dependOn(&lab_test.step);
+    const lab_native_test = b.addTest(.{ .root_module = b.createModule(.{
+        .root_source_file = b.path("src/examples/lab_worker.zig"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+        .imports = &.{.{ .name = "quicktui", .module = runtime }},
+    }) });
+    const lab_native_run = b.addRunArtifact(lab_native_test);
+    test_step.dependOn(&lab_native_run.step);
     const messages_test = b.addRunArtifact(exe);
     messages_test.addArg("--messages-self-test");
     test_step.dependOn(&messages_test.step);
@@ -109,6 +121,11 @@ pub fn build(b: *std.Build) void {
     gallery_terminal_test.addArtifactArg(exe);
     gallery_terminal_test.addArg("--gallery");
     b.step("test-gallery", "Check gallery mouse reporting and terminal cleanup").dependOn(&gallery_terminal_test.step);
+    const lab_terminal_test = b.addSystemCommand(&.{ "python3", "scripts/test-mouse.py" });
+    lab_terminal_test.setCwd(b.path("."));
+    lab_terminal_test.addArtifactArg(exe);
+    lab_terminal_test.addArg("--lab");
+    b.step("test-lab", "Check graphics lab terminal cleanup").dependOn(&lab_terminal_test.step);
     const messages_terminal_test = b.addSystemCommand(&.{ "python3", "scripts/test-mouse.py" });
     messages_terminal_test.setCwd(b.path("."));
     messages_terminal_test.addArtifactArg(exe);
