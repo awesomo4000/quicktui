@@ -3,7 +3,7 @@ const dither = @import("dither3d.zig");
 pub const width = 240;
 pub const height = 160;
 pub const byte_count = width * height * 4;
-pub const Scene = struct { shape: u32 = 0, angle: f32 = 0, tilt: f32 = 0.7, zoom: f32 = 0.82, wire: bool = false, palette: u32 = 0, playing: bool = true, fps: u32 = 10, charset: u32 = 0, cols: u32 = 60, rows: u32 = 20, tone: u32 = 0, brightness: f32 = 0, contrast: f32 = 1, dot_scale: f32 = 4, fractal_zoom: f64 = 1, center_x: f64 = -0.65, center_y: f64 = 0 };
+pub const Scene = struct { shape: u32 = 0, angle: f32 = 0, tilt: f32 = 0.7, zoom: f32 = 0.82, wire: bool = false, palette: u32 = 0, playing: bool = true, fps: u32 = 10, epoch: u32 = 0, charset: u32 = 0, cols: u32 = 60, rows: u32 = 20, tone: u32 = 0, brightness: f32 = 0, contrast: f32 = 1, dot_scale: f32 = 4, fractal_zoom: f64 = 1, center_x: f64 = -0.65, center_y: f64 = 0 };
 const V = struct { x: f32, y: f32, z: f32, wx: f32, wy: f32, uv: dither.UV = .{ 0, 0 }, inv_w: f32 = 1 };
 fn f(n: anytype) f32 {
     return @floatFromInt(n);
@@ -280,4 +280,15 @@ test "hypercube and fractal have distinct opaque frames and one-bit surfaces" {
         white += @intFromBool(v == 255);
     }
     try std.testing.expect(white > 100 and white < width * height / 2);
+}
+
+pub fn valid(scene: Scene) bool {
+    if (scene.charset > 8 or scene.cols < 1 or scene.cols > 240 or scene.rows < 1 or scene.rows > 80 or scene.fps < 1 or scene.fps > 120 or scene.shape > 4 or scene.palette > 2 or !std.math.isFinite(scene.angle) or !std.math.isFinite(scene.tilt) or !std.math.isFinite(scene.zoom) or scene.zoom < 0.3 or scene.zoom > 1.4) return false;
+    if (scene.tone > 3 or !std.math.isFinite(scene.brightness) or @abs(scene.brightness) > 1 or
+        !std.math.isFinite(scene.contrast) or scene.contrast < 0.25 or scene.contrast > 4 or
+        !std.math.isFinite(scene.dot_scale) or scene.dot_scale < 0 or scene.dot_scale > 5 or
+        !std.math.isFinite(scene.fractal_zoom) or scene.fractal_zoom < 0.5 or scene.fractal_zoom > 1e10 or
+        !std.math.isFinite(scene.center_x) or @abs(scene.center_x) > 4 or
+        !std.math.isFinite(scene.center_y) or @abs(scene.center_y) > 4) return false;
+    return true;
 }

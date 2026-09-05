@@ -5,3 +5,6 @@
 x/
 
 # vendor/js/node_modules is intentionally checked in for offline builds.
+
+# Local graphics-lab preset slots.
+/.quicktui-presets/

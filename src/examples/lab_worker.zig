@@ -1,5 +1,6 @@
 const std = @import("std");
 const runtime = @import("quicktui");
+const presets = @import("lab_presets.zig");
 const glyphs = @import("lab_glyphs.zig");
 const cpu = @import("lab_raster.zig");
 const c = @cImport({
@@ -15,6 +16,13 @@ pub const Worker = struct {
     thread: ?std.Thread = null,
     stopping: bool = false,
     scene: cpu.Scene = .{},
+    preset_directory: [:0]const u8 = ".quicktui-presets",
+    command: [4096]u8 = undefined,
+    command_len: usize = 0,
+    command_busy: bool = false,
+    reply: [4096]u8 = undefined,
+    reply_len: usize = 0,
+    ready_angle: f32 = 0,
     dirty: bool = true,
     ready: [cpu.byte_count + glyphs.max_bytes]u8 = undefined,
     ready_len: usize = cpu.byte_count,
@@ -60,16 +68,24 @@ pub const Worker = struct {
         return @ptrCast(@alignCast(context.?));
     }
     fn send(context: ?*anyopaque, bytes: [*]const u8, len: usize) callconv(.c) c_int {
+        if (len > 4096) return 0;
+        if (std.mem.find(u8, bytes[0..len], "\"preset\"") != null) {
+            const request = std.json.parseFromSlice(presets.Request, std.heap.c_allocator, bytes[0..len], .{}) catch return 0;
+            request.deinit();
+            const self = cast(context);
+            _ = c.pthread_mutex_lock(&self.mutex);
+            defer _ = c.pthread_mutex_unlock(&self.mutex);
+            if (self.stopping or self.command_busy) return 0;
+            @memcpy(self.command[0..len], bytes[0..len]);
+            self.command_len = len;
+            self.command_busy = true;
+            _ = c.pthread_cond_signal(&self.changed);
+            return 1;
+        }
         const parsed = std.json.parseFromSlice(cpu.Scene, std.heap.c_allocator, bytes[0..len], .{}) catch return 0;
         defer parsed.deinit();
         const scene = parsed.value;
-        if (scene.charset > 8 or scene.cols < 1 or scene.cols > glyphs.max_cols or scene.rows < 1 or scene.rows > glyphs.max_rows or scene.fps < 1 or scene.fps > 120 or scene.shape > 4 or scene.palette > 2 or !std.math.isFinite(scene.angle) or !std.math.isFinite(scene.tilt) or !std.math.isFinite(scene.zoom) or scene.zoom < 0.3 or scene.zoom > 1.4) return 0;
-        if (scene.tone > 3 or !std.math.isFinite(scene.brightness) or @abs(scene.brightness) > 1 or
-            !std.math.isFinite(scene.contrast) or scene.contrast < 0.25 or scene.contrast > 4 or
-            !std.math.isFinite(scene.dot_scale) or scene.dot_scale < 0 or scene.dot_scale > 5 or
-            !std.math.isFinite(scene.fractal_zoom) or scene.fractal_zoom < 0.5 or scene.fractal_zoom > 1e10 or
-            !std.math.isFinite(scene.center_x) or @abs(scene.center_x) > 4 or
-            !std.math.isFinite(scene.center_y) or @abs(scene.center_y) > 4) return 0;
+        if (!cpu.valid(scene)) return 0;
         const self = cast(context);
         _ = c.pthread_mutex_lock(&self.mutex);
         defer _ = c.pthread_mutex_unlock(&self.mutex);
@@ -83,8 +99,21 @@ pub const Worker = struct {
         const self = cast(context);
         _ = c.pthread_mutex_lock(&self.mutex);
         defer _ = c.pthread_mutex_unlock(&self.mutex);
+        if (self.reply_len > 0) {
+            if (self.reply_len > capacity) return -1;
+            const length = self.reply_len;
+            @memcpy(bytes[0..length], self.reply[0..length]);
+            self.reply_len = 0;
+            self.command_busy = false;
+            var byte: u8 = 0;
+            while (true) {
+                const result = c.read(self.wake[0], &byte, 1);
+                if (result == 1 or std.posix.errno(result) != .INTR) break;
+            }
+            return @intCast(length);
+        }
         if (!self.pending) return -1;
-        const message = std.fmt.bufPrint(bytes[0..capacity], "{{\"type\":\"frame-ready\",\"id\":{d},\"width\":{d},\"height\":{d},\"ms\":{d:.2},\"dropped\":{d},\"cols\":{d},\"rows\":{d},\"charset\":{d},\"tone\":{d},\"glyph_bytes\":{d}}}", .{ self.frame_id, cpu.width, cpu.height, self.render_ms, self.dropped, self.ready_cols, self.ready_rows, self.ready_charset, self.ready_tone, self.ready_len - cpu.byte_count - (if (self.ready_charset > 0) self.ready_cols * self.ready_rows * 6 else @as(u32, 0)) }) catch return -1;
+        const message = std.fmt.bufPrint(bytes[0..capacity], "{{\"type\":\"frame-ready\",\"id\":{d},\"width\":{d},\"height\":{d},\"ms\":{d:.2},\"dropped\":{d},\"cols\":{d},\"rows\":{d},\"charset\":{d},\"tone\":{d},\"glyph_bytes\":{d},\"angle\":{d}}}", .{ self.frame_id, cpu.width, cpu.height, self.render_ms, self.dropped, self.ready_cols, self.ready_rows, self.ready_charset, self.ready_tone, self.ready_len - cpu.byte_count - (if (self.ready_charset > 0) self.ready_cols * self.ready_rows * 6 else @as(u32, 0)), self.ready_angle }) catch return -1;
         self.pending = false;
         var byte: u8 = 0;
         while (true) {
@@ -119,11 +148,13 @@ pub const Worker = struct {
         var converter: glyphs.Converter = .{};
         var text: [glyphs.max_bytes]u8 = undefined;
         var phase: f32 = 0;
+        var epoch: u32 = 0;
         var last_frame: f64 = 0;
         var was_playing = false;
         while (true) {
             _ = c.pthread_mutex_lock(&self.mutex);
             while (!self.stopping) {
+                if (self.command_len > 0) break;
                 if (!self.dirty and !self.scene.playing) {
                     _ = c.pthread_cond_wait(&self.changed, &self.mutex);
                     continue;
@@ -142,9 +173,35 @@ pub const Worker = struct {
                 _ = c.pthread_mutex_unlock(&self.mutex);
                 return;
             }
+            if (self.command_len > 0) {
+                var command: [4096]u8 = undefined;
+                const length = self.command_len;
+                @memcpy(command[0..length], self.command[0..length]);
+                self.command_len = 0;
+                _ = c.pthread_mutex_unlock(&self.mutex);
+                const request = std.json.parseFromSlice(presets.Request, std.heap.c_allocator, command[0..length], .{}) catch unreachable;
+                defer request.deinit();
+                var response: [4096]u8 = undefined;
+                const result = (presets.Store{ .directory = self.preset_directory }).execute(request.value, &response);
+                _ = c.pthread_mutex_lock(&self.mutex);
+                @memcpy(self.reply[0..result.len], result);
+                self.reply_len = result.len;
+                const byte: u8 = 1;
+                while (true) {
+                    const written = c.write(self.wake[1], &byte, 1);
+                    if (written == 1 or std.posix.errno(written) != .INTR) break;
+                }
+                _ = c.pthread_mutex_unlock(&self.mutex);
+                continue;
+            }
             var scene = self.scene;
             self.dirty = false;
             _ = c.pthread_mutex_unlock(&self.mutex);
+            if (scene.epoch != epoch) {
+                epoch = scene.epoch;
+                phase = 0;
+                was_playing = false;
+            }
             const began = now();
             if (scene.playing and was_playing) phase = @mod(phase + @as(f32, @floatCast((began - last_frame) * 0.00055)), std.math.pi * 200);
             last_frame = began;
@@ -165,6 +222,7 @@ pub const Worker = struct {
             self.ready_rows = scene.rows;
             self.ready_charset = scene.charset;
             self.ready_tone = scene.tone;
+            self.ready_angle = scene.angle;
             self.frame_id +%= 1;
             if (self.frame_id == 0) self.frame_id = 1;
             self.render_ms = elapsed;

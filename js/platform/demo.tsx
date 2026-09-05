@@ -19,10 +19,13 @@ let native:any;
 let root:RootRenderable;
 let lib:ReturnType<typeof resolveRenderLib>;
 export const keys=new EventEmitter();
+let keyInterceptor:((key:any)=>boolean)|null=null;
+export function interceptKeys(handler:((key:any)=>boolean)|null){keyInterceptor=handler}
 export const graphicsState={confirmed:false};
 const parser=new StdinParser({onTimeoutFlush:()=>drainInput()});
 function drainInput(){parser.drain(event=>{
   if(event.type==="key"){
+    if(keyInterceptor?.(event.key))return;
     if((event.key.ctrl&&event.key.name==="c")||event.key.name.toLowerCase()==="q"){__host.quit();return}
     keys.emit("key",event.key.name.toLowerCase());
   } else if(event.type==="mouse"){

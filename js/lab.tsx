@@ -1,11 +1,12 @@
 import "./lab-cells";
+import {PresetsPanel} from "./lab-presets";
 import React,{useEffect,useRef,useState} from "../vendor/js/node_modules/react";
 import {Renderable} from "../vendor/opentui/packages/core/src/Renderable";
 import {NativeImage} from "../vendor/opentui/packages/core/src/image";
 import {mountDemo,keys,graphicsState} from "./platform/demo";
 const WIDTH=240,HEIGHT=160;
-type Scene={shape:number,angle:number,tilt:number,zoom:number,wire:boolean,palette:number,playing:boolean,fps:number,charset:number,cols:number,rows:number,tone:number,brightness:number,contrast:number,dot_scale:number,fractal_zoom:number,center_x:number,center_y:number};
-type Frame={image:NativeImage,pixels:Uint8Array,glyphs:string,glyphColors:Uint8Array,tone:number,cols:number,rows:number,charset:number,ms:number,index:number,dropped:number,serial:number};
+type Scene={shape:number,angle:number,tilt:number,zoom:number,wire:boolean,palette:number,playing:boolean,fps:number,epoch:number,charset:number,cols:number,rows:number,tone:number,brightness:number,contrast:number,dot_scale:number,fractal_zoom:number,center_x:number,center_y:number};
+type Frame={angle:number,image:NativeImage,pixels:Uint8Array,glyphs:string,glyphColors:Uint8Array,tone:number,cols:number,rows:number,charset:number,ms:number,index:number,dropped:number,serial:number};
 const ownedImages=new Map<NativeImage,number>();
 function releaseBefore<T extends {dispose():void}>(images:Map<T,number>,committed:number){
   // A delayed effect must never release a newer frame waiting for its commit.
@@ -16,6 +17,7 @@ let framesReceived=0;
 const deliveries:number[]=[];
 Object.assign(globalThis,{__message(message:string){
   const event=JSON.parse(message);
+  if(event.type==="presets"){keys.emit("presets",event);return}
   if(event.type!=="frame-ready")return;
   const bytes=__host.takeBuffer(event.id);
   if(!bytes)return; // The worker may already have replaced a stale frame.
@@ -25,16 +27,19 @@ Object.assign(globalThis,{__message(message:string){
   if(deliveries.length>240)deliveries.splice(0,deliveries.length-240);
   if(frameListeners.size===0){image.dispose();return;}
   ownedImages.set(image,framesReceived);
-  for(const listener of frameListeners)listener({image,pixels:new Uint8Array(bytes,0,WIDTH*HEIGHT*4),glyphs:new TextDecoder().decode(new Uint8Array(bytes,WIDTH*HEIGHT*4,event.glyph_bytes)),glyphColors:new Uint8Array(bytes,WIDTH*HEIGHT*4+event.glyph_bytes),tone:event.tone,cols:event.cols,rows:event.rows,charset:event.charset,ms:event.ms,index:event.id,dropped:event.dropped,serial:framesReceived});
+  for(const listener of frameListeners)listener({angle:event.angle,image,pixels:new Uint8Array(bytes,0,WIDTH*HEIGHT*4),glyphs:new TextDecoder().decode(new Uint8Array(bytes,WIDTH*HEIGHT*4,event.glyph_bytes)),glyphColors:new Uint8Array(bytes,WIDTH*HEIGHT*4+event.glyph_bytes),tone:event.tone,cols:event.cols,rows:event.rows,charset:event.charset,ms:event.ms,index:event.id,dropped:event.dropped,serial:framesReceived});
 }});
 declare const __host:{headless:boolean,postMessage(text:string):boolean,takeBuffer(id:number):ArrayBuffer|null};
 const names=["Torus","Orb","Sheet","4D hypercube","Mandelbrot"];
 const glyphNames=["","ASCII","Shades","Quadrants","Braille + punctuation","ASCII + braille","Box drawing","Blocks","Pure braille"];
 const tones=["Color","Grayscale","Screen Bayer","Surface fractal"];
 function App(){
-  const scene=useRef<Scene>({shape:3,angle:0,tilt:.7,zoom:.82,wire:false,palette:0,playing:true,fps:10,charset:0,cols:60,rows:20,tone:0,brightness:0,contrast:1,dot_scale:4,fractal_zoom:1,center_x:-.65,center_y:0});
+  const scene=useRef<Scene>({shape:3,angle:0,tilt:.7,zoom:.82,wire:false,palette:0,playing:true,fps:10,epoch:0,charset:0,cols:60,rows:20,tone:0,brightness:0,contrast:1,dot_scale:4,fractal_zoom:1,center_x:-.65,center_y:0});
   const playing=useRef(true),drag=useRef<{x:number,y:number}|null>(null);
+  const [presetsOpen,setPresetsOpen]=useState(false);
+  const currentFrame=useRef<Frame|null>(null);
   const [frame,setFrame]=useState<Frame|null>(null);
+  currentFrame.current=frame;
   const [fps,setFps]=useState(0);
   const outputRef=useRef(0),glyphRef=useRef(1);
   const [output,setOutput]=useState(0);
@@ -66,6 +71,7 @@ function App(){
   },[]);
   useEffect(()=>{
     const key=(name:string)=>{
+      if(name==="f"){setPresetsOpen(true);return}
       if(["1","2","3","4","5"].includes(name))scene.current.shape=Number(name)-1;
       if(name==="-"||name==="="){
         const rates=[1,5,10,15,20,30,45,60,90,120];
@@ -106,6 +112,19 @@ function App(){
     frameListeners.add(setFrame);draw();
     return()=>{frameListeners.delete(setFrame);keys.off("key",key);keys.off("graphics",graphics)};
   },[]);
+  const capture=()=>({
+    version:1,description:names[scene.current.shape]+" / "+tones[scene.current.tone],
+    scene:{...scene.current,angle:currentFrame.current?.angle??scene.current.angle,playing:playing.current},
+    output:outputRef.current,glyph:glyphRef.current
+  });
+  const restore=(value:any)=>{
+    const {cols,rows,epoch}=scene.current;
+    Object.assign(scene.current,value.scene,{cols,rows,epoch:(epoch+1)>>>0});
+    playing.current=value.scene.playing;drag.current=null;
+    outputRef.current=value.output;glyphRef.current=value.glyph;
+    scene.current.charset=value.output===3?value.glyph:0;
+    setOutput(value.output);setPresetsOpen(false);draw();
+  };
   return <box width="100%" height="100%" padding={1} backgroundColor="#101820">
     <box border borderStyle="rounded" borderColor="#63c7b2" title=" 05 / Graphics lab " paddingX={1} width="100%" height="100%" gap={1}>
       <text height={1} flexShrink={0} fg="#f6f0dd"><b>Light, geometry, and terminal pixels</b></text>
@@ -130,10 +149,11 @@ function App(){
         {frame?(output===0?<image source={frame.image} width="100%" height="100%" protocol={kitty?"kitty":"blocks"} onError={(error:any)=>{throw error}}/>:React.createElement("labCells",{pixels:frame.pixels,mode:output===1?"half":output===2?"braille":"glyphs",glyphs:frame.glyphs,glyphColors:frame.glyphColors,tone:frame.tone,glyphCols:frame.cols,glyphRows:frame.rows,width:"100%",height:"100%"})):<text fg="#718b99">Waiting for native frame…</text>}
       </box>
       <text height={1} flexShrink={0} fg="#c2ced5">{names[scene.current.shape]} · {scene.current.wire?"wireframe":"shaded"} · {playing.current?"playing":"paused"} · {fps} FPS delivered · -/= target {scene.current.fps} · {frame?.ms??0} ms CPU · drop {frame?.dropped??0}</text>
-      <text height={1} flexShrink={0} fg="#718b99">Drag rotate/pan · scroll zoom · W wire · C palette · P pause · R reset · T fractal target · Q exit</text>
+      <text height={1} flexShrink={0} fg="#718b99">Drag rotate/pan · scroll zoom · W wire · C palette · P pause · R reset · T fractal target · F presets · Q exit</text>
       <text height={1} flexShrink={0} fg="#c2ced5">D {tones[scene.current.tone]} · B/N brightness {scene.current.brightness.toFixed(1)} · K/J contrast {scene.current.contrast.toFixed(2)} · O/I dots {scene.current.dot_scale.toFixed(2)}</text>
       <text height={1} flexShrink={0} fg="#526b78">M {output===1?"Half blocks":output===2?"Braille":output===3?glyphNames[glyphRef.current]+" · G charset":kitty?"Kitty pixels":"Block fallback"} · {WIDTH} × {HEIGHT} · {scene.current.shape===4?scene.current.fractal_zoom.toFixed(1)+"× zoom":"Zig CPU worker → React → terminal"}</text>
     </box>
+    {presetsOpen&&<PresetsPanel capture={capture} restore={restore} close={()=>setPresetsOpen(false)}/>}
   </box>;
 }
 mountDemo(App);
@@ -146,9 +166,9 @@ if(__host.headless)Object.assign(globalThis,{async __selfTest(){
   if(released.join(",")!=="1,2"||mock.size!==1)throw new Error("Superseded frames must be released");
   const host=globalThis as any;
   const wait=()=>new Promise(resolve=>setTimeout(resolve,30));
-  for(const key of ["p","2","3","1","w","c","left"]){host.__input(new TextEncoder().encode(key).buffer);await wait()}
+  for(const key of ["p","2","3","1","w","c","\x1b[D"]){host.__input(new TextEncoder().encode(key).buffer);await wait()}
   const snapshot=host.__snapshot();
-  if(!snapshot.includes("wireframe")||!snapshot.includes("paused"))throw new Error("Lab controls failed");
+  if(!snapshot.includes("wireframe")||!snapshot.includes("paused"))throw new Error("Lab controls failed: "+snapshot);
   const deadline=Date.now()+3000;
   while(framesReceived<2&&Date.now()<deadline)await wait();
   if(framesReceived<2)throw new Error("Native worker must deliver frames through messages");
@@ -189,5 +209,18 @@ if(__host.headless)Object.assign(globalThis,{async __selfTest(){
   host.__resize(60,18);
   await new Promise(resolve=>setTimeout(resolve,700));
   if(glyphNode.glyphCols>glyphNode.width||glyphNode.glyphRows>glyphNode.height)throw new Error("Native glyph dimensions must follow resize");
+  host.__resize(80,24);
+  const press=async(text:string)=>{host.__input(new TextEncoder().encode(text).buffer);await new Promise(resolve=>setTimeout(resolve,180))};
+  await press("4");
+  await press("f");
+  await press("\t");
+  await press("quiet cube");
+  if(!host.__snapshot().includes("quiet cube"))throw new Error("Preset descriptions must accept q and spaces without triggering shortcuts");
+  await press("\r");
+  await press("\x1b");
+  await press("5");
+  await press("f");
+  await press("\r");
+  if(!host.__snapshot().includes("4D hypercube")||host.__snapshot().includes("Nine local slots"))throw new Error("Loading must restore the saved scene and close the panel");
   if(__host.takeBuffer(0)!==null)throw new Error("Unknown frame IDs must not expose pixels");
 }});

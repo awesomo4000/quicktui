@@ -2,6 +2,8 @@
 
 ## Unreleased - 09/05/2026
 
+- Add nine persistent graphics presets with descriptions, a keyboard/mouse save-load panel, and atomic native-worker file writes. Restore the saved pose and display settings while retaining the current viewport.
+
 - Add a pure braille charset to native glyph selection, without ASCII or punctuation.
 
 - Preserve source colors in braille and native glyph modes; fit foreground/background colors for quadrant and block sets while keeping dithering monochrome.

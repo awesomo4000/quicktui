@@ -242,6 +242,21 @@ as `--messages`.
 - **T** visits a Mandelbrot detail; **R** resets view and tone adjustments.
 - Arrow keys rotate or pan; **Q** exits.
 
+**F** opens nine numbered preset slots. Select with **1–9**, arrows, or the
+mouse. **Tab** edits the description, **S** saves the current settings, and
+**Enter** loads. While editing, **Enter** saves the description and settings;
+**Escape** leaves editing or closes the panel. Saving to an occupied slot
+replaces it.
+
+Presets are versioned JSON files in `.quicktui-presets/1.json` through
+`9.json`, relative to the app's working directory. This folder is ignored by
+Git. Each stores scene, current rendered angle, camera/fractal position, zoom,
+pause state, frame-rate target, palette, tone, brightness, contrast, dot size,
+output mode, and selected charset. Loading keeps the current viewport size.
+The native worker writes a temporary file, flushes it, and atomically replaces
+the selected slot. Invalid presets report an error instead of changing the
+scene. Self-tests use disposable directories under `/tmp`, never local slots.
+
 The hypercube rotates in three 4D planes before perspective projection into 3D
 and then 2D. Shaded faces, visible edges, and dashed hidden edges expose its
 structure. Mandelbrot uses double-precision coordinates, smooth escape coloring,

@@ -24,7 +24,12 @@ pub fn main(init: std.process.Init) !void {
         return runtime.runWithMessages(examples, "messages", std.mem.eql(u8, args[1], "--messages-self-test"), &endpoint);
     }
     if (args.len == 2 and (std.mem.eql(u8, args[1], "--lab") or std.mem.eql(u8, args[1], "--lab-self-test"))) {
+        const headless = std.mem.eql(u8, args[1], "--lab-self-test");
+        var temporary: @import("examples/lab_presets.zig").Temporary = .{};
+        if (headless) try temporary.init();
+        defer if (headless) temporary.deinit();
         var worker: @import("examples/lab_worker.zig").Worker = .{};
+        if (headless) worker.preset_directory = temporary.directory;
         try worker.start();
         defer worker.stop();
         const endpoint = worker.endpoint();
