@@ -1,0 +1,72 @@
+{
+  "source": "../winged-dragon-sheet-alpha.png",
+  "fps": 8,
+  "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "frames": [
+    {
+      "frame": 0,
+      "x": 0,
+      "y": 160,
+      "width": 337,
+      "height": 416
+    },
+    {
+      "frame": 1,
+      "x": 337,
+      "y": 160,
+      "width": 300,
+      "height": 416
+    },
+    {
+      "frame": 2,
+      "x": 637,
+      "y": 160,
+      "width": 300,
+      "height": 416
+    },
+    {
+      "frame": 3,
+      "x": 937,
+      "y": 160,
+      "width": 317,
+      "height": 416
+    },
+    {
+      "frame": 4,
+      "x": 0,
+      "y": 640,
+      "width": 337,
+      "height": 416
+    },
+    {
+      "frame": 5,
+      "x": 337,
+      "y": 640,
+      "width": 300,
+      "height": 416
+    },
+    {
+      "frame": 6,
+      "x": 637,
+      "y": 640,
+      "width": 300,
+      "height": 416
+    },
+    {
+      "frame": 7,
+      "x": 937,
+      "y": 640,
+      "width": 317,
+      "height": 416
+    }
+  ]
+}

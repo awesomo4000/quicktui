@@ -1,0 +1,6 @@
+/.zig-cache/
+/zig-out/
+/vendor/opentui/**/.zig-cache/
+/vendor/opentui/**/zig-out/
+
+# vendor/js/node_modules is intentionally checked in for offline builds.

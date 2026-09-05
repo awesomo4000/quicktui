@@ -1,0 +1,12 @@
+.zig-cache
+zig-out
+lib
+symbols
+zig-pkg
+# QuickTUI vendors the extracted dependencies for offline builds.
+!/zig-deps/
+!/zig-deps/**
+.zig-deps.*
+examples/*/.zig-cache
+examples/*/zig-out
+examples/*/zig-pkg

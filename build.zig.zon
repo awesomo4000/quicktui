@@ -1,0 +1,10 @@
+.{
+    .name = .quicktui,
+    .fingerprint = 0x931806257758bfb4,
+    .version = "0.1.0",
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{
+        .opentui = .{ .path = "vendor/opentui/packages/native" },
+    },
+    .paths = .{ "build.zig", "build.zig.zon", "src", "js", "scripts", "vendor", "README.md", "CHANGELOG.md", "specs" },
+}

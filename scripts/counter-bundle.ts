@@ -1,0 +1,60 @@
+import path from "node:path";
+const base=process.cwd();
+const native=path.join(base,"vendor/opentui/packages/core/src");
+const react=path.join(base,"vendor/opentui/packages/react/src");
+const platform=path.join(base,"js/platform");
+const replacements=new Map([
+  [path.join(native,"platform/ffi.ts"),path.join(platform,"ffi.ts")],
+  [path.join(native,"platform/runtime.ts"),path.join(platform,"runtime.ts")],
+  [path.join(react,"components/index.ts"),path.join(platform,"catalogue.ts")],
+]);
+const picture=Buffer.from(await Bun.file("assets/dragon.jpg").arrayBuffer()).toString("base64");
+const spriteFrames=await Promise.all(Array.from({length:8},async(_,i)=>Buffer.from(await Bun.file(`assets/dragon-frames/${i}.rgba`).arrayBuffer()).toString("base64")));
+const result=await Bun.build({
+  entrypoints:["js/counter.tsx"],target:"browser",format:"iife",minify:false,
+  define:{"__SPRITE_FRAMES_BASE64__":JSON.stringify(spriteFrames),"__DEMO_PICTURE_BASE64__":JSON.stringify(picture),"process.env.NODE_ENV":'"production"',"process.env.DEV":'"false"'},
+  plugins:[{name:"quicktui-counter-profile",setup(build){
+    build.onResolve({filter:/.*/},async(args)=>{
+      if(args.path === "js/counter.tsx") return {path:path.join(base,args.path)};
+      if(args.path==="@opentui/core")return {path:path.join(platform,"core.ts")};
+      if(["events","node:events","buffer","node:buffer"].includes(args.path))return {path:path.join(base,"vendor/js/node_modules",args.path.replace("node:",""),args.path.endsWith("events")?"events.js":"index.js")};
+      if(args.path==="node:util")return {path:"util",namespace:"quicktui"};
+      if(args.path==="#opentui/runtime-assets")return {path:"assets",namespace:"quicktui"};
+      if(["fs","node:fs"].includes(args.path))return {path:"fs",namespace:"quicktui"};
+      if(args.path==="node:fs/promises")return {path:"fs-promises",namespace:"quicktui"};
+      if(args.path.startsWith("node:") || args.path.startsWith("bun:"))throw new Error(`Unsupported host import ${args.path} from ${args.importer}`);
+      if(!args.path.startsWith(".")&&!path.isAbsolute(args.path)){
+        return {path:Bun.resolveSync(args.path,path.join(base,"vendor/js"))};
+      }
+      let resolved=path.resolve(args.resolveDir,args.path);
+      if(resolved.endsWith(".js"))resolved=resolved.slice(0,-3)+".ts";
+      else if(!path.extname(resolved))resolved+=".ts";
+      if(replacements.has(resolved))return {path:replacements.get(resolved)!};
+    });
+    build.onLoad({filter:/.*/,namespace:"quicktui"},args=>({loader:"ts",contents:args.path==="assets"?'export const resolveNativeLibraryPath=()=>"quicktui:static";':args.path==="fs-promises"?'export function open(){throw new Error("File image loading is unsupported; use NativeImage pixels")};export const stat=open;':args.path==="util"?'export const inspect=Object.assign((value)=>String(value),{custom:Symbol.for("nodejs.util.inspect.custom")}); export default {inspect};':'export function existsSync(){throw new Error("Filesystem access is unsupported")}; export function writeFileSync(){throw new Error("Filesystem access is unsupported")};'}));
+    build.onLoad({filter:/packages\/core\/src\/zig\.ts$/},async(args)=>{
+      let source=await Bun.file(args.path).text();
+      source=source.replace(/let targetLibPath:[\s\S]*?(?=registerEnvVar\()/,'const targetLibPath="quicktui:static"; const targetLibError=undefined;\n');
+      // The native registry owns the profile. Avoid retaining the 423-entry table.
+      const start=source.indexOf("const rawSymbols = dlopen(");
+      const end=source.indexOf("if (env.OTUI_DEBUG_FFI",start);
+      source=source.slice(0,start)+'const rawSymbols=dlopen(resolvedLibPath, {});\n\n  '+source.slice(end);
+      return {contents:source,loader:"ts"};
+    });
+    build.onLoad({filter:/packages\/core\/src\/lib\/index\.ts$/},()=>({loader:"ts",contents:['border','RGBA','styled-text'].map(name=>`export * from "./${name}.js";`).join("\n")}));
+    build.onLoad({filter:/bun-ffi-structs\/dist\/index\.js$/},async(args)=>{
+      const source=await Bun.file(args.path).text();
+      const start=source.indexOf("// src/structs_ffi.ts");
+      return {loader:"js",contents:`import {ptr,toArrayBuffer} from ${JSON.stringify(path.join(platform,"ffi.ts"))};\n`+source.slice(start)};
+    });
+  }}],
+});
+if(!result.success){for(const log of result.logs)console.error(log);process.exit(1)}
+const bootstrap=await Bun.build({entrypoints:["js/platform/bootstrap.ts"],target:"browser",format:"iife",minify:false});
+if(!bootstrap.success)throw new Error(bootstrap.logs.join("\n"));
+const licenses=await Promise.all(["react","react-reconciler","scheduler","events","buffer","bun-ffi-structs","base64-js","ieee754","strip-ansi","ansi-regex"].map(async name=>{
+  for(const file of ["LICENSE","LICENSE.md","license"]){const f=Bun.file(`vendor/js/node_modules/${name}/${file}`);if(await f.exists())return `${name}\n${await f.text()}`}
+  throw new Error(`Missing license for ${name}`);
+}));
+licenses.push(`OpenTUI\n${await Bun.file("vendor/opentui/LICENSE").text()}`);
+await Bun.write("src/counter.js",`/*!\n${licenses.join("\n")}\n*/\n${await bootstrap.outputs[0].text()}\n${await result.outputs[0].text()}`);

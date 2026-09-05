@@ -1,0 +1,16 @@
+{
+  "private": true,
+  "dependencies": {
+    "react": "19.2.3",
+    "react-reconciler": "0.33.0",
+    "scheduler": "0.27.0",
+    "bun-ffi-structs": "0.3.1",
+    "diff": "9.0.0",
+    "marked": "17.0.1",
+    "string-width": "7.2.0",
+    "strip-ansi": "7.1.2",
+    "web-tree-sitter": "0.25.10",
+    "events": "3.3.0",
+    "buffer": "6.0.3"
+  }
+}

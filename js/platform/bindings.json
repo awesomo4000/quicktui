@@ -1,0 +1,1166 @@
+[
+  {
+    "name": "setLogCallback",
+    "args": [
+      "ptr"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "ptr"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:516"
+    }
+  },
+  {
+    "name": "createEventSink",
+    "args": [
+      "ptr"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "ptr"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:520"
+    }
+  },
+  {
+    "name": "destroyEventSink",
+    "args": [
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:592"
+    }
+  },
+  {
+    "name": "createNativeRenderable",
+    "args": [],
+    "returns": "u32",
+    "native": {
+      "args": [],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:539"
+    }
+  },
+  {
+    "name": "destroyNativeRenderable",
+    "args": [
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:548"
+    }
+  },
+  {
+    "name": "nativeRenderableAttachYogaNode",
+    "args": [
+      "u32",
+      "ptr"
+    ],
+    "returns": "bool",
+    "native": {
+      "args": [
+        "u32",
+        "ptr"
+      ],
+      "returns": "bool",
+      "source": "vendor/opentui/packages/native/src/lib.zig:555"
+    }
+  },
+  {
+    "name": "nativeRenderableSetMeasureTarget",
+    "args": [
+      "u32",
+      "u32",
+      "u32"
+    ],
+    "returns": "bool",
+    "native": {
+      "args": [
+        "u32",
+        "u32",
+        "u32"
+      ],
+      "returns": "bool",
+      "source": "vendor/opentui/packages/native/src/lib.zig:565"
+    }
+  },
+  {
+    "name": "createRenderer",
+    "args": [
+      "u32",
+      "u32",
+      "u8",
+      "u8",
+      "ptr"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "u32",
+        "u32",
+        "u8",
+        "u8",
+        "ptr"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1148"
+    }
+  },
+  {
+    "name": "setTerminalEnvVar",
+    "args": [
+      "u32",
+      "ptr",
+      "u32",
+      "ptr",
+      "u32"
+    ],
+    "returns": "bool",
+    "native": {
+      "args": [
+        "u32",
+        "ptr",
+        "u32",
+        "ptr",
+        "u32"
+      ],
+      "returns": "bool",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1204"
+    }
+  },
+  {
+    "name": "destroyRenderer",
+    "args": [
+      "u32",
+      "bool"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "bool"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1221"
+    }
+  },
+  {
+    "name": "setUseThread",
+    "args": [
+      "u32",
+      "bool"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "bool"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1211"
+    }
+  },
+  {
+    "name": "setBackgroundColor",
+    "args": [
+      "u32",
+      "ptr"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "ptr"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1251"
+    }
+  },
+  {
+    "name": "render",
+    "args": [
+      "u32",
+      "bool"
+    ],
+    "returns": "u8",
+    "native": {
+      "args": [
+        "u32",
+        "bool"
+      ],
+      "returns": "u8",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1388"
+    }
+  },
+  {
+    "name": "getNextBuffer",
+    "args": [
+      "u32"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1331"
+    }
+  },
+  {
+    "name": "getCurrentBuffer",
+    "args": [
+      "u32"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1336"
+    }
+  },
+  {
+    "name": "getBufferWidth",
+    "args": [
+      "u32"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1365"
+    }
+  },
+  {
+    "name": "getBufferHeight",
+    "args": [
+      "u32"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1370"
+    }
+  },
+  {
+    "name": "getBufferWidthMethod",
+    "args": [
+      "u32"
+    ],
+    "returns": "u8",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "u8",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1375"
+    }
+  },
+  {
+    "name": "bufferClear",
+    "args": [
+      "u32",
+      "ptr"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "ptr"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1734"
+    }
+  },
+  {
+    "name": "bufferGetRealCharSize",
+    "args": [
+      "u32"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1780"
+    }
+  },
+  {
+    "name": "bufferWriteResolvedChars",
+    "args": [
+      "u32",
+      "ptr",
+      "u32",
+      "bool"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "u32",
+        "ptr",
+        "u32",
+        "bool"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1785"
+    }
+  },
+  {
+    "name": "resizeRenderer",
+    "args": [
+      "u32",
+      "u32",
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "u32",
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2063"
+    }
+  },
+  {
+    "name": "bufferDrawImage",
+    "args": [
+      "u32",
+      "u32",
+      "ptr"
+    ],
+    "returns": "u8",
+    "native": {
+      "args": [
+        "u32",
+        "u32",
+        "ptr"
+      ],
+      "returns": "u8",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1929"
+    }
+  },
+  {
+    "name": "bufferDrawBox",
+    "args": [
+      "u32",
+      "i32",
+      "i32",
+      "u32",
+      "u32",
+      "ptr",
+      "u32",
+      "ptr",
+      "ptr",
+      "ptr",
+      "ptr",
+      "u32",
+      "ptr",
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "i32",
+        "i32",
+        "u32",
+        "u32",
+        "ptr",
+        "u32",
+        "ptr",
+        "ptr",
+        "ptr",
+        "ptr",
+        "u32",
+        "ptr",
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2009"
+    }
+  },
+  {
+    "name": "setupTerminal",
+    "args": [
+      "u32",
+      "bool"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "bool"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2168"
+    }
+  },
+  {
+    "name": "createTextBuffer",
+    "args": [
+      "u8"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "u8"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2202"
+    }
+  },
+  {
+    "name": "destroyTextBuffer",
+    "args": [
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2216"
+    }
+  },
+  {
+    "name": "textBufferGetLength",
+    "args": [
+      "u32"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2223"
+    }
+  },
+  {
+    "name": "textBufferGetByteSize",
+    "args": [
+      "u32"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2228"
+    }
+  },
+  {
+    "name": "textBufferSetDefaultFg",
+    "args": [
+      "u32",
+      "ptr"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "ptr"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2243"
+    }
+  },
+  {
+    "name": "textBufferSetDefaultBg",
+    "args": [
+      "u32",
+      "ptr"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "ptr"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2248"
+    }
+  },
+  {
+    "name": "textBufferSetDefaultAttributes",
+    "args": [
+      "u32",
+      "ptr"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "ptr"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2253"
+    }
+  },
+  {
+    "name": "textBufferSetStyledText",
+    "args": [
+      "u32",
+      "ptr",
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "ptr",
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2322"
+    }
+  },
+  {
+    "name": "textBufferSetSyntaxStyle",
+    "args": [
+      "u32",
+      "u32"
+    ],
+    "returns": "bool",
+    "native": {
+      "args": [
+        "u32",
+        "u32"
+      ],
+      "returns": "bool",
+      "source": "vendor/opentui/packages/native/src/lib.zig:3319"
+    }
+  },
+  {
+    "name": "createTextBufferView",
+    "args": [
+      "u32"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2348"
+    }
+  },
+  {
+    "name": "destroyTextBufferView",
+    "args": [
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2361"
+    }
+  },
+  {
+    "name": "textBufferViewSetWrapMode",
+    "args": [
+      "u32",
+      "u8"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "u8"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2415"
+    }
+  },
+  {
+    "name": "textBufferViewSetFirstLineOffset",
+    "args": [
+      "u32",
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2426"
+    }
+  },
+  {
+    "name": "textBufferViewSetViewport",
+    "args": [
+      "u32",
+      "u32",
+      "u32",
+      "u32",
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "u32",
+        "u32",
+        "u32",
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2436"
+    }
+  },
+  {
+    "name": "textBufferViewSetTruncate",
+    "args": [
+      "u32",
+      "bool"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "bool"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2519"
+    }
+  },
+  {
+    "name": "bufferDrawTextBufferView",
+    "args": [
+      "u32",
+      "u32",
+      "i32",
+      "i32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "u32",
+        "i32",
+        "i32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:3238"
+    }
+  },
+  {
+    "name": "createSyntaxStyle",
+    "args": [],
+    "returns": "u32",
+    "native": {
+      "args": [],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:3390"
+    }
+  },
+  {
+    "name": "destroySyntaxStyle",
+    "args": [
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:3401"
+    }
+  },
+  {
+    "name": "imageRetainIccCache",
+    "args": [],
+    "returns": "void",
+    "native": {
+      "args": [],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:3443"
+    }
+  },
+  {
+    "name": "imageReleaseIccCache",
+    "args": [],
+    "returns": "void",
+    "native": {
+      "args": [],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:3447"
+    }
+  },
+  {
+    "name": "imageDecode",
+    "args": [
+      "ptr",
+      "u32",
+      "ptr"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "ptr",
+        "u32",
+        "ptr"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:3455"
+    }
+  },
+  {
+    "name": "imageCreateFromRgba",
+    "args": [
+      "ptr",
+      "u64",
+      "u32",
+      "u32",
+      "u32",
+      "ptr"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "ptr",
+        "u64",
+        "u32",
+        "u32",
+        "u32",
+        "ptr"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:3465"
+    }
+  },
+  {
+    "name": "imageDestroy",
+    "args": [
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:3561"
+    }
+  },
+  {
+    "name": "imageRetain",
+    "args": [
+      "u32",
+      "ptr"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "u32",
+        "ptr"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:3595"
+    }
+  },
+  {
+    "name": "imageGetInfo",
+    "args": [
+      "u32",
+      "ptr"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "u32",
+        "ptr"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:3604"
+    }
+  },
+  {
+    "name": "getTerminalCapabilities",
+    "args": [
+      "u32",
+      "ptr"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "ptr"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1521"
+    }
+  },
+  {
+    "name": "processCapabilityResponse",
+    "args": [
+      "u32",
+      "ptr",
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "ptr",
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1565"
+    }
+  },
+  {
+    "name": "encodeUnicode",
+    "args": [
+      "ptr",
+      "u32",
+      "ptr",
+      "ptr",
+      "u8"
+    ],
+    "returns": "bool",
+    "native": {
+      "args": [
+        "ptr",
+        "u32",
+        "ptr",
+        "ptr",
+        "u8"
+      ],
+      "returns": "bool",
+      "source": "vendor/opentui/packages/native/src/lib.zig:3824"
+    }
+  },
+  {
+    "name": "freeUnicode",
+    "args": [
+      "ptr",
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "ptr",
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:3953"
+    }
+  },
+  {
+    "name": "yogaNodeCreateForOpenTUI",
+    "args": [],
+    "returns": "ptr",
+    "native": {
+      "args": [],
+      "returns": "ptr",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:332"
+    }
+  },
+  {
+    "name": "yogaNodeFree",
+    "args": [
+      "ptr"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "ptr"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:340"
+    }
+  },
+  {
+    "name": "yogaNodeInsertChild",
+    "args": [
+      "ptr",
+      "ptr",
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "ptr",
+        "ptr",
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:359"
+    }
+  },
+  {
+    "name": "yogaNodeRemoveChild",
+    "args": [
+      "ptr",
+      "ptr"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "ptr",
+        "ptr"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:363"
+    }
+  },
+  {
+    "name": "yogaNodeCalculateLayout",
+    "args": [
+      "ptr",
+      "f32",
+      "f32",
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "ptr",
+        "f32",
+        "f32",
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:383"
+    }
+  },
+  {
+    "name": "yogaNodeIsDirty",
+    "args": [
+      "ptr"
+    ],
+    "returns": "bool",
+    "native": {
+      "args": [
+        "ptr"
+      ],
+      "returns": "bool",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:387"
+    }
+  },
+  {
+    "name": "yogaNodeMarkDirty",
+    "args": [
+      "ptr"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "ptr"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:391"
+    }
+  },
+  {
+    "name": "yogaNodeGetHasNewLayout",
+    "args": [
+      "ptr"
+    ],
+    "returns": "bool",
+    "native": {
+      "args": [
+        "ptr"
+      ],
+      "returns": "bool",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:395"
+    }
+  },
+  {
+    "name": "yogaNodeSetHasNewLayout",
+    "args": [
+      "ptr",
+      "bool"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "ptr",
+        "bool"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:399"
+    }
+  },
+  {
+    "name": "yogaNodeGetComputedLayout",
+    "args": [
+      "ptr",
+      "ptr"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "ptr",
+        "ptr"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:419"
+    }
+  },
+  {
+    "name": "yogaNodeStyleSetEnum",
+    "args": [
+      "ptr",
+      "u32",
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "ptr",
+        "u32",
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:439"
+    }
+  },
+  {
+    "name": "yogaNodeStyleSetFloat",
+    "args": [
+      "ptr",
+      "u32",
+      "f32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "ptr",
+        "u32",
+        "f32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:471"
+    }
+  },
+  {
+    "name": "yogaNodeStyleSetBorder",
+    "args": [
+      "ptr",
+      "u32",
+      "f32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "ptr",
+        "u32",
+        "f32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:489"
+    }
+  },
+  {
+    "name": "yogaNodeStyleSetValue",
+    "args": [
+      "ptr",
+      "u32",
+      "u32",
+      "u32",
+      "f32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "ptr",
+        "u32",
+        "u32",
+        "u32",
+        "f32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:497"
+    }
+  },
+  {
+    "name": "yogaNodeUnsetMeasureFunc",
+    "args": [
+      "ptr"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "ptr"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:625"
+    }
+  },
+  {
+    "name": "yogaNodeUnsetDirtiedFunc",
+    "args": [
+      "ptr"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "ptr"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:642"
+    }
+  },
+  {
+    "name": "yogaSetMeasureCallback",
+    "args": [
+      "ptr"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "ptr"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:592"
+    }
+  },
+  {
+    "name": "yogaSetDirtiedCallback",
+    "args": [
+      "ptr"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "ptr"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/yoga.zig:596"
+    }
+  }
+]
