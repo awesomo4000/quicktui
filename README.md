@@ -230,7 +230,7 @@ as `--messages`.
 - **Drag** rotates geometry or pans the fractal; **scroll** zooms.
 - **M** cycles Kitty/automatic fallback, Unicode half blocks, braille, and native glyphs.
 - **G** enters native glyph mode and cycles ASCII, shades, quadrants, braille with punctuation,
-  ASCII plus braille, box drawing, and blocks.
+  ASCII plus braille, box drawing, blocks, and pure braille.
 - **D** cycles color, grayscale, screen-space Bayer, and surface fractal dithering.
 - **B / N** raises/lowers brightness; **K / J** raises/lowers contrast.
 - **O / I** enlarges/shrinks surface dither dots.
@@ -263,7 +263,7 @@ resolution and grazing angles can still alias. Mandelbrot uses complex-plane
 coordinates as its surface.
 
 Half blocks and braille use a custom OpenTUI renderable, so they participate in
-normal cell diffing and need no graphics protocol. Braille shares one foreground
+normal cell diffing and need no graphics protocol. Braille shares one source-derived foreground
 color across each cell's eight dots; it is most useful for wireframes. These
 modes currently resample the same 240 × 160 native frame.
 
@@ -271,7 +271,11 @@ Native glyph mode adapts Phosphor's six-region shape matching and Fira Code
 measurements from `examples/ascii-cube.zig`. Font differences can affect how
 well a selected character matches the samples. Matching and area sampling run
 on the Zig worker; UTF-8 rows travel after the RGBA pixels in the binary frame.
-JS draws rows through OpenTUI without searching the glyph sets. The viewport is
+Each cell also carries foreground/background RGB values. ASCII, braille,
+shades, and box glyphs use source-derived foreground colors. Quadrant and
+block sets fit two colors to their glyph coverage. Both black-and-white
+dither modes use white ink on black. JS batches adjacent cells with equal
+colors into runs through OpenTUI without searching the glyph sets. The viewport is
 bounded to 240 columns by 80 rows, and size changes reach the worker within
 the half-second metrics interval. Existing half-block/braille modes still do
 their conversion in JS.

@@ -2,6 +2,10 @@
 
 ## Unreleased - 09/05/2026
 
+- Add a pure braille charset to native glyph selection, without ASCII or punctuation.
+
+- Preserve source colors in braille and native glyph modes; fit foreground/background colors for quadrant and block sets while keeping dithering monochrome.
+
 - Add seven Phosphor glyph sets with six-region shape matching on the native worker and G selection in the graphics lab.
 
 - Add 1–120 FPS controls and delivered-frame statistics; rate-limit native rendering under key repeat and advance animation by elapsed time.

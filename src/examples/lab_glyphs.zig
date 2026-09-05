@@ -265,7 +265,11 @@ const quadrant_all_chars = [_][]const u8{
 
 pub const max_cols = 240;
 pub const max_rows = 80;
-pub const max_bytes = max_rows * (max_cols * 4 + 1);
+pub const max_text_bytes = max_rows * (max_cols * 4 + 1);
+pub const max_bytes = max_text_bytes + max_cols * max_rows * 6;
+fn byte(v: f32) u8 {
+    return @intFromFloat(@round(@max(0, @min(255, v))));
+}
 const Candidate = struct { cp: u21, v: [6]f32 };
 pub const Converter = struct {
     candidates: [351]Candidate = undefined,
@@ -290,11 +294,11 @@ pub const Converter = struct {
             else => &.{},
         };
         for (chars) |char| self.add(std.unicode.utf8Decode(char) catch unreachable);
-        if (charset == 4 or charset == 5) {
+        if (charset == 4 or charset == 5 or charset == 8) {
             for (0..256) |i| self.add(@intCast(0x2800 + i));
             if (charset == 4) {
                 for (" .,'` :;!?\"-_ij") |ch| self.add(ch);
-            } else for (32..127) |ch| self.add(@intCast(ch));
+            } else if (charset == 5) for (32..127) |ch| self.add(@intCast(ch));
         }
     }
     fn match(self: *const Converter, shape: [6]f32) u21 {
@@ -310,13 +314,51 @@ pub const Converter = struct {
         }
         return cp;
     }
-    pub fn render(self: *Converter, pixels: []const u8, cols: usize, rows: usize, charset: u32, out: []u8) usize {
-        std.debug.assert(cols > 0 and cols <= max_cols and rows > 0 and rows <= max_rows and charset >= 1 and charset <= 7);
+    const Colored = struct { cp: u21, colors: [6]u8 };
+    fn coloredBlock(self: *const Converter, rgb: [6][3]f32) Colored {
+        var best: f32 = std.math.inf(f32);
+        var result: Colored = .{ .cp = ' ', .colors = @splat(0) };
+        for (self.candidates[0..self.count]) |candidate| {
+            var sw: f32 = 0;
+            var sww: f32 = 0;
+            for (candidate.v) |w| {
+                sw += w;
+                sww += w * w;
+            }
+            const den = 6 * sww - sw * sw;
+            var colors: [6]u8 = undefined;
+            for (0..3) |channel| {
+                var sum: f32 = 0;
+                var weighted: f32 = 0;
+                for (rgb, candidate.v) |pixel, w| {
+                    sum += pixel[channel];
+                    weighted += pixel[channel] * w;
+                }
+                const bg = if (den < 0.0001) sum / 6 else (sum * sww - weighted * sw) / den;
+                const fg = if (den < 0.0001) bg else bg + (6 * weighted - sw * sum) / den;
+                colors[channel] = byte(fg);
+                colors[channel + 3] = byte(bg);
+            }
+            var err: f32 = 0;
+            for (rgb, candidate.v) |pixel, w| for (0..3) |channel| {
+                const predicted = @as(f32, @floatFromInt(colors[channel])) * w + @as(f32, @floatFromInt(colors[channel + 3])) * (1 - w);
+                err += (pixel[channel] - predicted) * (pixel[channel] - predicted);
+            };
+            if (err < best) {
+                best = err;
+                result = .{ .cp = candidate.cp, .colors = colors };
+            }
+        }
+        return result;
+    }
+    pub fn render(self: *Converter, pixels: []const u8, cols: usize, rows: usize, charset: u32, tone: u32, out: []u8) usize {
+        std.debug.assert(cols > 0 and cols <= max_cols and rows > 0 and rows <= max_rows and charset >= 1 and charset <= 8);
         self.set(charset);
         var length: usize = 0;
         for (0..rows) |y| {
             for (0..cols) |x| {
                 var shape: [6]f32 = undefined;
+                var rgb: [6][3]f32 = undefined;
                 for (0..3) |ry| for (0..2) |rx| {
                     // Area sampling keeps thin edges when reducing the native frame.
                     const sx = (x * 2 + rx) * 240 / (cols * 2);
@@ -324,42 +366,92 @@ pub const Converter = struct {
                     const ex = @min(240, @max(sx + 1, (x * 2 + rx + 1) * 240 / (cols * 2)));
                     const ey = @min(160, @max(sy + 1, (y * 3 + ry + 1) * 160 / (rows * 3)));
                     var sum: f32 = 0;
+                    var channels: [3]f32 = @splat(0);
                     var samples: f32 = 0;
                     for (sy..ey) |py| for (sx..ex) |px| {
                         const i = (py * 240 + px) * 4;
                         sum += (@as(f32, @floatFromInt(pixels[i])) * 0.299 + @as(f32, @floatFromInt(pixels[i + 1])) * 0.587 + @as(f32, @floatFromInt(pixels[i + 2])) * 0.114) / 255;
+                        for (0..3) |channel| channels[channel] += @floatFromInt(pixels[i + channel]);
                         samples += 1;
                     };
                     // Suppress the lab background vignette instead of filling it with faint strokes.
                     const value = sum / samples;
                     shape[ry * 2 + rx] = if (value < 0.09) 0 else value;
+                    for (0..3) |channel| rgb[ry * 2 + rx][channel] = if (value < 0.09) 0 else channels[channel] / samples;
                 };
+                var colors: [6]u8 = .{ 255, 255, 255, 0, 0, 0 };
+                var cp = self.match(shape);
+                if (tone < 2) {
+                    if (charset == 3 or charset == 7) {
+                        const block = self.coloredBlock(rgb);
+                        cp = block.cp;
+                        colors = block.colors;
+                    } else {
+                        var sum: [3]f32 = @splat(0);
+                        var count: f32 = 0;
+                        for (rgb, shape) |pixel, ink| if (ink > 0) {
+                            for (0..3) |channel| sum[channel] += pixel[channel];
+                            count += 1;
+                        };
+                        for (0..3) |channel| colors[channel] = byte(sum[channel] / @max(1, count));
+                    }
+                }
+                const color_offset = max_text_bytes + (y * cols + x) * 6;
+                @memcpy(out[color_offset..][0..6], &colors);
                 var bytes: [4]u8 = undefined;
-                const n = std.unicode.utf8Encode(self.match(shape), &bytes) catch unreachable;
+                const n = std.unicode.utf8Encode(cp, &bytes) catch unreachable;
                 @memcpy(out[length..][0..n], bytes[0..n]);
                 length += n;
             }
             out[length] = '\n';
             length += 1;
         }
-        return length;
+        const color_len = cols * rows * 6;
+        std.mem.copyForwards(u8, out[length..][0..color_len], out[max_text_bytes..][0..color_len]);
+        return length + color_len;
     }
 };
 test "glyph sets produce valid bounded text and distinguish ink from blank" {
     var converter: Converter = .{};
     var pixels: [240 * 160 * 4]u8 = @splat(0);
     var output: [max_bytes]u8 = undefined;
-    for (1..8) |set_id| {
+    for (1..9) |set_id| {
         @memset(&pixels, 0);
-        const blank_len = converter.render(&pixels, 20, 10, @intCast(set_id), &output);
-        try std.testing.expect(std.unicode.utf8ValidateSlice(output[0..blank_len]));
+        const blank_len = converter.render(&pixels, 20, 10, @intCast(set_id), 0, &output);
+        try std.testing.expect(std.unicode.utf8ValidateSlice(output[0 .. blank_len - 1200]));
         const blank = std.hash.Wyhash.hash(0, output[0..blank_len]);
         @memset(&pixels, 20);
-        const dark_len = converter.render(&pixels, 20, 10, @intCast(set_id), &output);
+        const dark_len = converter.render(&pixels, 20, 10, @intCast(set_id), 0, &output);
         try std.testing.expectEqual(blank, std.hash.Wyhash.hash(0, output[0..dark_len]));
         @memset(&pixels, 255);
-        const ink_len = converter.render(&pixels, 20, 10, @intCast(set_id), &output);
+        const ink_len = converter.render(&pixels, 20, 10, @intCast(set_id), 0, &output);
         try std.testing.expect(blank != std.hash.Wyhash.hash(0, output[0..ink_len]));
-        try std.testing.expectEqual(@as(usize, 10), std.mem.count(u8, output[0..ink_len], "\n"));
+        try std.testing.expectEqual(@as(usize, 10), std.mem.count(u8, output[0 .. ink_len - 1200], "\n"));
     }
+}
+
+test "glyph foreground preserves color and monochrome modes use neutral colors" {
+    var converter: Converter = .{};
+    var pixels: [240 * 160 * 4]u8 = undefined;
+    for (0..240 * 160) |i| @memcpy(pixels[i * 4 ..][0..4], &[_]u8{ 210, 90, 35, 255 });
+    var output: [max_bytes]u8 = undefined;
+    for (1..9) |set_id| {
+        const len = converter.render(&pixels, 1, 1, @intCast(set_id), 0, &output);
+        const colors = output[len - 6 .. len];
+        try std.testing.expect(colors[0] > colors[2] or colors[3] > colors[5]);
+        const mono_len = converter.render(&pixels, 1, 1, @intCast(set_id), 3, &output);
+        try std.testing.expectEqualSlices(u8, &.{ 255, 255, 255, 0, 0, 0 }, output[mono_len - 6 .. mono_len]);
+    }
+}
+test "blocks preserve two distinct source colors" {
+    var converter: Converter = .{};
+    var pixels: [240 * 160 * 4]u8 = undefined;
+    for (0..160) |y| for (0..240) |x| {
+        const color = [4]u8{ if (x < 120) 255 else 0, if (x < 120) 0 else 255, 0, 255 };
+        @memcpy(pixels[(y * 240 + x) * 4 ..][0..4], &color);
+    };
+    var output: [max_bytes]u8 = undefined;
+    const len = converter.render(&pixels, 1, 1, 7, 0, &output);
+    const colors = output[len - 6 .. len];
+    try std.testing.expect((colors[0] > 240 and colors[4] > 240) or (colors[1] > 240 and colors[3] > 240));
 }

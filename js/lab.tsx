@@ -5,7 +5,7 @@ import {NativeImage} from "../vendor/opentui/packages/core/src/image";
 import {mountDemo,keys,graphicsState} from "./platform/demo";
 const WIDTH=240,HEIGHT=160;
 type Scene={shape:number,angle:number,tilt:number,zoom:number,wire:boolean,palette:number,playing:boolean,fps:number,charset:number,cols:number,rows:number,tone:number,brightness:number,contrast:number,dot_scale:number,fractal_zoom:number,center_x:number,center_y:number};
-type Frame={image:NativeImage,pixels:Uint8Array,glyphs:string,cols:number,rows:number,charset:number,ms:number,index:number,dropped:number,serial:number};
+type Frame={image:NativeImage,pixels:Uint8Array,glyphs:string,glyphColors:Uint8Array,tone:number,cols:number,rows:number,charset:number,ms:number,index:number,dropped:number,serial:number};
 const ownedImages=new Map<NativeImage,number>();
 function releaseBefore<T extends {dispose():void}>(images:Map<T,number>,committed:number){
   // A delayed effect must never release a newer frame waiting for its commit.
@@ -25,11 +25,11 @@ Object.assign(globalThis,{__message(message:string){
   if(deliveries.length>240)deliveries.splice(0,deliveries.length-240);
   if(frameListeners.size===0){image.dispose();return;}
   ownedImages.set(image,framesReceived);
-  for(const listener of frameListeners)listener({image,pixels:new Uint8Array(bytes,0,WIDTH*HEIGHT*4),glyphs:new TextDecoder().decode(new Uint8Array(bytes,WIDTH*HEIGHT*4)),cols:event.cols,rows:event.rows,charset:event.charset,ms:event.ms,index:event.id,dropped:event.dropped,serial:framesReceived});
+  for(const listener of frameListeners)listener({image,pixels:new Uint8Array(bytes,0,WIDTH*HEIGHT*4),glyphs:new TextDecoder().decode(new Uint8Array(bytes,WIDTH*HEIGHT*4,event.glyph_bytes)),glyphColors:new Uint8Array(bytes,WIDTH*HEIGHT*4+event.glyph_bytes),tone:event.tone,cols:event.cols,rows:event.rows,charset:event.charset,ms:event.ms,index:event.id,dropped:event.dropped,serial:framesReceived});
 }});
 declare const __host:{headless:boolean,postMessage(text:string):boolean,takeBuffer(id:number):ArrayBuffer|null};
 const names=["Torus","Orb","Sheet","4D hypercube","Mandelbrot"];
-const glyphNames=["","ASCII","Shades","Quadrants","Braille + punctuation","ASCII + braille","Box drawing","Blocks"];
+const glyphNames=["","ASCII","Shades","Quadrants","Braille + punctuation","ASCII + braille","Box drawing","Blocks","Pure braille"];
 const tones=["Color","Grayscale","Screen Bayer","Surface fractal"];
 function App(){
   const scene=useRef<Scene>({shape:3,angle:0,tilt:.7,zoom:.82,wire:false,palette:0,playing:true,fps:10,charset:0,cols:60,rows:20,tone:0,brightness:0,contrast:1,dot_scale:4,fractal_zoom:1,center_x:-.65,center_y:0});
@@ -74,7 +74,7 @@ function App(){
       }
       if(name==="m"){outputRef.current=(outputRef.current+1)%4;setOutput(outputRef.current)}
       if(name==="g"){
-        if(outputRef.current===3)glyphRef.current=glyphRef.current%7+1;
+        if(outputRef.current===3)glyphRef.current=glyphRef.current%(glyphNames.length-1)+1;
         outputRef.current=3;setOutput(3);
       }
       scene.current.charset=outputRef.current===3?glyphRef.current:0;
@@ -127,7 +127,7 @@ function App(){
         onMouseUp={()=>{drag.current=null;draw()}}
         onMouseScroll={(e:any)=>{if(scene.current.shape===4)scene.current.fractal_zoom=Math.max(.5,Math.min(1e10,scene.current.fractal_zoom*(e.scroll.direction==="up"?1.25:.8)));
           else scene.current.zoom=Math.max(.3,Math.min(1.4,scene.current.zoom+(e.scroll.direction==="up"?.07:-.07)));draw()}}>
-        {frame?(output===0?<image source={frame.image} width="100%" height="100%" protocol={kitty?"kitty":"blocks"} onError={(error:any)=>{throw error}}/>:React.createElement("labCells",{pixels:frame.pixels,mode:output===1?"half":output===2?"braille":"glyphs",glyphs:frame.glyphs,glyphCols:frame.cols,glyphRows:frame.rows,width:"100%",height:"100%"})):<text fg="#718b99">Waiting for native frame…</text>}
+        {frame?(output===0?<image source={frame.image} width="100%" height="100%" protocol={kitty?"kitty":"blocks"} onError={(error:any)=>{throw error}}/>:React.createElement("labCells",{pixels:frame.pixels,mode:output===1?"half":output===2?"braille":"glyphs",glyphs:frame.glyphs,glyphColors:frame.glyphColors,tone:frame.tone,glyphCols:frame.cols,glyphRows:frame.rows,width:"100%",height:"100%"})):<text fg="#718b99">Waiting for native frame…</text>}
       </box>
       <text height={1} flexShrink={0} fg="#c2ced5">{names[scene.current.shape]} · {scene.current.wire?"wireframe":"shaded"} · {playing.current?"playing":"paused"} · {fps} FPS delivered · -/= target {scene.current.fps} · {frame?.ms??0} ms CPU · drop {frame?.dropped??0}</text>
       <text height={1} flexShrink={0} fg="#718b99">Drag rotate/pan · scroll zoom · W wire · C palette · P pause · R reset · T fractal target · Q exit</text>
@@ -162,7 +162,7 @@ if(__host.headless)Object.assign(globalThis,{async __selfTest(){
   }
   await wait();
   if(framesReceived<=before)throw new Error("Zoom must keep receiving native frames");
-  for(const [key,label] of [["=","target 15"],["-","target 10"],["4","4D hypercube"],["5","Mandelbrot"],["t","250.0× zoom"],["d","Grayscale"],["d","Screen Bayer"],["d","Surface fractal"],["m","Half blocks"],["m","Braille"],["m","G charset"],["g","Shades"],["g","Quadrants"],["g","Braille + punctuation"],["g","ASCII + braille"],["g","Box drawing"],["g","Blocks"],["m","Block fallback"]]){
+  for(const [key,label] of [["=","target 15"],["-","target 10"],["4","4D hypercube"],["5","Mandelbrot"],["t","250.0× zoom"],["d","Grayscale"],["d","Screen Bayer"],["d","Surface fractal"],["m","Half blocks"],["m","Braille"],["m","G charset"],["g","Shades"],["g","Quadrants"],["g","Braille + punctuation"],["g","ASCII + braille"],["g","Box drawing"],["g","Blocks"],["g","Pure braille"],["m","Block fallback"]]){
     host.__input(new TextEncoder().encode(key).buffer);await wait();
     if(!host.__snapshot().includes(label))throw new Error("Missing lab control state: "+label);
     if(label==="Half blocks"&&!host.__snapshot().includes("▀"))throw new Error("Half-block canvas must draw cells");
@@ -172,6 +172,20 @@ if(__host.headless)Object.assign(globalThis,{async __selfTest(){
   await new Promise(resolve=>setTimeout(resolve,250));
   const glyphNode=[...Renderable.renderablesByNumber.values()].find((node:any)=>node.glyphCols>0) as any;
   if(!glyphNode||!glyphNode.glyphs.trim())throw new Error("Native glyph rows must reach the canvas");
+  host.__input(new TextEncoder().encode("d").buffer); // Surface fractal -> color.
+  await new Promise(resolve=>setTimeout(resolve,250));
+  let colored=false;
+  glyphNode.renderSelf({drawText(_text:any,_x:any,_y:any,fg:any,bg:any){
+    for(const color of [fg,bg]){const [r,g,b]=color.toInts();if(r!==g||g!==b)colored=true}
+  }});
+  if(!colored)throw new Error("Glyph drawing must submit source colors to OpenTUI");
+  // Exercise the separate braille drawing path with the same colored frame.
+  glyphNode.mode="braille";colored=false;
+  glyphNode.renderSelf({drawText(_text:any,_x:any,_y:any,fg:any){
+    const [r,g,b]=fg.toInts();if(r!==g||g!==b)colored=true;
+  }});
+  if(!colored)throw new Error("Braille drawing must submit source colors to OpenTUI");
+  glyphNode.mode="glyphs";
   host.__resize(60,18);
   await new Promise(resolve=>setTimeout(resolve,700));
   if(glyphNode.glyphCols>glyphNode.width||glyphNode.glyphRows>glyphNode.height)throw new Error("Native glyph dimensions must follow resize");

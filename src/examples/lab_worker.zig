@@ -21,6 +21,7 @@ pub const Worker = struct {
     ready_cols: u32 = 0,
     ready_rows: u32 = 0,
     ready_charset: u32 = 0,
+    ready_tone: u32 = 0,
     frame_id: u32 = 0,
     taken_id: u32 = 0,
     pending: bool = false,
@@ -62,7 +63,7 @@ pub const Worker = struct {
         const parsed = std.json.parseFromSlice(cpu.Scene, std.heap.c_allocator, bytes[0..len], .{}) catch return 0;
         defer parsed.deinit();
         const scene = parsed.value;
-        if (scene.charset > 7 or scene.cols < 1 or scene.cols > glyphs.max_cols or scene.rows < 1 or scene.rows > glyphs.max_rows or scene.fps < 1 or scene.fps > 120 or scene.shape > 4 or scene.palette > 2 or !std.math.isFinite(scene.angle) or !std.math.isFinite(scene.tilt) or !std.math.isFinite(scene.zoom) or scene.zoom < 0.3 or scene.zoom > 1.4) return 0;
+        if (scene.charset > 8 or scene.cols < 1 or scene.cols > glyphs.max_cols or scene.rows < 1 or scene.rows > glyphs.max_rows or scene.fps < 1 or scene.fps > 120 or scene.shape > 4 or scene.palette > 2 or !std.math.isFinite(scene.angle) or !std.math.isFinite(scene.tilt) or !std.math.isFinite(scene.zoom) or scene.zoom < 0.3 or scene.zoom > 1.4) return 0;
         if (scene.tone > 3 or !std.math.isFinite(scene.brightness) or @abs(scene.brightness) > 1 or
             !std.math.isFinite(scene.contrast) or scene.contrast < 0.25 or scene.contrast > 4 or
             !std.math.isFinite(scene.dot_scale) or scene.dot_scale < 0 or scene.dot_scale > 5 or
@@ -83,7 +84,7 @@ pub const Worker = struct {
         _ = c.pthread_mutex_lock(&self.mutex);
         defer _ = c.pthread_mutex_unlock(&self.mutex);
         if (!self.pending) return -1;
-        const message = std.fmt.bufPrint(bytes[0..capacity], "{{\"type\":\"frame-ready\",\"id\":{d},\"width\":{d},\"height\":{d},\"ms\":{d:.2},\"dropped\":{d},\"cols\":{d},\"rows\":{d},\"charset\":{d}}}", .{ self.frame_id, cpu.width, cpu.height, self.render_ms, self.dropped, self.ready_cols, self.ready_rows, self.ready_charset }) catch return -1;
+        const message = std.fmt.bufPrint(bytes[0..capacity], "{{\"type\":\"frame-ready\",\"id\":{d},\"width\":{d},\"height\":{d},\"ms\":{d:.2},\"dropped\":{d},\"cols\":{d},\"rows\":{d},\"charset\":{d},\"tone\":{d},\"glyph_bytes\":{d}}}", .{ self.frame_id, cpu.width, cpu.height, self.render_ms, self.dropped, self.ready_cols, self.ready_rows, self.ready_charset, self.ready_tone, self.ready_len - cpu.byte_count - (if (self.ready_charset > 0) self.ready_cols * self.ready_rows * 6 else @as(u32, 0)) }) catch return -1;
         self.pending = false;
         var byte: u8 = 0;
         while (true) {
@@ -150,7 +151,7 @@ pub const Worker = struct {
             was_playing = scene.playing;
             scene.angle += phase;
             raster.render(scene);
-            const text_len = if (scene.charset > 0) converter.render(&raster.pixels, scene.cols, scene.rows, scene.charset, &text) else 0;
+            const text_len = if (scene.charset > 0) converter.render(&raster.pixels, scene.cols, scene.rows, scene.charset, scene.tone, &text) else 0;
             const elapsed = now() - began;
             _ = c.pthread_mutex_lock(&self.mutex);
             if (self.stopping) {
@@ -163,6 +164,7 @@ pub const Worker = struct {
             self.ready_cols = scene.cols;
             self.ready_rows = scene.rows;
             self.ready_charset = scene.charset;
+            self.ready_tone = scene.tone;
             self.frame_id +%= 1;
             if (self.frame_id == 0) self.frame_id = 1;
             self.render_ms = elapsed;
