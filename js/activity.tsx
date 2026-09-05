@@ -7,10 +7,12 @@ function tint(color:number[],amount:number){
 }
 const verbs=["thinking...","connecting...","considering...","imagining...","remembering...","reconsidering..."];
 
-// A purely visual React animation, independent of the worker and its heartbeat.
-export function Activity(){
+export type NativeBlink={type:"blink",sequence:number,cells:number[],columns:number,rows:number,atMs:number};
+// JS animates the effect, but only a native event can start a blink.
+export function Activity({pulse}:{pulse:NativeBlink|null}){
   const [size,setSize]=useState({width:24,height:8});
   const [time,setTime]=useState(0);
+  const [blink,setBlink]=useState<{cells:number[],columns:number,rows:number,started:number}|null>(null);
   useEffect(()=>{
     const started=Date.now();
     const timer=setInterval(()=>setTime((Date.now()-started)/1000),50);
@@ -18,6 +20,16 @@ export function Activity(){
   },[]);
   const columns=Math.max(1,Math.floor((size.width-4)/3));
   const rows=Math.max(1,Math.min(12,size.height-4));
+  useEffect(()=>{
+    const host=(globalThis as any).__host;
+    if(!host.postMessage(`grid:${columns}:${rows}`))throw new Error("Native grid configuration rejected");
+  },[columns,rows]);
+  useEffect(()=>{
+    // Ignore in-flight events for an old layout. Never remap native selections.
+    if(!pulse||pulse.columns!==columns||pulse.rows!==rows)return;
+    setBlink({cells:pulse.cells,columns,rows,started:Date.now()});
+  },[pulse]);
+  const blinkAge=blink?Date.now()-blink.started:Infinity;
   const cycle=time/2.8;
   const fade=Math.pow(Math.sin(Math.PI*(cycle%1)),1.4);
   const signal=512+240*Math.sin(time*0.63)+71*Math.sin(time*1.71);
@@ -29,7 +41,9 @@ export function Activity(){
         const wave=(1+Math.sin(time*(1.2+(x%3)*0.13)-x*0.7+y*1.1))/2;
         const shimmer=(1+Math.sin(time*2.3+x*1.7+y*0.6))/2;
         const brightness=0.12+0.88*Math.pow(wave*0.8+shimmer*0.2,2);
-        return <box key={x} width={2} height={1} flexShrink={0} backgroundColor={tint(palette[(x+2*y)%palette.length],brightness)}/>;
+        const selected=blink&&blink.columns===columns&&blink.rows===rows&&blink.cells.includes(y*columns+x)&&blinkAge<800;
+        const color=selected?(Math.floor(blinkAge/200)%2===0?"#f5f4df":"#101820"):tint(palette[(x+2*y)%palette.length],brightness);
+        return <box id={`activity-cell-${x}-${y}`} key={x} width={2} height={1} flexShrink={0} backgroundColor={color}/>;
       })}
     </box>)}
     <text height={1} flexShrink={0} fg={tint([164,205,213],fade)}>{verbs[Math.floor(cycle)%verbs.length]}</text>

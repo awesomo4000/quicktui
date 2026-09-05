@@ -165,7 +165,14 @@ five seconds after it starts. Batches queued behind earlier work wait their turn
 **V** cycles solid, segmented, and thin progress bars. **C** clears completed
 requests and their replies, keeping queued and running work.
 A decorative Activity pane below Replies pulses a multicolor grid at 20 FPS,
-with fading verbs and oscillating values. It runs independently of native jobs.
+with fading verbs and oscillating values. The Zig worker also sends an unsolicited
+`blink` event at random 1–5 second intervals, both idle and while working. That
+message contains 1–10 unique square IDs selected by Zig, capped at the grid size.
+The grid reports its dimensions through `grid:columns:rows` messages on layout
+changes. Native code keeps the latest dimensions independently of the job queue.
+All selected squares flash twice together over 800 ms before resuming their
+underlying pulses. Events for an old grid size are ignored rather than remapped. The reply log records each native blink. JS animates the visual
+response; it does not schedule or synthesize the triggering events.
 Drag its horizontal divider to change the right-side height split. Both dividers
 are one terminal cell thick.
 Requests starts wider than Replies. Drag the divider between them to resize

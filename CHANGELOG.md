@@ -2,6 +2,9 @@
 
 ## Unreleased - 09/05/2026
 
+- Send unsolicited blink events from the native worker every random 1–5 seconds, including while idle.
+- Report grid dimensions to the native worker, which chooses 1–10 unique squares to flash twice together on each event.
+
 - Overlay a subtle draggable scroll thumb on each history pane border without reserving a content column.
 
 - Prevent segmented and thin progress bars from retaining their previous width and clipping percentages when panes narrow.

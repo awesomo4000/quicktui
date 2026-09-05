@@ -1,20 +1,22 @@
 import React, {useEffect, useState, useRef, useCallback} from "../vendor/js/node_modules/react";
-import {Activity} from "./activity";
+import {Activity, type NativeBlink} from "./activity";
 import {Renderable} from "../vendor/opentui/packages/core/src/Renderable";
 import {mountDemo, keys} from "./platform/demo";
 
 declare const __host:{postMessage(message:string):boolean,headless:boolean};
 type Reply={id:number,type:"progress"|"done",progress:number,atMs:number};
 type Job={id:number,progress:number,status:string};
-const listeners=new Set<(event:Reply)=>void>();
+type NativeEvent=Reply|NativeBlink;
+const listeners=new Set<(event:NativeEvent)=>void>();
+const nativeBlinks:NativeBlink[]=[];
 const received:Reply[]=[];
 const acceptedIds:number[]=[];
 let nextId=1;
 let sent=0,rejected=0,uiTicks=0;
 // The host invokes this on the JS/UI thread, after draining the native queue.
 Object.assign(globalThis,{__message(message:string){
-  const event:Reply=JSON.parse(message);
-  if(__host.headless)received.push(event);
+  const event:NativeEvent=JSON.parse(message);
+  if(__host.headless){if(event.type==="blink")nativeBlinks.push(event);else received.push(event);}
   for(const listener of listeners)listener(event);
 }});
 const barStyles=["solid","segmented","thin"] as const;
@@ -99,19 +101,20 @@ function App(){
     setVerticalSplit(Math.max(minTop,Math.min(available-minBottom,y-column.y-verticalGrab.current))/available);
   }
   const topHeight=rightHeight?Math.max(Math.min(3,(rightHeight-1)*0.4),Math.min(rightHeight-1-Math.min(5,(rightHeight-1)*0.4),Math.round((rightHeight-1)*verticalSplit))):"50%";
+  const [pulse,setPulse]=useState<NativeBlink|null>(null);
   const [barStyle,setBarStyle]=useState(0);
   const [jobs,setJobs]=useState<Job[]>([]);
   const [tick,setTick]=useState(0);
   const [paused,setPaused]=useState(false);
   const [clicks,setClicks]=useState(0);
   const [counts,setCounts]=useState([0,0]);
-  const [events,setEvents]=useState<Reply[]>([]);
+  const [events,setEvents]=useState<NativeEvent[]>([]);
   const finished=useRef(new Set<number>());
   function clearFinished(){
     const ids=new Set(finished.current);
     finished.current.clear();
     setJobs(rows=>rows.filter(row=>!ids.has(row.id)));
-    setEvents(rows=>rows.filter(event=>!ids.has(event.id)));
+    setEvents(rows=>rows.filter(event=>event.type==="blink"||!ids.has(event.id)));
   }
   function submit(count=1){
     for(let i=0;i<count;i++){
@@ -135,7 +138,8 @@ function App(){
     setCounts([sent,rejected]);
   }
   useEffect(()=>{
-    const listener=(event:Reply)=>{
+    const listener=(event:NativeEvent)=>{
+      if(event.type==="blink"){setPulse(event);setEvents(rows=>[...rows,event]);return;}
       if(event.type==="done")finished.current.add(event.id);
       setJobs(rows=>rows.map(row=>row.id===event.id?{...row,progress:event.progress,status:event.type==="done"?"done":"working"}:row));
       setEvents(rows=>[...rows,event]);
@@ -184,7 +188,7 @@ function App(){
           onSizeChange={function(this:{height:number}){setRightHeight(this.height)}}>
         <box id="message-reply-panel" height={topHeight} flexShrink={0} border borderColor="#36535f" title={` Native replies (${events.length}) `} paddingX={1}>
           <scrollbox id="message-replies" ref={replyEdges.attach} width="100%" flexGrow={1} minHeight={0} scrollY stickyScroll stickyStart="bottom" contentOptions={{gap:0}}>
-          {events.map((event,i)=><text key={i} height={1} flexShrink={0} fg="#a59de0">← #{event.id}  {event.type}  {event.progress}%</text>)}
+          {events.map((event,i)=><text key={i} height={1} flexShrink={0} fg="#a59de0">{event.type==="blink"?`← blink #${event.sequence}: ${event.cells.length} cells`:`← #${event.id}  ${event.type}  ${event.progress}%`}</text>)}
           </scrollbox>
           <BorderThumb id="reply-scroll-thumb" scroll={replyEdges}/>
         </box>
@@ -194,7 +198,7 @@ function App(){
           onMouseDown={(event:any)=>{if(event.button!==0)return;verticalGrab.current=event.y-event.currentTarget.y;verticalDrag.current=true;setHorizontalActive(true);event.stopPropagation()}}
           onMouseDrag={(event:any)=>{if(verticalDrag.current){resizeVertical(event.y);event.stopPropagation()}}}
           onMouseUp={(event:any)=>{if(event.button!==0)return;verticalDrag.current=false;setHorizontalActive(false);event.stopPropagation()}}/>
-        <Activity/>
+        <Activity pulse={pulse}/>
         </box>
       </box>
       <text height={1} flexShrink={0} fg="#718b99">V: bar style {barStyles[barStyle]} · C clear finished · R random</text>
@@ -207,6 +211,28 @@ if(__host.headless)Object.assign(globalThis,{
     const host=globalThis as any;
     const expect=(condition:boolean,message:string)=>{if(!condition)throw new Error(message)};
     const feed=(text:string)=>host.__input(new TextEncoder().encode(text).buffer);
+    const idleDeadline=Date.now()+5500;
+    while(nativeBlinks.length===0&&Date.now()<idleDeadline)await new Promise(resolve=>setTimeout(resolve,10));
+    expect(nativeBlinks.length===1&&sent===0,"native must emit a blink while idle, without a JS request");
+    const blinkReceivedAt=Date.now();
+    const firstBlink=nativeBlinks[0];
+    expect(firstBlink.sequence===1,"first native blink must have sequence one");
+    await new Promise(resolve=>setTimeout(resolve,40));
+    const cells=()=>[...Renderable.renderablesByNumber.values()].filter(node=>node.id.startsWith("activity-cell-")) as any[];
+    const lit=cells().filter(node=>node.backgroundColor?.toInts().slice(0,3).join(",")==="245,244,223");
+    expect(firstBlink.cells.length>=1&&firstBlink.cells.length<=Math.min(10,firstBlink.columns*firstBlink.rows),"native blink count must fit the grid");
+    expect(new Set(firstBlink.cells).size===firstBlink.cells.length,"native blink selections must be unique");
+    expect(lit.length===firstBlink.cells.length,"native event must light exactly the selected squares");
+    for(const cell of firstBlink.cells){
+      expect(lit.some(node=>node.id===`activity-cell-${cell%firstBlink.columns}-${Math.floor(cell/firstBlink.columns)}`),"UI must honor native-selected coordinates without remapping");
+    }
+    const selected=lit;
+    const waitForAge=async(age:number)=>{while(Date.now()-blinkReceivedAt<age)await new Promise(resolve=>setTimeout(resolve,10))};
+    const allColor=(color:string)=>selected.every(node=>node.backgroundColor.toInts().slice(0,3).join(",")===color);
+    await waitForAge(300);expect(allColor("16,24,32"),"first blink must go dark");
+    await waitForAge(500);expect(allColor("245,244,223"),"second blink must light the same square");
+    await waitForAge(700);expect(allColor("16,24,32"),"second blink must go dark");
+    await waitForAge(900);expect(!allColor("245,244,223")&&!allColor("16,24,32"),"square must resume its underlying pulse");
     feed("s");feed(" ");
     expect(sent===1&&rejected===0,"initial request should be accepted");
     const first=1;

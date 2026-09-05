@@ -203,7 +203,7 @@ int quicktui_app_messages(const char *source,size_t length,int headless,const ch
         JS_FreeValue(ctx,custom_test);JS_FreeValue(ctx,test_global);
         if(has_custom_test){
             JSValue test_result=call(ctx,"__selfTest",0,NULL);
-            for(int i=0;i<10000&&!host.failed&&JS_PromiseState(ctx,test_result)==JS_PROMISE_PENDING;i++){step(ctx,runtime); if(endpoint){struct pollfd fd={.fd=endpoint->wake_fd,.events=POLLIN};poll(&fd,1,1);}}
+            for(int i=0;i<30000&&!host.failed&&JS_PromiseState(ctx,test_result)==JS_PROMISE_PENDING;i++){step(ctx,runtime); if(endpoint){struct pollfd fd={.fd=endpoint->wake_fd,.events=POLLIN};poll(&fd,1,1);}}
             if(!host.failed&&JS_PromiseState(ctx,test_result)==JS_PROMISE_PENDING){diagnostic(ctx,"Example self-test did not settle\n");host.failed=1;}
             if(!host.failed&&JS_PromiseState(ctx,test_result)==JS_PROMISE_REJECTED){JS_Throw(ctx,JS_PromiseResult(ctx,test_result));exception(ctx);}
             JS_FreeValue(ctx,test_result);goto cleanup;
