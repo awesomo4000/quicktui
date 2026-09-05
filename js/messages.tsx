@@ -1,4 +1,5 @@
-import React, {useEffect, useState, useRef} from "../vendor/js/node_modules/react";
+import React, {useEffect, useState, useRef, useCallback} from "../vendor/js/node_modules/react";
+import {Activity} from "./activity";
 import {Renderable} from "../vendor/opentui/packages/core/src/Renderable";
 import {mountDemo, keys} from "./platform/demo";
 
@@ -21,14 +22,83 @@ function ProgressBar({progress,style}:{progress:number,style:number}){
   const [width,setWidth]=useState(0);
   const filled=Math.round(width*progress/100);
   const color=progress===100?"#63c7b2":"#438b80";
-  return <box flexGrow={1} minWidth={0} height={1}
+  return <box flexGrow={1} flexBasis={0} minWidth={0} height={1} overflow="hidden"
     backgroundColor={style===0?"#243740":"#101820"}
     onSizeChange={function(this:{width:number}){setWidth(Math.max(0,Math.floor(this.width)))}}>
     {style===0?<box width={`${progress}%`} height={1} backgroundColor={color}/>:
       <text width="100%" height={1} fg={color}>{(style===1?"▰":"━").repeat(filled)}<span fg="#36535f">{(style===1?"·":"─").repeat(Math.max(0,width-filled))}</span></text>}
   </box>;
 }
+function useBorderScroll(){
+  const node=useRef<any>(null);
+  const attach=useCallback((scroll:any)=>{
+    node.current=scroll;
+    if(scroll){scroll.verticalScrollBar.visible=false;scroll.horizontalScrollBar.visible=false;}
+  },[]);
+  return {node,attach};
+}
+function BorderThumb({scroll,id}:{scroll:ReturnType<typeof useBorderScroll>,id:string}){
+  const [position,setPosition]=useState({top:0,visible:false});
+  const [hover,setHover]=useState(false);
+  const [active,setActive]=useState(false);
+  const drag=useRef<{y:number,start:number}|null>(null);
+  useEffect(()=>{
+    const timer=setInterval(()=>{
+      const node=scroll.node.current;
+      if(!node)return;
+      const max=Math.max(0,node.scrollHeight-node.viewport.height);
+      const top=max>0?Math.round(node.scrollTop/max*Math.max(0,node.height-1)):0;
+      const visible=max>0;
+      setPosition(old=>old.top===top&&old.visible===visible?old:{top,visible});
+    },16);
+    return()=>clearInterval(timer);
+  },[scroll.node]);
+  return <text id={id} position="absolute" right={-1} top={position.top} width={1} height={1} zIndex={10} visible={position.visible}
+    fg={active?"#8cdecc":hover?"#63c7b2":"#526b78"} bg="#101820"
+    onMouseOver={()=>setHover(true)} onMouseOut={()=>setHover(false)}
+    onMouseDown={(event:any)=>{if(event.button!==0)return;drag.current={y:event.y,start:scroll.node.current.scrollTop};setActive(true);event.stopPropagation()}}
+    onMouseDrag={(event:any)=>{
+      const node=scroll.node.current,start=drag.current;
+      if(!node||!start)return;
+      const max=Math.max(0,node.scrollHeight-node.viewport.height);
+      node.scrollTo(Math.max(0,Math.min(max,start.start+(event.y-start.y)*max/Math.max(1,node.height-1))));
+      event.stopPropagation();
+    }}
+    onMouseUp={(event:any)=>{if(event.button!==0)return;drag.current=null;setActive(false);event.stopPropagation()}}>┃</text>;
+}
 function App(){
+  const requestEdges=useBorderScroll();
+  const replyEdges=useBorderScroll();
+  const splitRow=useRef<any>(null);
+  const dragging=useRef(false);
+  const grabOffset=useRef(0);
+  const [rowWidth,setRowWidth]=useState(0);
+  const [split,setSplit]=useState(0.65);
+  const [dividerHover,setDividerHover]=useState(false);
+  const [dividerActive,setDividerActive]=useState(false);
+  function resizeSplit(x:number){
+    const row=splitRow.current;
+    if(!row)return;
+    const available=Math.max(1,row.width-1);
+    const minLeft=Math.min(30,available*0.4);
+    const minRight=Math.min(20,available*0.3);
+    setSplit(Math.max(minLeft,Math.min(available-minRight,x-row.x-grabOffset.current))/available);
+  }
+  const rightColumn=useRef<any>(null);
+  const verticalDrag=useRef(false);
+  const verticalGrab=useRef(0);
+  const [rightHeight,setRightHeight]=useState(0);
+  const [verticalSplit,setVerticalSplit]=useState(0.5);
+  const [horizontalHover,setHorizontalHover]=useState(false);
+  const [horizontalActive,setHorizontalActive]=useState(false);
+  function resizeVertical(y:number){
+    const column=rightColumn.current;
+    if(!column)return;
+    const available=Math.max(1,column.height-1);
+    const minTop=Math.min(3,available*0.4),minBottom=Math.min(5,available*0.4);
+    setVerticalSplit(Math.max(minTop,Math.min(available-minBottom,y-column.y-verticalGrab.current))/available);
+  }
+  const topHeight=rightHeight?Math.max(Math.min(3,(rightHeight-1)*0.4),Math.min(rightHeight-1-Math.min(5,(rightHeight-1)*0.4),Math.round((rightHeight-1)*verticalSplit))):"50%";
   const [barStyle,setBarStyle]=useState(0);
   const [jobs,setJobs]=useState<Job[]>([]);
   const [tick,setTick]=useState(0);
@@ -91,20 +161,40 @@ function App(){
         <box flexShrink={0} backgroundColor="#293340" paddingX={1} onMouseDown={()=>setClicks(n=>n+1)}><text fg="#e9af70">Space UI counter {clicks}</text></box>
       </box>
       <text height={1} flexShrink={0} fg="#c2ced5">Heartbeat {tick}{paused?" paused":""} · P pause heartbeat · sent {counts[0]} · full {counts[1]} · Q exit</text>
-      <box flexDirection="row" gap={2} flexGrow={1} flexShrink={1} minHeight={0} overflow="hidden">
-        <box width="50%" border borderColor="#36535f" title={` Requests (${jobs.length}) `} paddingX={1} overflow="hidden">
-          <scrollbox id="message-requests" width="100%" flexGrow={1} minHeight={0} scrollY stickyScroll stickyStart="bottom" contentOptions={{gap:0,paddingRight:1}} verticalScrollbarOptions={{width:1}}>
+      <box id="message-split" ref={splitRow} onSizeChange={function(this:{width:number}){setRowWidth(this.width)}} flexDirection="row" flexGrow={1} flexShrink={1} minHeight={0} overflow="hidden">
+        <box id="message-request-panel" width={rowWidth?Math.max(30,Math.min(rowWidth-21,Math.round((rowWidth-1)*split))):"65%"} flexShrink={0} border borderColor="#36535f" title={` Requests (${jobs.length}) `} paddingX={1}>
+          <scrollbox id="message-requests" ref={requestEdges.attach} width="100%" flexGrow={1} minHeight={0} scrollY stickyScroll stickyStart="bottom" contentOptions={{gap:0}}>
           {jobs.length===0?<text fg="#718b99">Send a job to start. Try a burst while it works.</text>:jobs.map(job=><box key={job.id} flexDirection="row" width="100%" height={1} flexShrink={0} gap={1}>
             <text width={15} flexShrink={0} fg={job.status==="done"?"#63c7b2":"#c2ced5"}>#{job.id} {job.status}</text>
             <ProgressBar progress={job.progress} style={barStyle}/>
-            <text width={4} flexShrink={0} fg="#c2ced5">{`${job.progress}%`.padStart(4)}</text>
+            <text id={`message-percent-${job.id}`} width={4} flexShrink={0} fg="#c2ced5">{`${job.progress}%`.padStart(4)}</text>
           </box>)}
           </scrollbox>
+          <BorderThumb id="request-scroll-thumb" scroll={requestEdges}/>
         </box>
-        <box flexGrow={1} border borderColor="#36535f" title={` Native replies (${events.length}) `} paddingX={1} overflow="hidden">
-          <scrollbox id="message-replies" width="100%" flexGrow={1} minHeight={0} scrollY stickyScroll stickyStart="bottom" contentOptions={{gap:0,paddingRight:1}} verticalScrollbarOptions={{width:1}}>
+        <box id="message-divider" width={1} flexShrink={0} height="100%" justifyContent="center" alignItems="center"
+          backgroundColor="#101820"
+          onMouseOver={()=>setDividerHover(true)} onMouseOut={()=>setDividerHover(false)}
+          onMouseDown={(event:any)=>{if(event.button!==0)return;grabOffset.current=event.x-event.currentTarget.x;dragging.current=true;setDividerActive(true);event.stopPropagation()}}
+          onMouseDrag={(event:any)=>{if(dragging.current){resizeSplit(event.x);event.stopPropagation()}}}
+          onMouseUp={(event:any)=>{if(event.button!==0)return;dragging.current=false;setDividerActive(false);event.stopPropagation()}}>
+          <box width={1} height="100%" backgroundColor={dividerActive?"#36535f":dividerHover?"#243740":"#101820"}/>
+        </box>
+        <box id="message-right-column" ref={rightColumn} flexGrow={1} flexBasis={0} minWidth={20} minHeight={0}
+          onSizeChange={function(this:{height:number}){setRightHeight(this.height)}}>
+        <box id="message-reply-panel" height={topHeight} flexShrink={0} border borderColor="#36535f" title={` Native replies (${events.length}) `} paddingX={1}>
+          <scrollbox id="message-replies" ref={replyEdges.attach} width="100%" flexGrow={1} minHeight={0} scrollY stickyScroll stickyStart="bottom" contentOptions={{gap:0}}>
           {events.map((event,i)=><text key={i} height={1} flexShrink={0} fg="#a59de0">← #{event.id}  {event.type}  {event.progress}%</text>)}
           </scrollbox>
+          <BorderThumb id="reply-scroll-thumb" scroll={replyEdges}/>
+        </box>
+        <box id="message-horizontal-divider" width="100%" height={1} flexShrink={0}
+          backgroundColor={horizontalActive?"#36535f":horizontalHover?"#243740":"#101820"}
+          onMouseOver={()=>setHorizontalHover(true)} onMouseOut={()=>setHorizontalHover(false)}
+          onMouseDown={(event:any)=>{if(event.button!==0)return;verticalGrab.current=event.y-event.currentTarget.y;verticalDrag.current=true;setHorizontalActive(true);event.stopPropagation()}}
+          onMouseDrag={(event:any)=>{if(verticalDrag.current){resizeVertical(event.y);event.stopPropagation()}}}
+          onMouseUp={(event:any)=>{if(event.button!==0)return;verticalDrag.current=false;setHorizontalActive(false);event.stopPropagation()}}/>
+        <Activity/>
         </box>
       </box>
       <text height={1} flexShrink={0} fg="#718b99">V: bar style {barStyles[barStyle]} · C clear finished · R random</text>
@@ -155,18 +245,87 @@ if(__host.headless)Object.assign(globalThis,{
       feed("v");await new Promise(resolve=>setTimeout(resolve,20));
       expect(host.__snapshot().includes(`bar style ${style}`),"style key should cycle rendered bars");
     }
+    const find=(id:string)=>[...Renderable.renderablesByNumber.values()].find(node=>node.id===id) as any;
+    const divider=find("message-divider"),left=find("message-request-panel"),right=find("message-reply-panel");
+    const widthBefore=left.width;
+    const startX=divider.x;
+    // Every cell in the handle must preserve its grab offset without a jump.
+    for(let offset=0;offset<1;offset++){
+      const x=divider.x+offset;
+      feed(`\x1b[<0;${x+1};${divider.y+2}M`);
+      feed(`\x1b[<32;${x+1};${divider.y+2}M`);
+      host.__frame();
+      expect(divider.x===startX,"stationary drag must not jump at any grab point");
+      feed(`\x1b[<32;${x+2};${divider.y+2}M`);
+      host.__frame();
+      expect(divider.x===startX+1,"divider must track a one-column drag exactly");
+      feed(`\x1b[<32;${x+1};${divider.y+2}M`);
+      host.__frame();
+      expect(divider.x===startX,"reverse drag must return exactly without drift");
+      feed(`\x1b[<0;${x+1};${divider.y+2}m`);
+    }
+    expect(left.width>right.width,"requests should start wider than replies");
+    feed(`\x1b[<0;${divider.x+1};${divider.y+2}M`);
+    feed(`\x1b[<32;${divider.x-7};${divider.y+2}M`);
+    feed(`\x1b[<0;${divider.x-7};${divider.y+2}m`);
+    await new Promise(resolve=>setTimeout(resolve,30));
+    expect(left.width<widthBefore&&left.width>=30&&right.width>=20,"divider drag must resize panes and preserve minimum widths");
+    const requestScroll=find("message-requests");
+    requestScroll.scrollTo(0);
+    await new Promise(resolve=>setTimeout(resolve,50));
+    const percent=find("message-percent-1");
+    expect(percent.x+percent.width<=requestScroll.viewport.x+requestScroll.viewport.width,`percentage outside resized viewport: ${percent.x}+${percent.width}, viewport ${requestScroll.viewport.x}+${requestScroll.viewport.width}`);
+    expect(host.__snapshot().split("\n").some((line:string)=>line.includes("100%")),`completed percentages should remain visible after narrowing: ${host.__snapshot()}`);
+    for(let style=0;style<3;style++){
+      const divider=find("message-divider"),row=find("message-split");
+      feed(`\x1b[<0;${divider.x+1};${divider.y+2}M`);
+      for(const width of [row.width-22,30,row.width-22,30]){
+        feed(`\x1b[<32;${row.x+width+1};${divider.y+2}M`);
+        await new Promise(resolve=>setTimeout(resolve,30));
+        const scroll=find("message-requests");scroll.scrollTo(0);
+        await new Promise(resolve=>setTimeout(resolve,30));
+        const label=find("message-percent-1");
+        expect(label.x+label.width<=scroll.viewport.x+scroll.viewport.width,`style ${style} percentage clipped after wide/narrow cycle`);
+      }
+      feed(`\x1b[<0;${divider.x+1};${divider.y+2}m`);
+      feed("v");await new Promise(resolve=>setTimeout(resolve,30));
+    }
+    const horizontal=find("message-horizontal-divider"),activity=find("message-activity");
+    expect(divider.width===1&&horizontal.height===1,"dividers must be one cell thick");
+    const horizontalY=horizontal.y;
+    feed(`\x1b[<0;${horizontal.x+2};${horizontal.y+1}M`);
+    feed(`\x1b[<32;${horizontal.x+2};${horizontalY+1}M`);
+    host.__frame();
+    expect(horizontal.y===horizontalY,"horizontal divider must not jump on grab");
+    feed(`\x1b[<32;${horizontal.x+2};${horizontalY}M`);
+    host.__frame();
+    expect(horizontal.y===horizontalY-1,"horizontal divider must track one row");
+    feed(`\x1b[<0;${horizontal.x+2};${horizontalY}m`);
+    expect(activity.height>0,"activity pane must retain visible space");
     const panels=["message-requests","message-replies"].map(id=>[...Renderable.renderablesByNumber.values()].find(node=>node.id===id) as any);
     expect(panels[0].scrollHeight>=sent,"request history must retain earlier batches");
     expect(panels[1].scrollHeight>=received.length,"reply history must retain every event");
     for(const panel of panels){
       panel.scrollTo(Infinity);
       await new Promise(resolve=>setTimeout(resolve,30));
+      expect(!panel.verticalScrollBar.visible&&panel.viewport.width===panel.width,"scrollbar must not reserve a column");
       const before=panel.scrollTop;
       expect(before>0,"history must overflow its viewport");
       feed(`\x1b[<64;${panel.viewport.x+2};${panel.viewport.y+2}M`);
       await new Promise(resolve=>setTimeout(resolve,50));
       expect(panel.scrollTop<before,"wheel must scroll the hovered history panel");
       panel.scrollTo(0);
+    }
+    await new Promise(resolve=>setTimeout(resolve,30));
+    for(const [panelId,thumbId] of [["message-request-panel","request-scroll-thumb"],["message-reply-panel","reply-scroll-thumb"]]){
+      const panel=find(panelId),thumb=find(thumbId);
+      expect(thumb.x===panel.x+panel.width-1,`thumb must overlay border: ${thumb.x} vs ${panel.x+panel.width-1}`);
+      const scroll=panelId==="message-request-panel"?panels[0]:panels[1];
+      feed(`\x1b[<0;${thumb.x+1};${thumb.y+1}M`);
+      feed(`\x1b[<32;${thumb.x+1};${thumb.y+2}M`);
+      feed(`\x1b[<0;${thumb.x+1};${thumb.y+2}m`);
+      expect(scroll.scrollTop>0,"border thumb must drag-scroll history");
+      scroll.scrollTo(0);
     }
     await new Promise(resolve=>setTimeout(resolve,30));
     expect(host.__snapshot().includes("← #1"),"oldest reply must remain accessible");

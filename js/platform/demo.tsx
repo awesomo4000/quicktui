@@ -60,7 +60,7 @@ function shutdown(){
 }
 Object.assign(globalThis,{
   __shutdown:shutdown,
-  __input(data:ArrayBuffer){parser.push(new Uint8Array(data));drainInput()},
+  __input(data:ArrayBuffer){reconciler.flushSyncFromReconciler(()=>{parser.push(new Uint8Array(data));drainInput()})},
   __resize(width:number,height:number){
     context.width=width;context.height=height;
     lib.resizeRenderer(native,width,height);

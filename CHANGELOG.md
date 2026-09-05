@@ -2,6 +2,19 @@
 
 ## Unreleased - 09/05/2026
 
+- Overlay a subtle draggable scroll thumb on each history pane border without reserving a content column.
+
+- Prevent segmented and thin progress bars from retaining their previous width and clipping percentages when panes narrow.
+
+- Add a pulsing multicolor activity grid beneath native replies, with fading verbs and oscillating values.
+- Use one-cell vertical and horizontal draggable dividers for the three-pane messages layout.
+
+- Replace the divider arrow with a subtle vertical hover and drag cue.
+
+- Preserve the divider grab offset, apply explicit column widths, and flush input updates synchronously to avoid drag jumps and lag.
+
+- Widen the requests pane by default and add a mouse-draggable divider to the messages demo.
+
 - Increase the message demo command queue from 8 to 256 entries so repeated bursts can wait behind active work.
 
 - Add C to clear completed requests and their replies while preserving active work.

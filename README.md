@@ -164,8 +164,14 @@ serial pairs. Each runs for 1–2.2 seconds; the batch targets completion below
 five seconds after it starts. Batches queued behind earlier work wait their turn.
 **V** cycles solid, segmented, and thin progress bars. **C** clears completed
 requests and their replies, keeping queued and running work.
-Both panels retain the full session history. Scroll each with the trackpad or
-its scrollbar. At the bottom, it follows new entries; scroll up to browse older
+A decorative Activity pane below Replies pulses a multicolor grid at 20 FPS,
+with fading verbs and oscillating values. It runs independently of native jobs.
+Drag its horizontal divider to change the right-side height split. Both dividers
+are one terminal cell thick.
+Requests starts wider than Replies. Drag the divider between them to resize
+the panels; the progress bars follow the available width.
+Both panels retain the full session history. Scroll each with the trackpad or the single thumb overlaid on its right border.
+The thumb brightens on hover; no scrollbar column is reserved. At the bottom, it follows new entries; scroll up to browse older
 entries without being pulled back down. Panel titles show the total counts.
 **P** pauses the UI heartbeat, and **Q** exits. Native replies still arrive with
 the heartbeat paused because their pipe wakes the host poll loop.
