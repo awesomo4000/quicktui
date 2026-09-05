@@ -159,6 +159,11 @@ int quicktui_app(const char *source,size_t length,int headless) {
     JS_FreeValue(ctx,result);
     if(host.failed)goto cleanup;
     if(headless){
+        JSValue test_global=JS_GetGlobalObject(ctx);
+        JSValue custom_test=JS_GetPropertyStr(ctx,test_global,"__selfTest");
+        int has_custom_test=JS_IsFunction(ctx,custom_test);
+        JS_FreeValue(ctx,custom_test);JS_FreeValue(ctx,test_global);
+        if(has_custom_test){call_void(ctx,"__selfTest");goto cleanup;}
         for(int i=0;i<4;i++)step(ctx,runtime);
         if(!expect_text(ctx,"Count: 0"))host.failed=1;
         if(!expect_text(ctx,"日本語")||!expect_text(ctx,"👩‍💻")||!expect_text(ctx,"é"))host.failed=1;
@@ -205,7 +210,7 @@ cleanup:
     if(ffi)qt_close_ffi(ctx);
     if(raw){
         // Fallback restoration also covers exceptions partway through setup.
-        fputs("\x1b[0m\x1b[?25h\x1b[?1049l",stdout);fflush(stdout);
+        fputs("\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1006l\x1b[0m\x1b[?25h\x1b[?1049l",stdout);fflush(stdout);
         tcsetattr(STDIN_FILENO,TCSANOW,&saved);
     }
     for(int i=0;i<signals;i++)sigaction(signal_numbers[i],&previous[i],NULL);
@@ -213,6 +218,6 @@ cleanup:
     for(int i=0;i<2;i++)if(wake[i]>=0)close(wake[i]);
     JS_FreeContext(ctx);JS_FreeRuntime(runtime);
     if(host.used)fputs(host.diagnostics,stderr);
-    if(headless&&!host.failed)puts("Counter self-test passed: React updates, split keyboard input, resize, and effect cleanup.");
+    if(headless&&!host.failed)puts("Example self-test passed: input, React updates, native rendering, and effect cleanup.");
     return host.failed?1:0;
 }

@@ -2,6 +2,10 @@
 
 ## Unreleased - 09/05/2026
 
+- Preserve the dragon demo as example 01 and add a separate mouse playground via `--mouse`.
+- Connect native hit testing to React hover, button, drag, and wheel handlers with press-target capture.
+- Test split mouse reports, all three buttons, wheel input, release outside the target, resizing, and terminal cleanup.
+
 - Send sprite frames as raw RGBA pixels to avoid the blank PNG sprite path through Herdr.
 - Add play/pause and single-frame controls for the wing-cycle preview.
 

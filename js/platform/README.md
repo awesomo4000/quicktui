@@ -2,12 +2,12 @@
 
 `symbols.json` is the counter profile's allowlist. `bindings.json` records the
 FFI declaration, checked native argument and return types, and source location
-for each of its 72 functions. `scripts/generate-bindings.ts` refuses unknown
+for each of its 81 functions. `scripts/generate-bindings.ts` refuses unknown
 native types and signature mismatches, then writes fixed C calls. Pointer-taking
 arguments use the platform C pointer ABI; native object handles remain `u32`.
 
 The allowlist comes from tracing mount, rendering, updates, resize, and teardown,
-plus terminal setup/replies, native Unicode encoding, and native images. It excludes file access,
+plus terminal setup/replies, native Unicode encoding, native images, and mouse hit testing. It excludes file access,
 retained external text-memory registration, native output feeds, and worker APIs.
 
 ## Storage ownership

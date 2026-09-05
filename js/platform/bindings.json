@@ -404,6 +404,128 @@
     }
   },
   {
+    "name": "addToHitGrid",
+    "args": [
+      "u32",
+      "i32",
+      "i32",
+      "u32",
+      "u32",
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "i32",
+        "i32",
+        "u32",
+        "u32",
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2068"
+    }
+  },
+  {
+    "name": "hitGridPushScissorRect",
+    "args": [
+      "u32",
+      "i32",
+      "i32",
+      "u32",
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "i32",
+        "i32",
+        "u32",
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2078"
+    }
+  },
+  {
+    "name": "hitGridPopScissorRect",
+    "args": [
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2083"
+    }
+  },
+  {
+    "name": "hitGridClearScissorRects",
+    "args": [
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2088"
+    }
+  },
+  {
+    "name": "checkHit",
+    "args": [
+      "u32",
+      "u32",
+      "u32"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "u32",
+        "u32",
+        "u32"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2098"
+    }
+  },
+  {
+    "name": "enableMouse",
+    "args": [
+      "u32",
+      "bool"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "bool"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2128"
+    }
+  },
+  {
+    "name": "disableMouse",
+    "args": [
+      "u32"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2133"
+    }
+  },
+  {
     "name": "setupTerminal",
     "args": [
       "u32",
@@ -637,6 +759,36 @@
       ],
       "returns": "void",
       "source": "vendor/opentui/packages/native/src/lib.zig:2436"
+    }
+  },
+  {
+    "name": "textBufferViewGetVirtualLineCount",
+    "args": [
+      "u32"
+    ],
+    "returns": "u32",
+    "native": {
+      "args": [
+        "u32"
+      ],
+      "returns": "u32",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2446"
+    }
+  },
+  {
+    "name": "textBufferViewGetLogicalLineInfoDirect",
+    "args": [
+      "u32",
+      "ptr"
+    ],
+    "returns": "void",
+    "native": {
+      "args": [
+        "u32",
+        "ptr"
+      ],
+      "returns": "void",
+      "source": "vendor/opentui/packages/native/src/lib.zig:2471"
     }
   },
   {

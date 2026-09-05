@@ -70,5 +70,14 @@
   "imageGetInfo",
   "setTerminalEnvVar",
   "yogaNodeGetHasNewLayout",
-  "imageDecode"
+  "imageDecode",
+  "addToHitGrid",
+  "hitGridPushScissorRect",
+  "hitGridPopScissorRect",
+  "hitGridClearScissorRects",
+  "checkHit",
+  "enableMouse",
+  "disableMouse",
+  "textBufferViewGetVirtualLineCount",
+  "textBufferViewGetLogicalLineInfoDirect"
 ]

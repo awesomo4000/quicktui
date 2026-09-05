@@ -82,9 +82,32 @@ The original dependency smoke test remains available:
 ./zig-out/bin/quicktui --self-test
 ```
 
+## Mouse example
+
+The original dragon demo remains the default. Run example 02 separately:
+
+```sh
+zig build run -- --mouse
+```
+
+Hover over the click pad, try left/middle/right buttons, drag from the orange pad
+and release outside it, and scroll over the purple wheel control. The last event
+shows pane-relative cell coordinates and modifiers. Press Q to exit.
+
+Mouse input uses OpenTUI's parser and native hit grid, with React `onMouseDown`,
+`onMouseUp`, `onMouseOver`, `onMouseOut`, `onMouseDrag`, and `onMouseScroll`
+handlers. Events bubble through the renderable tree. Drag and release remain
+routed to the pressed target while the pointer leaves its bounds. This example
+does not yet provide text selection, focus navigation, or drag-and-drop widgets.
+Multiplexers must forward mouse events to the application. Terminal or multiplexer
+shortcuts can intercept modified clicks.
+
+`zig build test` includes the mouse example's real parser/rendering test.
+`zig build test-mouse` checks mouse mode setup and restoration in disposable PTYs.
+
 ## Editing the example
 
-Edit `js/counter.tsx`, then regenerate the checked-in bundles with Bun:
+Edit `js/counter.tsx` or `js/mouse.tsx`, then regenerate the checked-in bundles with Bun:
 
 ```sh
 zig build bundle
@@ -115,8 +138,8 @@ This implements the first interactive counter from [the spec](specs/00-quickjs-o
 The supported catalogue contains boxes, text, inline text modifiers, and images
 decoded from embedded image bytes or created from native RGBA pixel buffers. Unsupported
 components and native operations throw errors. It is not yet a general OpenTUI
-runtime: focusable widgets, input fields, selection lists, scrolling, mouse input,
-live animation, and application-native service APIs remain future work.
+runtime: focusable widgets, input fields, selection lists, general scrolling widgets and application-native service APIs remain future work.
+Timer-driven animation and basic mouse routing are demonstrated in the examples.
 
 The host provides the scheduling and UTF-8 behavior used by this example, rather
 than general Node/Bun compatibility. Text uses OpenTUI's native Unicode facilities.

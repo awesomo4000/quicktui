@@ -10,12 +10,13 @@ const replacements=new Map([
 ]);
 const picture=Buffer.from(await Bun.file("assets/dragon.jpg").arrayBuffer()).toString("base64");
 const spriteFrames=await Promise.all(Array.from({length:8},async(_,i)=>Buffer.from(await Bun.file(`assets/dragon-frames/${i}.rgba`).arrayBuffer()).toString("base64")));
+for(const example of ["counter","mouse"]){
 const result=await Bun.build({
-  entrypoints:["js/counter.tsx"],target:"browser",format:"iife",minify:false,
+  entrypoints:[`js/${example}.tsx`],target:"browser",format:"iife",minify:false,
   define:{"__SPRITE_FRAMES_BASE64__":JSON.stringify(spriteFrames),"__DEMO_PICTURE_BASE64__":JSON.stringify(picture),"process.env.NODE_ENV":'"production"',"process.env.DEV":'"false"'},
   plugins:[{name:"quicktui-counter-profile",setup(build){
     build.onResolve({filter:/.*/},async(args)=>{
-      if(args.path === "js/counter.tsx") return {path:path.join(base,args.path)};
+      if(args.path === `js/${example}.tsx`) return {path:path.join(base,args.path)};
       if(args.path==="@opentui/core")return {path:path.join(platform,"core.ts")};
       if(["events","node:events","buffer","node:buffer"].includes(args.path))return {path:path.join(base,"vendor/js/node_modules",args.path.replace("node:",""),args.path.endsWith("events")?"events.js":"index.js")};
       if(args.path==="node:util")return {path:"util",namespace:"quicktui"};
@@ -57,4 +58,6 @@ const licenses=await Promise.all(["react","react-reconciler","scheduler","events
   throw new Error(`Missing license for ${name}`);
 }));
 licenses.push(`OpenTUI\n${await Bun.file("vendor/opentui/LICENSE").text()}`);
-await Bun.write("src/counter.js",`/*!\n${licenses.join("\n")}\n*/\n${await bootstrap.outputs[0].text()}\n${await result.outputs[0].text()}`);
+await Bun.write(`src/${example}.js`,`/*!\n${licenses.join("\n")}\n*/\n${await bootstrap.outputs[0].text()}\n${await result.outputs[0].text()}`);
+
+}

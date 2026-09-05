@@ -64,6 +64,10 @@ pub fn build(b: *std.Build) void {
     self_test.addArg("--self-test");
     test_step.dependOn(&self_test.step);
 
+    const mouse_test = b.addRunArtifact(exe);
+    mouse_test.addArg("--mouse-self-test");
+    test_step.dependOn(&mouse_test.step);
+
     const failure_test = b.addExecutable(.{
         .name = "quicktui-failure-test",
         .root_module = b.createModule(.{
@@ -78,6 +82,10 @@ pub fn build(b: *std.Build) void {
     terminal_test.addArtifactArg(exe);
     terminal_test.addArtifactArg(failure_test);
     b.step("test-terminal", "Check terminal restoration in disposable PTYs, requires Python 3").dependOn(&terminal_test.step);
+    const mouse_terminal_test = b.addSystemCommand(&.{ "python3", "scripts/test-mouse.py" });
+    mouse_terminal_test.setCwd(b.path("."));
+    mouse_terminal_test.addArtifactArg(exe);
+    b.step("test-mouse", "Check mouse reporting and cleanup in disposable PTYs").dependOn(&mouse_terminal_test.step);
     const tmux_test = b.addSystemCommand(&.{ "python3", "scripts/test-tmux.py" });
     tmux_test.setCwd(b.path("."));
     tmux_test.addArtifactArg(exe);

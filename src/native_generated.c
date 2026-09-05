@@ -181,6 +181,60 @@ void *a12; if (qt_pointer(ctx, argv[12], &a12) < 0) return JS_EXCEPTION;
 uint32_t a13; if (JS_ToUint32(ctx, &a13, argv[13]) < 0) return JS_EXCEPTION;
 bufferDrawBox((uint32_t)a0, (int32_t)a1, (int32_t)a2, (uint32_t)a3, (uint32_t)a4, (void *)a5, (uint32_t)a6, (void *)a7, (void *)a8, (void *)a9, (void *)a10, (uint32_t)a11, (void *)a12, (uint32_t)a13); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
+extern void addToHitGrid(uint32_t a0, int32_t a1, int32_t a2, uint32_t a3, uint32_t a4, uint32_t a5);
+static JSValue wrap_addToHitGrid(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 6) return JS_ThrowTypeError(ctx, "addToHitGrid: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+int32_t a1; if (JS_ToInt32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+int32_t a2; if (JS_ToInt32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+uint32_t a4; if (JS_ToUint32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+uint32_t a5; if (JS_ToUint32(ctx, &a5, argv[5]) < 0) return JS_EXCEPTION;
+addToHitGrid((uint32_t)a0, (int32_t)a1, (int32_t)a2, (uint32_t)a3, (uint32_t)a4, (uint32_t)a5); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void hitGridPushScissorRect(uint32_t a0, int32_t a1, int32_t a2, uint32_t a3, uint32_t a4);
+static JSValue wrap_hitGridPushScissorRect(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 5) return JS_ThrowTypeError(ctx, "hitGridPushScissorRect: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+int32_t a1; if (JS_ToInt32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+int32_t a2; if (JS_ToInt32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+uint32_t a4; if (JS_ToUint32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
+hitGridPushScissorRect((uint32_t)a0, (int32_t)a1, (int32_t)a2, (uint32_t)a3, (uint32_t)a4); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void hitGridPopScissorRect(uint32_t a0);
+static JSValue wrap_hitGridPopScissorRect(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "hitGridPopScissorRect: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+hitGridPopScissorRect((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void hitGridClearScissorRects(uint32_t a0);
+static JSValue wrap_hitGridClearScissorRects(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "hitGridClearScissorRects: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+hitGridClearScissorRects((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint32_t checkHit(uint32_t a0, uint32_t a1, uint32_t a2);
+static JSValue wrap_checkHit(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 3) return JS_ThrowTypeError(ctx, "checkHit: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+uint32_t value = checkHit((uint32_t)a0, (uint32_t)a1, (uint32_t)a2); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern void enableMouse(uint32_t a0, bool a1);
+static JSValue wrap_enableMouse(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "enableMouse: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+int a1 = JS_ToBool(ctx, argv[1]); if (a1 < 0) return JS_EXCEPTION;
+enableMouse((uint32_t)a0, (bool)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern void disableMouse(uint32_t a0);
+static JSValue wrap_disableMouse(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "disableMouse: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+disableMouse((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
 extern void setupTerminal(uint32_t a0, bool a1);
 static JSValue wrap_setupTerminal(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "setupTerminal: wrong argument count");
@@ -283,6 +337,19 @@ uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
 uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
 uint32_t a4; if (JS_ToUint32(ctx, &a4, argv[4]) < 0) return JS_EXCEPTION;
 textBufferViewSetViewport((uint32_t)a0, (uint32_t)a1, (uint32_t)a2, (uint32_t)a3, (uint32_t)a4); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
+}
+extern uint32_t textBufferViewGetVirtualLineCount(uint32_t a0);
+static JSValue wrap_textBufferViewGetVirtualLineCount(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "textBufferViewGetVirtualLineCount: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t value = textBufferViewGetVirtualLineCount((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewUint32(ctx, value);
+}
+extern void textBufferViewGetLogicalLineInfoDirect(uint32_t a0, void * a1);
+static JSValue wrap_textBufferViewGetLogicalLineInfoDirect(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "textBufferViewGetLogicalLineInfoDirect: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
+textBufferViewGetLogicalLineInfoDirect((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
 extern void textBufferViewSetTruncate(uint32_t a0, bool a1);
 static JSValue wrap_textBufferViewSetTruncate(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
@@ -543,6 +610,13 @@ if (JS_SetPropertyStr(ctx, symbols, "bufferWriteResolvedChars", JS_NewCFunction(
 if (JS_SetPropertyStr(ctx, symbols, "resizeRenderer", JS_NewCFunction(ctx, wrap_resizeRenderer, "resizeRenderer", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "bufferDrawImage", JS_NewCFunction(ctx, wrap_bufferDrawImage, "bufferDrawImage", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "bufferDrawBox", JS_NewCFunction(ctx, wrap_bufferDrawBox, "bufferDrawBox", 14)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "addToHitGrid", JS_NewCFunction(ctx, wrap_addToHitGrid, "addToHitGrid", 6)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "hitGridPushScissorRect", JS_NewCFunction(ctx, wrap_hitGridPushScissorRect, "hitGridPushScissorRect", 5)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "hitGridPopScissorRect", JS_NewCFunction(ctx, wrap_hitGridPopScissorRect, "hitGridPopScissorRect", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "hitGridClearScissorRects", JS_NewCFunction(ctx, wrap_hitGridClearScissorRects, "hitGridClearScissorRects", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "checkHit", JS_NewCFunction(ctx, wrap_checkHit, "checkHit", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "enableMouse", JS_NewCFunction(ctx, wrap_enableMouse, "enableMouse", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "disableMouse", JS_NewCFunction(ctx, wrap_disableMouse, "disableMouse", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "setupTerminal", JS_NewCFunction(ctx, wrap_setupTerminal, "setupTerminal", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "createTextBuffer", JS_NewCFunction(ctx, wrap_createTextBuffer, "createTextBuffer", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "destroyTextBuffer", JS_NewCFunction(ctx, wrap_destroyTextBuffer, "destroyTextBuffer", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
@@ -558,6 +632,8 @@ if (JS_SetPropertyStr(ctx, symbols, "destroyTextBufferView", JS_NewCFunction(ctx
 if (JS_SetPropertyStr(ctx, symbols, "textBufferViewSetWrapMode", JS_NewCFunction(ctx, wrap_textBufferViewSetWrapMode, "textBufferViewSetWrapMode", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "textBufferViewSetFirstLineOffset", JS_NewCFunction(ctx, wrap_textBufferViewSetFirstLineOffset, "textBufferViewSetFirstLineOffset", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "textBufferViewSetViewport", JS_NewCFunction(ctx, wrap_textBufferViewSetViewport, "textBufferViewSetViewport", 5)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewGetVirtualLineCount", JS_NewCFunction(ctx, wrap_textBufferViewGetVirtualLineCount, "textBufferViewGetVirtualLineCount", 1)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "textBufferViewGetLogicalLineInfoDirect", JS_NewCFunction(ctx, wrap_textBufferViewGetLogicalLineInfoDirect, "textBufferViewGetLogicalLineInfoDirect", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "textBufferViewSetTruncate", JS_NewCFunction(ctx, wrap_textBufferViewSetTruncate, "textBufferViewSetTruncate", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "bufferDrawTextBufferView", JS_NewCFunction(ctx, wrap_bufferDrawTextBufferView, "bufferDrawTextBufferView", 4)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "createSyntaxStyle", JS_NewCFunction(ctx, wrap_createSyntaxStyle, "createSyntaxStyle", 0)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
