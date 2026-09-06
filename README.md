@@ -426,3 +426,22 @@ Herdr also requires `[experimental] kitty_graphics = true` in its config for
 attached-client image rendering, followed by `herdr server reload-config`. A
 successful capability reply alone does not prove that every enclosing multiplexer
 will display the image.
+
+## Poolside buffer views
+
+The four terminal-buffer plane getters (`bufferGetCharPtr`, `bufferGetFgPtr`,
+`bufferGetBgPtr`, and `bufferGetAttributesPtr`) keep their upstream symbol names,
+but QuickTUI returns opaque native-backed JS objects instead of raw addresses.
+Our FFI adapter routes these objects through `__readBufferView(view, offset,
+length)`, which checks their Poolside generation and byte bounds before copying.
+The Poolside token is held in native object storage, not a JS property.
+
+Buffer resize/destruction revokes its views. Renderer resize/destruction
+conservatively revokes all views, including views of standalone buffers; obtain
+new views afterward. JS garbage collection releases registry entries, and host
+teardown frees registry storage after JS finalizers run. The operation still
+makes one copy into a JS ArrayBuffer, as the previous read path did.
+
+This is a focused lifetime/bounds experiment, not an extension sandbox. Other
+FFI operations still accept raw pointers, native buffer IDs are not scoped to
+individual extensions, and all bridge operations remain on the UI thread.

@@ -36,6 +36,8 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .link_libc = true,
     });
+    const poolside = b.createModule(.{ .root_source_file = b.path("vendor/poolside/src/root.zig") });
+    runtime.addImport("poolside", poolside);
     runtime.addIncludePath(b.path("vendor/quickjs"));
     runtime.addCSourceFile(.{ .file = b.path("src/quickjs_bridge.c"), .flags = &.{"-std=c11"} });
     runtime.addCSourceFiles(.{ .files = &.{ "src/native_bridge.c", "src/native_generated.c", "src/app_host.c" }, .flags = &.{"-std=c11"} });

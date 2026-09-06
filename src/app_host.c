@@ -278,7 +278,7 @@ cleanup:
     for(int i=0;i<signals;i++)sigaction(signal_numbers[i],&previous[i],NULL);
     wake_write=-1;
     for(int i=0;i<2;i++)if(wake[i]>=0)close(wake[i]);
-    JS_FreeContext(ctx);JS_FreeRuntime(runtime);
+    JS_FreeContext(ctx);JS_FreeRuntime(runtime);qt_views_deinit();
     if(host.used)fputs(host.diagnostics,stderr);
     if(headless&&!host.failed)puts("Example self-test passed: input, React updates, native rendering, and effect cleanup.");
     return host.failed?1:0;

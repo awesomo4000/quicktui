@@ -1,3 +1,6 @@
+comptime {
+    _ = @import("buffer_views.zig");
+}
 const std = @import("std");
 
 extern "c" fn quicktui_eval(source: [*:0]const u8, len: usize, diagnostics: c_int) c_int;
@@ -94,4 +97,9 @@ test "statically linked Yoga computes layout" {
     yoga.YGNodeCalculateLayout(node, 80, 24, 1);
     try std.testing.expectEqual(@as(f32, 32), yoga.YGNodeLayoutGetWidth(node));
     try std.testing.expectEqual(@as(f32, 8), yoga.YGNodeLayoutGetHeight(node));
+}
+
+test "opaque terminal buffer views reject fabrication and expired storage" {
+    // Repeat to exercise runtime teardown and finalizers, too.
+    for (0..2) |_| try runExample(@embedFile("buffer_views_test.js"), "buffer-views-test", true);
 }

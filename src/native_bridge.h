@@ -9,4 +9,8 @@ int qt_callback_failed(JSContext *ctx);
 int qt_register_symbols(JSContext *ctx, JSValue global);
 int qt_register_ffi(JSContext *ctx, JSValue global);
 void qt_close_ffi(JSContext *ctx);
+JSValue qt_buffer_view(JSContext *ctx, uint32_t buffer, unsigned kind);
+void qt_views_invalidate(uint32_t buffer);
+void qt_views_clear(void);
+void qt_views_deinit(void);
 #endif

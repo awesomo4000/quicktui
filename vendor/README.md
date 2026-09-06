@@ -55,3 +55,9 @@ patch, and extract its native dependency archive. To update JavaScript packages,
 change the exact versions in `js/package.json`, regenerate the npm lockfile with
 scripts disabled, and include the resulting package files. Regenerate `src/examples.js`
 with `zig build bundle`, then run `zig build test` and rebuild both target artifacts.
+
+## Poolside
+
+Poolside 0.2.0 supplies the generational registry for terminal-buffer read views.
+The four Zig source files, README, and MPL-2.0 license are vendored in
+`poolside/`; see [provenance](poolside/PROVENANCE.md). Sources are unmodified.

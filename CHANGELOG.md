@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased - 09/06/2026
+
+- Vendor Poolside 0.2.0 and replace four terminal-buffer plane pointer results with opaque, generational read views; validate byte bounds and revoke views on buffer resize/destruction.
+
 ## Unreleased - 09/05/2026
 
 - Add a separate live-JavaScript demo that loads external scripts into the running React page, supports additive components and file watching, and recovers from load/render errors.

@@ -1,5 +1,6 @@
 declare const __native: Record<string, Function>;
 declare function __pointer(value: ArrayBuffer | ArrayBufferView): bigint;
+declare function __readBufferView(view: object, offset: number, length: number): ArrayBuffer;
 declare function __readMemory(pointer: bigint, length: number): ArrayBuffer;
 declare function __callback(kind: number, fn: Function | null): bigint;
 
@@ -10,7 +11,9 @@ export const toPointer = (value: number | bigint) => BigInt(value);
 export const ffiBool = (value: boolean) => value ? 1 : 0;
 export const trimNodeFFIOutputBytes = (bytes: Uint8Array, length: number) => bytes.slice(0,length);
 // Copy native read results. No JavaScript view can outlive a native allocation.
-export const toArrayBuffer = (pointer: bigint, offset = 0, length: number) => __readMemory(BigInt(pointer)+BigInt(offset),length);
+export const toArrayBuffer = (pointer: bigint, offset = 0, length: number) => typeof pointer === "object" && pointer !== null
+  ? __readBufferView(pointer,offset,length)
+  : __readMemory(BigInt(pointer)+BigInt(offset),length);
 const kinds = ["u8,ptr,u32", "ptr,u32,ptr,u32", "ptr,f32,u32,f32,u32", "ptr"];
 export function dlopen(path: string) {
   if(path !== "quicktui:static") throw new Error("Only the statically linked QuickTUI registry is supported");

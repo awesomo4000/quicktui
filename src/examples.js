@@ -10096,7 +10096,7 @@ No matching component was found for:
       }
     };
   }
-  var ptr, usesBunFFI = false, toPointer = (value) => BigInt(value), ffiBool = (value) => value ? 1 : 0, trimNodeFFIOutputBytes = (bytes, length) => bytes.slice(0, length), toArrayBuffer = (pointer, offset = 0, length) => __readMemory(BigInt(pointer) + BigInt(offset), length), kinds;
+  var ptr, usesBunFFI = false, toPointer = (value) => BigInt(value), ffiBool = (value) => value ? 1 : 0, trimNodeFFIOutputBytes = (bytes, length) => bytes.slice(0, length), toArrayBuffer = (pointer, offset = 0, length) => typeof pointer === "object" && pointer !== null ? __readBufferView(pointer, offset, length) : __readMemory(BigInt(pointer) + BigInt(offset), length), kinds;
   var init_ffi = __esm(() => {
     ptr = __pointer;
     kinds = ["u8,ptr,u32", "ptr,u32,ptr,u32", "ptr,f32,u32,f32,u32", "ptr"];

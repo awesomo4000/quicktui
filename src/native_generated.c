@@ -70,6 +70,7 @@ static JSValue wrap_destroyRenderer(JSContext *ctx, JSValueConst self, int argc,
 (void)self; if (argc != 2) return JS_ThrowTypeError(ctx, "destroyRenderer: wrong argument count");
 uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
 int a1 = JS_ToBool(ctx, argv[1]); if (a1 < 0) return JS_EXCEPTION;
+qt_views_clear();
 destroyRenderer((uint32_t)a0, (bool)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
 extern void setUseThread(uint32_t a0, bool a1);
@@ -121,6 +122,7 @@ extern void destroyOptimizedBuffer(uint32_t a0);
 static JSValue wrap_destroyOptimizedBuffer(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "destroyOptimizedBuffer: wrong argument count");
 uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+qt_views_invalidate(a0);
 destroyOptimizedBuffer((uint32_t)a0); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
 extern void drawFrameBuffer(uint32_t a0, int32_t a1, int32_t a2, uint32_t a3, uint32_t a4, uint32_t a5, uint32_t a6, uint32_t a7);
@@ -165,25 +167,25 @@ extern void * bufferGetCharPtr(uint32_t a0);
 static JSValue wrap_bufferGetCharPtr(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "bufferGetCharPtr: wrong argument count");
 uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
-void * value = bufferGetCharPtr((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBigUint64(ctx, (uintptr_t)value);
+return qt_buffer_view(ctx,a0,0);
 }
 extern void * bufferGetFgPtr(uint32_t a0);
 static JSValue wrap_bufferGetFgPtr(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "bufferGetFgPtr: wrong argument count");
 uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
-void * value = bufferGetFgPtr((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBigUint64(ctx, (uintptr_t)value);
+return qt_buffer_view(ctx,a0,1);
 }
 extern void * bufferGetBgPtr(uint32_t a0);
 static JSValue wrap_bufferGetBgPtr(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "bufferGetBgPtr: wrong argument count");
 uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
-void * value = bufferGetBgPtr((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBigUint64(ctx, (uintptr_t)value);
+return qt_buffer_view(ctx,a0,2);
 }
 extern void * bufferGetAttributesPtr(uint32_t a0);
 static JSValue wrap_bufferGetAttributesPtr(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 1) return JS_ThrowTypeError(ctx, "bufferGetAttributesPtr: wrong argument count");
 uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
-void * value = bufferGetAttributesPtr((uint32_t)a0); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBigUint64(ctx, (uintptr_t)value);
+return qt_buffer_view(ctx,a0,3);
 }
 extern bool bufferGetRespectAlpha(uint32_t a0);
 static JSValue wrap_bufferGetRespectAlpha(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
@@ -295,6 +297,7 @@ static JSValue wrap_bufferResize(JSContext *ctx, JSValueConst self, int argc, JS
 uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
 uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
 uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+qt_views_invalidate(a0);
 bufferResize((uint32_t)a0, (uint32_t)a1, (uint32_t)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
 extern void resizeRenderer(uint32_t a0, uint32_t a1, uint32_t a2);
@@ -303,6 +306,7 @@ static JSValue wrap_resizeRenderer(JSContext *ctx, JSValueConst self, int argc, 
 uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
 uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
 uint32_t a2; if (JS_ToUint32(ctx, &a2, argv[2]) < 0) return JS_EXCEPTION;
+qt_views_clear();
 resizeRenderer((uint32_t)a0, (uint32_t)a1, (uint32_t)a2); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
 extern void setCursorPosition(uint32_t a0, int32_t a1, int32_t a2, bool a3);

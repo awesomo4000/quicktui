@@ -58,6 +58,10 @@ for (const e of selected) {
   });
   if(e.name==="setUseThread")code.push('if(a1) return JS_ThrowTypeError(ctx, "The counter profile requires same-thread native rendering");');
   if(e.name==="createRenderer")code.push('if(a4) return JS_ThrowTypeError(ctx, "Custom native output feeds are unsupported");');
+  const viewKind=["bufferGetCharPtr","bufferGetFgPtr","bufferGetBgPtr","bufferGetAttributesPtr"].indexOf(e.name);
+  if(viewKind>=0){code.push(`return qt_buffer_view(ctx,a0,${viewKind});`,"}");continue;}
+  if(e.name==="destroyOptimizedBuffer"||e.name==="bufferResize")code.push("qt_views_invalidate(a0);");
+  if(e.name==="resizeRenderer"||e.name==="destroyRenderer")code.push("qt_views_clear();");
   const call = `${e.name}(${e.args.map((t,i)=>`(${types[t]})a${i}`).join(", ")})`;
   if(e.returns === "void") code.push(`${call}; return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;`);
   else {

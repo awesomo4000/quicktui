@@ -1,5 +1,6 @@
 #include "native_bridge.h"
 #include <pthread.h>
+#include <math.h>
 
 // The application owns one runtime and one thread. The four callbacks are
 // OpenTUI's global log, per-library event sink, Yoga measure, and Yoga dirtied.
@@ -116,9 +117,55 @@ static JSValue callback(JSContext *ctx,JSValueConst self,int argc,JSValueConst *
     uintptr_t addresses[]={(uintptr_t)log_callback,(uintptr_t)event_callback,(uintptr_t)measure_callback,(uintptr_t)dirtied_callback};
     return JS_NewBigUint64(ctx,addresses[kind]);
 }
+extern uint64_t qt_view_create(uint32_t buffer, const unsigned char *bytes, size_t length);
+extern const unsigned char *qt_view_resolve(uint64_t token, size_t offset, size_t length);
+extern void qt_view_release(uint64_t token);
+extern uint32_t getBufferWidth(uint32_t), getBufferHeight(uint32_t);
+extern void *bufferGetCharPtr(uint32_t), *bufferGetFgPtr(uint32_t), *bufferGetBgPtr(uint32_t), *bufferGetAttributesPtr(uint32_t);
+static JSClassID buffer_view_class;
+typedef struct { uint64_t token; } BufferView;
+static void buffer_view_finalize(JSRuntime *runtime, JSValue value) {
+    BufferView *view=JS_GetOpaque(value,buffer_view_class);
+    if(view){qt_view_release(view->token);js_free_rt(runtime,view);}
+}
+JSValue qt_buffer_view(JSContext *ctx, uint32_t buffer, unsigned kind) {
+    void *bytes=NULL;
+    switch(kind){case 0:bytes=bufferGetCharPtr(buffer);break;case 1:bytes=bufferGetFgPtr(buffer);break;
+        case 2:bytes=bufferGetBgPtr(buffer);break;case 3:bytes=bufferGetAttributesPtr(buffer);break;}
+    if(!bytes)return JS_NULL;
+    size_t cells=(size_t)getBufferWidth(buffer)*getBufferHeight(buffer);
+    size_t unit=(kind==1||kind==2)?8:4;
+    if(cells>SIZE_MAX/unit)return JS_ThrowRangeError(ctx,"Buffer view size overflow");
+    JSValue result=JS_NewObjectClass(ctx,buffer_view_class);
+    if(JS_IsException(result))return result;
+    BufferView *view=js_malloc(ctx,sizeof(*view));
+    if(!view){JS_FreeValue(ctx,result);return JS_EXCEPTION;}
+    view->token=qt_view_create(buffer,bytes,cells*unit);
+    if(!view->token){js_free(ctx,view);JS_FreeValue(ctx,result);return JS_ThrowOutOfMemory(ctx);}
+    JS_SetOpaque(result,view);
+    return result;
+}
+static JSValue read_buffer_view(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+    (void)self;
+    if(argc!=3)return JS_ThrowTypeError(ctx,"readBufferView expects a view, offset, and length");
+    BufferView *view=JS_GetOpaque2(ctx,argv[0],buffer_view_class);
+    if(!view)return JS_EXCEPTION;
+    double offset,length;
+    if(!JS_IsNumber(argv[1])||!JS_IsNumber(argv[2]))return JS_ThrowTypeError(ctx,"View bounds must be numbers");
+    if(JS_ToFloat64(ctx,&offset,argv[1])<0||JS_ToFloat64(ctx,&length,argv[2])<0)return JS_EXCEPTION;
+    if(!isfinite(offset)||!isfinite(length)||offset<0||length<0||floor(offset)!=offset||floor(length)!=length||
+       offset>9007199254740991.0||length>16*1024*1024)return JS_ThrowRangeError(ctx,"Invalid view bounds");
+    const unsigned char *bytes=qt_view_resolve(view->token,(size_t)offset,(size_t)length);
+    if(!bytes)return JS_ThrowRangeError(ctx,"Stale buffer view or out-of-bounds read");
+    return JS_NewArrayBufferCopy(ctx,bytes,(size_t)length);
+}
 int qt_register_ffi(JSContext *ctx,JSValue global) {
     callback_context=ctx;owner=pthread_self();callback_error=JS_UNDEFINED;
     for(int i=0;i<4;i++) callbacks[i]=JS_UNDEFINED;
+    if(!buffer_view_class)JS_NewClassID(&buffer_view_class);
+    const JSClassDef view_class={.class_name="TerminalBufferView",.finalizer=buffer_view_finalize};
+    if(JS_NewClass(JS_GetRuntime(ctx),buffer_view_class,&view_class)<0)return -1;
+    if(JS_SetPropertyStr(ctx,global,"__readBufferView",JS_NewCFunction(ctx,read_buffer_view,"__readBufferView",3))<0)return -1;
     if(JS_SetPropertyStr(ctx,global,"__pointer",JS_NewCFunction(ctx,pointer,"__pointer",1))<0) return -1;
     if(JS_SetPropertyStr(ctx,global,"__readMemory",JS_NewCFunction(ctx,read_memory,"__readMemory",2))<0) return -1;
     if(JS_SetPropertyStr(ctx,global,"__callback",JS_NewCFunction(ctx,callback,"__callback",2))<0) return -1;
