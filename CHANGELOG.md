@@ -2,6 +2,10 @@
 
 ## Unreleased - 09/06/2026
 
+- Raise shape zoom from 1.4× to 8× for close inspection of surface dithering.
+
+- Add independent graphics-lab rotation speed controls, including zero, reverse rotation, and fine steps down to 1/65,536× with double-precision angle accumulation, with preset persistence.
+
 - Vendor Poolside 0.2.0 and replace four terminal-buffer plane pointer results with opaque, generational read views; validate byte bounds and revoke views on buffer resize/destruction.
 
 ## Unreleased - 09/05/2026

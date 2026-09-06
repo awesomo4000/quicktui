@@ -5,7 +5,7 @@ import {Renderable} from "../vendor/opentui/packages/core/src/Renderable";
 import {NativeImage} from "../vendor/opentui/packages/core/src/image";
 import {mountDemo,keys,graphicsState} from "./platform/demo";
 const WIDTH=240,HEIGHT=160;
-type Scene={shape:number,angle:number,tilt:number,zoom:number,wire:boolean,palette:number,playing:boolean,fps:number,epoch:number,charset:number,cols:number,rows:number,tone:number,brightness:number,contrast:number,dot_scale:number,fractal_zoom:number,center_x:number,center_y:number};
+type Scene={shape:number,angle:number,tilt:number,zoom:number,wire:boolean,palette:number,playing:boolean,fps:number,rotation_speed:number,epoch:number,charset:number,cols:number,rows:number,tone:number,brightness:number,contrast:number,dot_scale:number,fractal_zoom:number,center_x:number,center_y:number};
 type Frame={angle:number,image:NativeImage,pixels:Uint8Array,glyphs:string,glyphColors:Uint8Array,tone:number,cols:number,rows:number,charset:number,ms:number,index:number,dropped:number,serial:number};
 const ownedImages=new Map<NativeImage,number>();
 function releaseBefore<T extends {dispose():void}>(images:Map<T,number>,committed:number){
@@ -34,7 +34,7 @@ const names=["Torus","Orb","Sheet","4D hypercube","Mandelbrot"];
 const glyphNames=["","ASCII","Shades","Quadrants","Braille + punctuation","ASCII + braille","Box drawing","Blocks","Pure braille"];
 const tones=["Color","Grayscale","Screen Bayer","Surface fractal"];
 function App(){
-  const scene=useRef<Scene>({shape:3,angle:0,tilt:.7,zoom:.82,wire:false,palette:0,playing:true,fps:10,epoch:0,charset:0,cols:60,rows:20,tone:0,brightness:0,contrast:1,dot_scale:4,fractal_zoom:1,center_x:-.65,center_y:0});
+  const scene=useRef<Scene>({shape:3,angle:0,tilt:.7,zoom:.82,wire:false,palette:0,playing:true,fps:10,rotation_speed:1,epoch:0,charset:0,cols:60,rows:20,tone:0,brightness:0,contrast:1,dot_scale:4,fractal_zoom:1,center_x:-.65,center_y:0});
   const playing=useRef(true),drag=useRef<{x:number,y:number}|null>(null);
   const [presetsOpen,setPresetsOpen]=useState(false);
   const currentFrame=useRef<Frame|null>(null);
@@ -78,6 +78,12 @@ function App(){
         const index=rates.indexOf(scene.current.fps);
         scene.current.fps=rates[Math.max(0,Math.min(rates.length-1,index+(name==="="?1:-1)))];
       }
+      if(name==="["||name==="]"){
+        const positive=Array.from({length:19},(_,i)=>2**(i-16));
+        const speeds=[...positive.map(value=>-value).reverse(),0,...positive];
+        const speed=scene.current.rotation_speed;
+        scene.current.rotation_speed=name==="["?[...speeds].reverse().find(value=>value<speed)??speeds[0]:speeds.find(value=>value>speed)??speeds[speeds.length-1];
+      }
       if(name==="m"){outputRef.current=(outputRef.current+1)%4;setOutput(outputRef.current)}
       if(name==="g"){
         if(outputRef.current===3)glyphRef.current=glyphRef.current%(glyphNames.length-1)+1;
@@ -91,7 +97,7 @@ function App(){
       if(name==="j")scene.current.contrast=Math.max(.25,scene.current.contrast-.25);
       if(name==="o")scene.current.dot_scale=Math.min(5,scene.current.dot_scale+.25);
       if(name==="i")scene.current.dot_scale=Math.max(0,scene.current.dot_scale-.25);
-      if(name==="r"){Object.assign(scene.current,{zoom:.82,fractal_zoom:1,center_x:-.65,center_y:0,brightness:0,contrast:1,dot_scale:4,angle:0,tilt:.7})}
+      if(name==="r"){Object.assign(scene.current,{zoom:.82,fractal_zoom:1,center_x:-.65,center_y:0,brightness:0,contrast:1,dot_scale:4,rotation_speed:1,angle:0,tilt:.7})}
       if(name==="t"){scene.current.shape=4;scene.current.center_x=-.743643887037151;scene.current.center_y=.13182590420533;scene.current.fractal_zoom=250}
       if(name==="w")scene.current.wire=!scene.current.wire;
       if(name==="c")scene.current.palette=(scene.current.palette+1)%3;
@@ -119,7 +125,7 @@ function App(){
   });
   const restore=(value:any)=>{
     const {cols,rows,epoch}=scene.current;
-    Object.assign(scene.current,value.scene,{cols,rows,epoch:(epoch+1)>>>0});
+    Object.assign(scene.current,{rotation_speed:1},value.scene,{cols,rows,epoch:(epoch+1)>>>0});
     playing.current=value.scene.playing;drag.current=null;
     outputRef.current=value.output;glyphRef.current=value.glyph;
     scene.current.charset=value.output===3?value.glyph:0;
@@ -145,13 +151,13 @@ function App(){
         }}
         onMouseUp={()=>{drag.current=null;draw()}}
         onMouseScroll={(e:any)=>{if(scene.current.shape===4)scene.current.fractal_zoom=Math.max(.5,Math.min(1e10,scene.current.fractal_zoom*(e.scroll.direction==="up"?1.25:.8)));
-          else scene.current.zoom=Math.max(.3,Math.min(1.4,scene.current.zoom+(e.scroll.direction==="up"?.07:-.07)));draw()}}>
+          else scene.current.zoom=Math.max(.3,Math.min(8,scene.current.zoom+(e.scroll.direction==="up"?.07:-.07)));draw()}}>
         {frame?(output===0?<image source={frame.image} width="100%" height="100%" protocol={kitty?"kitty":"blocks"} onError={(error:any)=>{throw error}}/>:React.createElement("labCells",{pixels:frame.pixels,mode:output===1?"half":output===2?"braille":"glyphs",glyphs:frame.glyphs,glyphColors:frame.glyphColors,tone:frame.tone,glyphCols:frame.cols,glyphRows:frame.rows,width:"100%",height:"100%"})):<text fg="#718b99">Waiting for native frame…</text>}
       </box>
       <text height={1} flexShrink={0} fg="#c2ced5">{names[scene.current.shape]} · {scene.current.wire?"wireframe":"shaded"} · {playing.current?"playing":"paused"} · {fps} FPS delivered · -/= target {scene.current.fps} · {frame?.ms??0} ms CPU · drop {frame?.dropped??0}</text>
       <text height={1} flexShrink={0} fg="#718b99">Drag rotate/pan · scroll zoom · W wire · C palette · P pause · R reset · T fractal target · F presets · Q exit</text>
-      <text height={1} flexShrink={0} fg="#c2ced5">D {tones[scene.current.tone]} · B/N brightness {scene.current.brightness.toFixed(1)} · K/J contrast {scene.current.contrast.toFixed(2)} · O/I dots {scene.current.dot_scale.toFixed(2)}</text>
-      <text height={1} flexShrink={0} fg="#526b78">M {output===1?"Half blocks":output===2?"Braille":output===3?glyphNames[glyphRef.current]+" · G charset":kitty?"Kitty pixels":"Block fallback"} · {WIDTH} × {HEIGHT} · {scene.current.shape===4?scene.current.fractal_zoom.toFixed(1)+"× zoom":"Zig CPU worker → React → terminal"}</text>
+      <text height={1} flexShrink={0} fg="#c2ced5">D {tones[scene.current.tone]} · B/N brightness {scene.current.brightness.toFixed(1)} · K/J contrast {scene.current.contrast.toFixed(2)} · O/I dots {scene.current.dot_scale.toFixed(2)} · zoom {scene.current.zoom.toFixed(2)}×</text>
+      <text height={1} flexShrink={0} fg="#526b78">[/] rotation {Math.abs(scene.current.rotation_speed)>0&&Math.abs(scene.current.rotation_speed)<1/64?`${scene.current.rotation_speed<0?"-":""}1/${Math.round(1/Math.abs(scene.current.rotation_speed))}`:scene.current.rotation_speed}× · M {output===1?"Half blocks":output===2?"Braille":output===3?glyphNames[glyphRef.current]+" · G charset":kitty?"Kitty pixels":"Block fallback"} · {WIDTH} × {HEIGHT} · {scene.current.shape===4?scene.current.fractal_zoom.toFixed(1)+"× zoom":"Zig CPU worker → React → terminal"}</text>
     </box>
     {presetsOpen&&<PresetsPanel capture={capture} restore={restore} close={()=>setPresetsOpen(false)}/>}
   </box>;
@@ -167,6 +173,13 @@ if(__host.headless)Object.assign(globalThis,{async __selfTest(){
   const host=globalThis as any;
   const wait=()=>new Promise(resolve=>setTimeout(resolve,30));
   for(const key of ["p","2","3","1","w","c","\x1b[D"]){host.__input(new TextEncoder().encode(key).buffer);await wait()}
+  host.__input(new TextEncoder().encode("[[").buffer);await wait();
+  if(!host.__snapshot().includes("rotation 0.25×"))throw new Error("Rotation speed control failed");
+  host.__input(new TextEncoder().encode("]]").buffer);await wait();
+  for(const [input,label] of [["[".repeat(17),"rotation 0×"],["[","rotation -1/65536×"],["[","rotation -1/32768×"],["]","rotation -1/65536×"],["]","rotation 0×"],["]".repeat(17),"rotation 1×"]]){
+    host.__input(new TextEncoder().encode(input).buffer);await wait();
+    if(!host.__snapshot().includes(label))throw new Error("Signed rotation control failed: "+label);
+  }
   const snapshot=host.__snapshot();
   if(!snapshot.includes("wireframe")||!snapshot.includes("paused"))throw new Error("Lab controls failed: "+snapshot);
   const deadline=Date.now()+3000;

@@ -114,12 +114,13 @@ test "presets survive a new store and invalid saves preserve the previous slot" 
         _ = c.unlink(path);
         _ = c.rmdir(dir);
     }
-    const value = Preset{ .description = "Emerald braille", .scene = .{ .shape = 4, .tone = 3, .fps = 90, .angle = 1.75 }, .output = 3, .glyph = 8 };
+    const value = Preset{ .description = "Emerald braille", .scene = .{ .shape = 4, .tone = 3, .fps = 90, .rotation_speed = -0.125, .zoom = 8, .angle = 1.75 }, .output = 3, .glyph = 8 };
     try store.save(1, value);
     var out: [4096]u8 = undefined;
     const fresh = Store{ .directory = store.directory };
     const response = fresh.execute(.{ .preset = .load, .slot = 1 }, &out);
     try std.testing.expect(std.mem.find(u8, response, "Emerald braille") != null);
+    try std.testing.expect(std.mem.find(u8, response, "\"rotation_speed\":-0.125") != null);
     var bad = value;
     bad.scene.fps = 121;
     try std.testing.expectError(error.InvalidPreset, store.save(1, bad));

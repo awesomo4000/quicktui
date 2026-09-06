@@ -445,3 +445,9 @@ makes one copy into a JS ArrayBuffer, as the previous read path did.
 This is a focused lifetime/bounds experiment, not an extension sandbox. Other
 FFI operations still accept raw pointers, native buffer IDs are not scoped to
 individual extensions, and all bridge operations remain on the UI thread.
+
+Graphics lab: **[** steps rotation speed down and **]** steps it up, from −4×
+through zero to +4×, with powers-of-two steps down to ±1/65,536×. This changes animation speed independently of the FPS target. Presets save
+the speed; older presets use 1×. **R** restores 1× along with the scene controls.
+
+Shape zoom in the graphics lab ranges from 0.3× to 8× using the scroll gesture.

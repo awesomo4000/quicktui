@@ -40627,7 +40627,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       }
   }
   function App4() {
-    const scene = import_react8.useRef({ shape: 3, angle: 0, tilt: 0.7, zoom: 0.82, wire: false, palette: 0, playing: true, fps: 10, epoch: 0, charset: 0, cols: 60, rows: 20, tone: 0, brightness: 0, contrast: 1, dot_scale: 4, fractal_zoom: 1, center_x: -0.65, center_y: 0 });
+    const scene = import_react8.useRef({ shape: 3, angle: 0, tilt: 0.7, zoom: 0.82, wire: false, palette: 0, playing: true, fps: 10, rotation_speed: 1, epoch: 0, charset: 0, cols: 60, rows: 20, tone: 0, brightness: 0, contrast: 1, dot_scale: 4, fractal_zoom: 1, center_x: -0.65, center_y: 0 });
     const playing = import_react8.useRef(true), drag = import_react8.useRef(null);
     const [presetsOpen, setPresetsOpen] = import_react8.useState(false);
     const currentFrame = import_react8.useRef(null);
@@ -40684,6 +40684,12 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           const index = rates.indexOf(scene.current.fps);
           scene.current.fps = rates[Math.max(0, Math.min(rates.length - 1, index + (name === "=" ? 1 : -1)))];
         }
+        if (name === "[" || name === "]") {
+          const positive = Array.from({ length: 19 }, (_2, i) => 2 ** (i - 16));
+          const speeds = [...positive.map((value) => -value).reverse(), 0, ...positive];
+          const speed = scene.current.rotation_speed;
+          scene.current.rotation_speed = name === "[" ? [...speeds].reverse().find((value) => value < speed) ?? speeds[0] : speeds.find((value) => value > speed) ?? speeds[speeds.length - 1];
+        }
         if (name === "m") {
           outputRef.current = (outputRef.current + 1) % 4;
           setOutput(outputRef.current);
@@ -40710,7 +40716,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         if (name === "i")
           scene.current.dot_scale = Math.max(0, scene.current.dot_scale - 0.25);
         if (name === "r") {
-          Object.assign(scene.current, { zoom: 0.82, fractal_zoom: 1, center_x: -0.65, center_y: 0, brightness: 0, contrast: 1, dot_scale: 4, angle: 0, tilt: 0.7 });
+          Object.assign(scene.current, { zoom: 0.82, fractal_zoom: 1, center_x: -0.65, center_y: 0, brightness: 0, contrast: 1, dot_scale: 4, rotation_speed: 1, angle: 0, tilt: 0.7 });
         }
         if (name === "t") {
           scene.current.shape = 4;
@@ -40768,7 +40774,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     });
     const restore = (value) => {
       const { cols, rows, epoch: epoch2 } = scene.current;
-      Object.assign(scene.current, value.scene, { cols, rows, epoch: epoch2 + 1 >>> 0 });
+      Object.assign(scene.current, { rotation_speed: 1 }, value.scene, { cols, rows, epoch: epoch2 + 1 >>> 0 });
       playing.current = value.scene.playing;
       drag.current = null;
       outputRef.current = value.output;
@@ -40859,7 +40865,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                 if (scene.current.shape === 4)
                   scene.current.fractal_zoom = Math.max(0.5, Math.min(10000000000, scene.current.fractal_zoom * (e.scroll.direction === "up" ? 1.25 : 0.8)));
                 else
-                  scene.current.zoom = Math.max(0.3, Math.min(1.4, scene.current.zoom + (e.scroll.direction === "up" ? 0.07 : -0.07)));
+                  scene.current.zoom = Math.max(0.3, Math.min(8, scene.current.zoom + (e.scroll.direction === "up" ? 0.07 : -0.07)));
                 draw();
               },
               children: frame ? output === 0 ? /* @__PURE__ */ jsx_runtime6.jsx("image", {
@@ -40913,7 +40919,10 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                 " · K/J contrast ",
                 scene.current.contrast.toFixed(2),
                 " · O/I dots ",
-                scene.current.dot_scale.toFixed(2)
+                scene.current.dot_scale.toFixed(2),
+                " · zoom ",
+                scene.current.zoom.toFixed(2),
+                "×"
               ]
             }),
             /* @__PURE__ */ jsx_runtime6.jsxs("text", {
@@ -40921,7 +40930,9 @@ Please report this to https://github.com/markedjs/marked.`, e) {
               flexShrink: 0,
               fg: "#526b78",
               children: [
-                "M ",
+                "[/] rotation ",
+                Math.abs(scene.current.rotation_speed) > 0 && Math.abs(scene.current.rotation_speed) < 1 / 64 ? `${scene.current.rotation_speed < 0 ? "-" : ""}1/${Math.round(1 / Math.abs(scene.current.rotation_speed))}` : scene.current.rotation_speed,
+                "× · M ",
                 output === 1 ? "Half blocks" : output === 2 ? "Braille" : output === 3 ? glyphNames[glyphRef.current] + " · G charset" : kitty ? "Kitty pixels" : "Block fallback",
                 " · ",
                 WIDTH,
@@ -40998,6 +41009,18 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         for (const key of ["p", "2", "3", "1", "w", "c", "\x1B[D"]) {
           host.__input(new TextEncoder().encode(key).buffer);
           await wait();
+        }
+        host.__input(new TextEncoder().encode("[[").buffer);
+        await wait();
+        if (!host.__snapshot().includes("rotation 0.25×"))
+          throw new Error("Rotation speed control failed");
+        host.__input(new TextEncoder().encode("]]").buffer);
+        await wait();
+        for (const [input, label] of [["[".repeat(17), "rotation 0×"], ["[", "rotation -1/65536×"], ["[", "rotation -1/32768×"], ["]", "rotation -1/65536×"], ["]", "rotation 0×"], ["]".repeat(17), "rotation 1×"]]) {
+          host.__input(new TextEncoder().encode(input).buffer);
+          await wait();
+          if (!host.__snapshot().includes(label))
+            throw new Error("Signed rotation control failed: " + label);
         }
         const snapshot = host.__snapshot();
         if (!snapshot.includes("wireframe") || !snapshot.includes("paused"))
