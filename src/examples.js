@@ -28343,6 +28343,4604 @@ No matching component was found for:
     };
   });
 
+  // vendor/js/node_modules/marked/lib/marked.umd.js
+  var require_marked_umd = __commonJS((exports, module) => {
+    (function(g, f) {
+      if (typeof exports == "object" && typeof module < "u") {
+        module.exports = f();
+      } else if (typeof define == "function" && define.amd) {
+        define("marked", f);
+      } else {
+        g["marked"] = f();
+      }
+    })(typeof globalThis < "u" ? globalThis : typeof self < "u" ? self : exports, function() {
+      var exports2 = {};
+      var __exports = exports2;
+      var module2 = { exports: exports2 };
+      var Z = Object.defineProperty;
+      var xe = Object.getOwnPropertyDescriptor;
+      var be = Object.getOwnPropertyNames;
+      var Re = Object.prototype.hasOwnProperty;
+      var Te = (l, e) => {
+        for (var t in e)
+          Z(l, t, { get: e[t], enumerable: true });
+      }, Oe = (l, e, t, n) => {
+        if (e && typeof e == "object" || typeof e == "function")
+          for (let r of be(e))
+            !Re.call(l, r) && r !== t && Z(l, r, { get: () => e[r], enumerable: !(n = xe(e, r)) || n.enumerable });
+        return l;
+      };
+      var we = (l) => Oe(Z({}, "__esModule", { value: true }), l);
+      var kt = {};
+      Te(kt, { Hooks: () => S, Lexer: () => x, Marked: () => A, Parser: () => b, Renderer: () => P, TextRenderer: () => $, Tokenizer: () => y, defaults: () => T, getDefaults: () => _, lexer: () => ht, marked: () => d, options: () => it, parse: () => pt, parseInline: () => ut, parser: () => ct, setOptions: () => ot, use: () => at, walkTokens: () => lt });
+      module2.exports = we(kt);
+      function _() {
+        return { async: false, breaks: false, extensions: null, gfm: true, hooks: null, pedantic: false, renderer: null, silent: false, tokenizer: null, walkTokens: null };
+      }
+      var T = _();
+      function G(l) {
+        T = l;
+      }
+      var I = { exec: () => null };
+      function k(l, e = "") {
+        let t = typeof l == "string" ? l : l.source, n = { replace: (r, i) => {
+          let s = typeof i == "string" ? i : i.source;
+          return s = s.replace(m.caret, "$1"), t = t.replace(r, s), n;
+        }, getRegex: () => new RegExp(t, e) };
+        return n;
+      }
+      var ye = (() => {
+        try {
+          return !!new RegExp("(?<=1)(?<!1)");
+        } catch {
+          return false;
+        }
+      })(), m = { codeRemoveIndent: /^(?: {1,4}| {0,3}\t)/gm, outputLinkReplace: /\\([\[\]])/g, indentCodeCompensation: /^(\s+)(?:```)/, beginningSpace: /^\s+/, endingHash: /#$/, startingSpaceChar: /^ /, endingSpaceChar: / $/, nonSpaceChar: /[^ ]/, newLineCharGlobal: /\n/g, tabCharGlobal: /\t/g, multipleSpaceGlobal: /\s+/g, blankLine: /^[ \t]*$/, doubleBlankLine: /\n[ \t]*\n[ \t]*$/, blockquoteStart: /^ {0,3}>/, blockquoteSetextReplace: /\n {0,3}((?:=+|-+) *)(?=\n|$)/g, blockquoteSetextReplace2: /^ {0,3}>[ \t]?/gm, listReplaceTabs: /^\t+/, listReplaceNesting: /^ {1,4}(?=( {4})*[^ ])/g, listIsTask: /^\[[ xX]\] +\S/, listReplaceTask: /^\[[ xX]\] +/, listTaskCheckbox: /\[[ xX]\]/, anyLine: /\n.*\n/, hrefBrackets: /^<(.*)>$/, tableDelimiter: /[:|]/, tableAlignChars: /^\||\| *$/g, tableRowBlankLine: /\n[ \t]*$/, tableAlignRight: /^ *-+: *$/, tableAlignCenter: /^ *:-+: *$/, tableAlignLeft: /^ *:-+ *$/, startATag: /^<a /i, endATag: /^<\/a>/i, startPreScriptTag: /^<(pre|code|kbd|script)(\s|>)/i, endPreScriptTag: /^<\/(pre|code|kbd|script)(\s|>)/i, startAngleBracket: /^</, endAngleBracket: />$/, pedanticHrefTitle: /^([^'"]*[^\s])\s+(['"])(.*)\2/, unicodeAlphaNumeric: /[\p{L}\p{N}]/u, escapeTest: /[&<>"']/, escapeReplace: /[&<>"']/g, escapeTestNoEncode: /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/, escapeReplaceNoEncode: /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/g, unescapeTest: /&(#(?:\d+)|(?:#x[0-9A-Fa-f]+)|(?:\w+));?/ig, caret: /(^|[^\[])\^/g, percentDecode: /%25/g, findPipe: /\|/g, splitPipe: / \|/, slashPipe: /\\\|/g, carriageReturn: /\r\n|\r/g, spaceLine: /^ +$/gm, notSpaceStart: /^\S*/, endingNewline: /\n$/, listItemRegex: (l) => new RegExp(`^( {0,3}${l})((?:[	 ][^\\n]*)?(?:\\n|$))`), nextBulletRegex: (l) => new RegExp(`^ {0,${Math.min(3, l - 1)}}(?:[*+-]|\\d{1,9}[.)])((?:[ 	][^\\n]*)?(?:\\n|$))`), hrRegex: (l) => new RegExp(`^ {0,${Math.min(3, l - 1)}}((?:- *){3,}|(?:_ *){3,}|(?:\\* *){3,})(?:\\n+|$)`), fencesBeginRegex: (l) => new RegExp(`^ {0,${Math.min(3, l - 1)}}(?:\`\`\`|~~~)`), headingBeginRegex: (l) => new RegExp(`^ {0,${Math.min(3, l - 1)}}#`), htmlBeginRegex: (l) => new RegExp(`^ {0,${Math.min(3, l - 1)}}<(?:[a-z].*>|!--)`, "i") }, Pe = /^(?:[ \t]*(?:\n|$))+/, Se = /^((?: {4}| {0,3}\t)[^\n]+(?:\n(?:[ \t]*(?:\n|$))*)?)+/, $e = /^ {0,3}(`{3,}(?=[^`\n]*(?:\n|$))|~{3,})([^\n]*)(?:\n|$)(?:|([\s\S]*?)(?:\n|$))(?: {0,3}\1[~`]* *(?=\n|$)|$)/, E = /^ {0,3}((?:-[\t ]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})(?:\n+|$)/, _e = /^ {0,3}(#{1,6})(?=\s|$)(.*)(?:\n+|$)/, Q = /(?:[*+-]|\d{1,9}[.)])/, se = /^(?!bull |blockCode|fences|blockquote|heading|html|table)((?:.|\n(?!\s*?\n|bull |blockCode|fences|blockquote|heading|html|table))+?)\n {0,3}(=+|-+) *(?:\n+|$)/, ie = k(se).replace(/bull/g, Q).replace(/blockCode/g, /(?: {4}| {0,3}\t)/).replace(/fences/g, / {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g, / {0,3}>/).replace(/heading/g, / {0,3}#{1,6}/).replace(/html/g, / {0,3}<[^\n>]+>\n/).replace(/\|table/g, "").getRegex(), Le = k(se).replace(/bull/g, Q).replace(/blockCode/g, /(?: {4}| {0,3}\t)/).replace(/fences/g, / {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g, / {0,3}>/).replace(/heading/g, / {0,3}#{1,6}/).replace(/html/g, / {0,3}<[^\n>]+>\n/).replace(/table/g, / {0,3}\|?(?:[:\- ]*\|)+[\:\- ]*\n/).getRegex(), F = /^([^\n]+(?:\n(?!hr|heading|lheading|blockquote|fences|list|html|table| +\n)[^\n]+)*)/, Me = /^[^\n]+/, j = /(?!\s*\])(?:\\[\s\S]|[^\[\]\\])+/, ze = k(/^ {0,3}\[(label)\]: *(?:\n[ \t]*)?([^<\s][^\s]*|<.*?>)(?:(?: +(?:\n[ \t]*)?| *\n[ \t]*)(title))? *(?:\n+|$)/).replace("label", j).replace("title", /(?:"(?:\\"?|[^"\\])*"|'[^'\n]*(?:\n[^'\n]+)*\n?'|\([^()]*\))/).getRegex(), Ae = k(/^( {0,3}bull)([ \t][^\n]+?)?(?:\n|$)/).replace(/bull/g, Q).getRegex(), v = "address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|meta|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul", U = /<!--(?:-?>|[\s\S]*?(?:-->|$))/, Ce = k("^ {0,3}(?:<(script|pre|style|textarea)[\\s>][\\s\\S]*?(?:</\\1>[^\\n]*\\n+|$)|comment[^\\n]*(\\n+|$)|<\\?[\\s\\S]*?(?:\\?>\\n*|$)|<![A-Z][\\s\\S]*?(?:>\\n*|$)|<!\\[CDATA\\[[\\s\\S]*?(?:\\]\\]>\\n*|$)|</?(tag)(?: +|\\n|/?>)[\\s\\S]*?(?:(?:\\n[ \t]*)+\\n|$)|<(?!script|pre|style|textarea)([a-z][\\w-]*)(?:attribute)*? */?>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ \t]*)+\\n|$)|</(?!script|pre|style|textarea)[a-z][\\w-]*\\s*>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ \t]*)+\\n|$))", "i").replace("comment", U).replace("tag", v).replace("attribute", / +[a-zA-Z:_][\w.:-]*(?: *= *"[^"\n]*"| *= *'[^'\n]*'| *= *[^\s"'=<>`]+)?/).getRegex(), oe = k(F).replace("hr", E).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("|lheading", "").replace("|table", "").replace("blockquote", " {0,3}>").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list", " {0,3}(?:[*+-]|1[.)]) ").replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", v).getRegex(), Ie = k(/^( {0,3}> ?(paragraph|[^\n]*)(?:\n|$))+/).replace("paragraph", oe).getRegex(), K = { blockquote: Ie, code: Se, def: ze, fences: $e, heading: _e, hr: E, html: Ce, lheading: ie, list: Ae, newline: Pe, paragraph: oe, table: I, text: Me }, ne = k("^ *([^\\n ].*)\\n {0,3}((?:\\| *)?:?-+:? *(?:\\| *:?-+:? *)*(?:\\| *)?)(?:\\n((?:(?! *\\n|hr|heading|blockquote|code|fences|list|html).*(?:\\n|$))*)\\n*|$)").replace("hr", E).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("blockquote", " {0,3}>").replace("code", "(?: {4}| {0,3}\t)[^\\n]").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list", " {0,3}(?:[*+-]|1[.)]) ").replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", v).getRegex(), Ee = { ...K, lheading: Le, table: ne, paragraph: k(F).replace("hr", E).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("|lheading", "").replace("table", ne).replace("blockquote", " {0,3}>").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list", " {0,3}(?:[*+-]|1[.)]) ").replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", v).getRegex() }, Be = { ...K, html: k(`^ *(?:comment *(?:\\n|\\s*$)|<(tag)[\\s\\S]+?</\\1> *(?:\\n{2,}|\\s*$)|<tag(?:"[^"]*"|'[^']*'|\\s[^'"/>\\s]*)*?/?> *(?:\\n{2,}|\\s*$))`).replace("comment", U).replace(/tag/g, "(?!(?:a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|span|br|wbr|ins|del|img)\\b)\\w+(?!:|[^\\w\\s@]*@)\\b").getRegex(), def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +(["(][^\n]+[")]))? *(?:\n+|$)/, heading: /^(#{1,6})(.*)(?:\n+|$)/, fences: I, lheading: /^(.+?)\n {0,3}(=+|-+) *(?:\n+|$)/, paragraph: k(F).replace("hr", E).replace("heading", ` *#{1,6} *[^
+]`).replace("lheading", ie).replace("|table", "").replace("blockquote", " {0,3}>").replace("|fences", "").replace("|list", "").replace("|html", "").replace("|tag", "").getRegex() }, qe = /^\\([!"#$%&'()*+,\-./:;<=>?@\[\]\\^_`{|}~])/, ve = /^(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/, ae = /^( {2,}|\\)\n(?!\s*$)/, De = /^(`+|[^`])(?:(?= {2,}\n)|[\s\S]*?(?:(?=[\\<!\[`*_]|\b_|$)|[^ ](?= {2,}\n)))/, D = /[\p{P}\p{S}]/u, W = /[\s\p{P}\p{S}]/u, le = /[^\s\p{P}\p{S}]/u, He = k(/^((?![*_])punctSpace)/, "u").replace(/punctSpace/g, W).getRegex(), ue = /(?!~)[\p{P}\p{S}]/u, Ze = /(?!~)[\s\p{P}\p{S}]/u, Ge = /(?:[^\s\p{P}\p{S}]|~)/u, Ne = k(/link|precode-code|html/, "g").replace("link", /\[(?:[^\[\]`]|(?<a>`+)[^`]+\k<a>(?!`))*?\]\((?:\\[\s\S]|[^\\\(\)]|\((?:\\[\s\S]|[^\\\(\)])*\))*\)/).replace("precode-", ye ? "(?<!`)()" : "(^^|[^`])").replace("code", /(?<b>`+)[^`]+\k<b>(?!`)/).replace("html", /<(?! )[^<>]*?>/).getRegex(), pe = /^(?:\*+(?:((?!\*)punct)|[^\s*]))|^_+(?:((?!_)punct)|([^\s_]))/, Qe = k(pe, "u").replace(/punct/g, D).getRegex(), Fe = k(pe, "u").replace(/punct/g, ue).getRegex(), ce = "^[^_*]*?__[^_*]*?\\*[^_*]*?(?=__)|[^*]+(?=[^*])|(?!\\*)punct(\\*+)(?=[\\s]|$)|notPunctSpace(\\*+)(?!\\*)(?=punctSpace|$)|(?!\\*)punctSpace(\\*+)(?=notPunctSpace)|[\\s](\\*+)(?!\\*)(?=punct)|(?!\\*)punct(\\*+)(?!\\*)(?=punct)|notPunctSpace(\\*+)(?=notPunctSpace)", je = k(ce, "gu").replace(/notPunctSpace/g, le).replace(/punctSpace/g, W).replace(/punct/g, D).getRegex(), Ue = k(ce, "gu").replace(/notPunctSpace/g, Ge).replace(/punctSpace/g, Ze).replace(/punct/g, ue).getRegex(), Ke = k("^[^_*]*?\\*\\*[^_*]*?_[^_*]*?(?=\\*\\*)|[^_]+(?=[^_])|(?!_)punct(_+)(?=[\\s]|$)|notPunctSpace(_+)(?!_)(?=punctSpace|$)|(?!_)punctSpace(_+)(?=notPunctSpace)|[\\s](_+)(?!_)(?=punct)|(?!_)punct(_+)(?!_)(?=punct)", "gu").replace(/notPunctSpace/g, le).replace(/punctSpace/g, W).replace(/punct/g, D).getRegex(), We = k(/\\(punct)/, "gu").replace(/punct/g, D).getRegex(), Xe = k(/^<(scheme:[^\s\x00-\x1f<>]*|email)>/).replace("scheme", /[a-zA-Z][a-zA-Z0-9+.-]{1,31}/).replace("email", /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+(@)[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(?![-_])/).getRegex(), Je = k(U).replace("(?:-->|$)", "-->").getRegex(), Ve = k("^comment|^</[a-zA-Z][\\w:-]*\\s*>|^<[a-zA-Z][\\w-]*(?:attribute)*?\\s*/?>|^<\\?[\\s\\S]*?\\?>|^<![a-zA-Z]+\\s[\\s\\S]*?>|^<!\\[CDATA\\[[\\s\\S]*?\\]\\]>").replace("comment", Je).replace("attribute", /\s+[a-zA-Z:_][\w.:-]*(?:\s*=\s*"[^"]*"|\s*=\s*'[^']*'|\s*=\s*[^\s"'=<>`]+)?/).getRegex(), q = /(?:\[(?:\\[\s\S]|[^\[\]\\])*\]|\\[\s\S]|`+[^`]*?`+(?!`)|[^\[\]\\`])*?/, Ye = k(/^!?\[(label)\]\(\s*(href)(?:(?:[ \t]*(?:\n[ \t]*)?)(title))?\s*\)/).replace("label", q).replace("href", /<(?:\\.|[^\n<>\\])+>|[^ \t\n\x00-\x1f]*/).replace("title", /"(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)/).getRegex(), he = k(/^!?\[(label)\]\[(ref)\]/).replace("label", q).replace("ref", j).getRegex(), ke = k(/^!?\[(ref)\](?:\[\])?/).replace("ref", j).getRegex(), et = k("reflink|nolink(?!\\()", "g").replace("reflink", he).replace("nolink", ke).getRegex(), re = /[hH][tT][tT][pP][sS]?|[fF][tT][pP]/, X = { _backpedal: I, anyPunctuation: We, autolink: Xe, blockSkip: Ne, br: ae, code: ve, del: I, emStrongLDelim: Qe, emStrongRDelimAst: je, emStrongRDelimUnd: Ke, escape: qe, link: Ye, nolink: ke, punctuation: He, reflink: he, reflinkSearch: et, tag: Ve, text: De, url: I }, tt = { ...X, link: k(/^!?\[(label)\]\((.*?)\)/).replace("label", q).getRegex(), reflink: k(/^!?\[(label)\]\s*\[([^\]]*)\]/).replace("label", q).getRegex() }, N = { ...X, emStrongRDelimAst: Ue, emStrongLDelim: Fe, url: k(/^((?:protocol):\/\/|www\.)(?:[a-zA-Z0-9\-]+\.?)+[^\s<]*|^email/).replace("protocol", re).replace("email", /[A-Za-z0-9._+-]+(@)[a-zA-Z0-9-_]+(?:\.[a-zA-Z0-9-_]*[a-zA-Z0-9])+(?![-_])/).getRegex(), _backpedal: /(?:[^?!.,:;*_'"~()&]+|\([^)]*\)|&(?![a-zA-Z0-9]+;$)|[?!.,:;*_'"~)]+(?!$))+/, del: /^(~~?)(?=[^\s~])((?:\\[\s\S]|[^\\])*?(?:\\[\s\S]|[^\s~\\]))\1(?=[^~]|$)/, text: k(/^([`~]+|[^`~])(?:(?= {2,}\n)|(?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)|[\s\S]*?(?:(?=[\\<!\[`*~_]|\b_|protocol:\/\/|www\.|$)|[^ ](?= {2,}\n)|[^a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-](?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)))/).replace("protocol", re).getRegex() }, nt = { ...N, br: k(ae).replace("{2,}", "*").getRegex(), text: k(N.text).replace("\\b_", "\\b_| {2,}\\n").replace(/\{2,\}/g, "*").getRegex() }, B = { normal: K, gfm: Ee, pedantic: Be }, M = { normal: X, gfm: N, breaks: nt, pedantic: tt };
+      var rt = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }, de = (l) => rt[l];
+      function w(l, e) {
+        if (e) {
+          if (m.escapeTest.test(l))
+            return l.replace(m.escapeReplace, de);
+        } else if (m.escapeTestNoEncode.test(l))
+          return l.replace(m.escapeReplaceNoEncode, de);
+        return l;
+      }
+      function J(l) {
+        try {
+          l = encodeURI(l).replace(m.percentDecode, "%");
+        } catch {
+          return null;
+        }
+        return l;
+      }
+      function V(l, e) {
+        let t = l.replace(m.findPipe, (i, s, a) => {
+          let o = false, u = s;
+          for (;--u >= 0 && a[u] === "\\"; )
+            o = !o;
+          return o ? "|" : " |";
+        }), n = t.split(m.splitPipe), r = 0;
+        if (n[0].trim() || n.shift(), n.length > 0 && !n.at(-1)?.trim() && n.pop(), e)
+          if (n.length > e)
+            n.splice(e);
+          else
+            for (;n.length < e; )
+              n.push("");
+        for (;r < n.length; r++)
+          n[r] = n[r].trim().replace(m.slashPipe, "|");
+        return n;
+      }
+      function z(l, e, t) {
+        let n = l.length;
+        if (n === 0)
+          return "";
+        let r = 0;
+        for (;r < n; ) {
+          let i = l.charAt(n - r - 1);
+          if (i === e && !t)
+            r++;
+          else if (i !== e && t)
+            r++;
+          else
+            break;
+        }
+        return l.slice(0, n - r);
+      }
+      function ge(l, e) {
+        if (l.indexOf(e[1]) === -1)
+          return -1;
+        let t = 0;
+        for (let n = 0;n < l.length; n++)
+          if (l[n] === "\\")
+            n++;
+          else if (l[n] === e[0])
+            t++;
+          else if (l[n] === e[1] && (t--, t < 0))
+            return n;
+        return t > 0 ? -2 : -1;
+      }
+      function fe(l, e, t, n, r) {
+        let i = e.href, s = e.title || null, a = l[1].replace(r.other.outputLinkReplace, "$1");
+        n.state.inLink = true;
+        let o = { type: l[0].charAt(0) === "!" ? "image" : "link", raw: t, href: i, title: s, text: a, tokens: n.inlineTokens(a) };
+        return n.state.inLink = false, o;
+      }
+      function st(l, e, t) {
+        let n = l.match(t.other.indentCodeCompensation);
+        if (n === null)
+          return e;
+        let r = n[1];
+        return e.split(`
+`).map((i) => {
+          let s = i.match(t.other.beginningSpace);
+          if (s === null)
+            return i;
+          let [a] = s;
+          return a.length >= r.length ? i.slice(r.length) : i;
+        }).join(`
+`);
+      }
+      var y = class {
+        options;
+        rules;
+        lexer;
+        constructor(e) {
+          this.options = e || T;
+        }
+        space(e) {
+          let t = this.rules.block.newline.exec(e);
+          if (t && t[0].length > 0)
+            return { type: "space", raw: t[0] };
+        }
+        code(e) {
+          let t = this.rules.block.code.exec(e);
+          if (t) {
+            let n = t[0].replace(this.rules.other.codeRemoveIndent, "");
+            return { type: "code", raw: t[0], codeBlockStyle: "indented", text: this.options.pedantic ? n : z(n, `
+`) };
+          }
+        }
+        fences(e) {
+          let t = this.rules.block.fences.exec(e);
+          if (t) {
+            let n = t[0], r = st(n, t[3] || "", this.rules);
+            return { type: "code", raw: n, lang: t[2] ? t[2].trim().replace(this.rules.inline.anyPunctuation, "$1") : t[2], text: r };
+          }
+        }
+        heading(e) {
+          let t = this.rules.block.heading.exec(e);
+          if (t) {
+            let n = t[2].trim();
+            if (this.rules.other.endingHash.test(n)) {
+              let r = z(n, "#");
+              (this.options.pedantic || !r || this.rules.other.endingSpaceChar.test(r)) && (n = r.trim());
+            }
+            return { type: "heading", raw: t[0], depth: t[1].length, text: n, tokens: this.lexer.inline(n) };
+          }
+        }
+        hr(e) {
+          let t = this.rules.block.hr.exec(e);
+          if (t)
+            return { type: "hr", raw: z(t[0], `
+`) };
+        }
+        blockquote(e) {
+          let t = this.rules.block.blockquote.exec(e);
+          if (t) {
+            let n = z(t[0], `
+`).split(`
+`), r = "", i = "", s = [];
+            for (;n.length > 0; ) {
+              let a = false, o = [], u;
+              for (u = 0;u < n.length; u++)
+                if (this.rules.other.blockquoteStart.test(n[u]))
+                  o.push(n[u]), a = true;
+                else if (!a)
+                  o.push(n[u]);
+                else
+                  break;
+              n = n.slice(u);
+              let p = o.join(`
+`), c = p.replace(this.rules.other.blockquoteSetextReplace, `
+    $1`).replace(this.rules.other.blockquoteSetextReplace2, "");
+              r = r ? `${r}
+${p}` : p, i = i ? `${i}
+${c}` : c;
+              let g = this.lexer.state.top;
+              if (this.lexer.state.top = true, this.lexer.blockTokens(c, s, true), this.lexer.state.top = g, n.length === 0)
+                break;
+              let h = s.at(-1);
+              if (h?.type === "code")
+                break;
+              if (h?.type === "blockquote") {
+                let R = h, f = R.raw + `
+` + n.join(`
+`), O = this.blockquote(f);
+                s[s.length - 1] = O, r = r.substring(0, r.length - R.raw.length) + O.raw, i = i.substring(0, i.length - R.text.length) + O.text;
+                break;
+              } else if (h?.type === "list") {
+                let R = h, f = R.raw + `
+` + n.join(`
+`), O = this.list(f);
+                s[s.length - 1] = O, r = r.substring(0, r.length - h.raw.length) + O.raw, i = i.substring(0, i.length - R.raw.length) + O.raw, n = f.substring(s.at(-1).raw.length).split(`
+`);
+                continue;
+              }
+            }
+            return { type: "blockquote", raw: r, tokens: s, text: i };
+          }
+        }
+        list(e) {
+          let t = this.rules.block.list.exec(e);
+          if (t) {
+            let n = t[1].trim(), r = n.length > 1, i = { type: "list", raw: "", ordered: r, start: r ? +n.slice(0, -1) : "", loose: false, items: [] };
+            n = r ? `\\d{1,9}\\${n.slice(-1)}` : `\\${n}`, this.options.pedantic && (n = r ? n : "[*+-]");
+            let s = this.rules.other.listItemRegex(n), a = false;
+            for (;e; ) {
+              let u = false, p = "", c = "";
+              if (!(t = s.exec(e)) || this.rules.block.hr.test(e))
+                break;
+              p = t[0], e = e.substring(p.length);
+              let g = t[2].split(`
+`, 1)[0].replace(this.rules.other.listReplaceTabs, (O) => " ".repeat(3 * O.length)), h = e.split(`
+`, 1)[0], R = !g.trim(), f = 0;
+              if (this.options.pedantic ? (f = 2, c = g.trimStart()) : R ? f = t[1].length + 1 : (f = t[2].search(this.rules.other.nonSpaceChar), f = f > 4 ? 1 : f, c = g.slice(f), f += t[1].length), R && this.rules.other.blankLine.test(h) && (p += h + `
+`, e = e.substring(h.length + 1), u = true), !u) {
+                let O = this.rules.other.nextBulletRegex(f), Y = this.rules.other.hrRegex(f), ee = this.rules.other.fencesBeginRegex(f), te = this.rules.other.headingBeginRegex(f), me = this.rules.other.htmlBeginRegex(f);
+                for (;e; ) {
+                  let H = e.split(`
+`, 1)[0], C;
+                  if (h = H, this.options.pedantic ? (h = h.replace(this.rules.other.listReplaceNesting, "  "), C = h) : C = h.replace(this.rules.other.tabCharGlobal, "    "), ee.test(h) || te.test(h) || me.test(h) || O.test(h) || Y.test(h))
+                    break;
+                  if (C.search(this.rules.other.nonSpaceChar) >= f || !h.trim())
+                    c += `
+` + C.slice(f);
+                  else {
+                    if (R || g.replace(this.rules.other.tabCharGlobal, "    ").search(this.rules.other.nonSpaceChar) >= 4 || ee.test(g) || te.test(g) || Y.test(g))
+                      break;
+                    c += `
+` + h;
+                  }
+                  !R && !h.trim() && (R = true), p += H + `
+`, e = e.substring(H.length + 1), g = C.slice(f);
+                }
+              }
+              i.loose || (a ? i.loose = true : this.rules.other.doubleBlankLine.test(p) && (a = true)), i.items.push({ type: "list_item", raw: p, task: !!this.options.gfm && this.rules.other.listIsTask.test(c), loose: false, text: c, tokens: [] }), i.raw += p;
+            }
+            let o = i.items.at(-1);
+            if (o)
+              o.raw = o.raw.trimEnd(), o.text = o.text.trimEnd();
+            else
+              return;
+            i.raw = i.raw.trimEnd();
+            for (let u of i.items) {
+              if (this.lexer.state.top = false, u.tokens = this.lexer.blockTokens(u.text, []), u.task) {
+                if (u.text = u.text.replace(this.rules.other.listReplaceTask, ""), u.tokens[0]?.type === "text" || u.tokens[0]?.type === "paragraph") {
+                  u.tokens[0].raw = u.tokens[0].raw.replace(this.rules.other.listReplaceTask, ""), u.tokens[0].text = u.tokens[0].text.replace(this.rules.other.listReplaceTask, "");
+                  for (let c = this.lexer.inlineQueue.length - 1;c >= 0; c--)
+                    if (this.rules.other.listIsTask.test(this.lexer.inlineQueue[c].src)) {
+                      this.lexer.inlineQueue[c].src = this.lexer.inlineQueue[c].src.replace(this.rules.other.listReplaceTask, "");
+                      break;
+                    }
+                }
+                let p = this.rules.other.listTaskCheckbox.exec(u.raw);
+                if (p) {
+                  let c = { type: "checkbox", raw: p[0] + " ", checked: p[0] !== "[ ]" };
+                  u.checked = c.checked, i.loose ? u.tokens[0] && ["paragraph", "text"].includes(u.tokens[0].type) && "tokens" in u.tokens[0] && u.tokens[0].tokens ? (u.tokens[0].raw = c.raw + u.tokens[0].raw, u.tokens[0].text = c.raw + u.tokens[0].text, u.tokens[0].tokens.unshift(c)) : u.tokens.unshift({ type: "paragraph", raw: c.raw, text: c.raw, tokens: [c] }) : u.tokens.unshift(c);
+                }
+              }
+              if (!i.loose) {
+                let p = u.tokens.filter((g) => g.type === "space"), c = p.length > 0 && p.some((g) => this.rules.other.anyLine.test(g.raw));
+                i.loose = c;
+              }
+            }
+            if (i.loose)
+              for (let u of i.items) {
+                u.loose = true;
+                for (let p of u.tokens)
+                  p.type === "text" && (p.type = "paragraph");
+              }
+            return i;
+          }
+        }
+        html(e) {
+          let t = this.rules.block.html.exec(e);
+          if (t)
+            return { type: "html", block: true, raw: t[0], pre: t[1] === "pre" || t[1] === "script" || t[1] === "style", text: t[0] };
+        }
+        def(e) {
+          let t = this.rules.block.def.exec(e);
+          if (t) {
+            let n = t[1].toLowerCase().replace(this.rules.other.multipleSpaceGlobal, " "), r = t[2] ? t[2].replace(this.rules.other.hrefBrackets, "$1").replace(this.rules.inline.anyPunctuation, "$1") : "", i = t[3] ? t[3].substring(1, t[3].length - 1).replace(this.rules.inline.anyPunctuation, "$1") : t[3];
+            return { type: "def", tag: n, raw: t[0], href: r, title: i };
+          }
+        }
+        table(e) {
+          let t = this.rules.block.table.exec(e);
+          if (!t || !this.rules.other.tableDelimiter.test(t[2]))
+            return;
+          let n = V(t[1]), r = t[2].replace(this.rules.other.tableAlignChars, "").split("|"), i = t[3]?.trim() ? t[3].replace(this.rules.other.tableRowBlankLine, "").split(`
+`) : [], s = { type: "table", raw: t[0], header: [], align: [], rows: [] };
+          if (n.length === r.length) {
+            for (let a of r)
+              this.rules.other.tableAlignRight.test(a) ? s.align.push("right") : this.rules.other.tableAlignCenter.test(a) ? s.align.push("center") : this.rules.other.tableAlignLeft.test(a) ? s.align.push("left") : s.align.push(null);
+            for (let a = 0;a < n.length; a++)
+              s.header.push({ text: n[a], tokens: this.lexer.inline(n[a]), header: true, align: s.align[a] });
+            for (let a of i)
+              s.rows.push(V(a, s.header.length).map((o, u) => ({ text: o, tokens: this.lexer.inline(o), header: false, align: s.align[u] })));
+            return s;
+          }
+        }
+        lheading(e) {
+          let t = this.rules.block.lheading.exec(e);
+          if (t)
+            return { type: "heading", raw: t[0], depth: t[2].charAt(0) === "=" ? 1 : 2, text: t[1], tokens: this.lexer.inline(t[1]) };
+        }
+        paragraph(e) {
+          let t = this.rules.block.paragraph.exec(e);
+          if (t) {
+            let n = t[1].charAt(t[1].length - 1) === `
+` ? t[1].slice(0, -1) : t[1];
+            return { type: "paragraph", raw: t[0], text: n, tokens: this.lexer.inline(n) };
+          }
+        }
+        text(e) {
+          let t = this.rules.block.text.exec(e);
+          if (t)
+            return { type: "text", raw: t[0], text: t[0], tokens: this.lexer.inline(t[0]) };
+        }
+        escape(e) {
+          let t = this.rules.inline.escape.exec(e);
+          if (t)
+            return { type: "escape", raw: t[0], text: t[1] };
+        }
+        tag(e) {
+          let t = this.rules.inline.tag.exec(e);
+          if (t)
+            return !this.lexer.state.inLink && this.rules.other.startATag.test(t[0]) ? this.lexer.state.inLink = true : this.lexer.state.inLink && this.rules.other.endATag.test(t[0]) && (this.lexer.state.inLink = false), !this.lexer.state.inRawBlock && this.rules.other.startPreScriptTag.test(t[0]) ? this.lexer.state.inRawBlock = true : this.lexer.state.inRawBlock && this.rules.other.endPreScriptTag.test(t[0]) && (this.lexer.state.inRawBlock = false), { type: "html", raw: t[0], inLink: this.lexer.state.inLink, inRawBlock: this.lexer.state.inRawBlock, block: false, text: t[0] };
+        }
+        link(e) {
+          let t = this.rules.inline.link.exec(e);
+          if (t) {
+            let n = t[2].trim();
+            if (!this.options.pedantic && this.rules.other.startAngleBracket.test(n)) {
+              if (!this.rules.other.endAngleBracket.test(n))
+                return;
+              let s = z(n.slice(0, -1), "\\");
+              if ((n.length - s.length) % 2 === 0)
+                return;
+            } else {
+              let s = ge(t[2], "()");
+              if (s === -2)
+                return;
+              if (s > -1) {
+                let o = (t[0].indexOf("!") === 0 ? 5 : 4) + t[1].length + s;
+                t[2] = t[2].substring(0, s), t[0] = t[0].substring(0, o).trim(), t[3] = "";
+              }
+            }
+            let r = t[2], i = "";
+            if (this.options.pedantic) {
+              let s = this.rules.other.pedanticHrefTitle.exec(r);
+              s && (r = s[1], i = s[3]);
+            } else
+              i = t[3] ? t[3].slice(1, -1) : "";
+            return r = r.trim(), this.rules.other.startAngleBracket.test(r) && (this.options.pedantic && !this.rules.other.endAngleBracket.test(n) ? r = r.slice(1) : r = r.slice(1, -1)), fe(t, { href: r && r.replace(this.rules.inline.anyPunctuation, "$1"), title: i && i.replace(this.rules.inline.anyPunctuation, "$1") }, t[0], this.lexer, this.rules);
+          }
+        }
+        reflink(e, t) {
+          let n;
+          if ((n = this.rules.inline.reflink.exec(e)) || (n = this.rules.inline.nolink.exec(e))) {
+            let r = (n[2] || n[1]).replace(this.rules.other.multipleSpaceGlobal, " "), i = t[r.toLowerCase()];
+            if (!i) {
+              let s = n[0].charAt(0);
+              return { type: "text", raw: s, text: s };
+            }
+            return fe(n, i, n[0], this.lexer, this.rules);
+          }
+        }
+        emStrong(e, t, n = "") {
+          let r = this.rules.inline.emStrongLDelim.exec(e);
+          if (!r || r[3] && n.match(this.rules.other.unicodeAlphaNumeric))
+            return;
+          if (!(r[1] || r[2] || "") || !n || this.rules.inline.punctuation.exec(n)) {
+            let s = [...r[0]].length - 1, a, o, u = s, p = 0, c = r[0][0] === "*" ? this.rules.inline.emStrongRDelimAst : this.rules.inline.emStrongRDelimUnd;
+            for (c.lastIndex = 0, t = t.slice(-1 * e.length + s);(r = c.exec(t)) != null; ) {
+              if (a = r[1] || r[2] || r[3] || r[4] || r[5] || r[6], !a)
+                continue;
+              if (o = [...a].length, r[3] || r[4]) {
+                u += o;
+                continue;
+              } else if ((r[5] || r[6]) && s % 3 && !((s + o) % 3)) {
+                p += o;
+                continue;
+              }
+              if (u -= o, u > 0)
+                continue;
+              o = Math.min(o, o + u + p);
+              let g = [...r[0]][0].length, h = e.slice(0, s + r.index + g + o);
+              if (Math.min(s, o) % 2) {
+                let f = h.slice(1, -1);
+                return { type: "em", raw: h, text: f, tokens: this.lexer.inlineTokens(f) };
+              }
+              let R = h.slice(2, -2);
+              return { type: "strong", raw: h, text: R, tokens: this.lexer.inlineTokens(R) };
+            }
+          }
+        }
+        codespan(e) {
+          let t = this.rules.inline.code.exec(e);
+          if (t) {
+            let n = t[2].replace(this.rules.other.newLineCharGlobal, " "), r = this.rules.other.nonSpaceChar.test(n), i = this.rules.other.startingSpaceChar.test(n) && this.rules.other.endingSpaceChar.test(n);
+            return r && i && (n = n.substring(1, n.length - 1)), { type: "codespan", raw: t[0], text: n };
+          }
+        }
+        br(e) {
+          let t = this.rules.inline.br.exec(e);
+          if (t)
+            return { type: "br", raw: t[0] };
+        }
+        del(e) {
+          let t = this.rules.inline.del.exec(e);
+          if (t)
+            return { type: "del", raw: t[0], text: t[2], tokens: this.lexer.inlineTokens(t[2]) };
+        }
+        autolink(e) {
+          let t = this.rules.inline.autolink.exec(e);
+          if (t) {
+            let n, r;
+            return t[2] === "@" ? (n = t[1], r = "mailto:" + n) : (n = t[1], r = n), { type: "link", raw: t[0], text: n, href: r, tokens: [{ type: "text", raw: n, text: n }] };
+          }
+        }
+        url(e) {
+          let t;
+          if (t = this.rules.inline.url.exec(e)) {
+            let n, r;
+            if (t[2] === "@")
+              n = t[0], r = "mailto:" + n;
+            else {
+              let i;
+              do
+                i = t[0], t[0] = this.rules.inline._backpedal.exec(t[0])?.[0] ?? "";
+              while (i !== t[0]);
+              n = t[0], t[1] === "www." ? r = "http://" + t[0] : r = t[0];
+            }
+            return { type: "link", raw: t[0], text: n, href: r, tokens: [{ type: "text", raw: n, text: n }] };
+          }
+        }
+        inlineText(e) {
+          let t = this.rules.inline.text.exec(e);
+          if (t) {
+            let n = this.lexer.state.inRawBlock;
+            return { type: "text", raw: t[0], text: t[0], escaped: n };
+          }
+        }
+      };
+      var x = class l {
+        tokens;
+        options;
+        state;
+        inlineQueue;
+        tokenizer;
+        constructor(e) {
+          this.tokens = [], this.tokens.links = Object.create(null), this.options = e || T, this.options.tokenizer = this.options.tokenizer || new y, this.tokenizer = this.options.tokenizer, this.tokenizer.options = this.options, this.tokenizer.lexer = this, this.inlineQueue = [], this.state = { inLink: false, inRawBlock: false, top: true };
+          let t = { other: m, block: B.normal, inline: M.normal };
+          this.options.pedantic ? (t.block = B.pedantic, t.inline = M.pedantic) : this.options.gfm && (t.block = B.gfm, this.options.breaks ? t.inline = M.breaks : t.inline = M.gfm), this.tokenizer.rules = t;
+        }
+        static get rules() {
+          return { block: B, inline: M };
+        }
+        static lex(e, t) {
+          return new l(t).lex(e);
+        }
+        static lexInline(e, t) {
+          return new l(t).inlineTokens(e);
+        }
+        lex(e) {
+          e = e.replace(m.carriageReturn, `
+`), this.blockTokens(e, this.tokens);
+          for (let t = 0;t < this.inlineQueue.length; t++) {
+            let n = this.inlineQueue[t];
+            this.inlineTokens(n.src, n.tokens);
+          }
+          return this.inlineQueue = [], this.tokens;
+        }
+        blockTokens(e, t = [], n = false) {
+          for (this.options.pedantic && (e = e.replace(m.tabCharGlobal, "    ").replace(m.spaceLine, ""));e; ) {
+            let r;
+            if (this.options.extensions?.block?.some((s) => (r = s.call({ lexer: this }, e, t)) ? (e = e.substring(r.raw.length), t.push(r), true) : false))
+              continue;
+            if (r = this.tokenizer.space(e)) {
+              e = e.substring(r.raw.length);
+              let s = t.at(-1);
+              r.raw.length === 1 && s !== undefined ? s.raw += `
+` : t.push(r);
+              continue;
+            }
+            if (r = this.tokenizer.code(e)) {
+              e = e.substring(r.raw.length);
+              let s = t.at(-1);
+              s?.type === "paragraph" || s?.type === "text" ? (s.raw += (s.raw.endsWith(`
+`) ? "" : `
+`) + r.raw, s.text += `
+` + r.text, this.inlineQueue.at(-1).src = s.text) : t.push(r);
+              continue;
+            }
+            if (r = this.tokenizer.fences(e)) {
+              e = e.substring(r.raw.length), t.push(r);
+              continue;
+            }
+            if (r = this.tokenizer.heading(e)) {
+              e = e.substring(r.raw.length), t.push(r);
+              continue;
+            }
+            if (r = this.tokenizer.hr(e)) {
+              e = e.substring(r.raw.length), t.push(r);
+              continue;
+            }
+            if (r = this.tokenizer.blockquote(e)) {
+              e = e.substring(r.raw.length), t.push(r);
+              continue;
+            }
+            if (r = this.tokenizer.list(e)) {
+              e = e.substring(r.raw.length), t.push(r);
+              continue;
+            }
+            if (r = this.tokenizer.html(e)) {
+              e = e.substring(r.raw.length), t.push(r);
+              continue;
+            }
+            if (r = this.tokenizer.def(e)) {
+              e = e.substring(r.raw.length);
+              let s = t.at(-1);
+              s?.type === "paragraph" || s?.type === "text" ? (s.raw += (s.raw.endsWith(`
+`) ? "" : `
+`) + r.raw, s.text += `
+` + r.raw, this.inlineQueue.at(-1).src = s.text) : this.tokens.links[r.tag] || (this.tokens.links[r.tag] = { href: r.href, title: r.title }, t.push(r));
+              continue;
+            }
+            if (r = this.tokenizer.table(e)) {
+              e = e.substring(r.raw.length), t.push(r);
+              continue;
+            }
+            if (r = this.tokenizer.lheading(e)) {
+              e = e.substring(r.raw.length), t.push(r);
+              continue;
+            }
+            let i = e;
+            if (this.options.extensions?.startBlock) {
+              let s = 1 / 0, a = e.slice(1), o;
+              this.options.extensions.startBlock.forEach((u) => {
+                o = u.call({ lexer: this }, a), typeof o == "number" && o >= 0 && (s = Math.min(s, o));
+              }), s < 1 / 0 && s >= 0 && (i = e.substring(0, s + 1));
+            }
+            if (this.state.top && (r = this.tokenizer.paragraph(i))) {
+              let s = t.at(-1);
+              n && s?.type === "paragraph" ? (s.raw += (s.raw.endsWith(`
+`) ? "" : `
+`) + r.raw, s.text += `
+` + r.text, this.inlineQueue.pop(), this.inlineQueue.at(-1).src = s.text) : t.push(r), n = i.length !== e.length, e = e.substring(r.raw.length);
+              continue;
+            }
+            if (r = this.tokenizer.text(e)) {
+              e = e.substring(r.raw.length);
+              let s = t.at(-1);
+              s?.type === "text" ? (s.raw += (s.raw.endsWith(`
+`) ? "" : `
+`) + r.raw, s.text += `
+` + r.text, this.inlineQueue.pop(), this.inlineQueue.at(-1).src = s.text) : t.push(r);
+              continue;
+            }
+            if (e) {
+              let s = "Infinite loop on byte: " + e.charCodeAt(0);
+              if (this.options.silent) {
+                console.error(s);
+                break;
+              } else
+                throw new Error(s);
+            }
+          }
+          return this.state.top = true, t;
+        }
+        inline(e, t = []) {
+          return this.inlineQueue.push({ src: e, tokens: t }), t;
+        }
+        inlineTokens(e, t = []) {
+          let n = e, r = null;
+          if (this.tokens.links) {
+            let o = Object.keys(this.tokens.links);
+            if (o.length > 0)
+              for (;(r = this.tokenizer.rules.inline.reflinkSearch.exec(n)) != null; )
+                o.includes(r[0].slice(r[0].lastIndexOf("[") + 1, -1)) && (n = n.slice(0, r.index) + "[" + "a".repeat(r[0].length - 2) + "]" + n.slice(this.tokenizer.rules.inline.reflinkSearch.lastIndex));
+          }
+          for (;(r = this.tokenizer.rules.inline.anyPunctuation.exec(n)) != null; )
+            n = n.slice(0, r.index) + "++" + n.slice(this.tokenizer.rules.inline.anyPunctuation.lastIndex);
+          let i;
+          for (;(r = this.tokenizer.rules.inline.blockSkip.exec(n)) != null; )
+            i = r[2] ? r[2].length : 0, n = n.slice(0, r.index + i) + "[" + "a".repeat(r[0].length - i - 2) + "]" + n.slice(this.tokenizer.rules.inline.blockSkip.lastIndex);
+          n = this.options.hooks?.emStrongMask?.call({ lexer: this }, n) ?? n;
+          let s = false, a = "";
+          for (;e; ) {
+            s || (a = ""), s = false;
+            let o;
+            if (this.options.extensions?.inline?.some((p) => (o = p.call({ lexer: this }, e, t)) ? (e = e.substring(o.raw.length), t.push(o), true) : false))
+              continue;
+            if (o = this.tokenizer.escape(e)) {
+              e = e.substring(o.raw.length), t.push(o);
+              continue;
+            }
+            if (o = this.tokenizer.tag(e)) {
+              e = e.substring(o.raw.length), t.push(o);
+              continue;
+            }
+            if (o = this.tokenizer.link(e)) {
+              e = e.substring(o.raw.length), t.push(o);
+              continue;
+            }
+            if (o = this.tokenizer.reflink(e, this.tokens.links)) {
+              e = e.substring(o.raw.length);
+              let p = t.at(-1);
+              o.type === "text" && p?.type === "text" ? (p.raw += o.raw, p.text += o.text) : t.push(o);
+              continue;
+            }
+            if (o = this.tokenizer.emStrong(e, n, a)) {
+              e = e.substring(o.raw.length), t.push(o);
+              continue;
+            }
+            if (o = this.tokenizer.codespan(e)) {
+              e = e.substring(o.raw.length), t.push(o);
+              continue;
+            }
+            if (o = this.tokenizer.br(e)) {
+              e = e.substring(o.raw.length), t.push(o);
+              continue;
+            }
+            if (o = this.tokenizer.del(e)) {
+              e = e.substring(o.raw.length), t.push(o);
+              continue;
+            }
+            if (o = this.tokenizer.autolink(e)) {
+              e = e.substring(o.raw.length), t.push(o);
+              continue;
+            }
+            if (!this.state.inLink && (o = this.tokenizer.url(e))) {
+              e = e.substring(o.raw.length), t.push(o);
+              continue;
+            }
+            let u = e;
+            if (this.options.extensions?.startInline) {
+              let p = 1 / 0, c = e.slice(1), g;
+              this.options.extensions.startInline.forEach((h) => {
+                g = h.call({ lexer: this }, c), typeof g == "number" && g >= 0 && (p = Math.min(p, g));
+              }), p < 1 / 0 && p >= 0 && (u = e.substring(0, p + 1));
+            }
+            if (o = this.tokenizer.inlineText(u)) {
+              e = e.substring(o.raw.length), o.raw.slice(-1) !== "_" && (a = o.raw.slice(-1)), s = true;
+              let p = t.at(-1);
+              p?.type === "text" ? (p.raw += o.raw, p.text += o.text) : t.push(o);
+              continue;
+            }
+            if (e) {
+              let p = "Infinite loop on byte: " + e.charCodeAt(0);
+              if (this.options.silent) {
+                console.error(p);
+                break;
+              } else
+                throw new Error(p);
+            }
+          }
+          return t;
+        }
+      };
+      var P = class {
+        options;
+        parser;
+        constructor(e) {
+          this.options = e || T;
+        }
+        space(e) {
+          return "";
+        }
+        code({ text: e, lang: t, escaped: n }) {
+          let r = (t || "").match(m.notSpaceStart)?.[0], i = e.replace(m.endingNewline, "") + `
+`;
+          return r ? '<pre><code class="language-' + w(r) + '">' + (n ? i : w(i, true)) + `</code></pre>
+` : "<pre><code>" + (n ? i : w(i, true)) + `</code></pre>
+`;
+        }
+        blockquote({ tokens: e }) {
+          return `<blockquote>
+${this.parser.parse(e)}</blockquote>
+`;
+        }
+        html({ text: e }) {
+          return e;
+        }
+        def(e) {
+          return "";
+        }
+        heading({ tokens: e, depth: t }) {
+          return `<h${t}>${this.parser.parseInline(e)}</h${t}>
+`;
+        }
+        hr(e) {
+          return `<hr>
+`;
+        }
+        list(e) {
+          let { ordered: t, start: n } = e, r = "";
+          for (let a = 0;a < e.items.length; a++) {
+            let o = e.items[a];
+            r += this.listitem(o);
+          }
+          let i = t ? "ol" : "ul", s = t && n !== 1 ? ' start="' + n + '"' : "";
+          return "<" + i + s + `>
+` + r + "</" + i + `>
+`;
+        }
+        listitem(e) {
+          return `<li>${this.parser.parse(e.tokens)}</li>
+`;
+        }
+        checkbox({ checked: e }) {
+          return "<input " + (e ? 'checked="" ' : "") + 'disabled="" type="checkbox"> ';
+        }
+        paragraph({ tokens: e }) {
+          return `<p>${this.parser.parseInline(e)}</p>
+`;
+        }
+        table(e) {
+          let t = "", n = "";
+          for (let i = 0;i < e.header.length; i++)
+            n += this.tablecell(e.header[i]);
+          t += this.tablerow({ text: n });
+          let r = "";
+          for (let i = 0;i < e.rows.length; i++) {
+            let s = e.rows[i];
+            n = "";
+            for (let a = 0;a < s.length; a++)
+              n += this.tablecell(s[a]);
+            r += this.tablerow({ text: n });
+          }
+          return r && (r = `<tbody>${r}</tbody>`), `<table>
+<thead>
+` + t + `</thead>
+` + r + `</table>
+`;
+        }
+        tablerow({ text: e }) {
+          return `<tr>
+${e}</tr>
+`;
+        }
+        tablecell(e) {
+          let t = this.parser.parseInline(e.tokens), n = e.header ? "th" : "td";
+          return (e.align ? `<${n} align="${e.align}">` : `<${n}>`) + t + `</${n}>
+`;
+        }
+        strong({ tokens: e }) {
+          return `<strong>${this.parser.parseInline(e)}</strong>`;
+        }
+        em({ tokens: e }) {
+          return `<em>${this.parser.parseInline(e)}</em>`;
+        }
+        codespan({ text: e }) {
+          return `<code>${w(e, true)}</code>`;
+        }
+        br(e) {
+          return "<br>";
+        }
+        del({ tokens: e }) {
+          return `<del>${this.parser.parseInline(e)}</del>`;
+        }
+        link({ href: e, title: t, tokens: n }) {
+          let r = this.parser.parseInline(n), i = J(e);
+          if (i === null)
+            return r;
+          e = i;
+          let s = '<a href="' + e + '"';
+          return t && (s += ' title="' + w(t) + '"'), s += ">" + r + "</a>", s;
+        }
+        image({ href: e, title: t, text: n, tokens: r }) {
+          r && (n = this.parser.parseInline(r, this.parser.textRenderer));
+          let i = J(e);
+          if (i === null)
+            return w(n);
+          e = i;
+          let s = `<img src="${e}" alt="${n}"`;
+          return t && (s += ` title="${w(t)}"`), s += ">", s;
+        }
+        text(e) {
+          return "tokens" in e && e.tokens ? this.parser.parseInline(e.tokens) : ("escaped" in e) && e.escaped ? e.text : w(e.text);
+        }
+      };
+      var $ = class {
+        strong({ text: e }) {
+          return e;
+        }
+        em({ text: e }) {
+          return e;
+        }
+        codespan({ text: e }) {
+          return e;
+        }
+        del({ text: e }) {
+          return e;
+        }
+        html({ text: e }) {
+          return e;
+        }
+        text({ text: e }) {
+          return e;
+        }
+        link({ text: e }) {
+          return "" + e;
+        }
+        image({ text: e }) {
+          return "" + e;
+        }
+        br() {
+          return "";
+        }
+        checkbox({ raw: e }) {
+          return e;
+        }
+      };
+      var b = class l {
+        options;
+        renderer;
+        textRenderer;
+        constructor(e) {
+          this.options = e || T, this.options.renderer = this.options.renderer || new P, this.renderer = this.options.renderer, this.renderer.options = this.options, this.renderer.parser = this, this.textRenderer = new $;
+        }
+        static parse(e, t) {
+          return new l(t).parse(e);
+        }
+        static parseInline(e, t) {
+          return new l(t).parseInline(e);
+        }
+        parse(e) {
+          let t = "";
+          for (let n = 0;n < e.length; n++) {
+            let r = e[n];
+            if (this.options.extensions?.renderers?.[r.type]) {
+              let s = r, a = this.options.extensions.renderers[s.type].call({ parser: this }, s);
+              if (a !== false || !["space", "hr", "heading", "code", "table", "blockquote", "list", "html", "def", "paragraph", "text"].includes(s.type)) {
+                t += a || "";
+                continue;
+              }
+            }
+            let i = r;
+            switch (i.type) {
+              case "space": {
+                t += this.renderer.space(i);
+                break;
+              }
+              case "hr": {
+                t += this.renderer.hr(i);
+                break;
+              }
+              case "heading": {
+                t += this.renderer.heading(i);
+                break;
+              }
+              case "code": {
+                t += this.renderer.code(i);
+                break;
+              }
+              case "table": {
+                t += this.renderer.table(i);
+                break;
+              }
+              case "blockquote": {
+                t += this.renderer.blockquote(i);
+                break;
+              }
+              case "list": {
+                t += this.renderer.list(i);
+                break;
+              }
+              case "checkbox": {
+                t += this.renderer.checkbox(i);
+                break;
+              }
+              case "html": {
+                t += this.renderer.html(i);
+                break;
+              }
+              case "def": {
+                t += this.renderer.def(i);
+                break;
+              }
+              case "paragraph": {
+                t += this.renderer.paragraph(i);
+                break;
+              }
+              case "text": {
+                t += this.renderer.text(i);
+                break;
+              }
+              default: {
+                let s = 'Token with "' + i.type + '" type was not found.';
+                if (this.options.silent)
+                  return console.error(s), "";
+                throw new Error(s);
+              }
+            }
+          }
+          return t;
+        }
+        parseInline(e, t = this.renderer) {
+          let n = "";
+          for (let r = 0;r < e.length; r++) {
+            let i = e[r];
+            if (this.options.extensions?.renderers?.[i.type]) {
+              let a = this.options.extensions.renderers[i.type].call({ parser: this }, i);
+              if (a !== false || !["escape", "html", "link", "image", "strong", "em", "codespan", "br", "del", "text"].includes(i.type)) {
+                n += a || "";
+                continue;
+              }
+            }
+            let s = i;
+            switch (s.type) {
+              case "escape": {
+                n += t.text(s);
+                break;
+              }
+              case "html": {
+                n += t.html(s);
+                break;
+              }
+              case "link": {
+                n += t.link(s);
+                break;
+              }
+              case "image": {
+                n += t.image(s);
+                break;
+              }
+              case "checkbox": {
+                n += t.checkbox(s);
+                break;
+              }
+              case "strong": {
+                n += t.strong(s);
+                break;
+              }
+              case "em": {
+                n += t.em(s);
+                break;
+              }
+              case "codespan": {
+                n += t.codespan(s);
+                break;
+              }
+              case "br": {
+                n += t.br(s);
+                break;
+              }
+              case "del": {
+                n += t.del(s);
+                break;
+              }
+              case "text": {
+                n += t.text(s);
+                break;
+              }
+              default: {
+                let a = 'Token with "' + s.type + '" type was not found.';
+                if (this.options.silent)
+                  return console.error(a), "";
+                throw new Error(a);
+              }
+            }
+          }
+          return n;
+        }
+      };
+      var S = class {
+        options;
+        block;
+        constructor(e) {
+          this.options = e || T;
+        }
+        static passThroughHooks = new Set(["preprocess", "postprocess", "processAllTokens", "emStrongMask"]);
+        static passThroughHooksRespectAsync = new Set(["preprocess", "postprocess", "processAllTokens"]);
+        preprocess(e) {
+          return e;
+        }
+        postprocess(e) {
+          return e;
+        }
+        processAllTokens(e) {
+          return e;
+        }
+        emStrongMask(e) {
+          return e;
+        }
+        provideLexer() {
+          return this.block ? x.lex : x.lexInline;
+        }
+        provideParser() {
+          return this.block ? b.parse : b.parseInline;
+        }
+      };
+      var A = class {
+        defaults = _();
+        options = this.setOptions;
+        parse = this.parseMarkdown(true);
+        parseInline = this.parseMarkdown(false);
+        Parser = b;
+        Renderer = P;
+        TextRenderer = $;
+        Lexer = x;
+        Tokenizer = y;
+        Hooks = S;
+        constructor(...e) {
+          this.use(...e);
+        }
+        walkTokens(e, t) {
+          let n = [];
+          for (let r of e)
+            switch (n = n.concat(t.call(this, r)), r.type) {
+              case "table": {
+                let i = r;
+                for (let s of i.header)
+                  n = n.concat(this.walkTokens(s.tokens, t));
+                for (let s of i.rows)
+                  for (let a of s)
+                    n = n.concat(this.walkTokens(a.tokens, t));
+                break;
+              }
+              case "list": {
+                let i = r;
+                n = n.concat(this.walkTokens(i.items, t));
+                break;
+              }
+              default: {
+                let i = r;
+                this.defaults.extensions?.childTokens?.[i.type] ? this.defaults.extensions.childTokens[i.type].forEach((s) => {
+                  let a = i[s].flat(1 / 0);
+                  n = n.concat(this.walkTokens(a, t));
+                }) : i.tokens && (n = n.concat(this.walkTokens(i.tokens, t)));
+              }
+            }
+          return n;
+        }
+        use(...e) {
+          let t = this.defaults.extensions || { renderers: {}, childTokens: {} };
+          return e.forEach((n) => {
+            let r = { ...n };
+            if (r.async = this.defaults.async || r.async || false, n.extensions && (n.extensions.forEach((i) => {
+              if (!i.name)
+                throw new Error("extension name required");
+              if ("renderer" in i) {
+                let s = t.renderers[i.name];
+                s ? t.renderers[i.name] = function(...a) {
+                  let o = i.renderer.apply(this, a);
+                  return o === false && (o = s.apply(this, a)), o;
+                } : t.renderers[i.name] = i.renderer;
+              }
+              if ("tokenizer" in i) {
+                if (!i.level || i.level !== "block" && i.level !== "inline")
+                  throw new Error("extension level must be 'block' or 'inline'");
+                let s = t[i.level];
+                s ? s.unshift(i.tokenizer) : t[i.level] = [i.tokenizer], i.start && (i.level === "block" ? t.startBlock ? t.startBlock.push(i.start) : t.startBlock = [i.start] : i.level === "inline" && (t.startInline ? t.startInline.push(i.start) : t.startInline = [i.start]));
+              }
+              "childTokens" in i && i.childTokens && (t.childTokens[i.name] = i.childTokens);
+            }), r.extensions = t), n.renderer) {
+              let i = this.defaults.renderer || new P(this.defaults);
+              for (let s in n.renderer) {
+                if (!(s in i))
+                  throw new Error(`renderer '${s}' does not exist`);
+                if (["options", "parser"].includes(s))
+                  continue;
+                let a = s, o = n.renderer[a], u = i[a];
+                i[a] = (...p) => {
+                  let c = o.apply(i, p);
+                  return c === false && (c = u.apply(i, p)), c || "";
+                };
+              }
+              r.renderer = i;
+            }
+            if (n.tokenizer) {
+              let i = this.defaults.tokenizer || new y(this.defaults);
+              for (let s in n.tokenizer) {
+                if (!(s in i))
+                  throw new Error(`tokenizer '${s}' does not exist`);
+                if (["options", "rules", "lexer"].includes(s))
+                  continue;
+                let a = s, o = n.tokenizer[a], u = i[a];
+                i[a] = (...p) => {
+                  let c = o.apply(i, p);
+                  return c === false && (c = u.apply(i, p)), c;
+                };
+              }
+              r.tokenizer = i;
+            }
+            if (n.hooks) {
+              let i = this.defaults.hooks || new S;
+              for (let s in n.hooks) {
+                if (!(s in i))
+                  throw new Error(`hook '${s}' does not exist`);
+                if (["options", "block"].includes(s))
+                  continue;
+                let a = s, o = n.hooks[a], u = i[a];
+                S.passThroughHooks.has(s) ? i[a] = (p) => {
+                  if (this.defaults.async && S.passThroughHooksRespectAsync.has(s))
+                    return (async () => {
+                      let g = await o.call(i, p);
+                      return u.call(i, g);
+                    })();
+                  let c = o.call(i, p);
+                  return u.call(i, c);
+                } : i[a] = (...p) => {
+                  if (this.defaults.async)
+                    return (async () => {
+                      let g = await o.apply(i, p);
+                      return g === false && (g = await u.apply(i, p)), g;
+                    })();
+                  let c = o.apply(i, p);
+                  return c === false && (c = u.apply(i, p)), c;
+                };
+              }
+              r.hooks = i;
+            }
+            if (n.walkTokens) {
+              let i = this.defaults.walkTokens, s = n.walkTokens;
+              r.walkTokens = function(a) {
+                let o = [];
+                return o.push(s.call(this, a)), i && (o = o.concat(i.call(this, a))), o;
+              };
+            }
+            this.defaults = { ...this.defaults, ...r };
+          }), this;
+        }
+        setOptions(e) {
+          return this.defaults = { ...this.defaults, ...e }, this;
+        }
+        lexer(e, t) {
+          return x.lex(e, t ?? this.defaults);
+        }
+        parser(e, t) {
+          return b.parse(e, t ?? this.defaults);
+        }
+        parseMarkdown(e) {
+          return (n, r) => {
+            let i = { ...r }, s = { ...this.defaults, ...i }, a = this.onError(!!s.silent, !!s.async);
+            if (this.defaults.async === true && i.async === false)
+              return a(new Error("marked(): The async option was set to true by an extension. Remove async: false from the parse options object to return a Promise."));
+            if (typeof n > "u" || n === null)
+              return a(new Error("marked(): input parameter is undefined or null"));
+            if (typeof n != "string")
+              return a(new Error("marked(): input parameter is of type " + Object.prototype.toString.call(n) + ", string expected"));
+            if (s.hooks && (s.hooks.options = s, s.hooks.block = e), s.async)
+              return (async () => {
+                let o = s.hooks ? await s.hooks.preprocess(n) : n, p = await (s.hooks ? await s.hooks.provideLexer() : e ? x.lex : x.lexInline)(o, s), c = s.hooks ? await s.hooks.processAllTokens(p) : p;
+                s.walkTokens && await Promise.all(this.walkTokens(c, s.walkTokens));
+                let h = await (s.hooks ? await s.hooks.provideParser() : e ? b.parse : b.parseInline)(c, s);
+                return s.hooks ? await s.hooks.postprocess(h) : h;
+              })().catch(a);
+            try {
+              s.hooks && (n = s.hooks.preprocess(n));
+              let u = (s.hooks ? s.hooks.provideLexer() : e ? x.lex : x.lexInline)(n, s);
+              s.hooks && (u = s.hooks.processAllTokens(u)), s.walkTokens && this.walkTokens(u, s.walkTokens);
+              let c = (s.hooks ? s.hooks.provideParser() : e ? b.parse : b.parseInline)(u, s);
+              return s.hooks && (c = s.hooks.postprocess(c)), c;
+            } catch (o) {
+              return a(o);
+            }
+          };
+        }
+        onError(e, t) {
+          return (n) => {
+            if (n.message += `
+Please report this to https://github.com/markedjs/marked.`, e) {
+              let r = "<p>An error occurred:</p><pre>" + w(n.message + "", true) + "</pre>";
+              return t ? Promise.resolve(r) : r;
+            }
+            if (t)
+              return Promise.reject(n);
+            throw n;
+          };
+        }
+      };
+      var L = new A;
+      function d(l, e) {
+        return L.parse(l, e);
+      }
+      d.options = d.setOptions = function(l) {
+        return L.setOptions(l), d.defaults = L.defaults, G(d.defaults), d;
+      };
+      d.getDefaults = _;
+      d.defaults = T;
+      d.use = function(...l) {
+        return L.use(...l), d.defaults = L.defaults, G(d.defaults), d;
+      };
+      d.walkTokens = function(l, e) {
+        return L.walkTokens(l, e);
+      };
+      d.parseInline = L.parseInline;
+      d.Parser = b;
+      d.parser = b.parse;
+      d.Renderer = P;
+      d.TextRenderer = $;
+      d.Lexer = x;
+      d.lexer = x.lex;
+      d.Tokenizer = y;
+      d.Hooks = S;
+      d.parse = d;
+      var { options: it, setOptions: ot, use: at, walkTokens: lt, parseInline: ut } = d, pt = d, ct = b.parse, ht = x.lex;
+      if (__exports != exports2)
+        module2.exports = exports2;
+      return module2.exports;
+    });
+  });
+
+  // js/platform/plain-code.ts
+  function markdownHighlights(content) {
+    const captures = [];
+    const add = (start, end, group) => {
+      if (end > start)
+        captures.push([start, end, group]);
+    };
+    const hide = (start, end) => {
+      if (end > start)
+        captures.push([start, end, "conceal", { conceal: "", isInjection: true }]);
+    };
+    function inline(tokens, base) {
+      let offset2 = base;
+      for (const token of tokens) {
+        const raw = token.raw ?? "";
+        const start = content.indexOf(raw, offset2);
+        if (start < 0)
+          continue;
+        const end = start + raw.length;
+        offset2 = end;
+        const groups = { strong: "markup.strong", em: "markup.italic", del: "markup.strikethrough", codespan: "markup.raw", link: "markup.link" };
+        if (groups[token.type]) {
+          const text = token.text ?? "";
+          const relative = raw.indexOf(text);
+          if (relative >= 0) {
+            const inner = start + relative;
+            add(inner, inner + text.length, groups[token.type]);
+            hide(start, inner);
+            hide(inner + text.length, end);
+            if (token.tokens)
+              inline(token.tokens, inner);
+          }
+        } else if (token.type === "escape")
+          hide(start, start + 1);
+        else if (token.tokens)
+          inline(token.tokens, start);
+      }
+    }
+    let offset = 0;
+    for (const token of import_marked.Lexer.lex(content)) {
+      const start = content.indexOf(token.raw, offset);
+      if (start < 0)
+        continue;
+      const end = start + token.raw.length;
+      offset = end;
+      if (token.type === "heading") {
+        const relative = token.raw.indexOf(token.text);
+        if (relative >= 0) {
+          const inner = start + relative;
+          hide(start, inner);
+          add(inner, inner + token.text.length, "markup.heading");
+          hide(inner + token.text.length, end - (token.raw.endsWith(`
+`) ? 1 : 0));
+          if (token.tokens)
+            inline(token.tokens, inner);
+        }
+      } else if (token.tokens)
+        inline(token.tokens, start);
+    }
+    return captures;
+  }
+
+  class TreeSitterClient {
+    async highlightOnce(content, filetype) {
+      return { highlights: filetype === "markdown" ? markdownHighlights(content) : [] };
+    }
+  }
+  var import_marked, client, getTreeSitterClient = () => client;
+  var init_plain_code = __esm(() => {
+    import_marked = __toESM(require_marked_umd(), 1);
+    client = new TreeSitterClient;
+  });
+
+  // vendor/opentui/packages/core/src/lib/tree-sitter-styled-text.ts
+  function getSpecificity(group) {
+    return group.split(".").length;
+  }
+  function shouldSuppressInInjection(group, meta) {
+    if (meta?.isInjection) {
+      return false;
+    }
+    return group === "markup.raw.block";
+  }
+  function treeSitterToTextChunks(content, highlights, syntaxStyle, options) {
+    const chunks = [];
+    const ranges = options?.ranges;
+    const defaultStyle = syntaxStyle.getStyle("default");
+    const concealEnabled = options?.enabled ?? true;
+    const baseStyle = options?.baseHighlight ? syntaxStyle.getStyle(options.baseHighlight) : undefined;
+    const injectionContainerRanges = [];
+    const boundaries = [];
+    for (let i = 0;i < highlights.length; i++) {
+      const [start, end, , meta] = highlights[i];
+      if (start === end)
+        continue;
+      if (meta?.containsInjection) {
+        injectionContainerRanges.push({ start, end });
+      }
+      boundaries.push({ offset: start, type: "start", highlightIndex: i });
+      boundaries.push({ offset: end, type: "end", highlightIndex: i });
+    }
+    boundaries.sort((a, b) => {
+      if (a.offset !== b.offset)
+        return a.offset - b.offset;
+      if (a.type === "end" && b.type === "start")
+        return -1;
+      if (a.type === "start" && b.type === "end")
+        return 1;
+      return 0;
+    });
+    const activeHighlights = new Set;
+    let currentOffset = 0;
+    for (let i = 0;i < boundaries.length; i++) {
+      const boundary = boundaries[i];
+      if (currentOffset < boundary.offset && activeHighlights.size > 0) {
+        const segmentText = content.slice(currentOffset, boundary.offset);
+        const activeGroups = [];
+        for (const idx of activeHighlights) {
+          const [, , group, meta] = highlights[idx];
+          activeGroups.push({ group, meta, index: idx });
+        }
+        const concealHighlight = concealEnabled ? activeGroups.find((h) => h.meta?.conceal !== undefined || h.group === "conceal" || h.group.startsWith("conceal.")) : undefined;
+        if (concealHighlight) {
+          let replacementText = "";
+          if (concealHighlight.meta?.conceal !== undefined) {
+            replacementText = concealHighlight.meta.conceal;
+          } else if (concealHighlight.group === "conceal.with.space") {
+            replacementText = " ";
+          }
+          if (replacementText) {
+            chunks.push({
+              __isChunk: true,
+              text: replacementText,
+              fg: defaultStyle?.fg,
+              bg: defaultStyle?.bg,
+              attributes: defaultStyle ? createTextAttributes({
+                bold: defaultStyle.bold,
+                italic: defaultStyle.italic,
+                underline: defaultStyle.underline,
+                dim: defaultStyle.dim
+              }) : 0
+            });
+            ranges?.push({ start: currentOffset, end: boundary.offset });
+          }
+        } else {
+          const insideInjectionContainer = injectionContainerRanges.some((range) => currentOffset >= range.start && currentOffset < range.end);
+          const validGroups = activeGroups.filter((h) => {
+            if (insideInjectionContainer && shouldSuppressInInjection(h.group, h.meta)) {
+              return false;
+            }
+            return true;
+          });
+          const sortedGroups = validGroups.sort((a, b) => {
+            const aSpec = getSpecificity(a.group);
+            const bSpec = getSpecificity(b.group);
+            if (aSpec !== bSpec)
+              return aSpec - bSpec;
+            return a.index - b.index;
+          });
+          const mergedStyle = baseStyle ? { ...baseStyle } : {};
+          for (const { group } of sortedGroups) {
+            let styleForGroup = syntaxStyle.getStyle(group);
+            if (!styleForGroup && group.includes(".")) {
+              const baseName = group.split(".")[0];
+              styleForGroup = syntaxStyle.getStyle(baseName);
+            }
+            if (styleForGroup) {
+              if (styleForGroup.fg !== undefined)
+                mergedStyle.fg = styleForGroup.fg;
+              if (styleForGroup.bg !== undefined)
+                mergedStyle.bg = styleForGroup.bg;
+              if (styleForGroup.bold !== undefined)
+                mergedStyle.bold = styleForGroup.bold;
+              if (styleForGroup.italic !== undefined)
+                mergedStyle.italic = styleForGroup.italic;
+              if (styleForGroup.underline !== undefined)
+                mergedStyle.underline = styleForGroup.underline;
+              if (styleForGroup.dim !== undefined)
+                mergedStyle.dim = styleForGroup.dim;
+            } else {
+              if (group.includes(".")) {
+                const baseName = group.split(".")[0];
+                if (env.OTUI_TS_STYLE_WARN) {
+                  console.warn(`Syntax style not found for group "${group}" or base scope "${baseName}", using default style`);
+                }
+              } else {
+                if (env.OTUI_TS_STYLE_WARN) {
+                  console.warn(`Syntax style not found for group "${group}", using default style`);
+                }
+              }
+            }
+          }
+          const finalStyle = Object.keys(mergedStyle).length > 0 ? mergedStyle : defaultStyle;
+          chunks.push({
+            __isChunk: true,
+            text: segmentText,
+            fg: finalStyle?.fg,
+            bg: finalStyle?.bg,
+            attributes: finalStyle ? createTextAttributes({
+              bold: finalStyle.bold,
+              italic: finalStyle.italic,
+              underline: finalStyle.underline,
+              dim: finalStyle.dim
+            }) : 0
+          });
+          ranges?.push({ start: currentOffset, end: boundary.offset });
+        }
+      } else if (currentOffset < boundary.offset) {
+        const text = content.slice(currentOffset, boundary.offset);
+        const style = baseStyle ?? defaultStyle;
+        chunks.push({
+          __isChunk: true,
+          text,
+          fg: style?.fg,
+          bg: style?.bg,
+          attributes: style ? createTextAttributes({
+            bold: style.bold,
+            italic: style.italic,
+            underline: style.underline,
+            dim: style.dim
+          }) : 0
+        });
+        ranges?.push({ start: currentOffset, end: boundary.offset });
+      }
+      if (boundary.type === "start") {
+        activeHighlights.add(boundary.highlightIndex);
+      } else {
+        activeHighlights.delete(boundary.highlightIndex);
+        if (concealEnabled) {
+          const [, , group, meta] = highlights[boundary.highlightIndex];
+          if (meta?.concealLines !== undefined) {
+            if (boundary.offset < content.length && content[boundary.offset] === `
+`) {
+              currentOffset = boundary.offset + 1;
+              continue;
+            }
+          }
+          if (meta?.conceal !== undefined) {
+            if (meta.conceal === " ") {
+              if (boundary.offset < content.length && content[boundary.offset] === " ") {
+                currentOffset = boundary.offset + 1;
+                continue;
+              }
+            } else if (meta.conceal === "" && group === "conceal" && !meta.isInjection) {
+              if (boundary.offset < content.length && content[boundary.offset] === " ") {
+                currentOffset = boundary.offset + 1;
+                continue;
+              }
+            }
+          }
+        }
+      }
+      currentOffset = boundary.offset;
+    }
+    if (currentOffset < content.length) {
+      const text = content.slice(currentOffset);
+      const style = baseStyle ?? defaultStyle;
+      chunks.push({
+        __isChunk: true,
+        text,
+        fg: style?.fg,
+        bg: style?.bg,
+        attributes: style ? createTextAttributes({
+          bold: style.bold,
+          italic: style.italic,
+          underline: style.underline,
+          dim: style.dim
+        }) : 0
+      });
+      ranges?.push({ start: currentOffset, end: content.length });
+    }
+    return chunks;
+  }
+  var init_tree_sitter_styled_text = __esm(() => {
+    init_styled_text();
+    init_utils();
+    init_env();
+    registerEnvVar({ name: "OTUI_TS_STYLE_WARN", default: false, description: "Enable warnings for missing syntax styles" });
+  });
+
+  // vendor/opentui/packages/core/src/renderables/Code.ts
+  var CodeRenderable;
+  var init_Code = __esm(() => {
+    init_styled_text();
+    init_plain_code();
+    init_TextBufferRenderable();
+    init_tree_sitter_styled_text();
+    CodeRenderable = class CodeRenderable extends TextBufferRenderable {
+      _content;
+      _filetype;
+      _syntaxStyle;
+      _isHighlighting = false;
+      _treeSitterClient;
+      _highlightsDirty = false;
+      _highlightSnapshotId = 0;
+      _highlightLoopActive = false;
+      _highlightPromise;
+      _highlightRerun = false;
+      _conceal;
+      _drawUnstyledText;
+      _shouldRenderTextBuffer = true;
+      _streaming;
+      _initialStyledText;
+      _hadInitialContent = false;
+      _lastHighlights = [];
+      _baseHighlight;
+      _onHighlight;
+      _onChunks;
+      _highlightingPromise = Promise.resolve();
+      _renderedLineSources;
+      _mappedLineInfo;
+      _contentDefaultOptions = {
+        content: "",
+        conceal: true,
+        drawUnstyledText: true,
+        streaming: false
+      };
+      constructor(ctx, options) {
+        super(ctx, options);
+        this._content = options.content ?? this._contentDefaultOptions.content;
+        this._filetype = options.filetype;
+        this._syntaxStyle = options.syntaxStyle;
+        this._treeSitterClient = options.treeSitterClient ?? getTreeSitterClient();
+        this._conceal = options.conceal ?? this._contentDefaultOptions.conceal;
+        this._drawUnstyledText = options.drawUnstyledText ?? this._contentDefaultOptions.drawUnstyledText;
+        this._streaming = options.streaming ?? this._contentDefaultOptions.streaming;
+        this._initialStyledText = options.initialStyledText;
+        this._baseHighlight = options.baseHighlight;
+        this._onHighlight = options.onHighlight;
+        this._onChunks = options.onChunks;
+        if (this._content.length > 0) {
+          if (this._initialStyledText && this._drawUnstyledText) {
+            this.textBuffer.setStyledText(this._initialStyledText);
+          } else {
+            this.textBuffer.setText(this._content);
+          }
+          this.updateTextInfo();
+          this._shouldRenderTextBuffer = this._drawUnstyledText || !this._filetype;
+        }
+        this._highlightsDirty = this._content.length > 0;
+      }
+      get content() {
+        return this._content;
+      }
+      invalidateHighlights() {
+        this._highlightsDirty = true;
+        this._highlightSnapshotId++;
+      }
+      set content(value) {
+        if (this._content !== value) {
+          this._content = value;
+          this.invalidateHighlights();
+          if (this._streaming && this._filetype && !this._drawUnstyledText) {
+            this.requestRender();
+            return;
+          }
+          if (value && this._initialStyledText && this._drawUnstyledText) {
+            this.textBuffer.setStyledText(this._initialStyledText);
+          } else {
+            this.textBuffer.setText(value);
+          }
+          this.setRenderedLineSources(undefined);
+          this.updateTextInfo();
+        }
+      }
+      updateStreamingPreview(content, initialStyledText) {
+        this._content = content;
+        this._initialStyledText = initialStyledText;
+        this.invalidateHighlights();
+        this.textBuffer.setStyledText(initialStyledText);
+        this.setRenderedLineSources(undefined);
+        this.updateTextInfo();
+      }
+      get lineInfo() {
+        if (!this._renderedLineSources)
+          return super.lineInfo;
+        if (this._mappedLineInfo)
+          return this._mappedLineInfo;
+        const lineInfo = super.lineInfo;
+        const renderedLineSources = this._renderedLineSources;
+        this._mappedLineInfo = {
+          ...lineInfo,
+          lineSources: lineInfo.lineSources.map((line) => renderedLineSources[line] ?? line)
+        };
+        return this._mappedLineInfo;
+      }
+      getLineSources(startLine, lineCount) {
+        if (this.needsLineInfoFallback(CodeRenderable.prototype)) {
+          return this.lineInfo.lineSources.slice(startLine, startLine + lineCount);
+        }
+        const sources = this.textBufferView.getLineSources(startLine, lineCount);
+        const renderedLineSources = this._renderedLineSources;
+        return renderedLineSources ? sources.map((line) => renderedLineSources[line] ?? line) : sources;
+      }
+      get wrapMode() {
+        return super.wrapMode;
+      }
+      set wrapMode(value) {
+        if (super.wrapMode !== value) {
+          this._mappedLineInfo = undefined;
+          super.wrapMode = value;
+        }
+      }
+      onResize(width, height) {
+        this._mappedLineInfo = undefined;
+        super.onResize(width, height);
+      }
+      updateTextInfo() {
+        this._mappedLineInfo = undefined;
+        super.updateTextInfo();
+      }
+      get filetype() {
+        return this._filetype;
+      }
+      set filetype(value) {
+        if (this._filetype !== value) {
+          this._filetype = value;
+          this.invalidateHighlights();
+        }
+      }
+      get syntaxStyle() {
+        return this._syntaxStyle;
+      }
+      set syntaxStyle(value) {
+        if (this._syntaxStyle !== value) {
+          this._syntaxStyle = value;
+          this.invalidateHighlights();
+        }
+      }
+      get conceal() {
+        return this._conceal;
+      }
+      set conceal(value) {
+        if (this._conceal !== value) {
+          this._conceal = value;
+          this.invalidateHighlights();
+        }
+      }
+      get drawUnstyledText() {
+        return this._drawUnstyledText;
+      }
+      set drawUnstyledText(value) {
+        if (this._drawUnstyledText !== value) {
+          this._drawUnstyledText = value;
+          this.invalidateHighlights();
+        }
+      }
+      get streaming() {
+        return this._streaming;
+      }
+      set initialStyledText(value) {
+        if (this._initialStyledText !== value) {
+          if (value && this._streaming && this._drawUnstyledText && this._isHighlighting) {
+            this.updateStreamingPreview(this._content, value);
+            return;
+          }
+          this._initialStyledText = value;
+          this.invalidateHighlights();
+        }
+      }
+      set streaming(value) {
+        if (this._streaming !== value) {
+          this._streaming = value;
+          this._hadInitialContent = false;
+          this._lastHighlights = [];
+          this.invalidateHighlights();
+        }
+      }
+      get treeSitterClient() {
+        return this._treeSitterClient;
+      }
+      set treeSitterClient(value) {
+        if (this._treeSitterClient !== value) {
+          this._treeSitterClient = value;
+          this.invalidateHighlights();
+        }
+      }
+      get onHighlight() {
+        return this._onHighlight;
+      }
+      get baseHighlight() {
+        return this._baseHighlight;
+      }
+      set baseHighlight(value) {
+        if (this._baseHighlight !== value) {
+          this._baseHighlight = value;
+          this.invalidateHighlights();
+        }
+      }
+      set onHighlight(value) {
+        if (this._onHighlight !== value) {
+          this._onHighlight = value;
+          this.invalidateHighlights();
+        }
+      }
+      get onChunks() {
+        return this._onChunks;
+      }
+      set onChunks(value) {
+        if (this._onChunks !== value) {
+          this._onChunks = value;
+          this.invalidateHighlights();
+        }
+      }
+      get isHighlighting() {
+        return this._isHighlighting || this._highlightRerun;
+      }
+      get highlightingDone() {
+        return this._highlightingPromise;
+      }
+      async transformChunks(chunks, context) {
+        if (!this._onChunks)
+          return chunks;
+        const modified = await this._onChunks(chunks, context);
+        return modified ?? chunks;
+      }
+      ensureVisibleTextBeforeHighlight() {
+        if (this.isDestroyed)
+          return;
+        const content = this._content;
+        if (!this._filetype) {
+          this._shouldRenderTextBuffer = true;
+          return;
+        }
+        const isInitialContent = this._streaming && !this._hadInitialContent;
+        const shouldDrawUnstyledNow = this._streaming ? isInitialContent && this._drawUnstyledText : this._drawUnstyledText;
+        if (this._streaming && !isInitialContent) {
+          this._shouldRenderTextBuffer = true;
+        } else if (shouldDrawUnstyledNow) {
+          if (this._initialStyledText) {
+            this.textBuffer.setStyledText(this._initialStyledText);
+          } else {
+            this.textBuffer.setText(content);
+          }
+          this.setRenderedLineSources(undefined);
+          this._shouldRenderTextBuffer = true;
+        } else {
+          this._shouldRenderTextBuffer = false;
+        }
+      }
+      async startHighlight() {
+        const content = this._content;
+        const filetype = this._filetype;
+        const snapshotId = ++this._highlightSnapshotId;
+        if (!filetype)
+          return;
+        const isInitialContent = this._streaming && !this._hadInitialContent;
+        if (isInitialContent) {
+          this._hadInitialContent = true;
+        }
+        this._isHighlighting = true;
+        try {
+          const result = await this._treeSitterClient.highlightOnce(content, filetype);
+          if (snapshotId !== this._highlightSnapshotId) {
+            this.requestRender();
+            return;
+          }
+          if (this.isDestroyed)
+            return;
+          let highlights = result.highlights ?? [];
+          if (this._onHighlight && highlights.length >= 0) {
+            const context = {
+              content,
+              filetype,
+              syntaxStyle: this._syntaxStyle
+            };
+            const modified = await this._onHighlight(highlights, context);
+            if (modified !== undefined) {
+              highlights = modified;
+            }
+          }
+          if (snapshotId !== this._highlightSnapshotId) {
+            this.requestRender();
+            return;
+          }
+          if (this.isDestroyed)
+            return;
+          if (highlights.length > 0) {
+            if (this._streaming) {
+              this._lastHighlights = highlights;
+            }
+          }
+          if (highlights.length > 0 || this._onChunks || this._baseHighlight) {
+            const sourceRanges = this._onChunks ? [] : undefined;
+            const context = {
+              content,
+              filetype,
+              syntaxStyle: this._syntaxStyle,
+              highlights,
+              sourceRanges
+            };
+            let chunks = treeSitterToTextChunks(content, highlights, this._syntaxStyle, {
+              enabled: this._conceal,
+              baseHighlight: this._baseHighlight,
+              ranges: sourceRanges
+            });
+            const renderedLineSources = this._onChunks ? undefined : this.getConcealLinesSourceMap(content, highlights);
+            chunks = await this.transformChunks(chunks, context);
+            if (snapshotId !== this._highlightSnapshotId) {
+              this.requestRender();
+              return;
+            }
+            if (this.isDestroyed)
+              return;
+            const styledText = new StyledText(chunks);
+            this.textBuffer.setStyledText(styledText);
+            this.setRenderedLineSources(renderedLineSources);
+          } else {
+            this.textBuffer.setText(content);
+            this.setRenderedLineSources(undefined);
+          }
+          this._shouldRenderTextBuffer = true;
+          this._isHighlighting = false;
+          this._highlightsDirty = false;
+          this.updateTextInfo();
+          this.requestRender();
+        } catch (error) {
+          if (snapshotId !== this._highlightSnapshotId) {
+            this.requestRender();
+            return;
+          }
+          console.warn("Code highlighting failed, falling back to plain text:", error);
+          if (this.isDestroyed)
+            return;
+          this.textBuffer.setText(content);
+          this.setRenderedLineSources(undefined);
+          this._shouldRenderTextBuffer = true;
+          this._isHighlighting = false;
+          this._highlightsDirty = false;
+          this.updateTextInfo();
+          this.requestRender();
+        }
+      }
+      async runHighlights() {
+        try {
+          do {
+            this._highlightRerun = false;
+            await this.startHighlight();
+          } while (this._highlightRerun && !this.isDestroyed && this._content.length > 0 && this._filetype);
+        } finally {
+          this._highlightLoopActive = false;
+          this._highlightRerun = false;
+        }
+      }
+      clearPendingHighlight() {
+        this._highlightSnapshotId++;
+        this._isHighlighting = false;
+        this._highlightRerun = false;
+        this._highlightingPromise = Promise.resolve();
+      }
+      setRenderedLineSources(lineSources) {
+        this._renderedLineSources = lineSources;
+        this._mappedLineInfo = undefined;
+      }
+      static isIdentityLineSources(lineSources) {
+        for (let i = 0;i < lineSources.length; i++) {
+          if (lineSources[i] !== i)
+            return false;
+        }
+        return true;
+      }
+      static getMergedConcealLineRanges(highlights) {
+        const ranges = [];
+        for (const highlight of highlights) {
+          const meta = highlight[3];
+          if (meta?.concealLines === undefined)
+            continue;
+          const group = highlight[2];
+          const isEmptyConceal = meta.conceal === "" || meta.conceal === undefined && (group === "conceal" || group.startsWith("conceal."));
+          if (isEmptyConceal) {
+            ranges.push([highlight[0], highlight[1]]);
+          }
+        }
+        if (ranges.length <= 1)
+          return ranges;
+        ranges.sort((a, b) => a[0] - b[0]);
+        let writeIndex = 0;
+        for (let i = 1;i < ranges.length; i++) {
+          const current = ranges[writeIndex];
+          const next = ranges[i];
+          if (next[0] <= current[1]) {
+            current[1] = Math.max(current[1], next[1]);
+          } else {
+            writeIndex++;
+            ranges[writeIndex] = next;
+          }
+        }
+        ranges.length = writeIndex + 1;
+        return ranges;
+      }
+      getConcealLinesSourceMap(content, highlights) {
+        if (!this._conceal || content.length === 0)
+          return;
+        const concealLineRanges = CodeRenderable.getMergedConcealLineRanges(highlights);
+        if (concealLineRanges.length === 0)
+          return;
+        const lineSources = [];
+        let sourceLine = 0;
+        let lineStart = 0;
+        let rangeIndex = 0;
+        let currentRenderedLineHasText = false;
+        const setCurrentRenderedLineSource = (line, hasText) => {
+          if (lineSources.length === 0) {
+            lineSources.push(line);
+          } else if (!currentRenderedLineHasText) {
+            lineSources[lineSources.length - 1] = line;
+          }
+          if (hasText)
+            currentRenderedLineHasText = true;
+        };
+        while (lineStart <= content.length) {
+          const newlineOffset = content.indexOf(`
+`, lineStart);
+          const lineEnd = newlineOffset === -1 ? content.length : newlineOffset;
+          while (rangeIndex < concealLineRanges.length && concealLineRanges[rangeIndex][1] <= lineStart) {
+            rangeIndex++;
+          }
+          const range = concealLineRanges[rangeIndex];
+          const fullyConcealed = !!range && lineEnd > lineStart && range[0] <= lineStart && range[1] >= lineEnd;
+          const lineBreakConcealed = newlineOffset !== -1 && !!range && range[0] <= newlineOffset && range[1] >= newlineOffset;
+          if (!fullyConcealed || !lineBreakConcealed) {
+            const hasText = lineEnd > lineStart && !fullyConcealed;
+            if (hasText || newlineOffset !== -1 || !fullyConcealed) {
+              setCurrentRenderedLineSource(sourceLine, hasText);
+            }
+            if (newlineOffset !== -1 && !lineBreakConcealed) {
+              lineSources.push(sourceLine + 1);
+              currentRenderedLineHasText = false;
+            }
+          }
+          sourceLine++;
+          if (newlineOffset === -1)
+            break;
+          lineStart = newlineOffset + 1;
+        }
+        if (lineSources.length === 0 || CodeRenderable.isIdentityLineSources(lineSources))
+          return;
+        return lineSources;
+      }
+      getLineHighlights(lineIdx) {
+        return this.textBuffer.getLineHighlights(lineIdx);
+      }
+      renderSelf(buffer) {
+        if (this._highlightsDirty) {
+          if (this.isDestroyed)
+            return;
+          const hasContent = this._content.length > 0;
+          if (!hasContent || !this._filetype) {
+            this._shouldRenderTextBuffer = hasContent;
+            this._highlightsDirty = false;
+            this.clearPendingHighlight();
+            if (hasContent) {
+              this.textBuffer.setText(this._content);
+              this.setRenderedLineSources(undefined);
+              this.updateTextInfo();
+            }
+          } else {
+            this.ensureVisibleTextBeforeHighlight();
+            this._highlightsDirty = false;
+            if (this._highlightLoopActive) {
+              this._isHighlighting = true;
+              this._highlightRerun = true;
+              this._highlightingPromise = this._highlightPromise;
+            } else {
+              const { promise: highlightingPromise, resolve, reject } = Promise.withResolvers();
+              this._highlightLoopActive = true;
+              this._highlightPromise = highlightingPromise;
+              this._highlightingPromise = highlightingPromise;
+              const clearHighlight = () => {
+                if (this._highlightPromise === highlightingPromise) {
+                  this._highlightPromise = undefined;
+                }
+              };
+              this.runHighlights().then(() => {
+                clearHighlight();
+                resolve();
+              }, (error) => {
+                clearHighlight();
+                reject(error);
+              });
+            }
+          }
+        }
+        if (!this._shouldRenderTextBuffer)
+          return;
+        super.renderSelf(buffer);
+      }
+      destroy() {
+        if (this.isDestroyed)
+          return;
+        this.clearPendingHighlight();
+        super.destroy();
+      }
+    };
+  });
+
+  // vendor/opentui/packages/core/src/renderables/LineNumberRenderable.ts
+  function getLineSources(target, startLine, lineCount) {
+    return target.getLineSources ? target.getLineSources(startLine, lineCount) : target.lineInfo.lineSources.slice(startLine, startLine + lineCount);
+  }
+  function darkenColor(color) {
+    return RGBA.fromValues(color.r * 0.8, color.g * 0.8, color.b * 0.8, color.a);
+  }
+  var DEFAULT_GUTTER_FG = "#888888", DEFAULT_GUTTER_BG = "transparent", GutterRenderable, LineNumberRenderable;
+  var init_LineNumberRenderable = __esm(() => {
+    init_Renderable();
+    init_buffer();
+    init_RGBA();
+    init_runtime();
+    GutterRenderable = class GutterRenderable extends Renderable {
+      target;
+      _fg;
+      _bg;
+      _minWidth;
+      _paddingRight;
+      _lineColorsGutter;
+      _lineColorsContent;
+      _lineSigns;
+      _lineNumberOffset;
+      _hideLineNumbers;
+      _lineNumbers;
+      _maxBeforeWidth = 0;
+      _maxAfterWidth = 0;
+      _lastKnownLineCount = 0;
+      _paintedSources;
+      _paintedSourceOffset = 0;
+      constructor(ctx, target, options) {
+        super(ctx, {
+          id: options.id,
+          width: "auto",
+          height: "auto",
+          flexGrow: 0,
+          flexShrink: 0,
+          buffered: true
+        });
+        this.target = target;
+        this._fg = options.fg;
+        this._bg = options.bg;
+        this._minWidth = options.minWidth;
+        this._paddingRight = options.paddingRight;
+        this._lineColorsGutter = options.lineColorsGutter;
+        this._lineColorsContent = options.lineColorsContent;
+        this._lineSigns = options.lineSigns;
+        this._lineNumberOffset = options.lineNumberOffset;
+        this._hideLineNumbers = options.hideLineNumbers;
+        this._lineNumbers = options.lineNumbers ?? new Map;
+        this._lastKnownLineCount = this.target.virtualLineCount;
+        this.calculateSignWidths();
+        this.setupMeasureFunc();
+        this.onLifecyclePass = () => {
+          const currentLineCount = this.target.virtualLineCount;
+          if (currentLineCount !== this._lastKnownLineCount) {
+            this._lastKnownLineCount = currentLineCount;
+            this.yogaNode.markDirty();
+            this.requestRender();
+          }
+        };
+      }
+      setupMeasureFunc() {
+        const measureFunc = (width, widthMode, height, heightMode) => {
+          const gutterWidth = this.calculateWidth();
+          const gutterHeight = this.target.virtualLineCount;
+          return {
+            width: gutterWidth,
+            height: gutterHeight
+          };
+        };
+        this.yogaNode.setMeasureFunc(measureFunc);
+      }
+      remeasure() {
+        this.yogaNode.markDirty();
+      }
+      setLineNumberOffset(offset) {
+        if (this._lineNumberOffset !== offset) {
+          this._lineNumberOffset = offset;
+          this.yogaNode.markDirty();
+          this.requestRender();
+        }
+      }
+      setHideLineNumbers(hideLineNumbers) {
+        this._hideLineNumbers = hideLineNumbers;
+        this.yogaNode.markDirty();
+        this.requestRender();
+      }
+      setLineNumbers(lineNumbers) {
+        this._lineNumbers = lineNumbers;
+        this.yogaNode.markDirty();
+        this.requestRender();
+      }
+      calculateSignWidths() {
+        this._maxBeforeWidth = 0;
+        this._maxAfterWidth = 0;
+        for (const sign of this._lineSigns.values()) {
+          if (sign.before) {
+            const width = stringWidth(sign.before);
+            this._maxBeforeWidth = Math.max(this._maxBeforeWidth, width);
+          }
+          if (sign.after) {
+            const width = stringWidth(sign.after);
+            this._maxAfterWidth = Math.max(this._maxAfterWidth, width);
+          }
+        }
+      }
+      calculateWidth() {
+        const totalLines = this.target.virtualLineCount;
+        let maxLineNumber = totalLines + this._lineNumberOffset;
+        if (this._lineNumbers.size > 0) {
+          for (const customLineNum of this._lineNumbers.values()) {
+            maxLineNumber = Math.max(maxLineNumber, customLineNum);
+          }
+        }
+        const digits = maxLineNumber > 0 ? Math.floor(Math.log10(maxLineNumber)) + 1 : 1;
+        const baseWidth = Math.max(this._minWidth, digits + this._paddingRight + 1);
+        return baseWidth + this._maxBeforeWidth + this._maxAfterWidth;
+      }
+      setLineColors(lineColorsGutter, lineColorsContent) {
+        this._lineColorsGutter = lineColorsGutter;
+        this._lineColorsContent = lineColorsContent;
+        this.requestRender();
+      }
+      get fg() {
+        return this._fg;
+      }
+      setFg(fg2) {
+        if (this._fg !== fg2) {
+          this._fg = fg2;
+          this.requestRender();
+        }
+      }
+      get bg() {
+        return this._bg;
+      }
+      setBg(bg) {
+        if (this._bg !== bg) {
+          this._bg = bg;
+          this.requestRender();
+        }
+      }
+      getLineColors() {
+        return {
+          gutter: this._lineColorsGutter,
+          content: this._lineColorsContent
+        };
+      }
+      setLineSigns(lineSigns) {
+        const oldMaxBefore = this._maxBeforeWidth;
+        const oldMaxAfter = this._maxAfterWidth;
+        this._lineSigns = lineSigns;
+        this.calculateSignWidths();
+        if (this._maxBeforeWidth !== oldMaxBefore || this._maxAfterWidth !== oldMaxAfter) {
+          this.yogaNode.markDirty();
+        }
+        this.requestRender();
+      }
+      getLineSigns() {
+        return this._lineSigns;
+      }
+      createFrameBuffer() {}
+      handleFrameBufferResize() {}
+      render(buffer, deltaTime) {
+        const x = this._screenX;
+        const y = Math.trunc(this._screenY);
+        const start = Math.max(0, -y);
+        const end = Math.min(this.height, buffer.height - y);
+        if (end <= start || x >= buffer.width || x + this.width <= 0)
+          return;
+        if (!this.frameBuffer) {
+          this.frameBuffer = OptimizedBuffer.create(this.width, end - start, this._ctx.widthMethod, {
+            respectAlpha: true,
+            id: `framebuffer-${this.id}`
+          });
+        } else if (this.frameBuffer.width !== this.width || this.frameBuffer.height !== end - start) {
+          this.frameBuffer.resize(this.width, end - start);
+          this._paintedSources = undefined;
+        }
+        this.refreshFrameBuffer(this.frameBuffer, Math.trunc(this.target.scrollY) + start);
+        this.markClean();
+        this._ctx.addToHitGrid(x, this._screenY, this.width, this.height, this.num);
+        buffer.drawFrameBuffer(x, y + start, this.frameBuffer);
+      }
+      refreshFrameBuffer(buffer, startLine) {
+        const sourceStart = Math.max(0, startLine - 1);
+        const sourceOffset = startLine - sourceStart;
+        const sources = getLineSources(this.target, sourceStart, buffer.height + sourceOffset);
+        const paintedSources = this._paintedSources;
+        if (!this.isDirty && sourceOffset === this._paintedSourceOffset && paintedSources && sources.length === paintedSources.length && sources.every((source, i) => source === paintedSources[i])) {
+          return;
+        }
+        buffer.clear(this._bg);
+        let lastSource = sourceOffset > 0 ? sources[0] : -1;
+        for (let i = 0;i < buffer.height; i++) {
+          const visualLineIndex = sourceOffset + i;
+          if (visualLineIndex >= sources.length)
+            break;
+          const logicalLine = sources[visualLineIndex];
+          const lineBg = this._lineColorsGutter.get(logicalLine) ?? this._bg;
+          if (lineBg !== this._bg) {
+            buffer.fillRect(0, i, this.width, 1, lineBg);
+          }
+          if (logicalLine === lastSource) {} else {
+            let currentX = 0;
+            const sign = this._lineSigns.get(logicalLine);
+            if (sign?.before) {
+              const beforeWidth = stringWidth(sign.before);
+              const padding = this._maxBeforeWidth - beforeWidth;
+              currentX += padding;
+              const beforeColor = sign.beforeColor ? parseColor(sign.beforeColor) : this._fg;
+              buffer.drawText(sign.before, currentX, i, beforeColor, lineBg);
+              currentX += beforeWidth;
+            } else if (this._maxBeforeWidth > 0) {
+              currentX += this._maxBeforeWidth;
+            }
+            if (!this._hideLineNumbers.has(logicalLine)) {
+              const customLineNum = this._lineNumbers.get(logicalLine);
+              const lineNum = customLineNum !== undefined ? customLineNum : logicalLine + 1 + this._lineNumberOffset;
+              const lineNumStr = lineNum.toString();
+              const lineNumWidth = lineNumStr.length;
+              const availableSpace = this.width - this._maxBeforeWidth - this._maxAfterWidth - this._paddingRight;
+              const lineNumX = this._maxBeforeWidth + 1 + availableSpace - lineNumWidth - 1;
+              if (lineNumX >= this._maxBeforeWidth + 1) {
+                buffer.drawText(lineNumStr, lineNumX, i, this._fg, lineBg);
+              }
+            }
+            if (sign?.after) {
+              const afterX = this.width - this._paddingRight - this._maxAfterWidth;
+              const afterColor = sign.afterColor ? parseColor(sign.afterColor) : this._fg;
+              buffer.drawText(sign.after, afterX, i, afterColor, lineBg);
+            }
+          }
+          lastSource = logicalLine;
+        }
+        this._paintedSources = sources.slice();
+        this._paintedSourceOffset = sourceOffset;
+      }
+    };
+    LineNumberRenderable = class LineNumberRenderable extends Renderable {
+      gutter = null;
+      target = null;
+      _lineColorsGutter;
+      _lineColorsContent;
+      _lineSigns;
+      _fg;
+      _bg;
+      _minWidth;
+      _paddingRight;
+      _lineNumberOffset;
+      _hideLineNumbers;
+      _lineNumbers;
+      _isDestroying = false;
+      handleLineInfoChange = () => {
+        this.gutter?.remeasure();
+        this.requestRender();
+      };
+      parseLineColor(line, color) {
+        if (typeof color === "object" && "gutter" in color) {
+          const config = color;
+          if (config.gutter) {
+            this._lineColorsGutter.set(line, parseColor(config.gutter));
+          }
+          if (config.content) {
+            this._lineColorsContent.set(line, parseColor(config.content));
+          } else if (config.gutter) {
+            this._lineColorsContent.set(line, darkenColor(parseColor(config.gutter)));
+          }
+        } else {
+          const parsedColor = parseColor(color);
+          this._lineColorsGutter.set(line, parsedColor);
+          this._lineColorsContent.set(line, darkenColor(parsedColor));
+        }
+      }
+      constructor(ctx, options) {
+        super(ctx, {
+          ...options,
+          flexDirection: "row",
+          height: "auto"
+        });
+        this._fg = parseColor(options.fg ?? DEFAULT_GUTTER_FG);
+        this._bg = parseColor(options.bg ?? DEFAULT_GUTTER_BG);
+        this._minWidth = options.minWidth ?? 3;
+        this._paddingRight = options.paddingRight ?? 1;
+        this._lineNumberOffset = options.lineNumberOffset ?? 0;
+        this._hideLineNumbers = options.hideLineNumbers ?? new Set;
+        this._lineNumbers = options.lineNumbers ?? new Map;
+        this._lineColorsGutter = new Map;
+        this._lineColorsContent = new Map;
+        if (options.lineColors) {
+          for (const [line, color] of options.lineColors) {
+            this.parseLineColor(line, color);
+          }
+        }
+        this._lineSigns = new Map;
+        if (options.lineSigns) {
+          for (const [line, sign] of options.lineSigns) {
+            this._lineSigns.set(line, sign);
+          }
+        }
+        if (options.target) {
+          this.setTarget(options.target);
+        }
+      }
+      setTarget(target) {
+        if (this.target === target)
+          return;
+        if (this.target) {
+          this.target.off("line-info-change", this.handleLineInfoChange);
+          super.remove(this.target);
+        }
+        if (this.gutter) {
+          super.remove(this.gutter);
+          this.gutter = null;
+        }
+        this.target = target;
+        this.target.on("line-info-change", this.handleLineInfoChange);
+        this.gutter = new GutterRenderable(this.ctx, this.target, {
+          fg: this._fg,
+          bg: this._bg,
+          minWidth: this._minWidth,
+          paddingRight: this._paddingRight,
+          lineColorsGutter: this._lineColorsGutter,
+          lineColorsContent: this._lineColorsContent,
+          lineSigns: this._lineSigns,
+          lineNumberOffset: this._lineNumberOffset,
+          hideLineNumbers: this._hideLineNumbers,
+          lineNumbers: this._lineNumbers,
+          id: this.id ? `${this.id}-gutter` : undefined
+        });
+        super.add(this.gutter);
+        super.add(this.target);
+      }
+      add(child) {
+        if (!this.target && "lineInfo" in child && "lineCount" in child && "virtualLineCount" in child && "scrollY" in child) {
+          this.setTarget(child);
+          return this.getChildrenCount() - 1;
+        }
+        return -1;
+      }
+      remove(child) {
+        if (this._isDestroying) {
+          super.remove(child);
+          return;
+        }
+        if (this.gutter && child === this.gutter) {
+          throw new Error("LineNumberRenderable: Cannot remove gutter directly.");
+        }
+        if (this.target && child === this.target) {
+          throw new Error("LineNumberRenderable: Cannot remove target directly. Use clearTarget() instead.");
+        }
+        super.remove(child);
+      }
+      destroyRecursively() {
+        this._isDestroying = true;
+        if (this.target) {
+          this.target.off("line-info-change", this.handleLineInfoChange);
+        }
+        super.destroyRecursively();
+        this.gutter = null;
+        this.target = null;
+      }
+      clearTarget() {
+        if (this.target) {
+          this.target.off("line-info-change", this.handleLineInfoChange);
+          super.remove(this.target);
+          this.target = null;
+        }
+        if (this.gutter) {
+          super.remove(this.gutter);
+          this.gutter = null;
+        }
+      }
+      renderSelf(buffer) {
+        if (!this.target || !this.gutter || this._lineColorsContent.size === 0)
+          return;
+        const y = Math.trunc(this.y);
+        const start = Math.max(0, -y);
+        const end = Math.min(this.height, buffer.height - y);
+        if (end <= start || this.x >= buffer.width || this.x + this.width <= 0)
+          return;
+        const sources = getLineSources(this.target, Math.trunc(this.target.scrollY) + start, end - start);
+        const gutterWidth = this.gutter.visible ? this.gutter.width : 0;
+        const contentWidth = this.width - gutterWidth;
+        for (let i = 0;i < sources.length; i++) {
+          const logicalLine = sources[i];
+          const lineBg = this._lineColorsContent.get(logicalLine);
+          if (lineBg) {
+            buffer.fillRect(this.x + gutterWidth, y + start + i, contentWidth, 1, lineBg);
+          }
+        }
+      }
+      set showLineNumbers(value) {
+        if (this.gutter) {
+          this.gutter.visible = value;
+        }
+      }
+      get showLineNumbers() {
+        return this.gutter?.visible ?? false;
+      }
+      get fg() {
+        return this._fg;
+      }
+      set fg(value) {
+        const parsed = parseColor(value ?? DEFAULT_GUTTER_FG);
+        if (this._fg !== parsed) {
+          this._fg = parsed;
+          this.gutter?.setFg(parsed);
+        }
+      }
+      get bg() {
+        return this._bg;
+      }
+      set bg(value) {
+        const parsed = parseColor(value ?? DEFAULT_GUTTER_BG);
+        if (this._bg !== parsed) {
+          this._bg = parsed;
+          this.gutter?.setBg(parsed);
+        }
+      }
+      setLineColor(line, color) {
+        this.parseLineColor(line, color);
+        if (this.gutter) {
+          this.gutter.setLineColors(this._lineColorsGutter, this._lineColorsContent);
+        }
+      }
+      clearLineColor(line) {
+        this._lineColorsGutter.delete(line);
+        this._lineColorsContent.delete(line);
+        if (this.gutter) {
+          this.gutter.setLineColors(this._lineColorsGutter, this._lineColorsContent);
+        }
+      }
+      clearAllLineColors() {
+        this._lineColorsGutter.clear();
+        this._lineColorsContent.clear();
+        if (this.gutter) {
+          this.gutter.setLineColors(this._lineColorsGutter, this._lineColorsContent);
+        }
+      }
+      setLineColors(lineColors) {
+        this._lineColorsGutter.clear();
+        this._lineColorsContent.clear();
+        for (const [line, color] of lineColors) {
+          this.parseLineColor(line, color);
+        }
+        if (this.gutter) {
+          this.gutter.setLineColors(this._lineColorsGutter, this._lineColorsContent);
+        }
+      }
+      getLineColors() {
+        return {
+          gutter: this._lineColorsGutter,
+          content: this._lineColorsContent
+        };
+      }
+      setLineSign(line, sign) {
+        this._lineSigns.set(line, sign);
+        if (this.gutter) {
+          this.gutter.setLineSigns(this._lineSigns);
+        }
+      }
+      clearLineSign(line) {
+        this._lineSigns.delete(line);
+        if (this.gutter) {
+          this.gutter.setLineSigns(this._lineSigns);
+        }
+      }
+      clearAllLineSigns() {
+        this._lineSigns.clear();
+        if (this.gutter) {
+          this.gutter.setLineSigns(this._lineSigns);
+        }
+      }
+      setLineSigns(lineSigns) {
+        this._lineSigns.clear();
+        for (const [line, sign] of lineSigns) {
+          this._lineSigns.set(line, sign);
+        }
+        if (this.gutter) {
+          this.gutter.setLineSigns(this._lineSigns);
+        }
+      }
+      getLineSigns() {
+        return this._lineSigns;
+      }
+      set lineNumberOffset(value) {
+        if (this._lineNumberOffset !== value) {
+          this._lineNumberOffset = value;
+          if (this.gutter) {
+            this.gutter.setLineNumberOffset(value);
+          }
+        }
+      }
+      get lineNumberOffset() {
+        return this._lineNumberOffset;
+      }
+      setHideLineNumbers(hideLineNumbers) {
+        this._hideLineNumbers = hideLineNumbers;
+        if (this.gutter) {
+          this.gutter.setHideLineNumbers(hideLineNumbers);
+        }
+      }
+      getHideLineNumbers() {
+        return this._hideLineNumbers;
+      }
+      setLineNumbers(lineNumbers) {
+        this._lineNumbers = lineNumbers;
+        if (this.gutter) {
+          this.gutter.setLineNumbers(lineNumbers);
+        }
+      }
+      getLineNumbers() {
+        return this._lineNumbers;
+      }
+      highlightLines(startLine, endLine, color) {
+        for (let i = startLine;i <= endLine; i++) {
+          this.parseLineColor(i, color);
+        }
+        if (this.gutter) {
+          this.gutter.setLineColors(this._lineColorsGutter, this._lineColorsContent);
+        }
+      }
+      clearHighlightLines(startLine, endLine) {
+        for (let i = startLine;i <= endLine; i++) {
+          this._lineColorsGutter.delete(i);
+          this._lineColorsContent.delete(i);
+        }
+        if (this.gutter) {
+          this.gutter.setLineColors(this._lineColorsGutter, this._lineColorsContent);
+        }
+      }
+    };
+  });
+
+  // vendor/js/node_modules/diff/libesm/diff/base.js
+  class Diff {
+    diff(oldStr, newStr, options = {}) {
+      let callback;
+      if (typeof options === "function") {
+        callback = options;
+        options = {};
+      } else if ("callback" in options) {
+        callback = options.callback;
+      }
+      const oldString = this.castInput(oldStr, options);
+      const newString = this.castInput(newStr, options);
+      const oldTokens = this.removeEmpty(this.tokenize(oldString, options));
+      const newTokens = this.removeEmpty(this.tokenize(newString, options));
+      return this.diffWithOptionsObj(oldTokens, newTokens, options, callback);
+    }
+    diffWithOptionsObj(oldTokens, newTokens, options, callback) {
+      var _a;
+      const done = (value) => {
+        value = this.postProcess(value, options);
+        if (callback) {
+          setTimeout(function() {
+            callback(value);
+          }, 0);
+          return;
+        } else {
+          return value;
+        }
+      };
+      const newLen = newTokens.length, oldLen = oldTokens.length;
+      let editLength = 1;
+      let maxEditLength = newLen + oldLen;
+      if (options.maxEditLength != null) {
+        maxEditLength = Math.min(maxEditLength, options.maxEditLength);
+      }
+      const maxExecutionTime = (_a = options.timeout) !== null && _a !== undefined ? _a : Infinity;
+      const abortAfterTimestamp = Date.now() + maxExecutionTime;
+      const bestPath = [{ oldPos: -1, lastComponent: undefined }];
+      let newPos = this.extractCommon(bestPath[0], newTokens, oldTokens, 0, options);
+      if (bestPath[0].oldPos + 1 >= oldLen && newPos + 1 >= newLen) {
+        return done(this.buildValues(bestPath[0].lastComponent, newTokens, oldTokens));
+      }
+      let minDiagonalToConsider = -Infinity, maxDiagonalToConsider = Infinity;
+      const execEditLength = () => {
+        for (let diagonalPath = Math.max(minDiagonalToConsider, -editLength);diagonalPath <= Math.min(maxDiagonalToConsider, editLength); diagonalPath += 2) {
+          let basePath;
+          const removePath = bestPath[diagonalPath - 1], addPath = bestPath[diagonalPath + 1];
+          if (removePath) {
+            bestPath[diagonalPath - 1] = undefined;
+          }
+          let canAdd = false;
+          if (addPath) {
+            const addPathNewPos = addPath.oldPos - diagonalPath;
+            canAdd = addPath && 0 <= addPathNewPos && addPathNewPos < newLen;
+          }
+          const canRemove = removePath && removePath.oldPos + 1 < oldLen;
+          if (!canAdd && !canRemove) {
+            bestPath[diagonalPath] = undefined;
+            continue;
+          }
+          if (!canRemove || canAdd && removePath.oldPos < addPath.oldPos) {
+            basePath = this.addToPath(addPath, true, false, 0, options);
+          } else {
+            basePath = this.addToPath(removePath, false, true, 1, options);
+          }
+          newPos = this.extractCommon(basePath, newTokens, oldTokens, diagonalPath, options);
+          if (basePath.oldPos + 1 >= oldLen && newPos + 1 >= newLen) {
+            return done(this.buildValues(basePath.lastComponent, newTokens, oldTokens)) || true;
+          } else {
+            bestPath[diagonalPath] = basePath;
+            if (basePath.oldPos + 1 >= oldLen) {
+              maxDiagonalToConsider = Math.min(maxDiagonalToConsider, diagonalPath - 1);
+            }
+            if (newPos + 1 >= newLen) {
+              minDiagonalToConsider = Math.max(minDiagonalToConsider, diagonalPath + 1);
+            }
+          }
+        }
+        editLength++;
+      };
+      if (callback) {
+        (function exec() {
+          setTimeout(function() {
+            if (editLength > maxEditLength || Date.now() > abortAfterTimestamp) {
+              return callback(undefined);
+            }
+            if (!execEditLength()) {
+              exec();
+            }
+          }, 0);
+        })();
+      } else {
+        while (editLength <= maxEditLength && Date.now() <= abortAfterTimestamp) {
+          const ret = execEditLength();
+          if (ret) {
+            return ret;
+          }
+        }
+      }
+    }
+    addToPath(path, added, removed, oldPosInc, options) {
+      const last = path.lastComponent;
+      if (last && !options.oneChangePerToken && last.added === added && last.removed === removed) {
+        return {
+          oldPos: path.oldPos + oldPosInc,
+          lastComponent: { count: last.count + 1, added, removed, previousComponent: last.previousComponent }
+        };
+      } else {
+        return {
+          oldPos: path.oldPos + oldPosInc,
+          lastComponent: { count: 1, added, removed, previousComponent: last }
+        };
+      }
+    }
+    extractCommon(basePath, newTokens, oldTokens, diagonalPath, options) {
+      const newLen = newTokens.length, oldLen = oldTokens.length;
+      let oldPos = basePath.oldPos, newPos = oldPos - diagonalPath, commonCount = 0;
+      while (newPos + 1 < newLen && oldPos + 1 < oldLen && this.equals(oldTokens[oldPos + 1], newTokens[newPos + 1], options)) {
+        newPos++;
+        oldPos++;
+        commonCount++;
+        if (options.oneChangePerToken) {
+          basePath.lastComponent = { count: 1, previousComponent: basePath.lastComponent, added: false, removed: false };
+        }
+      }
+      if (commonCount && !options.oneChangePerToken) {
+        basePath.lastComponent = { count: commonCount, previousComponent: basePath.lastComponent, added: false, removed: false };
+      }
+      basePath.oldPos = oldPos;
+      return newPos;
+    }
+    equals(left, right, options) {
+      if (options.comparator) {
+        return options.comparator(left, right);
+      } else {
+        return left === right || !!options.ignoreCase && left.toLowerCase() === right.toLowerCase();
+      }
+    }
+    removeEmpty(array) {
+      const ret = [];
+      for (let i = 0;i < array.length; i++) {
+        if (array[i]) {
+          ret.push(array[i]);
+        }
+      }
+      return ret;
+    }
+    castInput(value, options) {
+      return value;
+    }
+    tokenize(value, options) {
+      return Array.from(value);
+    }
+    join(chars) {
+      return chars.join("");
+    }
+    postProcess(changeObjects, options) {
+      return changeObjects;
+    }
+    get useLongestToken() {
+      return false;
+    }
+    buildValues(lastComponent, newTokens, oldTokens) {
+      const components = [];
+      let nextComponent;
+      while (lastComponent) {
+        components.push(lastComponent);
+        nextComponent = lastComponent.previousComponent;
+        delete lastComponent.previousComponent;
+        lastComponent = nextComponent;
+      }
+      components.reverse();
+      const componentLen = components.length;
+      let componentPos = 0, newPos = 0, oldPos = 0;
+      for (;componentPos < componentLen; componentPos++) {
+        const component = components[componentPos];
+        if (!component.removed) {
+          if (!component.added && this.useLongestToken) {
+            let value = newTokens.slice(newPos, newPos + component.count);
+            value = value.map(function(value2, i) {
+              const oldValue = oldTokens[oldPos + i];
+              return oldValue.length > value2.length ? oldValue : value2;
+            });
+            component.value = this.join(value);
+          } else {
+            component.value = this.join(newTokens.slice(newPos, newPos + component.count));
+          }
+          newPos += component.count;
+          if (!component.added) {
+            oldPos += component.count;
+          }
+        } else {
+          component.value = this.join(oldTokens.slice(oldPos, oldPos + component.count));
+          oldPos += component.count;
+        }
+      }
+      return components;
+    }
+  }
+
+  // vendor/js/node_modules/diff/libesm/diff/character.js
+  var CharacterDiff, characterDiff;
+  var init_character = __esm(() => {
+    CharacterDiff = class CharacterDiff extends Diff {
+    };
+    characterDiff = new CharacterDiff;
+  });
+
+  // vendor/js/node_modules/diff/libesm/util/string.js
+  function longestCommonPrefix(str1, str2) {
+    let i;
+    for (i = 0;i < str1.length && i < str2.length; i++) {
+      if (str1[i] != str2[i]) {
+        return str1.slice(0, i);
+      }
+    }
+    return str1.slice(0, i);
+  }
+  function longestCommonSuffix(str1, str2) {
+    let i;
+    if (!str1 || !str2 || str1[str1.length - 1] != str2[str2.length - 1]) {
+      return "";
+    }
+    for (i = 0;i < str1.length && i < str2.length; i++) {
+      if (str1[str1.length - (i + 1)] != str2[str2.length - (i + 1)]) {
+        return str1.slice(-i);
+      }
+    }
+    return str1.slice(-i);
+  }
+  function replacePrefix(string, oldPrefix, newPrefix) {
+    if (string.slice(0, oldPrefix.length) != oldPrefix) {
+      throw Error(`string ${JSON.stringify(string)} doesn't start with prefix ${JSON.stringify(oldPrefix)}; this is a bug`);
+    }
+    return newPrefix + string.slice(oldPrefix.length);
+  }
+  function replaceSuffix(string, oldSuffix, newSuffix) {
+    if (!oldSuffix) {
+      return string + newSuffix;
+    }
+    if (string.slice(-oldSuffix.length) != oldSuffix) {
+      throw Error(`string ${JSON.stringify(string)} doesn't end with suffix ${JSON.stringify(oldSuffix)}; this is a bug`);
+    }
+    return string.slice(0, -oldSuffix.length) + newSuffix;
+  }
+  function removePrefix(string, oldPrefix) {
+    return replacePrefix(string, oldPrefix, "");
+  }
+  function removeSuffix(string, oldSuffix) {
+    return replaceSuffix(string, oldSuffix, "");
+  }
+  function maximumOverlap(string1, string2) {
+    return string2.slice(0, overlapCount(string1, string2));
+  }
+  function overlapCount(a, b) {
+    let startA = 0;
+    if (a.length > b.length) {
+      startA = a.length - b.length;
+    }
+    let endB = b.length;
+    if (a.length < b.length) {
+      endB = a.length;
+    }
+    const map = Array(endB);
+    let k = 0;
+    map[0] = 0;
+    for (let j = 1;j < endB; j++) {
+      if (b[j] == b[k]) {
+        map[j] = map[k];
+      } else {
+        map[j] = k;
+      }
+      while (k > 0 && b[j] != b[k]) {
+        k = map[k];
+      }
+      if (b[j] == b[k]) {
+        k++;
+      }
+    }
+    k = 0;
+    for (let i = startA;i < a.length; i++) {
+      while (k > 0 && a[i] != b[k]) {
+        k = map[k];
+      }
+      if (a[i] == b[k]) {
+        k++;
+      }
+    }
+    return k;
+  }
+  function segment(string, segmenter) {
+    const parts = [];
+    for (const segmentObj of Array.from(segmenter.segment(string))) {
+      const segment2 = segmentObj.segment;
+      if (parts.length && /\s/.test(parts[parts.length - 1]) && /\s/.test(segment2)) {
+        parts[parts.length - 1] += segment2;
+      } else {
+        parts.push(segment2);
+      }
+    }
+    return parts;
+  }
+  function trailingWs(string, segmenter) {
+    if (segmenter) {
+      return leadingAndTrailingWs(string, segmenter)[1];
+    }
+    let i;
+    for (i = string.length - 1;i >= 0; i--) {
+      if (!string[i].match(/\s/)) {
+        break;
+      }
+    }
+    return string.substring(i + 1);
+  }
+  function leadingWs(string, segmenter) {
+    if (segmenter) {
+      return leadingAndTrailingWs(string, segmenter)[0];
+    }
+    const match = string.match(/^\s*/);
+    return match ? match[0] : "";
+  }
+  function leadingAndTrailingWs(string, segmenter) {
+    if (!segmenter) {
+      return [leadingWs(string), trailingWs(string)];
+    }
+    if (segmenter.resolvedOptions().granularity != "word") {
+      throw new Error('The segmenter passed must have a granularity of "word"');
+    }
+    const segments = segment(string, segmenter);
+    const firstSeg = segments[0];
+    const lastSeg = segments[segments.length - 1];
+    const head = /\s/.test(firstSeg) ? firstSeg : "";
+    const tail = /\s/.test(lastSeg) ? lastSeg : "";
+    return [head, tail];
+  }
+
+  // vendor/js/node_modules/diff/libesm/diff/word.js
+  function dedupeWhitespaceInChangeObjects(startKeep, deletion, insertion, endKeep, segmenter) {
+    if (deletion && insertion) {
+      const [oldWsPrefix, oldWsSuffix] = leadingAndTrailingWs(deletion.value, segmenter);
+      const [newWsPrefix, newWsSuffix] = leadingAndTrailingWs(insertion.value, segmenter);
+      if (startKeep) {
+        const commonWsPrefix = longestCommonPrefix(oldWsPrefix, newWsPrefix);
+        startKeep.value = replaceSuffix(startKeep.value, newWsPrefix, commonWsPrefix);
+        deletion.value = removePrefix(deletion.value, commonWsPrefix);
+        insertion.value = removePrefix(insertion.value, commonWsPrefix);
+      }
+      if (endKeep) {
+        const commonWsSuffix = longestCommonSuffix(oldWsSuffix, newWsSuffix);
+        endKeep.value = replacePrefix(endKeep.value, newWsSuffix, commonWsSuffix);
+        deletion.value = removeSuffix(deletion.value, commonWsSuffix);
+        insertion.value = removeSuffix(insertion.value, commonWsSuffix);
+      }
+    } else if (insertion) {
+      if (startKeep) {
+        const ws = leadingWs(insertion.value, segmenter);
+        insertion.value = insertion.value.substring(ws.length);
+      }
+      if (endKeep) {
+        const ws = leadingWs(endKeep.value, segmenter);
+        endKeep.value = endKeep.value.substring(ws.length);
+      }
+    } else if (startKeep && endKeep) {
+      const newWsFull = leadingWs(endKeep.value, segmenter), [delWsStart, delWsEnd] = leadingAndTrailingWs(deletion.value, segmenter);
+      const newWsStart = longestCommonPrefix(newWsFull, delWsStart);
+      deletion.value = removePrefix(deletion.value, newWsStart);
+      const newWsEnd = longestCommonSuffix(removePrefix(newWsFull, newWsStart), delWsEnd);
+      deletion.value = removeSuffix(deletion.value, newWsEnd);
+      endKeep.value = replacePrefix(endKeep.value, newWsFull, newWsEnd);
+      startKeep.value = replaceSuffix(startKeep.value, newWsFull, newWsFull.slice(0, newWsFull.length - newWsEnd.length));
+    } else if (endKeep) {
+      const endKeepWsPrefix = leadingWs(endKeep.value, segmenter);
+      const deletionWsSuffix = trailingWs(deletion.value, segmenter);
+      const overlap = maximumOverlap(deletionWsSuffix, endKeepWsPrefix);
+      deletion.value = removeSuffix(deletion.value, overlap);
+    } else if (startKeep) {
+      const startKeepWsSuffix = trailingWs(startKeep.value, segmenter);
+      const deletionWsPrefix = leadingWs(deletion.value, segmenter);
+      const overlap = maximumOverlap(startKeepWsSuffix, deletionWsPrefix);
+      deletion.value = removePrefix(deletion.value, overlap);
+    }
+  }
+  var extendedWordChars = "a-zA-Z0-9_\\u{AD}\\u{C0}-\\u{D6}\\u{D8}-\\u{F6}\\u{F8}-\\u{2C6}\\u{2C8}-\\u{2D7}\\u{2DE}-\\u{2FF}\\u{1E00}-\\u{1EFF}", tokenizeIncludingWhitespace, WordDiff, wordDiff, WordsWithSpaceDiff, wordsWithSpaceDiff;
+  var init_word = __esm(() => {
+    tokenizeIncludingWhitespace = new RegExp(`[${extendedWordChars}]+|\\s+|[^${extendedWordChars}]`, "ug");
+    WordDiff = class WordDiff extends Diff {
+      equals(left, right, options) {
+        if (options.ignoreCase) {
+          left = left.toLowerCase();
+          right = right.toLowerCase();
+        }
+        return left.trim() === right.trim();
+      }
+      tokenize(value, options = {}) {
+        let parts;
+        if (options.intlSegmenter) {
+          const segmenter = options.intlSegmenter;
+          if (segmenter.resolvedOptions().granularity != "word") {
+            throw new Error('The segmenter passed must have a granularity of "word"');
+          }
+          parts = segment(value, segmenter);
+        } else {
+          parts = value.match(tokenizeIncludingWhitespace) || [];
+        }
+        const tokens = [];
+        let prevPart = null;
+        parts.forEach((part) => {
+          if (/\s/.test(part)) {
+            if (prevPart == null) {
+              tokens.push(part);
+            } else {
+              tokens.push(tokens.pop() + part);
+            }
+          } else if (prevPart != null && /\s/.test(prevPart)) {
+            if (tokens[tokens.length - 1] == prevPart) {
+              tokens.push(tokens.pop() + part);
+            } else {
+              tokens.push(prevPart + part);
+            }
+          } else {
+            tokens.push(part);
+          }
+          prevPart = part;
+        });
+        return tokens;
+      }
+      join(tokens) {
+        return tokens.map((token, i) => {
+          if (i == 0) {
+            return token;
+          } else {
+            return token.replace(/^\s+/, "");
+          }
+        }).join("");
+      }
+      postProcess(changes, options) {
+        if (!changes || options.oneChangePerToken) {
+          return changes;
+        }
+        let lastKeep = null;
+        let insertion = null;
+        let deletion = null;
+        changes.forEach((change) => {
+          if (change.added) {
+            insertion = change;
+          } else if (change.removed) {
+            deletion = change;
+          } else {
+            if (insertion || deletion) {
+              dedupeWhitespaceInChangeObjects(lastKeep, deletion, insertion, change, options.intlSegmenter);
+            }
+            lastKeep = change;
+            insertion = null;
+            deletion = null;
+          }
+        });
+        if (insertion || deletion) {
+          dedupeWhitespaceInChangeObjects(lastKeep, deletion, insertion, null, options.intlSegmenter);
+        }
+        return changes;
+      }
+    };
+    wordDiff = new WordDiff;
+    WordsWithSpaceDiff = class WordsWithSpaceDiff extends Diff {
+      tokenize(value) {
+        const regex2 = new RegExp(`(\\r?\\n)|[${extendedWordChars}]+|[^\\S\\n\\r]+|[^${extendedWordChars}]`, "ug");
+        return value.match(regex2) || [];
+      }
+    };
+    wordsWithSpaceDiff = new WordsWithSpaceDiff;
+  });
+  // vendor/js/node_modules/diff/libesm/diff/line.js
+  function tokenize(value, options) {
+    if (options.stripTrailingCr) {
+      value = value.replace(/\r\n/g, `
+`);
+    }
+    const retLines = [], linesAndNewlines = value.split(/(\n|\r\n)/);
+    if (!linesAndNewlines[linesAndNewlines.length - 1]) {
+      linesAndNewlines.pop();
+    }
+    for (let i = 0;i < linesAndNewlines.length; i++) {
+      const line = linesAndNewlines[i];
+      if (i % 2 && !options.newlineIsToken) {
+        retLines[retLines.length - 1] += line;
+      } else {
+        retLines.push(line);
+      }
+    }
+    return retLines;
+  }
+  var LineDiff, lineDiff;
+  var init_line = __esm(() => {
+    LineDiff = class LineDiff extends Diff {
+      constructor() {
+        super(...arguments);
+        this.tokenize = tokenize;
+      }
+      equals(left, right, options) {
+        if (options.ignoreWhitespace) {
+          if (!options.newlineIsToken || !left.includes(`
+`)) {
+            left = left.trim();
+          }
+          if (!options.newlineIsToken || !right.includes(`
+`)) {
+            right = right.trim();
+          }
+        } else if (options.ignoreNewlineAtEof && !options.newlineIsToken) {
+          if (left.endsWith(`
+`)) {
+            left = left.slice(0, -1);
+          }
+          if (right.endsWith(`
+`)) {
+            right = right.slice(0, -1);
+          }
+        }
+        return super.equals(left, right, options);
+      }
+    };
+    lineDiff = new LineDiff;
+  });
+
+  // vendor/js/node_modules/diff/libesm/diff/sentence.js
+  function isSentenceEndPunct(char) {
+    return char == "." || char == "!" || char == "?";
+  }
+  var SentenceDiff, sentenceDiff;
+  var init_sentence = __esm(() => {
+    SentenceDiff = class SentenceDiff extends Diff {
+      tokenize(value) {
+        var _a;
+        const result = [];
+        let tokenStartI = 0;
+        for (let i = 0;i < value.length; i++) {
+          if (i == value.length - 1) {
+            result.push(value.slice(tokenStartI));
+            break;
+          }
+          if (isSentenceEndPunct(value[i]) && value[i + 1].match(/\s/)) {
+            result.push(value.slice(tokenStartI, i + 1));
+            i = tokenStartI = i + 1;
+            while ((_a = value[i + 1]) === null || _a === undefined ? undefined : _a.match(/\s/)) {
+              i++;
+            }
+            result.push(value.slice(tokenStartI, i + 1));
+            tokenStartI = i + 1;
+          }
+        }
+        return result;
+      }
+    };
+    sentenceDiff = new SentenceDiff;
+  });
+
+  // vendor/js/node_modules/diff/libesm/diff/css.js
+  var CssDiff, cssDiff;
+  var init_css = __esm(() => {
+    CssDiff = class CssDiff extends Diff {
+      tokenize(value) {
+        return value.split(/([{}:;,]|\s+)/);
+      }
+    };
+    cssDiff = new CssDiff;
+  });
+
+  // vendor/js/node_modules/diff/libesm/diff/json.js
+  function canonicalize(obj, stack, replacementStack, replacer, key) {
+    stack = stack || [];
+    replacementStack = replacementStack || [];
+    if (replacer) {
+      obj = replacer(key === undefined ? "" : key, obj);
+    }
+    let i;
+    for (i = 0;i < stack.length; i += 1) {
+      if (stack[i] === obj) {
+        return replacementStack[i];
+      }
+    }
+    let canonicalizedObj;
+    if (Object.prototype.toString.call(obj) === "[object Array]") {
+      stack.push(obj);
+      canonicalizedObj = new Array(obj.length);
+      replacementStack.push(canonicalizedObj);
+      for (i = 0;i < obj.length; i += 1) {
+        canonicalizedObj[i] = canonicalize(obj[i], stack, replacementStack, replacer, String(i));
+      }
+      stack.pop();
+      replacementStack.pop();
+      return canonicalizedObj;
+    }
+    if (obj && obj.toJSON) {
+      obj = obj.toJSON();
+    }
+    if (typeof obj === "object" && obj !== null) {
+      stack.push(obj);
+      canonicalizedObj = {};
+      replacementStack.push(canonicalizedObj);
+      const sortedKeys = [];
+      let key2;
+      for (key2 in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key2)) {
+          sortedKeys.push(key2);
+        }
+      }
+      sortedKeys.sort();
+      for (i = 0;i < sortedKeys.length; i += 1) {
+        key2 = sortedKeys[i];
+        canonicalizedObj[key2] = canonicalize(obj[key2], stack, replacementStack, replacer, key2);
+      }
+      stack.pop();
+      replacementStack.pop();
+    } else {
+      canonicalizedObj = obj;
+    }
+    return canonicalizedObj;
+  }
+  var JsonDiff, jsonDiff;
+  var init_json = __esm(() => {
+    init_line();
+    JsonDiff = class JsonDiff extends Diff {
+      constructor() {
+        super(...arguments);
+        this.tokenize = tokenize;
+      }
+      get useLongestToken() {
+        return true;
+      }
+      castInput(value, options) {
+        const { undefinedReplacement, stringifyReplacer = (k, v) => typeof v === "undefined" ? undefinedReplacement : v } = options;
+        return typeof value === "string" ? value : JSON.stringify(canonicalize(value, null, null, stringifyReplacer), null, "  ");
+      }
+      equals(left, right, options) {
+        return super.equals(left.replace(/,([\r\n])/g, "$1"), right.replace(/,([\r\n])/g, "$1"), options);
+      }
+    };
+    jsonDiff = new JsonDiff;
+  });
+
+  // vendor/js/node_modules/diff/libesm/diff/array.js
+  var ArrayDiff, arrayDiff;
+  var init_array = __esm(() => {
+    ArrayDiff = class ArrayDiff extends Diff {
+      tokenize(value) {
+        return value.slice();
+      }
+      join(value) {
+        return value;
+      }
+      removeEmpty(value) {
+        return value;
+      }
+    };
+    arrayDiff = new ArrayDiff;
+  });
+  // vendor/js/node_modules/diff/libesm/patch/parse.js
+  function parsePatch(uniDiff) {
+    const diffstr = uniDiff.split(/\n/), list = [];
+    let i = 0;
+    function isGitDiffHeader(line) {
+      return /^diff --git /.test(line);
+    }
+    function isDiffHeader(line) {
+      return isGitDiffHeader(line) || /^Index:\s/.test(line) || /^diff(?: -r \w+)+\s/.test(line);
+    }
+    function isFileHeader(line) {
+      return /^(---|\+\+\+)\s/.test(line);
+    }
+    function isHunkHeader(line) {
+      return /^@@\s/.test(line);
+    }
+    function parseIndex() {
+      var _a;
+      const index = {};
+      index.hunks = [];
+      list.push(index);
+      let seenDiffHeader = false;
+      while (i < diffstr.length) {
+        const line = diffstr[i];
+        if (isFileHeader(line) || isHunkHeader(line)) {
+          break;
+        }
+        if (isGitDiffHeader(line)) {
+          if (seenDiffHeader) {
+            return;
+          }
+          seenDiffHeader = true;
+          index.isGit = true;
+          const paths = parseGitDiffHeader(line);
+          if (paths) {
+            index.oldFileName = paths.oldFileName;
+            index.newFileName = paths.newFileName;
+          }
+          i++;
+          while (i < diffstr.length) {
+            const extLine = diffstr[i];
+            if (isFileHeader(extLine) || isHunkHeader(extLine) || isDiffHeader(extLine)) {
+              break;
+            }
+            const renameFromMatch = /^rename from (.*)/.exec(extLine);
+            if (renameFromMatch) {
+              index.oldFileName = "a/" + unquoteIfQuoted(renameFromMatch[1]);
+              index.isRename = true;
+            }
+            const renameToMatch = /^rename to (.*)/.exec(extLine);
+            if (renameToMatch) {
+              index.newFileName = "b/" + unquoteIfQuoted(renameToMatch[1]);
+              index.isRename = true;
+            }
+            const copyFromMatch = /^copy from (.*)/.exec(extLine);
+            if (copyFromMatch) {
+              index.oldFileName = "a/" + unquoteIfQuoted(copyFromMatch[1]);
+              index.isCopy = true;
+            }
+            const copyToMatch = /^copy to (.*)/.exec(extLine);
+            if (copyToMatch) {
+              index.newFileName = "b/" + unquoteIfQuoted(copyToMatch[1]);
+              index.isCopy = true;
+            }
+            const newFileModeMatch = /^new file mode (\d+)/.exec(extLine);
+            if (newFileModeMatch) {
+              index.isCreate = true;
+              index.newMode = newFileModeMatch[1];
+            }
+            const deletedFileModeMatch = /^deleted file mode (\d+)/.exec(extLine);
+            if (deletedFileModeMatch) {
+              index.isDelete = true;
+              index.oldMode = deletedFileModeMatch[1];
+            }
+            const oldModeMatch = /^old mode (\d+)/.exec(extLine);
+            if (oldModeMatch) {
+              index.oldMode = oldModeMatch[1];
+            }
+            const newModeMatch = /^new mode (\d+)/.exec(extLine);
+            if (newModeMatch) {
+              index.newMode = newModeMatch[1];
+            }
+            if (/^Binary files /.test(extLine)) {
+              index.isBinary = true;
+            }
+            i++;
+          }
+          continue;
+        } else if (isDiffHeader(line)) {
+          if (seenDiffHeader) {
+            return;
+          }
+          seenDiffHeader = true;
+          const headerMatch = /^(?:Index:|diff(?: -r \w+)+)\s+/.exec(line);
+          if (headerMatch) {
+            index.index = line.substring(headerMatch[0].length).trim();
+          }
+        }
+        i++;
+      }
+      parseFileHeader(index);
+      parseFileHeader(index);
+      if (index.oldFileName === undefined !== (index.newFileName === undefined)) {
+        throw new Error("Missing " + (index.oldFileName !== undefined ? '"+++ ..."' : '"--- ..."') + " file header for " + ((_a = index.oldFileName) !== null && _a !== undefined ? _a : index.newFileName));
+      }
+      while (i < diffstr.length) {
+        const line = diffstr[i];
+        if (isDiffHeader(line) || isFileHeader(line) || /^===================================================================/.test(line)) {
+          break;
+        } else if (isHunkHeader(line)) {
+          index.hunks.push(parseHunk());
+        } else {
+          i++;
+        }
+      }
+    }
+    function parseGitDiffHeader(line) {
+      const rest = line.substring("diff --git ".length);
+      if (rest.startsWith('"')) {
+        const oldPath = parseQuotedFileName(rest);
+        if (oldPath === null) {
+          return null;
+        }
+        const afterOld = rest.substring(oldPath.rawLength + 1);
+        let newFileName;
+        if (afterOld.startsWith('"')) {
+          const newPath = parseQuotedFileName(afterOld);
+          if (newPath === null) {
+            return null;
+          }
+          newFileName = newPath.fileName;
+        } else {
+          newFileName = afterOld;
+        }
+        return {
+          oldFileName: oldPath.fileName,
+          newFileName
+        };
+      }
+      const quoteIdx = rest.indexOf('"');
+      if (quoteIdx > 0) {
+        const oldFileName = rest.substring(0, quoteIdx - 1);
+        const newPath = parseQuotedFileName(rest.substring(quoteIdx));
+        if (newPath === null) {
+          return null;
+        }
+        return {
+          oldFileName,
+          newFileName: newPath.fileName
+        };
+      }
+      if (rest.startsWith("a/")) {
+        const splits = [];
+        let idx = 0;
+        while (true) {
+          idx = rest.indexOf(" b/", idx + 1);
+          if (idx === -1) {
+            break;
+          }
+          splits.push(idx);
+        }
+        if (splits.length > 0) {
+          const mid = splits[Math.floor(splits.length / 2)];
+          return {
+            oldFileName: rest.substring(0, mid),
+            newFileName: rest.substring(mid + 1)
+          };
+        }
+      }
+      return null;
+    }
+    function unquoteIfQuoted(s) {
+      if (s.startsWith('"')) {
+        const parsed = parseQuotedFileName(s);
+        if (parsed) {
+          return parsed.fileName;
+        }
+      }
+      return s;
+    }
+    function parseQuotedFileName(s) {
+      if (!s.startsWith('"')) {
+        return null;
+      }
+      let result = "";
+      let j = 1;
+      while (j < s.length) {
+        if (s[j] === '"') {
+          return { fileName: result, rawLength: j + 1 };
+        }
+        if (s[j] === "\\" && j + 1 < s.length) {
+          j++;
+          switch (s[j]) {
+            case "a":
+              result += "\x07";
+              break;
+            case "b":
+              result += "\b";
+              break;
+            case "f":
+              result += "\f";
+              break;
+            case "n":
+              result += `
+`;
+              break;
+            case "r":
+              result += "\r";
+              break;
+            case "t":
+              result += "\t";
+              break;
+            case "v":
+              result += "\v";
+              break;
+            case "\\":
+              result += "\\";
+              break;
+            case '"':
+              result += '"';
+              break;
+            case "0":
+            case "1":
+            case "2":
+            case "3":
+            case "4":
+            case "5":
+            case "6":
+            case "7": {
+              if (j + 2 >= s.length || s[j + 1] < "0" || s[j + 1] > "7" || s[j + 2] < "0" || s[j + 2] > "7") {
+                return null;
+              }
+              const bytes = [parseInt(s.substring(j, j + 3), 8)];
+              j += 3;
+              while (s[j] === "\\" && s[j + 1] >= "0" && s[j + 1] <= "7") {
+                if (j + 3 >= s.length || s[j + 2] < "0" || s[j + 2] > "7" || s[j + 3] < "0" || s[j + 3] > "7") {
+                  return null;
+                }
+                bytes.push(parseInt(s.substring(j + 1, j + 4), 8));
+                j += 4;
+              }
+              result += new TextDecoder("utf-8").decode(new Uint8Array(bytes));
+              continue;
+            }
+            default:
+              return null;
+          }
+        } else {
+          result += s[j];
+        }
+        j++;
+      }
+      return null;
+    }
+    function parseFileHeader(index) {
+      const fileHeaderMatch = /^(---|\+\+\+)\s+/.exec(diffstr[i]);
+      if (fileHeaderMatch) {
+        const prefix = fileHeaderMatch[1], data = diffstr[i].substring(3).trim().split("\t", 2), header = (data[1] || "").trim();
+        let fileName = data[0];
+        if (fileName.startsWith('"')) {
+          fileName = unquoteIfQuoted(fileName);
+        } else {
+          fileName = fileName.replace(/\\\\/g, "\\");
+        }
+        if (prefix === "---") {
+          index.oldFileName = fileName;
+          index.oldHeader = header;
+        } else {
+          index.newFileName = fileName;
+          index.newHeader = header;
+        }
+        i++;
+      }
+    }
+    function parseHunk() {
+      var _a;
+      const chunkHeaderIndex = i, chunkHeaderLine = diffstr[i++], chunkHeader = chunkHeaderLine.split(/@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/);
+      const hunk = {
+        oldStart: +chunkHeader[1],
+        oldLines: typeof chunkHeader[2] === "undefined" ? 1 : +chunkHeader[2],
+        newStart: +chunkHeader[3],
+        newLines: typeof chunkHeader[4] === "undefined" ? 1 : +chunkHeader[4],
+        lines: []
+      };
+      if (hunk.oldLines === 0) {
+        hunk.oldStart += 1;
+      }
+      if (hunk.newLines === 0) {
+        hunk.newStart += 1;
+      }
+      let addCount = 0, removeCount = 0;
+      for (;i < diffstr.length && (removeCount < hunk.oldLines || addCount < hunk.newLines || ((_a = diffstr[i]) === null || _a === undefined ? undefined : _a.startsWith("\\"))); i++) {
+        const operation = diffstr[i].length == 0 && i != diffstr.length - 1 ? " " : diffstr[i][0];
+        if (operation === "+" || operation === "-" || operation === " " || operation === "\\") {
+          hunk.lines.push(diffstr[i]);
+          if (operation === "+") {
+            addCount++;
+          } else if (operation === "-") {
+            removeCount++;
+          } else if (operation === " ") {
+            addCount++;
+            removeCount++;
+          }
+        } else {
+          throw new Error(`Hunk at line ${chunkHeaderIndex + 1} contained invalid line ${diffstr[i]}`);
+        }
+      }
+      if (!addCount && hunk.newLines === 1) {
+        hunk.newLines = 0;
+      }
+      if (!removeCount && hunk.oldLines === 1) {
+        hunk.oldLines = 0;
+      }
+      if (addCount !== hunk.newLines) {
+        throw new Error("Added line count did not match for hunk at line " + (chunkHeaderIndex + 1));
+      }
+      if (removeCount !== hunk.oldLines) {
+        throw new Error("Removed line count did not match for hunk at line " + (chunkHeaderIndex + 1));
+      }
+      if (i < diffstr.length && diffstr[i] && /^[+ -]/.test(diffstr[i]) && !isFileHeader(diffstr[i])) {
+        throw new Error("Hunk at line " + (chunkHeaderIndex + 1) + " has more lines than expected (expected " + hunk.oldLines + " old lines and " + hunk.newLines + " new lines)");
+      }
+      return hunk;
+    }
+    while (i < diffstr.length) {
+      parseIndex();
+    }
+    return list;
+  }
+  // vendor/js/node_modules/diff/libesm/patch/apply.js
+  var init_apply = () => {};
+  // vendor/js/node_modules/diff/libesm/patch/create.js
+  var init_create = __esm(() => {
+    init_line();
+  });
+  // vendor/js/node_modules/diff/libesm/index.js
+  var init_libesm = __esm(() => {
+    init_character();
+    init_word();
+    init_line();
+    init_sentence();
+    init_css();
+    init_json();
+    init_array();
+    init_apply();
+    init_create();
+  });
+
+  // vendor/opentui/packages/core/src/renderables/Diff.ts
+  var DiffRenderable;
+  var init_Diff = __esm(() => {
+    init_Renderable();
+    init_Code();
+    init_LineNumberRenderable();
+    init_RGBA();
+    init_syntax_style();
+    init_libesm();
+    init_Text();
+    DiffRenderable = class DiffRenderable extends Renderable {
+      _diff;
+      _syncScroll = false;
+      _view;
+      _parsedDiff = null;
+      _parseError = null;
+      _hunkStartLines = [];
+      _hunkRowOffsets = null;
+      _fg;
+      _filetype;
+      _syntaxStyle;
+      _wrapMode;
+      _conceal;
+      _selectionBg;
+      _selectionFg;
+      _treeSitterClient;
+      _showLineNumbers;
+      _lineNumberFg;
+      _lineNumberBg;
+      _addedBg;
+      _removedBg;
+      _contextBg;
+      _addedContentBg;
+      _removedContentBg;
+      _contextContentBg;
+      _addedSignColor;
+      _removedSignColor;
+      _addedLineNumberBg;
+      _removedLineNumberBg;
+      leftSide = null;
+      rightSide = null;
+      leftSideAdded = false;
+      rightSideAdded = false;
+      leftCodeRenderable = null;
+      rightCodeRenderable = null;
+      pendingRebuild = false;
+      _lastCodeWidths = [0, 0];
+      errorTextRenderable = null;
+      errorCodeRenderable = null;
+      _waitingForHighlight = false;
+      _lineInfoChangeHandler = null;
+      constructor(ctx, options) {
+        super(ctx, {
+          ...options,
+          flexDirection: options.view === "split" ? "row" : "column"
+        });
+        this._diff = options.diff ?? "";
+        this._syncScroll = options.syncScroll ?? false;
+        this._view = options.view ?? "unified";
+        this._fg = options.fg ? parseColor(options.fg) : undefined;
+        this._filetype = options.filetype;
+        this._syntaxStyle = options.syntaxStyle;
+        this._wrapMode = options.wrapMode;
+        this._conceal = options.conceal ?? false;
+        this._selectionBg = options.selectionBg ? parseColor(options.selectionBg) : undefined;
+        this._selectionFg = options.selectionFg ? parseColor(options.selectionFg) : undefined;
+        this._treeSitterClient = options.treeSitterClient;
+        this._showLineNumbers = options.showLineNumbers ?? true;
+        this._lineNumberFg = parseColor(options.lineNumberFg ?? "#888888");
+        this._lineNumberBg = parseColor(options.lineNumberBg ?? "transparent");
+        this._addedBg = parseColor(options.addedBg ?? "#1a4d1a");
+        this._removedBg = parseColor(options.removedBg ?? "#4d1a1a");
+        this._contextBg = parseColor(options.contextBg ?? "transparent");
+        this._addedContentBg = options.addedContentBg ? parseColor(options.addedContentBg) : null;
+        this._removedContentBg = options.removedContentBg ? parseColor(options.removedContentBg) : null;
+        this._contextContentBg = options.contextContentBg ? parseColor(options.contextContentBg) : null;
+        this._addedSignColor = parseColor(options.addedSignColor ?? "#22c55e");
+        this._removedSignColor = parseColor(options.removedSignColor ?? "#ef4444");
+        this._addedLineNumberBg = parseColor(options.addedLineNumberBg ?? "transparent");
+        this._removedLineNumberBg = parseColor(options.removedLineNumberBg ?? "transparent");
+        if (this._diff) {
+          this.parseDiff();
+          this.buildView();
+        }
+      }
+      parseDiff() {
+        if (!this._diff) {
+          this._parsedDiff = null;
+          this._parseError = null;
+          return;
+        }
+        try {
+          const patches = parsePatch(this._diff);
+          if (patches.length === 0) {
+            this._parsedDiff = null;
+            this._parseError = null;
+            return;
+          }
+          this._parsedDiff = patches[0];
+          this._parseError = null;
+        } catch (error) {
+          this._parsedDiff = null;
+          this._parseError = error instanceof Error ? error : new Error(String(error));
+        }
+      }
+      buildView() {
+        this._hunkStartLines = [];
+        this.invalidateHunkRowOffsets();
+        if (this._parseError) {
+          this.buildErrorView();
+          return;
+        }
+        if (!this._parsedDiff || this._parsedDiff.hunks.length === 0) {
+          return;
+        }
+        if (this._view === "unified") {
+          this.buildUnifiedView();
+        } else {
+          this.buildSplitView();
+        }
+      }
+      onMouseEvent(event) {
+        if (event.type !== "scroll" || this._view !== "split" || !this._syncScroll)
+          return;
+        if (!this.leftCodeRenderable || !this.rightCodeRenderable)
+          return;
+        if (!event.target)
+          return;
+        if (this.isInsideSide(event.target, "left")) {
+          this.rightCodeRenderable.scrollY = this.leftCodeRenderable.scrollY;
+          this.rightCodeRenderable.scrollX = this.leftCodeRenderable.scrollX;
+        } else if (this.isInsideSide(event.target, "right")) {
+          this.leftCodeRenderable.scrollY = this.rightCodeRenderable.scrollY;
+          this.leftCodeRenderable.scrollX = this.rightCodeRenderable.scrollX;
+        }
+      }
+      isInsideSide(target, side) {
+        const container = side === "left" ? this.leftCodeRenderable : this.rightCodeRenderable;
+        let current = target;
+        while (current) {
+          if (current === container)
+            return true;
+          current = current.parent;
+        }
+        return false;
+      }
+      requestRebuild() {
+        if (this.pendingRebuild) {
+          return;
+        }
+        this.pendingRebuild = true;
+        queueMicrotask(() => {
+          if (!this.isDestroyed && this.pendingRebuild) {
+            this.pendingRebuild = false;
+            this.buildView();
+            this.requestRender();
+          }
+        });
+      }
+      invalidateHunkRowOffsets() {
+        this._hunkRowOffsets = null;
+      }
+      rebuildView() {
+        if (this._view === "split") {
+          this.requestRebuild();
+        } else {
+          this.buildView();
+        }
+      }
+      handleLineInfoChange = () => {
+        this.invalidateHunkRowOffsets();
+        if (!this.leftCodeRenderable || !this.rightCodeRenderable)
+          return;
+        if (this._view === "split" && (this._wrapMode === "word" || this._wrapMode === "char") && (this.leftCodeRenderable.width !== this._lastCodeWidths[0] || this.rightCodeRenderable.width !== this._lastCodeWidths[1])) {
+          this.requestRebuild();
+        }
+        if (!this._waitingForHighlight)
+          return;
+        const leftIsHighlighting = this.leftCodeRenderable.isHighlighting;
+        const rightIsHighlighting = this.rightCodeRenderable.isHighlighting;
+        if (!leftIsHighlighting && !rightIsHighlighting) {
+          this._waitingForHighlight = false;
+          this.requestRebuild();
+        }
+      };
+      attachLineInfoListeners() {
+        if (!this.leftCodeRenderable && !this.rightCodeRenderable)
+          return;
+        this._lineInfoChangeHandler ??= this.handleLineInfoChange;
+        if (this.leftCodeRenderable) {
+          this.leftCodeRenderable.off("line-info-change", this._lineInfoChangeHandler);
+          this.leftCodeRenderable.on("line-info-change", this._lineInfoChangeHandler);
+        }
+        if (this.rightCodeRenderable) {
+          this.rightCodeRenderable.off("line-info-change", this._lineInfoChangeHandler);
+          this.rightCodeRenderable.on("line-info-change", this._lineInfoChangeHandler);
+        }
+      }
+      detachLineInfoListeners() {
+        if (!this._lineInfoChangeHandler)
+          return;
+        if (this.leftCodeRenderable) {
+          this.leftCodeRenderable.off("line-info-change", this._lineInfoChangeHandler);
+        }
+        if (this.rightCodeRenderable) {
+          this.rightCodeRenderable.off("line-info-change", this._lineInfoChangeHandler);
+        }
+        this._lineInfoChangeHandler = null;
+      }
+      destroyRecursively() {
+        this.detachLineInfoListeners();
+        this.pendingRebuild = false;
+        this.leftSideAdded = false;
+        this.rightSideAdded = false;
+        super.destroyRecursively();
+      }
+      buildErrorView() {
+        this.flexDirection = "column";
+        if (this.leftSide && this.leftSideAdded) {
+          super.remove(this.leftSide);
+          this.leftSideAdded = false;
+        }
+        if (this.rightSide && this.rightSideAdded) {
+          super.remove(this.rightSide);
+          this.rightSideAdded = false;
+        }
+        const errorMessage = `Error parsing diff: ${this._parseError?.message || "Unknown error"}
+`;
+        if (!this.errorTextRenderable) {
+          this.errorTextRenderable = new TextRenderable(this.ctx, {
+            id: this.id ? `${this.id}-error-text` : undefined,
+            content: errorMessage,
+            fg: "#ef4444",
+            width: "100%",
+            flexShrink: 0
+          });
+          super.add(this.errorTextRenderable);
+        } else {
+          this.errorTextRenderable.content = errorMessage;
+          const errorTextIndex = this.getChildren().indexOf(this.errorTextRenderable);
+          if (errorTextIndex === -1) {
+            super.add(this.errorTextRenderable);
+          }
+        }
+        if (!this.errorCodeRenderable) {
+          this.errorCodeRenderable = new CodeRenderable(this.ctx, {
+            id: this.id ? `${this.id}-error-code` : undefined,
+            content: this._diff,
+            filetype: "diff",
+            syntaxStyle: this._syntaxStyle ?? SyntaxStyle.create(),
+            wrapMode: this._wrapMode,
+            conceal: this._conceal,
+            width: "100%",
+            flexGrow: 1,
+            flexShrink: 1,
+            ...this._treeSitterClient !== undefined && { treeSitterClient: this._treeSitterClient }
+          });
+          super.add(this.errorCodeRenderable);
+        } else {
+          this.errorCodeRenderable.content = this._diff;
+          this.errorCodeRenderable.wrapMode = this._wrapMode ?? "none";
+          if (this._syntaxStyle) {
+            this.errorCodeRenderable.syntaxStyle = this._syntaxStyle;
+          }
+          const errorCodeIndex = this.getChildren().indexOf(this.errorCodeRenderable);
+          if (errorCodeIndex === -1) {
+            super.add(this.errorCodeRenderable);
+          }
+        }
+      }
+      createOrUpdateCodeRenderable(side, content, wrapMode, drawUnstyledText) {
+        const existingRenderable = side === "left" ? this.leftCodeRenderable : this.rightCodeRenderable;
+        if (!existingRenderable) {
+          const codeOptions = {
+            id: this.id ? `${this.id}-${side}-code` : undefined,
+            content,
+            filetype: this._filetype,
+            wrapMode,
+            conceal: this._conceal,
+            syntaxStyle: this._syntaxStyle ?? SyntaxStyle.create(),
+            width: "100%",
+            height: "100%",
+            ...this._fg !== undefined && { fg: this._fg },
+            ...drawUnstyledText !== undefined && { drawUnstyledText },
+            ...this._selectionBg !== undefined && { selectionBg: this._selectionBg },
+            ...this._selectionFg !== undefined && { selectionFg: this._selectionFg },
+            ...this._treeSitterClient !== undefined && { treeSitterClient: this._treeSitterClient }
+          };
+          const newRenderable = new CodeRenderable(this.ctx, codeOptions);
+          if (side === "left") {
+            this.leftCodeRenderable = newRenderable;
+          } else {
+            this.rightCodeRenderable = newRenderable;
+          }
+          return newRenderable;
+        } else {
+          existingRenderable.content = content;
+          existingRenderable.wrapMode = wrapMode ?? "none";
+          existingRenderable.conceal = this._conceal;
+          if (drawUnstyledText !== undefined) {
+            existingRenderable.drawUnstyledText = drawUnstyledText;
+          }
+          if (this._filetype !== undefined) {
+            existingRenderable.filetype = this._filetype;
+          }
+          if (this._syntaxStyle !== undefined) {
+            existingRenderable.syntaxStyle = this._syntaxStyle;
+          }
+          if (this._selectionBg !== undefined) {
+            existingRenderable.selectionBg = this._selectionBg;
+          }
+          if (this._selectionFg !== undefined) {
+            existingRenderable.selectionFg = this._selectionFg;
+          }
+          if (this._fg !== undefined) {
+            existingRenderable.fg = this._fg;
+          }
+          return existingRenderable;
+        }
+      }
+      createOrUpdateSide(side, target, lineColors, lineSigns, lineNumbers, hideLineNumbers, width) {
+        const sideRef = side === "left" ? this.leftSide : this.rightSide;
+        const addedFlag = side === "left" ? this.leftSideAdded : this.rightSideAdded;
+        if (!sideRef) {
+          const newSide = new LineNumberRenderable(this.ctx, {
+            id: this.id ? `${this.id}-${side}` : undefined,
+            target,
+            fg: this._lineNumberFg,
+            bg: this._lineNumberBg,
+            lineColors,
+            lineSigns,
+            lineNumbers,
+            lineNumberOffset: 0,
+            hideLineNumbers,
+            width,
+            height: "100%"
+          });
+          newSide.showLineNumbers = this._showLineNumbers;
+          super.add(newSide);
+          if (side === "left") {
+            this.leftSide = newSide;
+            this.leftSideAdded = true;
+          } else {
+            this.rightSide = newSide;
+            this.rightSideAdded = true;
+          }
+        } else {
+          sideRef.width = width;
+          sideRef.fg = this._lineNumberFg;
+          sideRef.bg = this._lineNumberBg;
+          sideRef.setLineColors(lineColors);
+          const padding = sideRef.getLineSigns().get(-1);
+          if (padding)
+            lineSigns.set(-1, padding);
+          sideRef.setLineSigns(lineSigns);
+          sideRef.setLineNumbers(lineNumbers);
+          sideRef.setHideLineNumbers(hideLineNumbers);
+          if (!addedFlag) {
+            super.add(sideRef);
+            if (side === "left") {
+              this.leftSideAdded = true;
+            } else {
+              this.rightSideAdded = true;
+            }
+          }
+        }
+      }
+      buildUnifiedView() {
+        if (!this._parsedDiff)
+          return;
+        this.flexDirection = "column";
+        if (this.errorTextRenderable) {
+          const errorTextIndex = this.getChildren().indexOf(this.errorTextRenderable);
+          if (errorTextIndex !== -1) {
+            super.remove(this.errorTextRenderable);
+          }
+        }
+        if (this.errorCodeRenderable) {
+          const errorCodeIndex = this.getChildren().indexOf(this.errorCodeRenderable);
+          if (errorCodeIndex !== -1) {
+            super.remove(this.errorCodeRenderable);
+          }
+        }
+        const contentLines = [];
+        const lineColors = new Map;
+        const lineSigns = new Map;
+        const lineNumbers = new Map;
+        let lineIndex = 0;
+        for (const hunk of this._parsedDiff.hunks) {
+          this._hunkStartLines.push(lineIndex);
+          let oldLineNum = hunk.oldStart;
+          let newLineNum = hunk.newStart;
+          for (const line of hunk.lines) {
+            const firstChar = line[0];
+            const content2 = line.slice(1);
+            if (firstChar === "+") {
+              contentLines.push(content2);
+              const config = {
+                gutter: this._addedLineNumberBg
+              };
+              if (this._addedContentBg) {
+                config.content = this._addedContentBg;
+              } else {
+                config.content = this._addedBg;
+              }
+              lineColors.set(lineIndex, config);
+              lineSigns.set(lineIndex, {
+                after: " +",
+                afterColor: this._addedSignColor
+              });
+              lineNumbers.set(lineIndex, newLineNum);
+              newLineNum++;
+              lineIndex++;
+            } else if (firstChar === "-") {
+              contentLines.push(content2);
+              const config = {
+                gutter: this._removedLineNumberBg
+              };
+              if (this._removedContentBg) {
+                config.content = this._removedContentBg;
+              } else {
+                config.content = this._removedBg;
+              }
+              lineColors.set(lineIndex, config);
+              lineSigns.set(lineIndex, {
+                after: " -",
+                afterColor: this._removedSignColor
+              });
+              lineNumbers.set(lineIndex, oldLineNum);
+              oldLineNum++;
+              lineIndex++;
+            } else if (firstChar === " ") {
+              contentLines.push(content2);
+              const config = {
+                gutter: this._lineNumberBg
+              };
+              if (this._contextContentBg) {
+                config.content = this._contextContentBg;
+              } else {
+                config.content = this._contextBg;
+              }
+              lineColors.set(lineIndex, config);
+              lineNumbers.set(lineIndex, newLineNum);
+              oldLineNum++;
+              newLineNum++;
+              lineIndex++;
+            }
+          }
+        }
+        const content = contentLines.join(`
+`);
+        const codeRenderable = this.createOrUpdateCodeRenderable("left", content, this._wrapMode);
+        this.attachLineInfoListeners();
+        this.createOrUpdateSide("left", codeRenderable, lineColors, lineSigns, lineNumbers, new Set, "100%");
+        if (this.rightSide && this.rightSideAdded) {
+          super.remove(this.rightSide);
+          this.rightSideAdded = false;
+        }
+      }
+      buildSplitView() {
+        if (!this._parsedDiff)
+          return;
+        this.flexDirection = "row";
+        if (this.errorTextRenderable) {
+          const errorTextIndex = this.getChildren().indexOf(this.errorTextRenderable);
+          if (errorTextIndex !== -1) {
+            super.remove(this.errorTextRenderable);
+          }
+        }
+        if (this.errorCodeRenderable) {
+          const errorCodeIndex = this.getChildren().indexOf(this.errorCodeRenderable);
+          if (errorCodeIndex !== -1) {
+            super.remove(this.errorCodeRenderable);
+          }
+        }
+        const leftLogicalLines = [];
+        const rightLogicalLines = [];
+        const hunkFirstLeftLine = [];
+        for (const hunk of this._parsedDiff.hunks) {
+          hunkFirstLeftLine.push(leftLogicalLines.length);
+          let oldLineNum = hunk.oldStart;
+          let newLineNum = hunk.newStart;
+          let i = 0;
+          while (i < hunk.lines.length) {
+            const line = hunk.lines[i];
+            const firstChar = line[0];
+            if (firstChar === " ") {
+              const content = line.slice(1);
+              leftLogicalLines.push({
+                content,
+                lineNum: oldLineNum,
+                color: this._contextBg,
+                type: "context"
+              });
+              rightLogicalLines.push({
+                content,
+                lineNum: newLineNum,
+                color: this._contextBg,
+                type: "context"
+              });
+              oldLineNum++;
+              newLineNum++;
+              i++;
+            } else if (firstChar === "\\") {
+              i++;
+            } else {
+              const removes = [];
+              const adds = [];
+              while (i < hunk.lines.length) {
+                const currentLine = hunk.lines[i];
+                const currentChar = currentLine[0];
+                if (currentChar === " " || currentChar === "\\") {
+                  break;
+                }
+                const content = currentLine.slice(1);
+                if (currentChar === "-") {
+                  removes.push({ content, lineNum: oldLineNum });
+                  oldLineNum++;
+                } else if (currentChar === "+") {
+                  adds.push({ content, lineNum: newLineNum });
+                  newLineNum++;
+                }
+                i++;
+              }
+              const maxLength = Math.max(removes.length, adds.length);
+              for (let j = 0;j < maxLength; j++) {
+                if (j < removes.length) {
+                  leftLogicalLines.push({
+                    content: removes[j].content,
+                    lineNum: removes[j].lineNum,
+                    color: this._removedBg,
+                    sign: {
+                      after: " -",
+                      afterColor: this._removedSignColor
+                    },
+                    type: "remove"
+                  });
+                } else {
+                  leftLogicalLines.push({
+                    content: "",
+                    hideLineNumber: true,
+                    type: "empty"
+                  });
+                }
+                if (j < adds.length) {
+                  rightLogicalLines.push({
+                    content: adds[j].content,
+                    lineNum: adds[j].lineNum,
+                    color: this._addedBg,
+                    sign: {
+                      after: " +",
+                      afterColor: this._addedSignColor
+                    },
+                    type: "add"
+                  });
+                } else {
+                  rightLogicalLines.push({
+                    content: "",
+                    hideLineNumber: true,
+                    type: "empty"
+                  });
+                }
+              }
+            }
+          }
+        }
+        for (const startIndex of hunkFirstLeftLine) {
+          const firstLine = leftLogicalLines[startIndex];
+          if (firstLine)
+            firstLine.hunkStart = true;
+        }
+        const canDoWrapAlignment = this.width > 0 && (this._wrapMode === "word" || this._wrapMode === "char");
+        const preLeftContent = leftLogicalLines.map((l) => l.content).join(`
+`);
+        const preRightContent = rightLogicalLines.map((l) => l.content).join(`
+`);
+        this._lastCodeWidths = [this.leftCodeRenderable?.width ?? 0, this.rightCodeRenderable?.width ?? 0];
+        const needsConsistentConcealing = (this._wrapMode === "word" || this._wrapMode === "char") && this._conceal && this._filetype;
+        const drawUnstyledText = !needsConsistentConcealing;
+        const leftCodeRenderable = this.createOrUpdateCodeRenderable("left", preLeftContent, this._wrapMode, drawUnstyledText);
+        const rightCodeRenderable = this.createOrUpdateCodeRenderable("right", preRightContent, this._wrapMode, drawUnstyledText);
+        this.attachLineInfoListeners();
+        let finalLeftLines;
+        let finalRightLines;
+        const leftIsHighlighting = leftCodeRenderable.isHighlighting;
+        const rightIsHighlighting = rightCodeRenderable.isHighlighting;
+        const highlightingInProgress = needsConsistentConcealing && (leftIsHighlighting || rightIsHighlighting);
+        if (highlightingInProgress) {
+          this._waitingForHighlight = true;
+          this.attachLineInfoListeners();
+        }
+        const shouldDoAlignment = canDoWrapAlignment && !highlightingInProgress;
+        if (shouldDoAlignment) {
+          const leftLineInfo = leftCodeRenderable.lineInfo;
+          const rightLineInfo = rightCodeRenderable.lineInfo;
+          const leftSources = leftLineInfo.lineSources || [];
+          const rightSources = rightLineInfo.lineSources || [];
+          const leftVisualCounts = new Map;
+          const rightVisualCounts = new Map;
+          for (const logicalLine of leftSources) {
+            leftVisualCounts.set(logicalLine, (leftVisualCounts.get(logicalLine) || 0) + 1);
+          }
+          for (const logicalLine of rightSources) {
+            rightVisualCounts.set(logicalLine, (rightVisualCounts.get(logicalLine) || 0) + 1);
+          }
+          finalLeftLines = [];
+          finalRightLines = [];
+          let leftVisualPos = 0;
+          let rightVisualPos = 0;
+          for (let i = 0;i < leftLogicalLines.length; i++) {
+            const leftLine = leftLogicalLines[i];
+            const rightLine = rightLogicalLines[i];
+            const leftVisualCount = leftVisualCounts.get(i) ?? 0;
+            const rightVisualCount = rightVisualCounts.get(i) ?? 0;
+            if (leftVisualPos < rightVisualPos) {
+              const pad = rightVisualPos - leftVisualPos;
+              for (let p = 0;p < pad; p++) {
+                finalLeftLines.push({ content: "", hideLineNumber: true, type: "empty" });
+              }
+              leftVisualPos += pad;
+            } else if (rightVisualPos < leftVisualPos) {
+              const pad = leftVisualPos - rightVisualPos;
+              for (let p = 0;p < pad; p++) {
+                finalRightLines.push({ content: "", hideLineNumber: true, type: "empty" });
+              }
+              rightVisualPos += pad;
+            }
+            finalLeftLines.push(leftLine);
+            finalRightLines.push(rightLine);
+            leftVisualPos += leftVisualCount;
+            rightVisualPos += rightVisualCount;
+          }
+          if (leftVisualPos < rightVisualPos) {
+            const pad = rightVisualPos - leftVisualPos;
+            for (let p = 0;p < pad; p++) {
+              finalLeftLines.push({ content: "", hideLineNumber: true, type: "empty" });
+            }
+          } else if (rightVisualPos < leftVisualPos) {
+            const pad = leftVisualPos - rightVisualPos;
+            for (let p = 0;p < pad; p++) {
+              finalRightLines.push({ content: "", hideLineNumber: true, type: "empty" });
+            }
+          }
+        } else {
+          finalLeftLines = leftLogicalLines;
+          finalRightLines = rightLogicalLines;
+        }
+        const leftLineColors = new Map;
+        const rightLineColors = new Map;
+        const leftLineSigns = new Map;
+        const rightLineSigns = new Map;
+        const leftHideLineNumbers = new Set;
+        const rightHideLineNumbers = new Set;
+        const leftLineNumbers = new Map;
+        const rightLineNumbers = new Map;
+        finalLeftLines.forEach((line, index) => {
+          if (line.hunkStart) {
+            this._hunkStartLines.push(index);
+          }
+          if (line.lineNum !== undefined) {
+            leftLineNumbers.set(index, line.lineNum);
+          }
+          if (line.hideLineNumber) {
+            leftHideLineNumbers.add(index);
+          }
+          if (line.type === "remove") {
+            const config = {
+              gutter: this._removedLineNumberBg
+            };
+            if (this._removedContentBg) {
+              config.content = this._removedContentBg;
+            } else {
+              config.content = this._removedBg;
+            }
+            leftLineColors.set(index, config);
+          } else if (line.type === "context") {
+            const config = {
+              gutter: this._lineNumberBg
+            };
+            if (this._contextContentBg) {
+              config.content = this._contextContentBg;
+            } else {
+              config.content = this._contextBg;
+            }
+            leftLineColors.set(index, config);
+          }
+          if (line.sign) {
+            leftLineSigns.set(index, line.sign);
+          }
+        });
+        finalRightLines.forEach((line, index) => {
+          if (line.lineNum !== undefined) {
+            rightLineNumbers.set(index, line.lineNum);
+          }
+          if (line.hideLineNumber) {
+            rightHideLineNumbers.add(index);
+          }
+          if (line.type === "add") {
+            const config = {
+              gutter: this._addedLineNumberBg
+            };
+            if (this._addedContentBg) {
+              config.content = this._addedContentBg;
+            } else {
+              config.content = this._addedBg;
+            }
+            rightLineColors.set(index, config);
+          } else if (line.type === "context") {
+            const config = {
+              gutter: this._lineNumberBg
+            };
+            if (this._contextContentBg) {
+              config.content = this._contextContentBg;
+            } else {
+              config.content = this._contextBg;
+            }
+            rightLineColors.set(index, config);
+          }
+          if (line.sign) {
+            rightLineSigns.set(index, line.sign);
+          }
+        });
+        const leftContentFinal = finalLeftLines.map((l) => l.content).join(`
+`);
+        const rightContentFinal = finalRightLines.map((l) => l.content).join(`
+`);
+        leftCodeRenderable.content = leftContentFinal;
+        rightCodeRenderable.content = rightContentFinal;
+        this.createOrUpdateSide("left", leftCodeRenderable, leftLineColors, leftLineSigns, leftLineNumbers, leftHideLineNumbers, "50%");
+        this.createOrUpdateSide("right", rightCodeRenderable, rightLineColors, rightLineSigns, rightLineNumbers, rightHideLineNumbers, "50%");
+      }
+      get diff() {
+        return this._diff;
+      }
+      set diff(value) {
+        if (this._diff !== value) {
+          this._diff = value;
+          this._waitingForHighlight = false;
+          this.parseDiff();
+          this.rebuildView();
+        }
+      }
+      get syncScroll() {
+        return this._syncScroll;
+      }
+      set syncScroll(value) {
+        if (this._syncScroll !== value) {
+          this._syncScroll = value;
+        }
+      }
+      get view() {
+        return this._view;
+      }
+      set view(value) {
+        if (this._view !== value) {
+          this._view = value;
+          this.flexDirection = value === "split" ? "row" : "column";
+          this.buildView();
+        }
+      }
+      get filetype() {
+        return this._filetype;
+      }
+      set filetype(value) {
+        if (this._filetype !== value) {
+          this._filetype = value;
+          this.rebuildView();
+        }
+      }
+      get syntaxStyle() {
+        return this._syntaxStyle;
+      }
+      set syntaxStyle(value) {
+        if (this._syntaxStyle !== value) {
+          this._syntaxStyle = value;
+          this.rebuildView();
+        }
+      }
+      get wrapMode() {
+        return this._wrapMode;
+      }
+      set wrapMode(value) {
+        if (this._wrapMode !== value) {
+          this._wrapMode = value;
+          this.invalidateHunkRowOffsets();
+          if (this._view === "unified" && this.leftCodeRenderable) {
+            this.leftCodeRenderable.wrapMode = value ?? "none";
+          } else if (this._view === "split") {
+            this.requestRebuild();
+          }
+        }
+      }
+      get showLineNumbers() {
+        return this._showLineNumbers;
+      }
+      set showLineNumbers(value) {
+        if (this._showLineNumbers !== value) {
+          this._showLineNumbers = value;
+          if (this.leftSide) {
+            this.leftSide.showLineNumbers = value;
+          }
+          if (this.rightSide) {
+            this.rightSide.showLineNumbers = value;
+          }
+        }
+      }
+      get addedBg() {
+        return this._addedBg;
+      }
+      set addedBg(value) {
+        const parsed = parseColor(value);
+        if (this._addedBg !== parsed) {
+          this._addedBg = parsed;
+          this.rebuildView();
+        }
+      }
+      get removedBg() {
+        return this._removedBg;
+      }
+      set removedBg(value) {
+        const parsed = parseColor(value);
+        if (this._removedBg !== parsed) {
+          this._removedBg = parsed;
+          this.rebuildView();
+        }
+      }
+      get contextBg() {
+        return this._contextBg;
+      }
+      set contextBg(value) {
+        const parsed = parseColor(value);
+        if (this._contextBg !== parsed) {
+          this._contextBg = parsed;
+          this.rebuildView();
+        }
+      }
+      get addedSignColor() {
+        return this._addedSignColor;
+      }
+      set addedSignColor(value) {
+        const parsed = parseColor(value);
+        if (this._addedSignColor !== parsed) {
+          this._addedSignColor = parsed;
+          this.rebuildView();
+        }
+      }
+      get removedSignColor() {
+        return this._removedSignColor;
+      }
+      set removedSignColor(value) {
+        const parsed = parseColor(value);
+        if (this._removedSignColor !== parsed) {
+          this._removedSignColor = parsed;
+          this.rebuildView();
+        }
+      }
+      get addedLineNumberBg() {
+        return this._addedLineNumberBg;
+      }
+      set addedLineNumberBg(value) {
+        const parsed = parseColor(value);
+        if (this._addedLineNumberBg !== parsed) {
+          this._addedLineNumberBg = parsed;
+          this.rebuildView();
+        }
+      }
+      get removedLineNumberBg() {
+        return this._removedLineNumberBg;
+      }
+      set removedLineNumberBg(value) {
+        const parsed = parseColor(value);
+        if (this._removedLineNumberBg !== parsed) {
+          this._removedLineNumberBg = parsed;
+          this.rebuildView();
+        }
+      }
+      get lineNumberFg() {
+        return this._lineNumberFg;
+      }
+      set lineNumberFg(value) {
+        const parsed = parseColor(value);
+        if (this._lineNumberFg !== parsed) {
+          this._lineNumberFg = parsed;
+          this.rebuildView();
+        }
+      }
+      get lineNumberBg() {
+        return this._lineNumberBg;
+      }
+      set lineNumberBg(value) {
+        const parsed = parseColor(value);
+        if (this._lineNumberBg !== parsed) {
+          this._lineNumberBg = parsed;
+          this.rebuildView();
+        }
+      }
+      get addedContentBg() {
+        return this._addedContentBg;
+      }
+      set addedContentBg(value) {
+        const parsed = value ? parseColor(value) : null;
+        if (this._addedContentBg !== parsed) {
+          this._addedContentBg = parsed;
+          this.rebuildView();
+        }
+      }
+      get removedContentBg() {
+        return this._removedContentBg;
+      }
+      set removedContentBg(value) {
+        const parsed = value ? parseColor(value) : null;
+        if (this._removedContentBg !== parsed) {
+          this._removedContentBg = parsed;
+          this.rebuildView();
+        }
+      }
+      get contextContentBg() {
+        return this._contextContentBg;
+      }
+      set contextContentBg(value) {
+        const parsed = value ? parseColor(value) : null;
+        if (this._contextContentBg !== parsed) {
+          this._contextContentBg = parsed;
+          this.rebuildView();
+        }
+      }
+      get selectionBg() {
+        return this._selectionBg;
+      }
+      set selectionBg(value) {
+        const parsed = value ? parseColor(value) : undefined;
+        if (this._selectionBg !== parsed) {
+          this._selectionBg = parsed;
+          if (this.leftCodeRenderable) {
+            this.leftCodeRenderable.selectionBg = parsed;
+          }
+          if (this.rightCodeRenderable) {
+            this.rightCodeRenderable.selectionBg = parsed;
+          }
+        }
+      }
+      get selectionFg() {
+        return this._selectionFg;
+      }
+      set selectionFg(value) {
+        const parsed = value ? parseColor(value) : undefined;
+        if (this._selectionFg !== parsed) {
+          this._selectionFg = parsed;
+          if (this.leftCodeRenderable) {
+            this.leftCodeRenderable.selectionFg = parsed;
+          }
+          if (this.rightCodeRenderable) {
+            this.rightCodeRenderable.selectionFg = parsed;
+          }
+        }
+      }
+      get conceal() {
+        return this._conceal;
+      }
+      set conceal(value) {
+        if (this._conceal !== value) {
+          this._conceal = value;
+          this.rebuildView();
+        }
+      }
+      get fg() {
+        return this._fg;
+      }
+      set fg(value) {
+        const parsed = value ? parseColor(value) : undefined;
+        if (this._fg !== parsed) {
+          this._fg = parsed;
+          if (this.leftCodeRenderable) {
+            this.leftCodeRenderable.fg = parsed;
+          }
+          if (this.rightCodeRenderable) {
+            this.rightCodeRenderable.fg = parsed;
+          }
+        }
+      }
+      setLineColor(line, color) {
+        this.leftSide?.setLineColor(line, color);
+        this.rightSide?.setLineColor(line, color);
+      }
+      clearLineColor(line) {
+        this.leftSide?.clearLineColor(line);
+        this.rightSide?.clearLineColor(line);
+      }
+      setLineColors(lineColors) {
+        this.leftSide?.setLineColors(lineColors);
+        this.rightSide?.setLineColors(lineColors);
+      }
+      clearAllLineColors() {
+        this.leftSide?.clearAllLineColors();
+        this.rightSide?.clearAllLineColors();
+      }
+      highlightLines(startLine, endLine, color) {
+        this.leftSide?.highlightLines(startLine, endLine, color);
+        this.rightSide?.highlightLines(startLine, endLine, color);
+      }
+      clearHighlightLines(startLine, endLine) {
+        this.leftSide?.clearHighlightLines(startLine, endLine);
+        this.rightSide?.clearHighlightLines(startLine, endLine);
+      }
+      getHunkRowOffsets() {
+        if (this._hunkRowOffsets)
+          return [...this._hunkRowOffsets];
+        this._hunkRowOffsets = this.computeHunkRowOffsets();
+        return [...this._hunkRowOffsets];
+      }
+      computeHunkRowOffsets() {
+        if (this._hunkStartLines.length === 0)
+          return [];
+        const sources = this.leftCodeRenderable?.lineInfo.lineSources;
+        if (!sources || sources.length === 0)
+          return [...this._hunkStartLines];
+        const offsets = [];
+        let visualRow = 0;
+        for (const hunkStartLine of this._hunkStartLines) {
+          while (visualRow < sources.length && sources[visualRow] < hunkStartLine) {
+            visualRow++;
+          }
+          offsets.push(visualRow < sources.length ? visualRow : hunkStartLine);
+        }
+        return offsets;
+      }
+    };
+  });
+
   // vendor/js/node_modules/marked/lib/marked.esm.js
   function L() {
     return { async: false, breaks: false, extensions: null, gfm: true, hooks: null, pedantic: false, renderer: null, silent: false, tokenizer: null, walkTokens: null };
@@ -29600,3370 +34198,6 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     Nt = d.parseInline;
     Ft = b.parse;
     jt = x.lex;
-  });
-
-  // js/platform/plain-code.ts
-  function markdownHighlights(content) {
-    const captures = [];
-    const add = (start, end, group) => {
-      if (end > start)
-        captures.push([start, end, group]);
-    };
-    const hide = (start, end) => {
-      if (end > start)
-        captures.push([start, end, "conceal", { conceal: "", isInjection: true }]);
-    };
-    function inline(tokens, base) {
-      let offset2 = base;
-      for (const token of tokens) {
-        const raw = token.raw ?? "";
-        const start = content.indexOf(raw, offset2);
-        if (start < 0)
-          continue;
-        const end = start + raw.length;
-        offset2 = end;
-        const groups = { strong: "markup.strong", em: "markup.italic", del: "markup.strikethrough", codespan: "markup.raw", link: "markup.link" };
-        if (groups[token.type]) {
-          const text = token.text ?? "";
-          const relative = raw.indexOf(text);
-          if (relative >= 0) {
-            const inner = start + relative;
-            add(inner, inner + text.length, groups[token.type]);
-            hide(start, inner);
-            hide(inner + text.length, end);
-            if (token.tokens)
-              inline(token.tokens, inner);
-          }
-        } else if (token.type === "escape")
-          hide(start, start + 1);
-        else if (token.tokens)
-          inline(token.tokens, start);
-      }
-    }
-    let offset = 0;
-    for (const token of x.lex(content)) {
-      const start = content.indexOf(token.raw, offset);
-      if (start < 0)
-        continue;
-      const end = start + token.raw.length;
-      offset = end;
-      if (token.type === "heading") {
-        const relative = token.raw.indexOf(token.text);
-        if (relative >= 0) {
-          const inner = start + relative;
-          hide(start, inner);
-          add(inner, inner + token.text.length, "markup.heading");
-          hide(inner + token.text.length, end - (token.raw.endsWith(`
-`) ? 1 : 0));
-          if (token.tokens)
-            inline(token.tokens, inner);
-        }
-      } else if (token.tokens)
-        inline(token.tokens, start);
-    }
-    return captures;
-  }
-
-  class TreeSitterClient {
-    async highlightOnce(content, filetype) {
-      return { highlights: filetype === "markdown" ? markdownHighlights(content) : [] };
-    }
-  }
-  var client, getTreeSitterClient = () => client;
-  var init_plain_code = __esm(() => {
-    init_marked_esm();
-    client = new TreeSitterClient;
-  });
-
-  // vendor/opentui/packages/core/src/lib/tree-sitter-styled-text.ts
-  function getSpecificity(group) {
-    return group.split(".").length;
-  }
-  function shouldSuppressInInjection(group, meta) {
-    if (meta?.isInjection) {
-      return false;
-    }
-    return group === "markup.raw.block";
-  }
-  function treeSitterToTextChunks(content, highlights, syntaxStyle, options) {
-    const chunks = [];
-    const ranges = options?.ranges;
-    const defaultStyle = syntaxStyle.getStyle("default");
-    const concealEnabled = options?.enabled ?? true;
-    const baseStyle = options?.baseHighlight ? syntaxStyle.getStyle(options.baseHighlight) : undefined;
-    const injectionContainerRanges = [];
-    const boundaries = [];
-    for (let i = 0;i < highlights.length; i++) {
-      const [start, end, , meta] = highlights[i];
-      if (start === end)
-        continue;
-      if (meta?.containsInjection) {
-        injectionContainerRanges.push({ start, end });
-      }
-      boundaries.push({ offset: start, type: "start", highlightIndex: i });
-      boundaries.push({ offset: end, type: "end", highlightIndex: i });
-    }
-    boundaries.sort((a, b2) => {
-      if (a.offset !== b2.offset)
-        return a.offset - b2.offset;
-      if (a.type === "end" && b2.type === "start")
-        return -1;
-      if (a.type === "start" && b2.type === "end")
-        return 1;
-      return 0;
-    });
-    const activeHighlights = new Set;
-    let currentOffset = 0;
-    for (let i = 0;i < boundaries.length; i++) {
-      const boundary = boundaries[i];
-      if (currentOffset < boundary.offset && activeHighlights.size > 0) {
-        const segmentText = content.slice(currentOffset, boundary.offset);
-        const activeGroups = [];
-        for (const idx of activeHighlights) {
-          const [, , group, meta] = highlights[idx];
-          activeGroups.push({ group, meta, index: idx });
-        }
-        const concealHighlight = concealEnabled ? activeGroups.find((h) => h.meta?.conceal !== undefined || h.group === "conceal" || h.group.startsWith("conceal.")) : undefined;
-        if (concealHighlight) {
-          let replacementText = "";
-          if (concealHighlight.meta?.conceal !== undefined) {
-            replacementText = concealHighlight.meta.conceal;
-          } else if (concealHighlight.group === "conceal.with.space") {
-            replacementText = " ";
-          }
-          if (replacementText) {
-            chunks.push({
-              __isChunk: true,
-              text: replacementText,
-              fg: defaultStyle?.fg,
-              bg: defaultStyle?.bg,
-              attributes: defaultStyle ? createTextAttributes({
-                bold: defaultStyle.bold,
-                italic: defaultStyle.italic,
-                underline: defaultStyle.underline,
-                dim: defaultStyle.dim
-              }) : 0
-            });
-            ranges?.push({ start: currentOffset, end: boundary.offset });
-          }
-        } else {
-          const insideInjectionContainer = injectionContainerRanges.some((range) => currentOffset >= range.start && currentOffset < range.end);
-          const validGroups = activeGroups.filter((h) => {
-            if (insideInjectionContainer && shouldSuppressInInjection(h.group, h.meta)) {
-              return false;
-            }
-            return true;
-          });
-          const sortedGroups = validGroups.sort((a, b2) => {
-            const aSpec = getSpecificity(a.group);
-            const bSpec = getSpecificity(b2.group);
-            if (aSpec !== bSpec)
-              return aSpec - bSpec;
-            return a.index - b2.index;
-          });
-          const mergedStyle = baseStyle ? { ...baseStyle } : {};
-          for (const { group } of sortedGroups) {
-            let styleForGroup = syntaxStyle.getStyle(group);
-            if (!styleForGroup && group.includes(".")) {
-              const baseName = group.split(".")[0];
-              styleForGroup = syntaxStyle.getStyle(baseName);
-            }
-            if (styleForGroup) {
-              if (styleForGroup.fg !== undefined)
-                mergedStyle.fg = styleForGroup.fg;
-              if (styleForGroup.bg !== undefined)
-                mergedStyle.bg = styleForGroup.bg;
-              if (styleForGroup.bold !== undefined)
-                mergedStyle.bold = styleForGroup.bold;
-              if (styleForGroup.italic !== undefined)
-                mergedStyle.italic = styleForGroup.italic;
-              if (styleForGroup.underline !== undefined)
-                mergedStyle.underline = styleForGroup.underline;
-              if (styleForGroup.dim !== undefined)
-                mergedStyle.dim = styleForGroup.dim;
-            } else {
-              if (group.includes(".")) {
-                const baseName = group.split(".")[0];
-                if (env.OTUI_TS_STYLE_WARN) {
-                  console.warn(`Syntax style not found for group "${group}" or base scope "${baseName}", using default style`);
-                }
-              } else {
-                if (env.OTUI_TS_STYLE_WARN) {
-                  console.warn(`Syntax style not found for group "${group}", using default style`);
-                }
-              }
-            }
-          }
-          const finalStyle = Object.keys(mergedStyle).length > 0 ? mergedStyle : defaultStyle;
-          chunks.push({
-            __isChunk: true,
-            text: segmentText,
-            fg: finalStyle?.fg,
-            bg: finalStyle?.bg,
-            attributes: finalStyle ? createTextAttributes({
-              bold: finalStyle.bold,
-              italic: finalStyle.italic,
-              underline: finalStyle.underline,
-              dim: finalStyle.dim
-            }) : 0
-          });
-          ranges?.push({ start: currentOffset, end: boundary.offset });
-        }
-      } else if (currentOffset < boundary.offset) {
-        const text = content.slice(currentOffset, boundary.offset);
-        const style = baseStyle ?? defaultStyle;
-        chunks.push({
-          __isChunk: true,
-          text,
-          fg: style?.fg,
-          bg: style?.bg,
-          attributes: style ? createTextAttributes({
-            bold: style.bold,
-            italic: style.italic,
-            underline: style.underline,
-            dim: style.dim
-          }) : 0
-        });
-        ranges?.push({ start: currentOffset, end: boundary.offset });
-      }
-      if (boundary.type === "start") {
-        activeHighlights.add(boundary.highlightIndex);
-      } else {
-        activeHighlights.delete(boundary.highlightIndex);
-        if (concealEnabled) {
-          const [, , group, meta] = highlights[boundary.highlightIndex];
-          if (meta?.concealLines !== undefined) {
-            if (boundary.offset < content.length && content[boundary.offset] === `
-`) {
-              currentOffset = boundary.offset + 1;
-              continue;
-            }
-          }
-          if (meta?.conceal !== undefined) {
-            if (meta.conceal === " ") {
-              if (boundary.offset < content.length && content[boundary.offset] === " ") {
-                currentOffset = boundary.offset + 1;
-                continue;
-              }
-            } else if (meta.conceal === "" && group === "conceal" && !meta.isInjection) {
-              if (boundary.offset < content.length && content[boundary.offset] === " ") {
-                currentOffset = boundary.offset + 1;
-                continue;
-              }
-            }
-          }
-        }
-      }
-      currentOffset = boundary.offset;
-    }
-    if (currentOffset < content.length) {
-      const text = content.slice(currentOffset);
-      const style = baseStyle ?? defaultStyle;
-      chunks.push({
-        __isChunk: true,
-        text,
-        fg: style?.fg,
-        bg: style?.bg,
-        attributes: style ? createTextAttributes({
-          bold: style.bold,
-          italic: style.italic,
-          underline: style.underline,
-          dim: style.dim
-        }) : 0
-      });
-      ranges?.push({ start: currentOffset, end: content.length });
-    }
-    return chunks;
-  }
-  var init_tree_sitter_styled_text = __esm(() => {
-    init_styled_text();
-    init_utils();
-    init_env();
-    registerEnvVar({ name: "OTUI_TS_STYLE_WARN", default: false, description: "Enable warnings for missing syntax styles" });
-  });
-
-  // vendor/opentui/packages/core/src/renderables/Code.ts
-  var CodeRenderable;
-  var init_Code = __esm(() => {
-    init_styled_text();
-    init_plain_code();
-    init_TextBufferRenderable();
-    init_tree_sitter_styled_text();
-    CodeRenderable = class CodeRenderable extends TextBufferRenderable {
-      _content;
-      _filetype;
-      _syntaxStyle;
-      _isHighlighting = false;
-      _treeSitterClient;
-      _highlightsDirty = false;
-      _highlightSnapshotId = 0;
-      _highlightLoopActive = false;
-      _highlightPromise;
-      _highlightRerun = false;
-      _conceal;
-      _drawUnstyledText;
-      _shouldRenderTextBuffer = true;
-      _streaming;
-      _initialStyledText;
-      _hadInitialContent = false;
-      _lastHighlights = [];
-      _baseHighlight;
-      _onHighlight;
-      _onChunks;
-      _highlightingPromise = Promise.resolve();
-      _renderedLineSources;
-      _mappedLineInfo;
-      _contentDefaultOptions = {
-        content: "",
-        conceal: true,
-        drawUnstyledText: true,
-        streaming: false
-      };
-      constructor(ctx, options) {
-        super(ctx, options);
-        this._content = options.content ?? this._contentDefaultOptions.content;
-        this._filetype = options.filetype;
-        this._syntaxStyle = options.syntaxStyle;
-        this._treeSitterClient = options.treeSitterClient ?? getTreeSitterClient();
-        this._conceal = options.conceal ?? this._contentDefaultOptions.conceal;
-        this._drawUnstyledText = options.drawUnstyledText ?? this._contentDefaultOptions.drawUnstyledText;
-        this._streaming = options.streaming ?? this._contentDefaultOptions.streaming;
-        this._initialStyledText = options.initialStyledText;
-        this._baseHighlight = options.baseHighlight;
-        this._onHighlight = options.onHighlight;
-        this._onChunks = options.onChunks;
-        if (this._content.length > 0) {
-          if (this._initialStyledText && this._drawUnstyledText) {
-            this.textBuffer.setStyledText(this._initialStyledText);
-          } else {
-            this.textBuffer.setText(this._content);
-          }
-          this.updateTextInfo();
-          this._shouldRenderTextBuffer = this._drawUnstyledText || !this._filetype;
-        }
-        this._highlightsDirty = this._content.length > 0;
-      }
-      get content() {
-        return this._content;
-      }
-      invalidateHighlights() {
-        this._highlightsDirty = true;
-        this._highlightSnapshotId++;
-      }
-      set content(value) {
-        if (this._content !== value) {
-          this._content = value;
-          this.invalidateHighlights();
-          if (this._streaming && this._filetype && !this._drawUnstyledText) {
-            this.requestRender();
-            return;
-          }
-          if (value && this._initialStyledText && this._drawUnstyledText) {
-            this.textBuffer.setStyledText(this._initialStyledText);
-          } else {
-            this.textBuffer.setText(value);
-          }
-          this.setRenderedLineSources(undefined);
-          this.updateTextInfo();
-        }
-      }
-      updateStreamingPreview(content, initialStyledText) {
-        this._content = content;
-        this._initialStyledText = initialStyledText;
-        this.invalidateHighlights();
-        this.textBuffer.setStyledText(initialStyledText);
-        this.setRenderedLineSources(undefined);
-        this.updateTextInfo();
-      }
-      get lineInfo() {
-        if (!this._renderedLineSources)
-          return super.lineInfo;
-        if (this._mappedLineInfo)
-          return this._mappedLineInfo;
-        const lineInfo = super.lineInfo;
-        const renderedLineSources = this._renderedLineSources;
-        this._mappedLineInfo = {
-          ...lineInfo,
-          lineSources: lineInfo.lineSources.map((line) => renderedLineSources[line] ?? line)
-        };
-        return this._mappedLineInfo;
-      }
-      getLineSources(startLine, lineCount) {
-        if (this.needsLineInfoFallback(CodeRenderable.prototype)) {
-          return this.lineInfo.lineSources.slice(startLine, startLine + lineCount);
-        }
-        const sources = this.textBufferView.getLineSources(startLine, lineCount);
-        const renderedLineSources = this._renderedLineSources;
-        return renderedLineSources ? sources.map((line) => renderedLineSources[line] ?? line) : sources;
-      }
-      get wrapMode() {
-        return super.wrapMode;
-      }
-      set wrapMode(value) {
-        if (super.wrapMode !== value) {
-          this._mappedLineInfo = undefined;
-          super.wrapMode = value;
-        }
-      }
-      onResize(width, height) {
-        this._mappedLineInfo = undefined;
-        super.onResize(width, height);
-      }
-      updateTextInfo() {
-        this._mappedLineInfo = undefined;
-        super.updateTextInfo();
-      }
-      get filetype() {
-        return this._filetype;
-      }
-      set filetype(value) {
-        if (this._filetype !== value) {
-          this._filetype = value;
-          this.invalidateHighlights();
-        }
-      }
-      get syntaxStyle() {
-        return this._syntaxStyle;
-      }
-      set syntaxStyle(value) {
-        if (this._syntaxStyle !== value) {
-          this._syntaxStyle = value;
-          this.invalidateHighlights();
-        }
-      }
-      get conceal() {
-        return this._conceal;
-      }
-      set conceal(value) {
-        if (this._conceal !== value) {
-          this._conceal = value;
-          this.invalidateHighlights();
-        }
-      }
-      get drawUnstyledText() {
-        return this._drawUnstyledText;
-      }
-      set drawUnstyledText(value) {
-        if (this._drawUnstyledText !== value) {
-          this._drawUnstyledText = value;
-          this.invalidateHighlights();
-        }
-      }
-      get streaming() {
-        return this._streaming;
-      }
-      set initialStyledText(value) {
-        if (this._initialStyledText !== value) {
-          if (value && this._streaming && this._drawUnstyledText && this._isHighlighting) {
-            this.updateStreamingPreview(this._content, value);
-            return;
-          }
-          this._initialStyledText = value;
-          this.invalidateHighlights();
-        }
-      }
-      set streaming(value) {
-        if (this._streaming !== value) {
-          this._streaming = value;
-          this._hadInitialContent = false;
-          this._lastHighlights = [];
-          this.invalidateHighlights();
-        }
-      }
-      get treeSitterClient() {
-        return this._treeSitterClient;
-      }
-      set treeSitterClient(value) {
-        if (this._treeSitterClient !== value) {
-          this._treeSitterClient = value;
-          this.invalidateHighlights();
-        }
-      }
-      get onHighlight() {
-        return this._onHighlight;
-      }
-      get baseHighlight() {
-        return this._baseHighlight;
-      }
-      set baseHighlight(value) {
-        if (this._baseHighlight !== value) {
-          this._baseHighlight = value;
-          this.invalidateHighlights();
-        }
-      }
-      set onHighlight(value) {
-        if (this._onHighlight !== value) {
-          this._onHighlight = value;
-          this.invalidateHighlights();
-        }
-      }
-      get onChunks() {
-        return this._onChunks;
-      }
-      set onChunks(value) {
-        if (this._onChunks !== value) {
-          this._onChunks = value;
-          this.invalidateHighlights();
-        }
-      }
-      get isHighlighting() {
-        return this._isHighlighting || this._highlightRerun;
-      }
-      get highlightingDone() {
-        return this._highlightingPromise;
-      }
-      async transformChunks(chunks, context) {
-        if (!this._onChunks)
-          return chunks;
-        const modified = await this._onChunks(chunks, context);
-        return modified ?? chunks;
-      }
-      ensureVisibleTextBeforeHighlight() {
-        if (this.isDestroyed)
-          return;
-        const content = this._content;
-        if (!this._filetype) {
-          this._shouldRenderTextBuffer = true;
-          return;
-        }
-        const isInitialContent = this._streaming && !this._hadInitialContent;
-        const shouldDrawUnstyledNow = this._streaming ? isInitialContent && this._drawUnstyledText : this._drawUnstyledText;
-        if (this._streaming && !isInitialContent) {
-          this._shouldRenderTextBuffer = true;
-        } else if (shouldDrawUnstyledNow) {
-          if (this._initialStyledText) {
-            this.textBuffer.setStyledText(this._initialStyledText);
-          } else {
-            this.textBuffer.setText(content);
-          }
-          this.setRenderedLineSources(undefined);
-          this._shouldRenderTextBuffer = true;
-        } else {
-          this._shouldRenderTextBuffer = false;
-        }
-      }
-      async startHighlight() {
-        const content = this._content;
-        const filetype = this._filetype;
-        const snapshotId = ++this._highlightSnapshotId;
-        if (!filetype)
-          return;
-        const isInitialContent = this._streaming && !this._hadInitialContent;
-        if (isInitialContent) {
-          this._hadInitialContent = true;
-        }
-        this._isHighlighting = true;
-        try {
-          const result = await this._treeSitterClient.highlightOnce(content, filetype);
-          if (snapshotId !== this._highlightSnapshotId) {
-            this.requestRender();
-            return;
-          }
-          if (this.isDestroyed)
-            return;
-          let highlights = result.highlights ?? [];
-          if (this._onHighlight && highlights.length >= 0) {
-            const context = {
-              content,
-              filetype,
-              syntaxStyle: this._syntaxStyle
-            };
-            const modified = await this._onHighlight(highlights, context);
-            if (modified !== undefined) {
-              highlights = modified;
-            }
-          }
-          if (snapshotId !== this._highlightSnapshotId) {
-            this.requestRender();
-            return;
-          }
-          if (this.isDestroyed)
-            return;
-          if (highlights.length > 0) {
-            if (this._streaming) {
-              this._lastHighlights = highlights;
-            }
-          }
-          if (highlights.length > 0 || this._onChunks || this._baseHighlight) {
-            const sourceRanges = this._onChunks ? [] : undefined;
-            const context = {
-              content,
-              filetype,
-              syntaxStyle: this._syntaxStyle,
-              highlights,
-              sourceRanges
-            };
-            let chunks = treeSitterToTextChunks(content, highlights, this._syntaxStyle, {
-              enabled: this._conceal,
-              baseHighlight: this._baseHighlight,
-              ranges: sourceRanges
-            });
-            const renderedLineSources = this._onChunks ? undefined : this.getConcealLinesSourceMap(content, highlights);
-            chunks = await this.transformChunks(chunks, context);
-            if (snapshotId !== this._highlightSnapshotId) {
-              this.requestRender();
-              return;
-            }
-            if (this.isDestroyed)
-              return;
-            const styledText = new StyledText(chunks);
-            this.textBuffer.setStyledText(styledText);
-            this.setRenderedLineSources(renderedLineSources);
-          } else {
-            this.textBuffer.setText(content);
-            this.setRenderedLineSources(undefined);
-          }
-          this._shouldRenderTextBuffer = true;
-          this._isHighlighting = false;
-          this._highlightsDirty = false;
-          this.updateTextInfo();
-          this.requestRender();
-        } catch (error) {
-          if (snapshotId !== this._highlightSnapshotId) {
-            this.requestRender();
-            return;
-          }
-          console.warn("Code highlighting failed, falling back to plain text:", error);
-          if (this.isDestroyed)
-            return;
-          this.textBuffer.setText(content);
-          this.setRenderedLineSources(undefined);
-          this._shouldRenderTextBuffer = true;
-          this._isHighlighting = false;
-          this._highlightsDirty = false;
-          this.updateTextInfo();
-          this.requestRender();
-        }
-      }
-      async runHighlights() {
-        try {
-          do {
-            this._highlightRerun = false;
-            await this.startHighlight();
-          } while (this._highlightRerun && !this.isDestroyed && this._content.length > 0 && this._filetype);
-        } finally {
-          this._highlightLoopActive = false;
-          this._highlightRerun = false;
-        }
-      }
-      clearPendingHighlight() {
-        this._highlightSnapshotId++;
-        this._isHighlighting = false;
-        this._highlightRerun = false;
-        this._highlightingPromise = Promise.resolve();
-      }
-      setRenderedLineSources(lineSources) {
-        this._renderedLineSources = lineSources;
-        this._mappedLineInfo = undefined;
-      }
-      static isIdentityLineSources(lineSources) {
-        for (let i = 0;i < lineSources.length; i++) {
-          if (lineSources[i] !== i)
-            return false;
-        }
-        return true;
-      }
-      static getMergedConcealLineRanges(highlights) {
-        const ranges = [];
-        for (const highlight of highlights) {
-          const meta = highlight[3];
-          if (meta?.concealLines === undefined)
-            continue;
-          const group = highlight[2];
-          const isEmptyConceal = meta.conceal === "" || meta.conceal === undefined && (group === "conceal" || group.startsWith("conceal."));
-          if (isEmptyConceal) {
-            ranges.push([highlight[0], highlight[1]]);
-          }
-        }
-        if (ranges.length <= 1)
-          return ranges;
-        ranges.sort((a, b2) => a[0] - b2[0]);
-        let writeIndex = 0;
-        for (let i = 1;i < ranges.length; i++) {
-          const current = ranges[writeIndex];
-          const next = ranges[i];
-          if (next[0] <= current[1]) {
-            current[1] = Math.max(current[1], next[1]);
-          } else {
-            writeIndex++;
-            ranges[writeIndex] = next;
-          }
-        }
-        ranges.length = writeIndex + 1;
-        return ranges;
-      }
-      getConcealLinesSourceMap(content, highlights) {
-        if (!this._conceal || content.length === 0)
-          return;
-        const concealLineRanges = CodeRenderable.getMergedConcealLineRanges(highlights);
-        if (concealLineRanges.length === 0)
-          return;
-        const lineSources = [];
-        let sourceLine = 0;
-        let lineStart = 0;
-        let rangeIndex = 0;
-        let currentRenderedLineHasText = false;
-        const setCurrentRenderedLineSource = (line, hasText) => {
-          if (lineSources.length === 0) {
-            lineSources.push(line);
-          } else if (!currentRenderedLineHasText) {
-            lineSources[lineSources.length - 1] = line;
-          }
-          if (hasText)
-            currentRenderedLineHasText = true;
-        };
-        while (lineStart <= content.length) {
-          const newlineOffset = content.indexOf(`
-`, lineStart);
-          const lineEnd = newlineOffset === -1 ? content.length : newlineOffset;
-          while (rangeIndex < concealLineRanges.length && concealLineRanges[rangeIndex][1] <= lineStart) {
-            rangeIndex++;
-          }
-          const range = concealLineRanges[rangeIndex];
-          const fullyConcealed = !!range && lineEnd > lineStart && range[0] <= lineStart && range[1] >= lineEnd;
-          const lineBreakConcealed = newlineOffset !== -1 && !!range && range[0] <= newlineOffset && range[1] >= newlineOffset;
-          if (!fullyConcealed || !lineBreakConcealed) {
-            const hasText = lineEnd > lineStart && !fullyConcealed;
-            if (hasText || newlineOffset !== -1 || !fullyConcealed) {
-              setCurrentRenderedLineSource(sourceLine, hasText);
-            }
-            if (newlineOffset !== -1 && !lineBreakConcealed) {
-              lineSources.push(sourceLine + 1);
-              currentRenderedLineHasText = false;
-            }
-          }
-          sourceLine++;
-          if (newlineOffset === -1)
-            break;
-          lineStart = newlineOffset + 1;
-        }
-        if (lineSources.length === 0 || CodeRenderable.isIdentityLineSources(lineSources))
-          return;
-        return lineSources;
-      }
-      getLineHighlights(lineIdx) {
-        return this.textBuffer.getLineHighlights(lineIdx);
-      }
-      renderSelf(buffer) {
-        if (this._highlightsDirty) {
-          if (this.isDestroyed)
-            return;
-          const hasContent = this._content.length > 0;
-          if (!hasContent || !this._filetype) {
-            this._shouldRenderTextBuffer = hasContent;
-            this._highlightsDirty = false;
-            this.clearPendingHighlight();
-            if (hasContent) {
-              this.textBuffer.setText(this._content);
-              this.setRenderedLineSources(undefined);
-              this.updateTextInfo();
-            }
-          } else {
-            this.ensureVisibleTextBeforeHighlight();
-            this._highlightsDirty = false;
-            if (this._highlightLoopActive) {
-              this._isHighlighting = true;
-              this._highlightRerun = true;
-              this._highlightingPromise = this._highlightPromise;
-            } else {
-              const { promise: highlightingPromise, resolve, reject } = Promise.withResolvers();
-              this._highlightLoopActive = true;
-              this._highlightPromise = highlightingPromise;
-              this._highlightingPromise = highlightingPromise;
-              const clearHighlight = () => {
-                if (this._highlightPromise === highlightingPromise) {
-                  this._highlightPromise = undefined;
-                }
-              };
-              this.runHighlights().then(() => {
-                clearHighlight();
-                resolve();
-              }, (error) => {
-                clearHighlight();
-                reject(error);
-              });
-            }
-          }
-        }
-        if (!this._shouldRenderTextBuffer)
-          return;
-        super.renderSelf(buffer);
-      }
-      destroy() {
-        if (this.isDestroyed)
-          return;
-        this.clearPendingHighlight();
-        super.destroy();
-      }
-    };
-  });
-
-  // vendor/opentui/packages/core/src/renderables/LineNumberRenderable.ts
-  function getLineSources(target, startLine, lineCount) {
-    return target.getLineSources ? target.getLineSources(startLine, lineCount) : target.lineInfo.lineSources.slice(startLine, startLine + lineCount);
-  }
-  function darkenColor(color) {
-    return RGBA.fromValues(color.r * 0.8, color.g * 0.8, color.b * 0.8, color.a);
-  }
-  var DEFAULT_GUTTER_FG = "#888888", DEFAULT_GUTTER_BG = "transparent", GutterRenderable, LineNumberRenderable;
-  var init_LineNumberRenderable = __esm(() => {
-    init_Renderable();
-    init_buffer();
-    init_RGBA();
-    init_runtime();
-    GutterRenderable = class GutterRenderable extends Renderable {
-      target;
-      _fg;
-      _bg;
-      _minWidth;
-      _paddingRight;
-      _lineColorsGutter;
-      _lineColorsContent;
-      _lineSigns;
-      _lineNumberOffset;
-      _hideLineNumbers;
-      _lineNumbers;
-      _maxBeforeWidth = 0;
-      _maxAfterWidth = 0;
-      _lastKnownLineCount = 0;
-      _paintedSources;
-      _paintedSourceOffset = 0;
-      constructor(ctx, target, options) {
-        super(ctx, {
-          id: options.id,
-          width: "auto",
-          height: "auto",
-          flexGrow: 0,
-          flexShrink: 0,
-          buffered: true
-        });
-        this.target = target;
-        this._fg = options.fg;
-        this._bg = options.bg;
-        this._minWidth = options.minWidth;
-        this._paddingRight = options.paddingRight;
-        this._lineColorsGutter = options.lineColorsGutter;
-        this._lineColorsContent = options.lineColorsContent;
-        this._lineSigns = options.lineSigns;
-        this._lineNumberOffset = options.lineNumberOffset;
-        this._hideLineNumbers = options.hideLineNumbers;
-        this._lineNumbers = options.lineNumbers ?? new Map;
-        this._lastKnownLineCount = this.target.virtualLineCount;
-        this.calculateSignWidths();
-        this.setupMeasureFunc();
-        this.onLifecyclePass = () => {
-          const currentLineCount = this.target.virtualLineCount;
-          if (currentLineCount !== this._lastKnownLineCount) {
-            this._lastKnownLineCount = currentLineCount;
-            this.yogaNode.markDirty();
-            this.requestRender();
-          }
-        };
-      }
-      setupMeasureFunc() {
-        const measureFunc = (width, widthMode, height, heightMode) => {
-          const gutterWidth = this.calculateWidth();
-          const gutterHeight = this.target.virtualLineCount;
-          return {
-            width: gutterWidth,
-            height: gutterHeight
-          };
-        };
-        this.yogaNode.setMeasureFunc(measureFunc);
-      }
-      remeasure() {
-        this.yogaNode.markDirty();
-      }
-      setLineNumberOffset(offset) {
-        if (this._lineNumberOffset !== offset) {
-          this._lineNumberOffset = offset;
-          this.yogaNode.markDirty();
-          this.requestRender();
-        }
-      }
-      setHideLineNumbers(hideLineNumbers) {
-        this._hideLineNumbers = hideLineNumbers;
-        this.yogaNode.markDirty();
-        this.requestRender();
-      }
-      setLineNumbers(lineNumbers) {
-        this._lineNumbers = lineNumbers;
-        this.yogaNode.markDirty();
-        this.requestRender();
-      }
-      calculateSignWidths() {
-        this._maxBeforeWidth = 0;
-        this._maxAfterWidth = 0;
-        for (const sign of this._lineSigns.values()) {
-          if (sign.before) {
-            const width = stringWidth(sign.before);
-            this._maxBeforeWidth = Math.max(this._maxBeforeWidth, width);
-          }
-          if (sign.after) {
-            const width = stringWidth(sign.after);
-            this._maxAfterWidth = Math.max(this._maxAfterWidth, width);
-          }
-        }
-      }
-      calculateWidth() {
-        const totalLines = this.target.virtualLineCount;
-        let maxLineNumber = totalLines + this._lineNumberOffset;
-        if (this._lineNumbers.size > 0) {
-          for (const customLineNum of this._lineNumbers.values()) {
-            maxLineNumber = Math.max(maxLineNumber, customLineNum);
-          }
-        }
-        const digits = maxLineNumber > 0 ? Math.floor(Math.log10(maxLineNumber)) + 1 : 1;
-        const baseWidth = Math.max(this._minWidth, digits + this._paddingRight + 1);
-        return baseWidth + this._maxBeforeWidth + this._maxAfterWidth;
-      }
-      setLineColors(lineColorsGutter, lineColorsContent) {
-        this._lineColorsGutter = lineColorsGutter;
-        this._lineColorsContent = lineColorsContent;
-        this.requestRender();
-      }
-      get fg() {
-        return this._fg;
-      }
-      setFg(fg2) {
-        if (this._fg !== fg2) {
-          this._fg = fg2;
-          this.requestRender();
-        }
-      }
-      get bg() {
-        return this._bg;
-      }
-      setBg(bg) {
-        if (this._bg !== bg) {
-          this._bg = bg;
-          this.requestRender();
-        }
-      }
-      getLineColors() {
-        return {
-          gutter: this._lineColorsGutter,
-          content: this._lineColorsContent
-        };
-      }
-      setLineSigns(lineSigns) {
-        const oldMaxBefore = this._maxBeforeWidth;
-        const oldMaxAfter = this._maxAfterWidth;
-        this._lineSigns = lineSigns;
-        this.calculateSignWidths();
-        if (this._maxBeforeWidth !== oldMaxBefore || this._maxAfterWidth !== oldMaxAfter) {
-          this.yogaNode.markDirty();
-        }
-        this.requestRender();
-      }
-      getLineSigns() {
-        return this._lineSigns;
-      }
-      createFrameBuffer() {}
-      handleFrameBufferResize() {}
-      render(buffer, deltaTime) {
-        const x2 = this._screenX;
-        const y2 = Math.trunc(this._screenY);
-        const start = Math.max(0, -y2);
-        const end = Math.min(this.height, buffer.height - y2);
-        if (end <= start || x2 >= buffer.width || x2 + this.width <= 0)
-          return;
-        if (!this.frameBuffer) {
-          this.frameBuffer = OptimizedBuffer.create(this.width, end - start, this._ctx.widthMethod, {
-            respectAlpha: true,
-            id: `framebuffer-${this.id}`
-          });
-        } else if (this.frameBuffer.width !== this.width || this.frameBuffer.height !== end - start) {
-          this.frameBuffer.resize(this.width, end - start);
-          this._paintedSources = undefined;
-        }
-        this.refreshFrameBuffer(this.frameBuffer, Math.trunc(this.target.scrollY) + start);
-        this.markClean();
-        this._ctx.addToHitGrid(x2, this._screenY, this.width, this.height, this.num);
-        buffer.drawFrameBuffer(x2, y2 + start, this.frameBuffer);
-      }
-      refreshFrameBuffer(buffer, startLine) {
-        const sourceStart = Math.max(0, startLine - 1);
-        const sourceOffset = startLine - sourceStart;
-        const sources = getLineSources(this.target, sourceStart, buffer.height + sourceOffset);
-        const paintedSources = this._paintedSources;
-        if (!this.isDirty && sourceOffset === this._paintedSourceOffset && paintedSources && sources.length === paintedSources.length && sources.every((source, i) => source === paintedSources[i])) {
-          return;
-        }
-        buffer.clear(this._bg);
-        let lastSource = sourceOffset > 0 ? sources[0] : -1;
-        for (let i = 0;i < buffer.height; i++) {
-          const visualLineIndex = sourceOffset + i;
-          if (visualLineIndex >= sources.length)
-            break;
-          const logicalLine = sources[visualLineIndex];
-          const lineBg = this._lineColorsGutter.get(logicalLine) ?? this._bg;
-          if (lineBg !== this._bg) {
-            buffer.fillRect(0, i, this.width, 1, lineBg);
-          }
-          if (logicalLine === lastSource) {} else {
-            let currentX = 0;
-            const sign = this._lineSigns.get(logicalLine);
-            if (sign?.before) {
-              const beforeWidth = stringWidth(sign.before);
-              const padding = this._maxBeforeWidth - beforeWidth;
-              currentX += padding;
-              const beforeColor = sign.beforeColor ? parseColor(sign.beforeColor) : this._fg;
-              buffer.drawText(sign.before, currentX, i, beforeColor, lineBg);
-              currentX += beforeWidth;
-            } else if (this._maxBeforeWidth > 0) {
-              currentX += this._maxBeforeWidth;
-            }
-            if (!this._hideLineNumbers.has(logicalLine)) {
-              const customLineNum = this._lineNumbers.get(logicalLine);
-              const lineNum = customLineNum !== undefined ? customLineNum : logicalLine + 1 + this._lineNumberOffset;
-              const lineNumStr = lineNum.toString();
-              const lineNumWidth = lineNumStr.length;
-              const availableSpace = this.width - this._maxBeforeWidth - this._maxAfterWidth - this._paddingRight;
-              const lineNumX = this._maxBeforeWidth + 1 + availableSpace - lineNumWidth - 1;
-              if (lineNumX >= this._maxBeforeWidth + 1) {
-                buffer.drawText(lineNumStr, lineNumX, i, this._fg, lineBg);
-              }
-            }
-            if (sign?.after) {
-              const afterX = this.width - this._paddingRight - this._maxAfterWidth;
-              const afterColor = sign.afterColor ? parseColor(sign.afterColor) : this._fg;
-              buffer.drawText(sign.after, afterX, i, afterColor, lineBg);
-            }
-          }
-          lastSource = logicalLine;
-        }
-        this._paintedSources = sources.slice();
-        this._paintedSourceOffset = sourceOffset;
-      }
-    };
-    LineNumberRenderable = class LineNumberRenderable extends Renderable {
-      gutter = null;
-      target = null;
-      _lineColorsGutter;
-      _lineColorsContent;
-      _lineSigns;
-      _fg;
-      _bg;
-      _minWidth;
-      _paddingRight;
-      _lineNumberOffset;
-      _hideLineNumbers;
-      _lineNumbers;
-      _isDestroying = false;
-      handleLineInfoChange = () => {
-        this.gutter?.remeasure();
-        this.requestRender();
-      };
-      parseLineColor(line, color) {
-        if (typeof color === "object" && "gutter" in color) {
-          const config = color;
-          if (config.gutter) {
-            this._lineColorsGutter.set(line, parseColor(config.gutter));
-          }
-          if (config.content) {
-            this._lineColorsContent.set(line, parseColor(config.content));
-          } else if (config.gutter) {
-            this._lineColorsContent.set(line, darkenColor(parseColor(config.gutter)));
-          }
-        } else {
-          const parsedColor = parseColor(color);
-          this._lineColorsGutter.set(line, parsedColor);
-          this._lineColorsContent.set(line, darkenColor(parsedColor));
-        }
-      }
-      constructor(ctx, options) {
-        super(ctx, {
-          ...options,
-          flexDirection: "row",
-          height: "auto"
-        });
-        this._fg = parseColor(options.fg ?? DEFAULT_GUTTER_FG);
-        this._bg = parseColor(options.bg ?? DEFAULT_GUTTER_BG);
-        this._minWidth = options.minWidth ?? 3;
-        this._paddingRight = options.paddingRight ?? 1;
-        this._lineNumberOffset = options.lineNumberOffset ?? 0;
-        this._hideLineNumbers = options.hideLineNumbers ?? new Set;
-        this._lineNumbers = options.lineNumbers ?? new Map;
-        this._lineColorsGutter = new Map;
-        this._lineColorsContent = new Map;
-        if (options.lineColors) {
-          for (const [line, color] of options.lineColors) {
-            this.parseLineColor(line, color);
-          }
-        }
-        this._lineSigns = new Map;
-        if (options.lineSigns) {
-          for (const [line, sign] of options.lineSigns) {
-            this._lineSigns.set(line, sign);
-          }
-        }
-        if (options.target) {
-          this.setTarget(options.target);
-        }
-      }
-      setTarget(target) {
-        if (this.target === target)
-          return;
-        if (this.target) {
-          this.target.off("line-info-change", this.handleLineInfoChange);
-          super.remove(this.target);
-        }
-        if (this.gutter) {
-          super.remove(this.gutter);
-          this.gutter = null;
-        }
-        this.target = target;
-        this.target.on("line-info-change", this.handleLineInfoChange);
-        this.gutter = new GutterRenderable(this.ctx, this.target, {
-          fg: this._fg,
-          bg: this._bg,
-          minWidth: this._minWidth,
-          paddingRight: this._paddingRight,
-          lineColorsGutter: this._lineColorsGutter,
-          lineColorsContent: this._lineColorsContent,
-          lineSigns: this._lineSigns,
-          lineNumberOffset: this._lineNumberOffset,
-          hideLineNumbers: this._hideLineNumbers,
-          lineNumbers: this._lineNumbers,
-          id: this.id ? `${this.id}-gutter` : undefined
-        });
-        super.add(this.gutter);
-        super.add(this.target);
-      }
-      add(child) {
-        if (!this.target && "lineInfo" in child && "lineCount" in child && "virtualLineCount" in child && "scrollY" in child) {
-          this.setTarget(child);
-          return this.getChildrenCount() - 1;
-        }
-        return -1;
-      }
-      remove(child) {
-        if (this._isDestroying) {
-          super.remove(child);
-          return;
-        }
-        if (this.gutter && child === this.gutter) {
-          throw new Error("LineNumberRenderable: Cannot remove gutter directly.");
-        }
-        if (this.target && child === this.target) {
-          throw new Error("LineNumberRenderable: Cannot remove target directly. Use clearTarget() instead.");
-        }
-        super.remove(child);
-      }
-      destroyRecursively() {
-        this._isDestroying = true;
-        if (this.target) {
-          this.target.off("line-info-change", this.handleLineInfoChange);
-        }
-        super.destroyRecursively();
-        this.gutter = null;
-        this.target = null;
-      }
-      clearTarget() {
-        if (this.target) {
-          this.target.off("line-info-change", this.handleLineInfoChange);
-          super.remove(this.target);
-          this.target = null;
-        }
-        if (this.gutter) {
-          super.remove(this.gutter);
-          this.gutter = null;
-        }
-      }
-      renderSelf(buffer) {
-        if (!this.target || !this.gutter || this._lineColorsContent.size === 0)
-          return;
-        const y2 = Math.trunc(this.y);
-        const start = Math.max(0, -y2);
-        const end = Math.min(this.height, buffer.height - y2);
-        if (end <= start || this.x >= buffer.width || this.x + this.width <= 0)
-          return;
-        const sources = getLineSources(this.target, Math.trunc(this.target.scrollY) + start, end - start);
-        const gutterWidth = this.gutter.visible ? this.gutter.width : 0;
-        const contentWidth = this.width - gutterWidth;
-        for (let i = 0;i < sources.length; i++) {
-          const logicalLine = sources[i];
-          const lineBg = this._lineColorsContent.get(logicalLine);
-          if (lineBg) {
-            buffer.fillRect(this.x + gutterWidth, y2 + start + i, contentWidth, 1, lineBg);
-          }
-        }
-      }
-      set showLineNumbers(value) {
-        if (this.gutter) {
-          this.gutter.visible = value;
-        }
-      }
-      get showLineNumbers() {
-        return this.gutter?.visible ?? false;
-      }
-      get fg() {
-        return this._fg;
-      }
-      set fg(value) {
-        const parsed = parseColor(value ?? DEFAULT_GUTTER_FG);
-        if (this._fg !== parsed) {
-          this._fg = parsed;
-          this.gutter?.setFg(parsed);
-        }
-      }
-      get bg() {
-        return this._bg;
-      }
-      set bg(value) {
-        const parsed = parseColor(value ?? DEFAULT_GUTTER_BG);
-        if (this._bg !== parsed) {
-          this._bg = parsed;
-          this.gutter?.setBg(parsed);
-        }
-      }
-      setLineColor(line, color) {
-        this.parseLineColor(line, color);
-        if (this.gutter) {
-          this.gutter.setLineColors(this._lineColorsGutter, this._lineColorsContent);
-        }
-      }
-      clearLineColor(line) {
-        this._lineColorsGutter.delete(line);
-        this._lineColorsContent.delete(line);
-        if (this.gutter) {
-          this.gutter.setLineColors(this._lineColorsGutter, this._lineColorsContent);
-        }
-      }
-      clearAllLineColors() {
-        this._lineColorsGutter.clear();
-        this._lineColorsContent.clear();
-        if (this.gutter) {
-          this.gutter.setLineColors(this._lineColorsGutter, this._lineColorsContent);
-        }
-      }
-      setLineColors(lineColors) {
-        this._lineColorsGutter.clear();
-        this._lineColorsContent.clear();
-        for (const [line, color] of lineColors) {
-          this.parseLineColor(line, color);
-        }
-        if (this.gutter) {
-          this.gutter.setLineColors(this._lineColorsGutter, this._lineColorsContent);
-        }
-      }
-      getLineColors() {
-        return {
-          gutter: this._lineColorsGutter,
-          content: this._lineColorsContent
-        };
-      }
-      setLineSign(line, sign) {
-        this._lineSigns.set(line, sign);
-        if (this.gutter) {
-          this.gutter.setLineSigns(this._lineSigns);
-        }
-      }
-      clearLineSign(line) {
-        this._lineSigns.delete(line);
-        if (this.gutter) {
-          this.gutter.setLineSigns(this._lineSigns);
-        }
-      }
-      clearAllLineSigns() {
-        this._lineSigns.clear();
-        if (this.gutter) {
-          this.gutter.setLineSigns(this._lineSigns);
-        }
-      }
-      setLineSigns(lineSigns) {
-        this._lineSigns.clear();
-        for (const [line, sign] of lineSigns) {
-          this._lineSigns.set(line, sign);
-        }
-        if (this.gutter) {
-          this.gutter.setLineSigns(this._lineSigns);
-        }
-      }
-      getLineSigns() {
-        return this._lineSigns;
-      }
-      set lineNumberOffset(value) {
-        if (this._lineNumberOffset !== value) {
-          this._lineNumberOffset = value;
-          if (this.gutter) {
-            this.gutter.setLineNumberOffset(value);
-          }
-        }
-      }
-      get lineNumberOffset() {
-        return this._lineNumberOffset;
-      }
-      setHideLineNumbers(hideLineNumbers) {
-        this._hideLineNumbers = hideLineNumbers;
-        if (this.gutter) {
-          this.gutter.setHideLineNumbers(hideLineNumbers);
-        }
-      }
-      getHideLineNumbers() {
-        return this._hideLineNumbers;
-      }
-      setLineNumbers(lineNumbers) {
-        this._lineNumbers = lineNumbers;
-        if (this.gutter) {
-          this.gutter.setLineNumbers(lineNumbers);
-        }
-      }
-      getLineNumbers() {
-        return this._lineNumbers;
-      }
-      highlightLines(startLine, endLine, color) {
-        for (let i = startLine;i <= endLine; i++) {
-          this.parseLineColor(i, color);
-        }
-        if (this.gutter) {
-          this.gutter.setLineColors(this._lineColorsGutter, this._lineColorsContent);
-        }
-      }
-      clearHighlightLines(startLine, endLine) {
-        for (let i = startLine;i <= endLine; i++) {
-          this._lineColorsGutter.delete(i);
-          this._lineColorsContent.delete(i);
-        }
-        if (this.gutter) {
-          this.gutter.setLineColors(this._lineColorsGutter, this._lineColorsContent);
-        }
-      }
-    };
-  });
-
-  // vendor/js/node_modules/diff/libesm/diff/base.js
-  class Diff {
-    diff(oldStr, newStr, options = {}) {
-      let callback;
-      if (typeof options === "function") {
-        callback = options;
-        options = {};
-      } else if ("callback" in options) {
-        callback = options.callback;
-      }
-      const oldString = this.castInput(oldStr, options);
-      const newString = this.castInput(newStr, options);
-      const oldTokens = this.removeEmpty(this.tokenize(oldString, options));
-      const newTokens = this.removeEmpty(this.tokenize(newString, options));
-      return this.diffWithOptionsObj(oldTokens, newTokens, options, callback);
-    }
-    diffWithOptionsObj(oldTokens, newTokens, options, callback) {
-      var _a;
-      const done = (value) => {
-        value = this.postProcess(value, options);
-        if (callback) {
-          setTimeout(function() {
-            callback(value);
-          }, 0);
-          return;
-        } else {
-          return value;
-        }
-      };
-      const newLen = newTokens.length, oldLen = oldTokens.length;
-      let editLength = 1;
-      let maxEditLength = newLen + oldLen;
-      if (options.maxEditLength != null) {
-        maxEditLength = Math.min(maxEditLength, options.maxEditLength);
-      }
-      const maxExecutionTime = (_a = options.timeout) !== null && _a !== undefined ? _a : Infinity;
-      const abortAfterTimestamp = Date.now() + maxExecutionTime;
-      const bestPath = [{ oldPos: -1, lastComponent: undefined }];
-      let newPos = this.extractCommon(bestPath[0], newTokens, oldTokens, 0, options);
-      if (bestPath[0].oldPos + 1 >= oldLen && newPos + 1 >= newLen) {
-        return done(this.buildValues(bestPath[0].lastComponent, newTokens, oldTokens));
-      }
-      let minDiagonalToConsider = -Infinity, maxDiagonalToConsider = Infinity;
-      const execEditLength = () => {
-        for (let diagonalPath = Math.max(minDiagonalToConsider, -editLength);diagonalPath <= Math.min(maxDiagonalToConsider, editLength); diagonalPath += 2) {
-          let basePath;
-          const removePath = bestPath[diagonalPath - 1], addPath = bestPath[diagonalPath + 1];
-          if (removePath) {
-            bestPath[diagonalPath - 1] = undefined;
-          }
-          let canAdd = false;
-          if (addPath) {
-            const addPathNewPos = addPath.oldPos - diagonalPath;
-            canAdd = addPath && 0 <= addPathNewPos && addPathNewPos < newLen;
-          }
-          const canRemove = removePath && removePath.oldPos + 1 < oldLen;
-          if (!canAdd && !canRemove) {
-            bestPath[diagonalPath] = undefined;
-            continue;
-          }
-          if (!canRemove || canAdd && removePath.oldPos < addPath.oldPos) {
-            basePath = this.addToPath(addPath, true, false, 0, options);
-          } else {
-            basePath = this.addToPath(removePath, false, true, 1, options);
-          }
-          newPos = this.extractCommon(basePath, newTokens, oldTokens, diagonalPath, options);
-          if (basePath.oldPos + 1 >= oldLen && newPos + 1 >= newLen) {
-            return done(this.buildValues(basePath.lastComponent, newTokens, oldTokens)) || true;
-          } else {
-            bestPath[diagonalPath] = basePath;
-            if (basePath.oldPos + 1 >= oldLen) {
-              maxDiagonalToConsider = Math.min(maxDiagonalToConsider, diagonalPath - 1);
-            }
-            if (newPos + 1 >= newLen) {
-              minDiagonalToConsider = Math.max(minDiagonalToConsider, diagonalPath + 1);
-            }
-          }
-        }
-        editLength++;
-      };
-      if (callback) {
-        (function exec() {
-          setTimeout(function() {
-            if (editLength > maxEditLength || Date.now() > abortAfterTimestamp) {
-              return callback(undefined);
-            }
-            if (!execEditLength()) {
-              exec();
-            }
-          }, 0);
-        })();
-      } else {
-        while (editLength <= maxEditLength && Date.now() <= abortAfterTimestamp) {
-          const ret = execEditLength();
-          if (ret) {
-            return ret;
-          }
-        }
-      }
-    }
-    addToPath(path, added, removed, oldPosInc, options) {
-      const last = path.lastComponent;
-      if (last && !options.oneChangePerToken && last.added === added && last.removed === removed) {
-        return {
-          oldPos: path.oldPos + oldPosInc,
-          lastComponent: { count: last.count + 1, added, removed, previousComponent: last.previousComponent }
-        };
-      } else {
-        return {
-          oldPos: path.oldPos + oldPosInc,
-          lastComponent: { count: 1, added, removed, previousComponent: last }
-        };
-      }
-    }
-    extractCommon(basePath, newTokens, oldTokens, diagonalPath, options) {
-      const newLen = newTokens.length, oldLen = oldTokens.length;
-      let oldPos = basePath.oldPos, newPos = oldPos - diagonalPath, commonCount = 0;
-      while (newPos + 1 < newLen && oldPos + 1 < oldLen && this.equals(oldTokens[oldPos + 1], newTokens[newPos + 1], options)) {
-        newPos++;
-        oldPos++;
-        commonCount++;
-        if (options.oneChangePerToken) {
-          basePath.lastComponent = { count: 1, previousComponent: basePath.lastComponent, added: false, removed: false };
-        }
-      }
-      if (commonCount && !options.oneChangePerToken) {
-        basePath.lastComponent = { count: commonCount, previousComponent: basePath.lastComponent, added: false, removed: false };
-      }
-      basePath.oldPos = oldPos;
-      return newPos;
-    }
-    equals(left, right, options) {
-      if (options.comparator) {
-        return options.comparator(left, right);
-      } else {
-        return left === right || !!options.ignoreCase && left.toLowerCase() === right.toLowerCase();
-      }
-    }
-    removeEmpty(array) {
-      const ret = [];
-      for (let i = 0;i < array.length; i++) {
-        if (array[i]) {
-          ret.push(array[i]);
-        }
-      }
-      return ret;
-    }
-    castInput(value, options) {
-      return value;
-    }
-    tokenize(value, options) {
-      return Array.from(value);
-    }
-    join(chars) {
-      return chars.join("");
-    }
-    postProcess(changeObjects, options) {
-      return changeObjects;
-    }
-    get useLongestToken() {
-      return false;
-    }
-    buildValues(lastComponent, newTokens, oldTokens) {
-      const components = [];
-      let nextComponent;
-      while (lastComponent) {
-        components.push(lastComponent);
-        nextComponent = lastComponent.previousComponent;
-        delete lastComponent.previousComponent;
-        lastComponent = nextComponent;
-      }
-      components.reverse();
-      const componentLen = components.length;
-      let componentPos = 0, newPos = 0, oldPos = 0;
-      for (;componentPos < componentLen; componentPos++) {
-        const component = components[componentPos];
-        if (!component.removed) {
-          if (!component.added && this.useLongestToken) {
-            let value = newTokens.slice(newPos, newPos + component.count);
-            value = value.map(function(value2, i) {
-              const oldValue = oldTokens[oldPos + i];
-              return oldValue.length > value2.length ? oldValue : value2;
-            });
-            component.value = this.join(value);
-          } else {
-            component.value = this.join(newTokens.slice(newPos, newPos + component.count));
-          }
-          newPos += component.count;
-          if (!component.added) {
-            oldPos += component.count;
-          }
-        } else {
-          component.value = this.join(oldTokens.slice(oldPos, oldPos + component.count));
-          oldPos += component.count;
-        }
-      }
-      return components;
-    }
-  }
-
-  // vendor/js/node_modules/diff/libesm/diff/character.js
-  var CharacterDiff, characterDiff;
-  var init_character = __esm(() => {
-    CharacterDiff = class CharacterDiff extends Diff {
-    };
-    characterDiff = new CharacterDiff;
-  });
-
-  // vendor/js/node_modules/diff/libesm/util/string.js
-  function longestCommonPrefix(str1, str2) {
-    let i;
-    for (i = 0;i < str1.length && i < str2.length; i++) {
-      if (str1[i] != str2[i]) {
-        return str1.slice(0, i);
-      }
-    }
-    return str1.slice(0, i);
-  }
-  function longestCommonSuffix(str1, str2) {
-    let i;
-    if (!str1 || !str2 || str1[str1.length - 1] != str2[str2.length - 1]) {
-      return "";
-    }
-    for (i = 0;i < str1.length && i < str2.length; i++) {
-      if (str1[str1.length - (i + 1)] != str2[str2.length - (i + 1)]) {
-        return str1.slice(-i);
-      }
-    }
-    return str1.slice(-i);
-  }
-  function replacePrefix(string, oldPrefix, newPrefix) {
-    if (string.slice(0, oldPrefix.length) != oldPrefix) {
-      throw Error(`string ${JSON.stringify(string)} doesn't start with prefix ${JSON.stringify(oldPrefix)}; this is a bug`);
-    }
-    return newPrefix + string.slice(oldPrefix.length);
-  }
-  function replaceSuffix(string, oldSuffix, newSuffix) {
-    if (!oldSuffix) {
-      return string + newSuffix;
-    }
-    if (string.slice(-oldSuffix.length) != oldSuffix) {
-      throw Error(`string ${JSON.stringify(string)} doesn't end with suffix ${JSON.stringify(oldSuffix)}; this is a bug`);
-    }
-    return string.slice(0, -oldSuffix.length) + newSuffix;
-  }
-  function removePrefix(string, oldPrefix) {
-    return replacePrefix(string, oldPrefix, "");
-  }
-  function removeSuffix(string, oldSuffix) {
-    return replaceSuffix(string, oldSuffix, "");
-  }
-  function maximumOverlap(string1, string2) {
-    return string2.slice(0, overlapCount(string1, string2));
-  }
-  function overlapCount(a, b2) {
-    let startA = 0;
-    if (a.length > b2.length) {
-      startA = a.length - b2.length;
-    }
-    let endB = b2.length;
-    if (a.length < b2.length) {
-      endB = a.length;
-    }
-    const map = Array(endB);
-    let k2 = 0;
-    map[0] = 0;
-    for (let j2 = 1;j2 < endB; j2++) {
-      if (b2[j2] == b2[k2]) {
-        map[j2] = map[k2];
-      } else {
-        map[j2] = k2;
-      }
-      while (k2 > 0 && b2[j2] != b2[k2]) {
-        k2 = map[k2];
-      }
-      if (b2[j2] == b2[k2]) {
-        k2++;
-      }
-    }
-    k2 = 0;
-    for (let i = startA;i < a.length; i++) {
-      while (k2 > 0 && a[i] != b2[k2]) {
-        k2 = map[k2];
-      }
-      if (a[i] == b2[k2]) {
-        k2++;
-      }
-    }
-    return k2;
-  }
-  function segment(string, segmenter) {
-    const parts = [];
-    for (const segmentObj of Array.from(segmenter.segment(string))) {
-      const segment2 = segmentObj.segment;
-      if (parts.length && /\s/.test(parts[parts.length - 1]) && /\s/.test(segment2)) {
-        parts[parts.length - 1] += segment2;
-      } else {
-        parts.push(segment2);
-      }
-    }
-    return parts;
-  }
-  function trailingWs(string, segmenter) {
-    if (segmenter) {
-      return leadingAndTrailingWs(string, segmenter)[1];
-    }
-    let i;
-    for (i = string.length - 1;i >= 0; i--) {
-      if (!string[i].match(/\s/)) {
-        break;
-      }
-    }
-    return string.substring(i + 1);
-  }
-  function leadingWs(string, segmenter) {
-    if (segmenter) {
-      return leadingAndTrailingWs(string, segmenter)[0];
-    }
-    const match = string.match(/^\s*/);
-    return match ? match[0] : "";
-  }
-  function leadingAndTrailingWs(string, segmenter) {
-    if (!segmenter) {
-      return [leadingWs(string), trailingWs(string)];
-    }
-    if (segmenter.resolvedOptions().granularity != "word") {
-      throw new Error('The segmenter passed must have a granularity of "word"');
-    }
-    const segments = segment(string, segmenter);
-    const firstSeg = segments[0];
-    const lastSeg = segments[segments.length - 1];
-    const head = /\s/.test(firstSeg) ? firstSeg : "";
-    const tail = /\s/.test(lastSeg) ? lastSeg : "";
-    return [head, tail];
-  }
-
-  // vendor/js/node_modules/diff/libesm/diff/word.js
-  function dedupeWhitespaceInChangeObjects(startKeep, deletion, insertion, endKeep, segmenter) {
-    if (deletion && insertion) {
-      const [oldWsPrefix, oldWsSuffix] = leadingAndTrailingWs(deletion.value, segmenter);
-      const [newWsPrefix, newWsSuffix] = leadingAndTrailingWs(insertion.value, segmenter);
-      if (startKeep) {
-        const commonWsPrefix = longestCommonPrefix(oldWsPrefix, newWsPrefix);
-        startKeep.value = replaceSuffix(startKeep.value, newWsPrefix, commonWsPrefix);
-        deletion.value = removePrefix(deletion.value, commonWsPrefix);
-        insertion.value = removePrefix(insertion.value, commonWsPrefix);
-      }
-      if (endKeep) {
-        const commonWsSuffix = longestCommonSuffix(oldWsSuffix, newWsSuffix);
-        endKeep.value = replacePrefix(endKeep.value, newWsSuffix, commonWsSuffix);
-        deletion.value = removeSuffix(deletion.value, commonWsSuffix);
-        insertion.value = removeSuffix(insertion.value, commonWsSuffix);
-      }
-    } else if (insertion) {
-      if (startKeep) {
-        const ws = leadingWs(insertion.value, segmenter);
-        insertion.value = insertion.value.substring(ws.length);
-      }
-      if (endKeep) {
-        const ws = leadingWs(endKeep.value, segmenter);
-        endKeep.value = endKeep.value.substring(ws.length);
-      }
-    } else if (startKeep && endKeep) {
-      const newWsFull = leadingWs(endKeep.value, segmenter), [delWsStart, delWsEnd] = leadingAndTrailingWs(deletion.value, segmenter);
-      const newWsStart = longestCommonPrefix(newWsFull, delWsStart);
-      deletion.value = removePrefix(deletion.value, newWsStart);
-      const newWsEnd = longestCommonSuffix(removePrefix(newWsFull, newWsStart), delWsEnd);
-      deletion.value = removeSuffix(deletion.value, newWsEnd);
-      endKeep.value = replacePrefix(endKeep.value, newWsFull, newWsEnd);
-      startKeep.value = replaceSuffix(startKeep.value, newWsFull, newWsFull.slice(0, newWsFull.length - newWsEnd.length));
-    } else if (endKeep) {
-      const endKeepWsPrefix = leadingWs(endKeep.value, segmenter);
-      const deletionWsSuffix = trailingWs(deletion.value, segmenter);
-      const overlap = maximumOverlap(deletionWsSuffix, endKeepWsPrefix);
-      deletion.value = removeSuffix(deletion.value, overlap);
-    } else if (startKeep) {
-      const startKeepWsSuffix = trailingWs(startKeep.value, segmenter);
-      const deletionWsPrefix = leadingWs(deletion.value, segmenter);
-      const overlap = maximumOverlap(startKeepWsSuffix, deletionWsPrefix);
-      deletion.value = removePrefix(deletion.value, overlap);
-    }
-  }
-  var extendedWordChars = "a-zA-Z0-9_\\u{AD}\\u{C0}-\\u{D6}\\u{D8}-\\u{F6}\\u{F8}-\\u{2C6}\\u{2C8}-\\u{2D7}\\u{2DE}-\\u{2FF}\\u{1E00}-\\u{1EFF}", tokenizeIncludingWhitespace, WordDiff, wordDiff, WordsWithSpaceDiff, wordsWithSpaceDiff;
-  var init_word = __esm(() => {
-    tokenizeIncludingWhitespace = new RegExp(`[${extendedWordChars}]+|\\s+|[^${extendedWordChars}]`, "ug");
-    WordDiff = class WordDiff extends Diff {
-      equals(left, right, options) {
-        if (options.ignoreCase) {
-          left = left.toLowerCase();
-          right = right.toLowerCase();
-        }
-        return left.trim() === right.trim();
-      }
-      tokenize(value, options = {}) {
-        let parts;
-        if (options.intlSegmenter) {
-          const segmenter = options.intlSegmenter;
-          if (segmenter.resolvedOptions().granularity != "word") {
-            throw new Error('The segmenter passed must have a granularity of "word"');
-          }
-          parts = segment(value, segmenter);
-        } else {
-          parts = value.match(tokenizeIncludingWhitespace) || [];
-        }
-        const tokens = [];
-        let prevPart = null;
-        parts.forEach((part) => {
-          if (/\s/.test(part)) {
-            if (prevPart == null) {
-              tokens.push(part);
-            } else {
-              tokens.push(tokens.pop() + part);
-            }
-          } else if (prevPart != null && /\s/.test(prevPart)) {
-            if (tokens[tokens.length - 1] == prevPart) {
-              tokens.push(tokens.pop() + part);
-            } else {
-              tokens.push(prevPart + part);
-            }
-          } else {
-            tokens.push(part);
-          }
-          prevPart = part;
-        });
-        return tokens;
-      }
-      join(tokens) {
-        return tokens.map((token, i) => {
-          if (i == 0) {
-            return token;
-          } else {
-            return token.replace(/^\s+/, "");
-          }
-        }).join("");
-      }
-      postProcess(changes, options) {
-        if (!changes || options.oneChangePerToken) {
-          return changes;
-        }
-        let lastKeep = null;
-        let insertion = null;
-        let deletion = null;
-        changes.forEach((change) => {
-          if (change.added) {
-            insertion = change;
-          } else if (change.removed) {
-            deletion = change;
-          } else {
-            if (insertion || deletion) {
-              dedupeWhitespaceInChangeObjects(lastKeep, deletion, insertion, change, options.intlSegmenter);
-            }
-            lastKeep = change;
-            insertion = null;
-            deletion = null;
-          }
-        });
-        if (insertion || deletion) {
-          dedupeWhitespaceInChangeObjects(lastKeep, deletion, insertion, null, options.intlSegmenter);
-        }
-        return changes;
-      }
-    };
-    wordDiff = new WordDiff;
-    WordsWithSpaceDiff = class WordsWithSpaceDiff extends Diff {
-      tokenize(value) {
-        const regex2 = new RegExp(`(\\r?\\n)|[${extendedWordChars}]+|[^\\S\\n\\r]+|[^${extendedWordChars}]`, "ug");
-        return value.match(regex2) || [];
-      }
-    };
-    wordsWithSpaceDiff = new WordsWithSpaceDiff;
-  });
-  // vendor/js/node_modules/diff/libesm/diff/line.js
-  function tokenize(value, options) {
-    if (options.stripTrailingCr) {
-      value = value.replace(/\r\n/g, `
-`);
-    }
-    const retLines = [], linesAndNewlines = value.split(/(\n|\r\n)/);
-    if (!linesAndNewlines[linesAndNewlines.length - 1]) {
-      linesAndNewlines.pop();
-    }
-    for (let i = 0;i < linesAndNewlines.length; i++) {
-      const line = linesAndNewlines[i];
-      if (i % 2 && !options.newlineIsToken) {
-        retLines[retLines.length - 1] += line;
-      } else {
-        retLines.push(line);
-      }
-    }
-    return retLines;
-  }
-  var LineDiff, lineDiff;
-  var init_line = __esm(() => {
-    LineDiff = class LineDiff extends Diff {
-      constructor() {
-        super(...arguments);
-        this.tokenize = tokenize;
-      }
-      equals(left, right, options) {
-        if (options.ignoreWhitespace) {
-          if (!options.newlineIsToken || !left.includes(`
-`)) {
-            left = left.trim();
-          }
-          if (!options.newlineIsToken || !right.includes(`
-`)) {
-            right = right.trim();
-          }
-        } else if (options.ignoreNewlineAtEof && !options.newlineIsToken) {
-          if (left.endsWith(`
-`)) {
-            left = left.slice(0, -1);
-          }
-          if (right.endsWith(`
-`)) {
-            right = right.slice(0, -1);
-          }
-        }
-        return super.equals(left, right, options);
-      }
-    };
-    lineDiff = new LineDiff;
-  });
-
-  // vendor/js/node_modules/diff/libesm/diff/sentence.js
-  function isSentenceEndPunct(char) {
-    return char == "." || char == "!" || char == "?";
-  }
-  var SentenceDiff, sentenceDiff;
-  var init_sentence = __esm(() => {
-    SentenceDiff = class SentenceDiff extends Diff {
-      tokenize(value) {
-        var _a;
-        const result = [];
-        let tokenStartI = 0;
-        for (let i = 0;i < value.length; i++) {
-          if (i == value.length - 1) {
-            result.push(value.slice(tokenStartI));
-            break;
-          }
-          if (isSentenceEndPunct(value[i]) && value[i + 1].match(/\s/)) {
-            result.push(value.slice(tokenStartI, i + 1));
-            i = tokenStartI = i + 1;
-            while ((_a = value[i + 1]) === null || _a === undefined ? undefined : _a.match(/\s/)) {
-              i++;
-            }
-            result.push(value.slice(tokenStartI, i + 1));
-            tokenStartI = i + 1;
-          }
-        }
-        return result;
-      }
-    };
-    sentenceDiff = new SentenceDiff;
-  });
-
-  // vendor/js/node_modules/diff/libesm/diff/css.js
-  var CssDiff, cssDiff;
-  var init_css = __esm(() => {
-    CssDiff = class CssDiff extends Diff {
-      tokenize(value) {
-        return value.split(/([{}:;,]|\s+)/);
-      }
-    };
-    cssDiff = new CssDiff;
-  });
-
-  // vendor/js/node_modules/diff/libesm/diff/json.js
-  function canonicalize(obj, stack, replacementStack, replacer, key) {
-    stack = stack || [];
-    replacementStack = replacementStack || [];
-    if (replacer) {
-      obj = replacer(key === undefined ? "" : key, obj);
-    }
-    let i;
-    for (i = 0;i < stack.length; i += 1) {
-      if (stack[i] === obj) {
-        return replacementStack[i];
-      }
-    }
-    let canonicalizedObj;
-    if (Object.prototype.toString.call(obj) === "[object Array]") {
-      stack.push(obj);
-      canonicalizedObj = new Array(obj.length);
-      replacementStack.push(canonicalizedObj);
-      for (i = 0;i < obj.length; i += 1) {
-        canonicalizedObj[i] = canonicalize(obj[i], stack, replacementStack, replacer, String(i));
-      }
-      stack.pop();
-      replacementStack.pop();
-      return canonicalizedObj;
-    }
-    if (obj && obj.toJSON) {
-      obj = obj.toJSON();
-    }
-    if (typeof obj === "object" && obj !== null) {
-      stack.push(obj);
-      canonicalizedObj = {};
-      replacementStack.push(canonicalizedObj);
-      const sortedKeys = [];
-      let key2;
-      for (key2 in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key2)) {
-          sortedKeys.push(key2);
-        }
-      }
-      sortedKeys.sort();
-      for (i = 0;i < sortedKeys.length; i += 1) {
-        key2 = sortedKeys[i];
-        canonicalizedObj[key2] = canonicalize(obj[key2], stack, replacementStack, replacer, key2);
-      }
-      stack.pop();
-      replacementStack.pop();
-    } else {
-      canonicalizedObj = obj;
-    }
-    return canonicalizedObj;
-  }
-  var JsonDiff, jsonDiff;
-  var init_json = __esm(() => {
-    init_line();
-    JsonDiff = class JsonDiff extends Diff {
-      constructor() {
-        super(...arguments);
-        this.tokenize = tokenize;
-      }
-      get useLongestToken() {
-        return true;
-      }
-      castInput(value, options) {
-        const { undefinedReplacement, stringifyReplacer = (k2, v2) => typeof v2 === "undefined" ? undefinedReplacement : v2 } = options;
-        return typeof value === "string" ? value : JSON.stringify(canonicalize(value, null, null, stringifyReplacer), null, "  ");
-      }
-      equals(left, right, options) {
-        return super.equals(left.replace(/,([\r\n])/g, "$1"), right.replace(/,([\r\n])/g, "$1"), options);
-      }
-    };
-    jsonDiff = new JsonDiff;
-  });
-
-  // vendor/js/node_modules/diff/libesm/diff/array.js
-  var ArrayDiff, arrayDiff;
-  var init_array = __esm(() => {
-    ArrayDiff = class ArrayDiff extends Diff {
-      tokenize(value) {
-        return value.slice();
-      }
-      join(value) {
-        return value;
-      }
-      removeEmpty(value) {
-        return value;
-      }
-    };
-    arrayDiff = new ArrayDiff;
-  });
-  // vendor/js/node_modules/diff/libesm/patch/parse.js
-  function parsePatch(uniDiff) {
-    const diffstr = uniDiff.split(/\n/), list = [];
-    let i = 0;
-    function isGitDiffHeader(line) {
-      return /^diff --git /.test(line);
-    }
-    function isDiffHeader(line) {
-      return isGitDiffHeader(line) || /^Index:\s/.test(line) || /^diff(?: -r \w+)+\s/.test(line);
-    }
-    function isFileHeader(line) {
-      return /^(---|\+\+\+)\s/.test(line);
-    }
-    function isHunkHeader(line) {
-      return /^@@\s/.test(line);
-    }
-    function parseIndex() {
-      var _a;
-      const index = {};
-      index.hunks = [];
-      list.push(index);
-      let seenDiffHeader = false;
-      while (i < diffstr.length) {
-        const line = diffstr[i];
-        if (isFileHeader(line) || isHunkHeader(line)) {
-          break;
-        }
-        if (isGitDiffHeader(line)) {
-          if (seenDiffHeader) {
-            return;
-          }
-          seenDiffHeader = true;
-          index.isGit = true;
-          const paths = parseGitDiffHeader(line);
-          if (paths) {
-            index.oldFileName = paths.oldFileName;
-            index.newFileName = paths.newFileName;
-          }
-          i++;
-          while (i < diffstr.length) {
-            const extLine = diffstr[i];
-            if (isFileHeader(extLine) || isHunkHeader(extLine) || isDiffHeader(extLine)) {
-              break;
-            }
-            const renameFromMatch = /^rename from (.*)/.exec(extLine);
-            if (renameFromMatch) {
-              index.oldFileName = "a/" + unquoteIfQuoted(renameFromMatch[1]);
-              index.isRename = true;
-            }
-            const renameToMatch = /^rename to (.*)/.exec(extLine);
-            if (renameToMatch) {
-              index.newFileName = "b/" + unquoteIfQuoted(renameToMatch[1]);
-              index.isRename = true;
-            }
-            const copyFromMatch = /^copy from (.*)/.exec(extLine);
-            if (copyFromMatch) {
-              index.oldFileName = "a/" + unquoteIfQuoted(copyFromMatch[1]);
-              index.isCopy = true;
-            }
-            const copyToMatch = /^copy to (.*)/.exec(extLine);
-            if (copyToMatch) {
-              index.newFileName = "b/" + unquoteIfQuoted(copyToMatch[1]);
-              index.isCopy = true;
-            }
-            const newFileModeMatch = /^new file mode (\d+)/.exec(extLine);
-            if (newFileModeMatch) {
-              index.isCreate = true;
-              index.newMode = newFileModeMatch[1];
-            }
-            const deletedFileModeMatch = /^deleted file mode (\d+)/.exec(extLine);
-            if (deletedFileModeMatch) {
-              index.isDelete = true;
-              index.oldMode = deletedFileModeMatch[1];
-            }
-            const oldModeMatch = /^old mode (\d+)/.exec(extLine);
-            if (oldModeMatch) {
-              index.oldMode = oldModeMatch[1];
-            }
-            const newModeMatch = /^new mode (\d+)/.exec(extLine);
-            if (newModeMatch) {
-              index.newMode = newModeMatch[1];
-            }
-            if (/^Binary files /.test(extLine)) {
-              index.isBinary = true;
-            }
-            i++;
-          }
-          continue;
-        } else if (isDiffHeader(line)) {
-          if (seenDiffHeader) {
-            return;
-          }
-          seenDiffHeader = true;
-          const headerMatch = /^(?:Index:|diff(?: -r \w+)+)\s+/.exec(line);
-          if (headerMatch) {
-            index.index = line.substring(headerMatch[0].length).trim();
-          }
-        }
-        i++;
-      }
-      parseFileHeader(index);
-      parseFileHeader(index);
-      if (index.oldFileName === undefined !== (index.newFileName === undefined)) {
-        throw new Error("Missing " + (index.oldFileName !== undefined ? '"+++ ..."' : '"--- ..."') + " file header for " + ((_a = index.oldFileName) !== null && _a !== undefined ? _a : index.newFileName));
-      }
-      while (i < diffstr.length) {
-        const line = diffstr[i];
-        if (isDiffHeader(line) || isFileHeader(line) || /^===================================================================/.test(line)) {
-          break;
-        } else if (isHunkHeader(line)) {
-          index.hunks.push(parseHunk());
-        } else {
-          i++;
-        }
-      }
-    }
-    function parseGitDiffHeader(line) {
-      const rest = line.substring("diff --git ".length);
-      if (rest.startsWith('"')) {
-        const oldPath = parseQuotedFileName(rest);
-        if (oldPath === null) {
-          return null;
-        }
-        const afterOld = rest.substring(oldPath.rawLength + 1);
-        let newFileName;
-        if (afterOld.startsWith('"')) {
-          const newPath = parseQuotedFileName(afterOld);
-          if (newPath === null) {
-            return null;
-          }
-          newFileName = newPath.fileName;
-        } else {
-          newFileName = afterOld;
-        }
-        return {
-          oldFileName: oldPath.fileName,
-          newFileName
-        };
-      }
-      const quoteIdx = rest.indexOf('"');
-      if (quoteIdx > 0) {
-        const oldFileName = rest.substring(0, quoteIdx - 1);
-        const newPath = parseQuotedFileName(rest.substring(quoteIdx));
-        if (newPath === null) {
-          return null;
-        }
-        return {
-          oldFileName,
-          newFileName: newPath.fileName
-        };
-      }
-      if (rest.startsWith("a/")) {
-        const splits = [];
-        let idx = 0;
-        while (true) {
-          idx = rest.indexOf(" b/", idx + 1);
-          if (idx === -1) {
-            break;
-          }
-          splits.push(idx);
-        }
-        if (splits.length > 0) {
-          const mid = splits[Math.floor(splits.length / 2)];
-          return {
-            oldFileName: rest.substring(0, mid),
-            newFileName: rest.substring(mid + 1)
-          };
-        }
-      }
-      return null;
-    }
-    function unquoteIfQuoted(s) {
-      if (s.startsWith('"')) {
-        const parsed = parseQuotedFileName(s);
-        if (parsed) {
-          return parsed.fileName;
-        }
-      }
-      return s;
-    }
-    function parseQuotedFileName(s) {
-      if (!s.startsWith('"')) {
-        return null;
-      }
-      let result = "";
-      let j2 = 1;
-      while (j2 < s.length) {
-        if (s[j2] === '"') {
-          return { fileName: result, rawLength: j2 + 1 };
-        }
-        if (s[j2] === "\\" && j2 + 1 < s.length) {
-          j2++;
-          switch (s[j2]) {
-            case "a":
-              result += "\x07";
-              break;
-            case "b":
-              result += "\b";
-              break;
-            case "f":
-              result += "\f";
-              break;
-            case "n":
-              result += `
-`;
-              break;
-            case "r":
-              result += "\r";
-              break;
-            case "t":
-              result += "\t";
-              break;
-            case "v":
-              result += "\v";
-              break;
-            case "\\":
-              result += "\\";
-              break;
-            case '"':
-              result += '"';
-              break;
-            case "0":
-            case "1":
-            case "2":
-            case "3":
-            case "4":
-            case "5":
-            case "6":
-            case "7": {
-              if (j2 + 2 >= s.length || s[j2 + 1] < "0" || s[j2 + 1] > "7" || s[j2 + 2] < "0" || s[j2 + 2] > "7") {
-                return null;
-              }
-              const bytes = [parseInt(s.substring(j2, j2 + 3), 8)];
-              j2 += 3;
-              while (s[j2] === "\\" && s[j2 + 1] >= "0" && s[j2 + 1] <= "7") {
-                if (j2 + 3 >= s.length || s[j2 + 2] < "0" || s[j2 + 2] > "7" || s[j2 + 3] < "0" || s[j2 + 3] > "7") {
-                  return null;
-                }
-                bytes.push(parseInt(s.substring(j2 + 1, j2 + 4), 8));
-                j2 += 4;
-              }
-              result += new TextDecoder("utf-8").decode(new Uint8Array(bytes));
-              continue;
-            }
-            default:
-              return null;
-          }
-        } else {
-          result += s[j2];
-        }
-        j2++;
-      }
-      return null;
-    }
-    function parseFileHeader(index) {
-      const fileHeaderMatch = /^(---|\+\+\+)\s+/.exec(diffstr[i]);
-      if (fileHeaderMatch) {
-        const prefix = fileHeaderMatch[1], data = diffstr[i].substring(3).trim().split("\t", 2), header = (data[1] || "").trim();
-        let fileName = data[0];
-        if (fileName.startsWith('"')) {
-          fileName = unquoteIfQuoted(fileName);
-        } else {
-          fileName = fileName.replace(/\\\\/g, "\\");
-        }
-        if (prefix === "---") {
-          index.oldFileName = fileName;
-          index.oldHeader = header;
-        } else {
-          index.newFileName = fileName;
-          index.newHeader = header;
-        }
-        i++;
-      }
-    }
-    function parseHunk() {
-      var _a;
-      const chunkHeaderIndex = i, chunkHeaderLine = diffstr[i++], chunkHeader = chunkHeaderLine.split(/@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/);
-      const hunk = {
-        oldStart: +chunkHeader[1],
-        oldLines: typeof chunkHeader[2] === "undefined" ? 1 : +chunkHeader[2],
-        newStart: +chunkHeader[3],
-        newLines: typeof chunkHeader[4] === "undefined" ? 1 : +chunkHeader[4],
-        lines: []
-      };
-      if (hunk.oldLines === 0) {
-        hunk.oldStart += 1;
-      }
-      if (hunk.newLines === 0) {
-        hunk.newStart += 1;
-      }
-      let addCount = 0, removeCount = 0;
-      for (;i < diffstr.length && (removeCount < hunk.oldLines || addCount < hunk.newLines || ((_a = diffstr[i]) === null || _a === undefined ? undefined : _a.startsWith("\\"))); i++) {
-        const operation = diffstr[i].length == 0 && i != diffstr.length - 1 ? " " : diffstr[i][0];
-        if (operation === "+" || operation === "-" || operation === " " || operation === "\\") {
-          hunk.lines.push(diffstr[i]);
-          if (operation === "+") {
-            addCount++;
-          } else if (operation === "-") {
-            removeCount++;
-          } else if (operation === " ") {
-            addCount++;
-            removeCount++;
-          }
-        } else {
-          throw new Error(`Hunk at line ${chunkHeaderIndex + 1} contained invalid line ${diffstr[i]}`);
-        }
-      }
-      if (!addCount && hunk.newLines === 1) {
-        hunk.newLines = 0;
-      }
-      if (!removeCount && hunk.oldLines === 1) {
-        hunk.oldLines = 0;
-      }
-      if (addCount !== hunk.newLines) {
-        throw new Error("Added line count did not match for hunk at line " + (chunkHeaderIndex + 1));
-      }
-      if (removeCount !== hunk.oldLines) {
-        throw new Error("Removed line count did not match for hunk at line " + (chunkHeaderIndex + 1));
-      }
-      if (i < diffstr.length && diffstr[i] && /^[+ -]/.test(diffstr[i]) && !isFileHeader(diffstr[i])) {
-        throw new Error("Hunk at line " + (chunkHeaderIndex + 1) + " has more lines than expected (expected " + hunk.oldLines + " old lines and " + hunk.newLines + " new lines)");
-      }
-      return hunk;
-    }
-    while (i < diffstr.length) {
-      parseIndex();
-    }
-    return list;
-  }
-  // vendor/js/node_modules/diff/libesm/patch/apply.js
-  var init_apply = () => {};
-  // vendor/js/node_modules/diff/libesm/patch/create.js
-  var init_create = __esm(() => {
-    init_line();
-  });
-  // vendor/js/node_modules/diff/libesm/index.js
-  var init_libesm = __esm(() => {
-    init_character();
-    init_word();
-    init_line();
-    init_sentence();
-    init_css();
-    init_json();
-    init_array();
-    init_apply();
-    init_create();
-  });
-
-  // vendor/opentui/packages/core/src/renderables/Diff.ts
-  var DiffRenderable;
-  var init_Diff = __esm(() => {
-    init_Renderable();
-    init_Code();
-    init_LineNumberRenderable();
-    init_RGBA();
-    init_syntax_style();
-    init_libesm();
-    init_Text();
-    DiffRenderable = class DiffRenderable extends Renderable {
-      _diff;
-      _syncScroll = false;
-      _view;
-      _parsedDiff = null;
-      _parseError = null;
-      _hunkStartLines = [];
-      _hunkRowOffsets = null;
-      _fg;
-      _filetype;
-      _syntaxStyle;
-      _wrapMode;
-      _conceal;
-      _selectionBg;
-      _selectionFg;
-      _treeSitterClient;
-      _showLineNumbers;
-      _lineNumberFg;
-      _lineNumberBg;
-      _addedBg;
-      _removedBg;
-      _contextBg;
-      _addedContentBg;
-      _removedContentBg;
-      _contextContentBg;
-      _addedSignColor;
-      _removedSignColor;
-      _addedLineNumberBg;
-      _removedLineNumberBg;
-      leftSide = null;
-      rightSide = null;
-      leftSideAdded = false;
-      rightSideAdded = false;
-      leftCodeRenderable = null;
-      rightCodeRenderable = null;
-      pendingRebuild = false;
-      _lastCodeWidths = [0, 0];
-      errorTextRenderable = null;
-      errorCodeRenderable = null;
-      _waitingForHighlight = false;
-      _lineInfoChangeHandler = null;
-      constructor(ctx, options) {
-        super(ctx, {
-          ...options,
-          flexDirection: options.view === "split" ? "row" : "column"
-        });
-        this._diff = options.diff ?? "";
-        this._syncScroll = options.syncScroll ?? false;
-        this._view = options.view ?? "unified";
-        this._fg = options.fg ? parseColor(options.fg) : undefined;
-        this._filetype = options.filetype;
-        this._syntaxStyle = options.syntaxStyle;
-        this._wrapMode = options.wrapMode;
-        this._conceal = options.conceal ?? false;
-        this._selectionBg = options.selectionBg ? parseColor(options.selectionBg) : undefined;
-        this._selectionFg = options.selectionFg ? parseColor(options.selectionFg) : undefined;
-        this._treeSitterClient = options.treeSitterClient;
-        this._showLineNumbers = options.showLineNumbers ?? true;
-        this._lineNumberFg = parseColor(options.lineNumberFg ?? "#888888");
-        this._lineNumberBg = parseColor(options.lineNumberBg ?? "transparent");
-        this._addedBg = parseColor(options.addedBg ?? "#1a4d1a");
-        this._removedBg = parseColor(options.removedBg ?? "#4d1a1a");
-        this._contextBg = parseColor(options.contextBg ?? "transparent");
-        this._addedContentBg = options.addedContentBg ? parseColor(options.addedContentBg) : null;
-        this._removedContentBg = options.removedContentBg ? parseColor(options.removedContentBg) : null;
-        this._contextContentBg = options.contextContentBg ? parseColor(options.contextContentBg) : null;
-        this._addedSignColor = parseColor(options.addedSignColor ?? "#22c55e");
-        this._removedSignColor = parseColor(options.removedSignColor ?? "#ef4444");
-        this._addedLineNumberBg = parseColor(options.addedLineNumberBg ?? "transparent");
-        this._removedLineNumberBg = parseColor(options.removedLineNumberBg ?? "transparent");
-        if (this._diff) {
-          this.parseDiff();
-          this.buildView();
-        }
-      }
-      parseDiff() {
-        if (!this._diff) {
-          this._parsedDiff = null;
-          this._parseError = null;
-          return;
-        }
-        try {
-          const patches = parsePatch(this._diff);
-          if (patches.length === 0) {
-            this._parsedDiff = null;
-            this._parseError = null;
-            return;
-          }
-          this._parsedDiff = patches[0];
-          this._parseError = null;
-        } catch (error) {
-          this._parsedDiff = null;
-          this._parseError = error instanceof Error ? error : new Error(String(error));
-        }
-      }
-      buildView() {
-        this._hunkStartLines = [];
-        this.invalidateHunkRowOffsets();
-        if (this._parseError) {
-          this.buildErrorView();
-          return;
-        }
-        if (!this._parsedDiff || this._parsedDiff.hunks.length === 0) {
-          return;
-        }
-        if (this._view === "unified") {
-          this.buildUnifiedView();
-        } else {
-          this.buildSplitView();
-        }
-      }
-      onMouseEvent(event) {
-        if (event.type !== "scroll" || this._view !== "split" || !this._syncScroll)
-          return;
-        if (!this.leftCodeRenderable || !this.rightCodeRenderable)
-          return;
-        if (!event.target)
-          return;
-        if (this.isInsideSide(event.target, "left")) {
-          this.rightCodeRenderable.scrollY = this.leftCodeRenderable.scrollY;
-          this.rightCodeRenderable.scrollX = this.leftCodeRenderable.scrollX;
-        } else if (this.isInsideSide(event.target, "right")) {
-          this.leftCodeRenderable.scrollY = this.rightCodeRenderable.scrollY;
-          this.leftCodeRenderable.scrollX = this.rightCodeRenderable.scrollX;
-        }
-      }
-      isInsideSide(target, side) {
-        const container = side === "left" ? this.leftCodeRenderable : this.rightCodeRenderable;
-        let current = target;
-        while (current) {
-          if (current === container)
-            return true;
-          current = current.parent;
-        }
-        return false;
-      }
-      requestRebuild() {
-        if (this.pendingRebuild) {
-          return;
-        }
-        this.pendingRebuild = true;
-        queueMicrotask(() => {
-          if (!this.isDestroyed && this.pendingRebuild) {
-            this.pendingRebuild = false;
-            this.buildView();
-            this.requestRender();
-          }
-        });
-      }
-      invalidateHunkRowOffsets() {
-        this._hunkRowOffsets = null;
-      }
-      rebuildView() {
-        if (this._view === "split") {
-          this.requestRebuild();
-        } else {
-          this.buildView();
-        }
-      }
-      handleLineInfoChange = () => {
-        this.invalidateHunkRowOffsets();
-        if (!this.leftCodeRenderable || !this.rightCodeRenderable)
-          return;
-        if (this._view === "split" && (this._wrapMode === "word" || this._wrapMode === "char") && (this.leftCodeRenderable.width !== this._lastCodeWidths[0] || this.rightCodeRenderable.width !== this._lastCodeWidths[1])) {
-          this.requestRebuild();
-        }
-        if (!this._waitingForHighlight)
-          return;
-        const leftIsHighlighting = this.leftCodeRenderable.isHighlighting;
-        const rightIsHighlighting = this.rightCodeRenderable.isHighlighting;
-        if (!leftIsHighlighting && !rightIsHighlighting) {
-          this._waitingForHighlight = false;
-          this.requestRebuild();
-        }
-      };
-      attachLineInfoListeners() {
-        if (!this.leftCodeRenderable && !this.rightCodeRenderable)
-          return;
-        this._lineInfoChangeHandler ??= this.handleLineInfoChange;
-        if (this.leftCodeRenderable) {
-          this.leftCodeRenderable.off("line-info-change", this._lineInfoChangeHandler);
-          this.leftCodeRenderable.on("line-info-change", this._lineInfoChangeHandler);
-        }
-        if (this.rightCodeRenderable) {
-          this.rightCodeRenderable.off("line-info-change", this._lineInfoChangeHandler);
-          this.rightCodeRenderable.on("line-info-change", this._lineInfoChangeHandler);
-        }
-      }
-      detachLineInfoListeners() {
-        if (!this._lineInfoChangeHandler)
-          return;
-        if (this.leftCodeRenderable) {
-          this.leftCodeRenderable.off("line-info-change", this._lineInfoChangeHandler);
-        }
-        if (this.rightCodeRenderable) {
-          this.rightCodeRenderable.off("line-info-change", this._lineInfoChangeHandler);
-        }
-        this._lineInfoChangeHandler = null;
-      }
-      destroyRecursively() {
-        this.detachLineInfoListeners();
-        this.pendingRebuild = false;
-        this.leftSideAdded = false;
-        this.rightSideAdded = false;
-        super.destroyRecursively();
-      }
-      buildErrorView() {
-        this.flexDirection = "column";
-        if (this.leftSide && this.leftSideAdded) {
-          super.remove(this.leftSide);
-          this.leftSideAdded = false;
-        }
-        if (this.rightSide && this.rightSideAdded) {
-          super.remove(this.rightSide);
-          this.rightSideAdded = false;
-        }
-        const errorMessage = `Error parsing diff: ${this._parseError?.message || "Unknown error"}
-`;
-        if (!this.errorTextRenderable) {
-          this.errorTextRenderable = new TextRenderable(this.ctx, {
-            id: this.id ? `${this.id}-error-text` : undefined,
-            content: errorMessage,
-            fg: "#ef4444",
-            width: "100%",
-            flexShrink: 0
-          });
-          super.add(this.errorTextRenderable);
-        } else {
-          this.errorTextRenderable.content = errorMessage;
-          const errorTextIndex = this.getChildren().indexOf(this.errorTextRenderable);
-          if (errorTextIndex === -1) {
-            super.add(this.errorTextRenderable);
-          }
-        }
-        if (!this.errorCodeRenderable) {
-          this.errorCodeRenderable = new CodeRenderable(this.ctx, {
-            id: this.id ? `${this.id}-error-code` : undefined,
-            content: this._diff,
-            filetype: "diff",
-            syntaxStyle: this._syntaxStyle ?? SyntaxStyle.create(),
-            wrapMode: this._wrapMode,
-            conceal: this._conceal,
-            width: "100%",
-            flexGrow: 1,
-            flexShrink: 1,
-            ...this._treeSitterClient !== undefined && { treeSitterClient: this._treeSitterClient }
-          });
-          super.add(this.errorCodeRenderable);
-        } else {
-          this.errorCodeRenderable.content = this._diff;
-          this.errorCodeRenderable.wrapMode = this._wrapMode ?? "none";
-          if (this._syntaxStyle) {
-            this.errorCodeRenderable.syntaxStyle = this._syntaxStyle;
-          }
-          const errorCodeIndex = this.getChildren().indexOf(this.errorCodeRenderable);
-          if (errorCodeIndex === -1) {
-            super.add(this.errorCodeRenderable);
-          }
-        }
-      }
-      createOrUpdateCodeRenderable(side, content, wrapMode, drawUnstyledText) {
-        const existingRenderable = side === "left" ? this.leftCodeRenderable : this.rightCodeRenderable;
-        if (!existingRenderable) {
-          const codeOptions = {
-            id: this.id ? `${this.id}-${side}-code` : undefined,
-            content,
-            filetype: this._filetype,
-            wrapMode,
-            conceal: this._conceal,
-            syntaxStyle: this._syntaxStyle ?? SyntaxStyle.create(),
-            width: "100%",
-            height: "100%",
-            ...this._fg !== undefined && { fg: this._fg },
-            ...drawUnstyledText !== undefined && { drawUnstyledText },
-            ...this._selectionBg !== undefined && { selectionBg: this._selectionBg },
-            ...this._selectionFg !== undefined && { selectionFg: this._selectionFg },
-            ...this._treeSitterClient !== undefined && { treeSitterClient: this._treeSitterClient }
-          };
-          const newRenderable = new CodeRenderable(this.ctx, codeOptions);
-          if (side === "left") {
-            this.leftCodeRenderable = newRenderable;
-          } else {
-            this.rightCodeRenderable = newRenderable;
-          }
-          return newRenderable;
-        } else {
-          existingRenderable.content = content;
-          existingRenderable.wrapMode = wrapMode ?? "none";
-          existingRenderable.conceal = this._conceal;
-          if (drawUnstyledText !== undefined) {
-            existingRenderable.drawUnstyledText = drawUnstyledText;
-          }
-          if (this._filetype !== undefined) {
-            existingRenderable.filetype = this._filetype;
-          }
-          if (this._syntaxStyle !== undefined) {
-            existingRenderable.syntaxStyle = this._syntaxStyle;
-          }
-          if (this._selectionBg !== undefined) {
-            existingRenderable.selectionBg = this._selectionBg;
-          }
-          if (this._selectionFg !== undefined) {
-            existingRenderable.selectionFg = this._selectionFg;
-          }
-          if (this._fg !== undefined) {
-            existingRenderable.fg = this._fg;
-          }
-          return existingRenderable;
-        }
-      }
-      createOrUpdateSide(side, target, lineColors, lineSigns, lineNumbers, hideLineNumbers, width) {
-        const sideRef = side === "left" ? this.leftSide : this.rightSide;
-        const addedFlag = side === "left" ? this.leftSideAdded : this.rightSideAdded;
-        if (!sideRef) {
-          const newSide = new LineNumberRenderable(this.ctx, {
-            id: this.id ? `${this.id}-${side}` : undefined,
-            target,
-            fg: this._lineNumberFg,
-            bg: this._lineNumberBg,
-            lineColors,
-            lineSigns,
-            lineNumbers,
-            lineNumberOffset: 0,
-            hideLineNumbers,
-            width,
-            height: "100%"
-          });
-          newSide.showLineNumbers = this._showLineNumbers;
-          super.add(newSide);
-          if (side === "left") {
-            this.leftSide = newSide;
-            this.leftSideAdded = true;
-          } else {
-            this.rightSide = newSide;
-            this.rightSideAdded = true;
-          }
-        } else {
-          sideRef.width = width;
-          sideRef.fg = this._lineNumberFg;
-          sideRef.bg = this._lineNumberBg;
-          sideRef.setLineColors(lineColors);
-          const padding = sideRef.getLineSigns().get(-1);
-          if (padding)
-            lineSigns.set(-1, padding);
-          sideRef.setLineSigns(lineSigns);
-          sideRef.setLineNumbers(lineNumbers);
-          sideRef.setHideLineNumbers(hideLineNumbers);
-          if (!addedFlag) {
-            super.add(sideRef);
-            if (side === "left") {
-              this.leftSideAdded = true;
-            } else {
-              this.rightSideAdded = true;
-            }
-          }
-        }
-      }
-      buildUnifiedView() {
-        if (!this._parsedDiff)
-          return;
-        this.flexDirection = "column";
-        if (this.errorTextRenderable) {
-          const errorTextIndex = this.getChildren().indexOf(this.errorTextRenderable);
-          if (errorTextIndex !== -1) {
-            super.remove(this.errorTextRenderable);
-          }
-        }
-        if (this.errorCodeRenderable) {
-          const errorCodeIndex = this.getChildren().indexOf(this.errorCodeRenderable);
-          if (errorCodeIndex !== -1) {
-            super.remove(this.errorCodeRenderable);
-          }
-        }
-        const contentLines = [];
-        const lineColors = new Map;
-        const lineSigns = new Map;
-        const lineNumbers = new Map;
-        let lineIndex = 0;
-        for (const hunk of this._parsedDiff.hunks) {
-          this._hunkStartLines.push(lineIndex);
-          let oldLineNum = hunk.oldStart;
-          let newLineNum = hunk.newStart;
-          for (const line of hunk.lines) {
-            const firstChar = line[0];
-            const content2 = line.slice(1);
-            if (firstChar === "+") {
-              contentLines.push(content2);
-              const config = {
-                gutter: this._addedLineNumberBg
-              };
-              if (this._addedContentBg) {
-                config.content = this._addedContentBg;
-              } else {
-                config.content = this._addedBg;
-              }
-              lineColors.set(lineIndex, config);
-              lineSigns.set(lineIndex, {
-                after: " +",
-                afterColor: this._addedSignColor
-              });
-              lineNumbers.set(lineIndex, newLineNum);
-              newLineNum++;
-              lineIndex++;
-            } else if (firstChar === "-") {
-              contentLines.push(content2);
-              const config = {
-                gutter: this._removedLineNumberBg
-              };
-              if (this._removedContentBg) {
-                config.content = this._removedContentBg;
-              } else {
-                config.content = this._removedBg;
-              }
-              lineColors.set(lineIndex, config);
-              lineSigns.set(lineIndex, {
-                after: " -",
-                afterColor: this._removedSignColor
-              });
-              lineNumbers.set(lineIndex, oldLineNum);
-              oldLineNum++;
-              lineIndex++;
-            } else if (firstChar === " ") {
-              contentLines.push(content2);
-              const config = {
-                gutter: this._lineNumberBg
-              };
-              if (this._contextContentBg) {
-                config.content = this._contextContentBg;
-              } else {
-                config.content = this._contextBg;
-              }
-              lineColors.set(lineIndex, config);
-              lineNumbers.set(lineIndex, newLineNum);
-              oldLineNum++;
-              newLineNum++;
-              lineIndex++;
-            }
-          }
-        }
-        const content = contentLines.join(`
-`);
-        const codeRenderable = this.createOrUpdateCodeRenderable("left", content, this._wrapMode);
-        this.attachLineInfoListeners();
-        this.createOrUpdateSide("left", codeRenderable, lineColors, lineSigns, lineNumbers, new Set, "100%");
-        if (this.rightSide && this.rightSideAdded) {
-          super.remove(this.rightSide);
-          this.rightSideAdded = false;
-        }
-      }
-      buildSplitView() {
-        if (!this._parsedDiff)
-          return;
-        this.flexDirection = "row";
-        if (this.errorTextRenderable) {
-          const errorTextIndex = this.getChildren().indexOf(this.errorTextRenderable);
-          if (errorTextIndex !== -1) {
-            super.remove(this.errorTextRenderable);
-          }
-        }
-        if (this.errorCodeRenderable) {
-          const errorCodeIndex = this.getChildren().indexOf(this.errorCodeRenderable);
-          if (errorCodeIndex !== -1) {
-            super.remove(this.errorCodeRenderable);
-          }
-        }
-        const leftLogicalLines = [];
-        const rightLogicalLines = [];
-        const hunkFirstLeftLine = [];
-        for (const hunk of this._parsedDiff.hunks) {
-          hunkFirstLeftLine.push(leftLogicalLines.length);
-          let oldLineNum = hunk.oldStart;
-          let newLineNum = hunk.newStart;
-          let i = 0;
-          while (i < hunk.lines.length) {
-            const line = hunk.lines[i];
-            const firstChar = line[0];
-            if (firstChar === " ") {
-              const content = line.slice(1);
-              leftLogicalLines.push({
-                content,
-                lineNum: oldLineNum,
-                color: this._contextBg,
-                type: "context"
-              });
-              rightLogicalLines.push({
-                content,
-                lineNum: newLineNum,
-                color: this._contextBg,
-                type: "context"
-              });
-              oldLineNum++;
-              newLineNum++;
-              i++;
-            } else if (firstChar === "\\") {
-              i++;
-            } else {
-              const removes = [];
-              const adds = [];
-              while (i < hunk.lines.length) {
-                const currentLine = hunk.lines[i];
-                const currentChar = currentLine[0];
-                if (currentChar === " " || currentChar === "\\") {
-                  break;
-                }
-                const content = currentLine.slice(1);
-                if (currentChar === "-") {
-                  removes.push({ content, lineNum: oldLineNum });
-                  oldLineNum++;
-                } else if (currentChar === "+") {
-                  adds.push({ content, lineNum: newLineNum });
-                  newLineNum++;
-                }
-                i++;
-              }
-              const maxLength = Math.max(removes.length, adds.length);
-              for (let j2 = 0;j2 < maxLength; j2++) {
-                if (j2 < removes.length) {
-                  leftLogicalLines.push({
-                    content: removes[j2].content,
-                    lineNum: removes[j2].lineNum,
-                    color: this._removedBg,
-                    sign: {
-                      after: " -",
-                      afterColor: this._removedSignColor
-                    },
-                    type: "remove"
-                  });
-                } else {
-                  leftLogicalLines.push({
-                    content: "",
-                    hideLineNumber: true,
-                    type: "empty"
-                  });
-                }
-                if (j2 < adds.length) {
-                  rightLogicalLines.push({
-                    content: adds[j2].content,
-                    lineNum: adds[j2].lineNum,
-                    color: this._addedBg,
-                    sign: {
-                      after: " +",
-                      afterColor: this._addedSignColor
-                    },
-                    type: "add"
-                  });
-                } else {
-                  rightLogicalLines.push({
-                    content: "",
-                    hideLineNumber: true,
-                    type: "empty"
-                  });
-                }
-              }
-            }
-          }
-        }
-        for (const startIndex of hunkFirstLeftLine) {
-          const firstLine = leftLogicalLines[startIndex];
-          if (firstLine)
-            firstLine.hunkStart = true;
-        }
-        const canDoWrapAlignment = this.width > 0 && (this._wrapMode === "word" || this._wrapMode === "char");
-        const preLeftContent = leftLogicalLines.map((l) => l.content).join(`
-`);
-        const preRightContent = rightLogicalLines.map((l) => l.content).join(`
-`);
-        this._lastCodeWidths = [this.leftCodeRenderable?.width ?? 0, this.rightCodeRenderable?.width ?? 0];
-        const needsConsistentConcealing = (this._wrapMode === "word" || this._wrapMode === "char") && this._conceal && this._filetype;
-        const drawUnstyledText = !needsConsistentConcealing;
-        const leftCodeRenderable = this.createOrUpdateCodeRenderable("left", preLeftContent, this._wrapMode, drawUnstyledText);
-        const rightCodeRenderable = this.createOrUpdateCodeRenderable("right", preRightContent, this._wrapMode, drawUnstyledText);
-        this.attachLineInfoListeners();
-        let finalLeftLines;
-        let finalRightLines;
-        const leftIsHighlighting = leftCodeRenderable.isHighlighting;
-        const rightIsHighlighting = rightCodeRenderable.isHighlighting;
-        const highlightingInProgress = needsConsistentConcealing && (leftIsHighlighting || rightIsHighlighting);
-        if (highlightingInProgress) {
-          this._waitingForHighlight = true;
-          this.attachLineInfoListeners();
-        }
-        const shouldDoAlignment = canDoWrapAlignment && !highlightingInProgress;
-        if (shouldDoAlignment) {
-          const leftLineInfo = leftCodeRenderable.lineInfo;
-          const rightLineInfo = rightCodeRenderable.lineInfo;
-          const leftSources = leftLineInfo.lineSources || [];
-          const rightSources = rightLineInfo.lineSources || [];
-          const leftVisualCounts = new Map;
-          const rightVisualCounts = new Map;
-          for (const logicalLine of leftSources) {
-            leftVisualCounts.set(logicalLine, (leftVisualCounts.get(logicalLine) || 0) + 1);
-          }
-          for (const logicalLine of rightSources) {
-            rightVisualCounts.set(logicalLine, (rightVisualCounts.get(logicalLine) || 0) + 1);
-          }
-          finalLeftLines = [];
-          finalRightLines = [];
-          let leftVisualPos = 0;
-          let rightVisualPos = 0;
-          for (let i = 0;i < leftLogicalLines.length; i++) {
-            const leftLine = leftLogicalLines[i];
-            const rightLine = rightLogicalLines[i];
-            const leftVisualCount = leftVisualCounts.get(i) ?? 0;
-            const rightVisualCount = rightVisualCounts.get(i) ?? 0;
-            if (leftVisualPos < rightVisualPos) {
-              const pad = rightVisualPos - leftVisualPos;
-              for (let p = 0;p < pad; p++) {
-                finalLeftLines.push({ content: "", hideLineNumber: true, type: "empty" });
-              }
-              leftVisualPos += pad;
-            } else if (rightVisualPos < leftVisualPos) {
-              const pad = leftVisualPos - rightVisualPos;
-              for (let p = 0;p < pad; p++) {
-                finalRightLines.push({ content: "", hideLineNumber: true, type: "empty" });
-              }
-              rightVisualPos += pad;
-            }
-            finalLeftLines.push(leftLine);
-            finalRightLines.push(rightLine);
-            leftVisualPos += leftVisualCount;
-            rightVisualPos += rightVisualCount;
-          }
-          if (leftVisualPos < rightVisualPos) {
-            const pad = rightVisualPos - leftVisualPos;
-            for (let p = 0;p < pad; p++) {
-              finalLeftLines.push({ content: "", hideLineNumber: true, type: "empty" });
-            }
-          } else if (rightVisualPos < leftVisualPos) {
-            const pad = leftVisualPos - rightVisualPos;
-            for (let p = 0;p < pad; p++) {
-              finalRightLines.push({ content: "", hideLineNumber: true, type: "empty" });
-            }
-          }
-        } else {
-          finalLeftLines = leftLogicalLines;
-          finalRightLines = rightLogicalLines;
-        }
-        const leftLineColors = new Map;
-        const rightLineColors = new Map;
-        const leftLineSigns = new Map;
-        const rightLineSigns = new Map;
-        const leftHideLineNumbers = new Set;
-        const rightHideLineNumbers = new Set;
-        const leftLineNumbers = new Map;
-        const rightLineNumbers = new Map;
-        finalLeftLines.forEach((line, index) => {
-          if (line.hunkStart) {
-            this._hunkStartLines.push(index);
-          }
-          if (line.lineNum !== undefined) {
-            leftLineNumbers.set(index, line.lineNum);
-          }
-          if (line.hideLineNumber) {
-            leftHideLineNumbers.add(index);
-          }
-          if (line.type === "remove") {
-            const config = {
-              gutter: this._removedLineNumberBg
-            };
-            if (this._removedContentBg) {
-              config.content = this._removedContentBg;
-            } else {
-              config.content = this._removedBg;
-            }
-            leftLineColors.set(index, config);
-          } else if (line.type === "context") {
-            const config = {
-              gutter: this._lineNumberBg
-            };
-            if (this._contextContentBg) {
-              config.content = this._contextContentBg;
-            } else {
-              config.content = this._contextBg;
-            }
-            leftLineColors.set(index, config);
-          }
-          if (line.sign) {
-            leftLineSigns.set(index, line.sign);
-          }
-        });
-        finalRightLines.forEach((line, index) => {
-          if (line.lineNum !== undefined) {
-            rightLineNumbers.set(index, line.lineNum);
-          }
-          if (line.hideLineNumber) {
-            rightHideLineNumbers.add(index);
-          }
-          if (line.type === "add") {
-            const config = {
-              gutter: this._addedLineNumberBg
-            };
-            if (this._addedContentBg) {
-              config.content = this._addedContentBg;
-            } else {
-              config.content = this._addedBg;
-            }
-            rightLineColors.set(index, config);
-          } else if (line.type === "context") {
-            const config = {
-              gutter: this._lineNumberBg
-            };
-            if (this._contextContentBg) {
-              config.content = this._contextContentBg;
-            } else {
-              config.content = this._contextBg;
-            }
-            rightLineColors.set(index, config);
-          }
-          if (line.sign) {
-            rightLineSigns.set(index, line.sign);
-          }
-        });
-        const leftContentFinal = finalLeftLines.map((l) => l.content).join(`
-`);
-        const rightContentFinal = finalRightLines.map((l) => l.content).join(`
-`);
-        leftCodeRenderable.content = leftContentFinal;
-        rightCodeRenderable.content = rightContentFinal;
-        this.createOrUpdateSide("left", leftCodeRenderable, leftLineColors, leftLineSigns, leftLineNumbers, leftHideLineNumbers, "50%");
-        this.createOrUpdateSide("right", rightCodeRenderable, rightLineColors, rightLineSigns, rightLineNumbers, rightHideLineNumbers, "50%");
-      }
-      get diff() {
-        return this._diff;
-      }
-      set diff(value) {
-        if (this._diff !== value) {
-          this._diff = value;
-          this._waitingForHighlight = false;
-          this.parseDiff();
-          this.rebuildView();
-        }
-      }
-      get syncScroll() {
-        return this._syncScroll;
-      }
-      set syncScroll(value) {
-        if (this._syncScroll !== value) {
-          this._syncScroll = value;
-        }
-      }
-      get view() {
-        return this._view;
-      }
-      set view(value) {
-        if (this._view !== value) {
-          this._view = value;
-          this.flexDirection = value === "split" ? "row" : "column";
-          this.buildView();
-        }
-      }
-      get filetype() {
-        return this._filetype;
-      }
-      set filetype(value) {
-        if (this._filetype !== value) {
-          this._filetype = value;
-          this.rebuildView();
-        }
-      }
-      get syntaxStyle() {
-        return this._syntaxStyle;
-      }
-      set syntaxStyle(value) {
-        if (this._syntaxStyle !== value) {
-          this._syntaxStyle = value;
-          this.rebuildView();
-        }
-      }
-      get wrapMode() {
-        return this._wrapMode;
-      }
-      set wrapMode(value) {
-        if (this._wrapMode !== value) {
-          this._wrapMode = value;
-          this.invalidateHunkRowOffsets();
-          if (this._view === "unified" && this.leftCodeRenderable) {
-            this.leftCodeRenderable.wrapMode = value ?? "none";
-          } else if (this._view === "split") {
-            this.requestRebuild();
-          }
-        }
-      }
-      get showLineNumbers() {
-        return this._showLineNumbers;
-      }
-      set showLineNumbers(value) {
-        if (this._showLineNumbers !== value) {
-          this._showLineNumbers = value;
-          if (this.leftSide) {
-            this.leftSide.showLineNumbers = value;
-          }
-          if (this.rightSide) {
-            this.rightSide.showLineNumbers = value;
-          }
-        }
-      }
-      get addedBg() {
-        return this._addedBg;
-      }
-      set addedBg(value) {
-        const parsed = parseColor(value);
-        if (this._addedBg !== parsed) {
-          this._addedBg = parsed;
-          this.rebuildView();
-        }
-      }
-      get removedBg() {
-        return this._removedBg;
-      }
-      set removedBg(value) {
-        const parsed = parseColor(value);
-        if (this._removedBg !== parsed) {
-          this._removedBg = parsed;
-          this.rebuildView();
-        }
-      }
-      get contextBg() {
-        return this._contextBg;
-      }
-      set contextBg(value) {
-        const parsed = parseColor(value);
-        if (this._contextBg !== parsed) {
-          this._contextBg = parsed;
-          this.rebuildView();
-        }
-      }
-      get addedSignColor() {
-        return this._addedSignColor;
-      }
-      set addedSignColor(value) {
-        const parsed = parseColor(value);
-        if (this._addedSignColor !== parsed) {
-          this._addedSignColor = parsed;
-          this.rebuildView();
-        }
-      }
-      get removedSignColor() {
-        return this._removedSignColor;
-      }
-      set removedSignColor(value) {
-        const parsed = parseColor(value);
-        if (this._removedSignColor !== parsed) {
-          this._removedSignColor = parsed;
-          this.rebuildView();
-        }
-      }
-      get addedLineNumberBg() {
-        return this._addedLineNumberBg;
-      }
-      set addedLineNumberBg(value) {
-        const parsed = parseColor(value);
-        if (this._addedLineNumberBg !== parsed) {
-          this._addedLineNumberBg = parsed;
-          this.rebuildView();
-        }
-      }
-      get removedLineNumberBg() {
-        return this._removedLineNumberBg;
-      }
-      set removedLineNumberBg(value) {
-        const parsed = parseColor(value);
-        if (this._removedLineNumberBg !== parsed) {
-          this._removedLineNumberBg = parsed;
-          this.rebuildView();
-        }
-      }
-      get lineNumberFg() {
-        return this._lineNumberFg;
-      }
-      set lineNumberFg(value) {
-        const parsed = parseColor(value);
-        if (this._lineNumberFg !== parsed) {
-          this._lineNumberFg = parsed;
-          this.rebuildView();
-        }
-      }
-      get lineNumberBg() {
-        return this._lineNumberBg;
-      }
-      set lineNumberBg(value) {
-        const parsed = parseColor(value);
-        if (this._lineNumberBg !== parsed) {
-          this._lineNumberBg = parsed;
-          this.rebuildView();
-        }
-      }
-      get addedContentBg() {
-        return this._addedContentBg;
-      }
-      set addedContentBg(value) {
-        const parsed = value ? parseColor(value) : null;
-        if (this._addedContentBg !== parsed) {
-          this._addedContentBg = parsed;
-          this.rebuildView();
-        }
-      }
-      get removedContentBg() {
-        return this._removedContentBg;
-      }
-      set removedContentBg(value) {
-        const parsed = value ? parseColor(value) : null;
-        if (this._removedContentBg !== parsed) {
-          this._removedContentBg = parsed;
-          this.rebuildView();
-        }
-      }
-      get contextContentBg() {
-        return this._contextContentBg;
-      }
-      set contextContentBg(value) {
-        const parsed = value ? parseColor(value) : null;
-        if (this._contextContentBg !== parsed) {
-          this._contextContentBg = parsed;
-          this.rebuildView();
-        }
-      }
-      get selectionBg() {
-        return this._selectionBg;
-      }
-      set selectionBg(value) {
-        const parsed = value ? parseColor(value) : undefined;
-        if (this._selectionBg !== parsed) {
-          this._selectionBg = parsed;
-          if (this.leftCodeRenderable) {
-            this.leftCodeRenderable.selectionBg = parsed;
-          }
-          if (this.rightCodeRenderable) {
-            this.rightCodeRenderable.selectionBg = parsed;
-          }
-        }
-      }
-      get selectionFg() {
-        return this._selectionFg;
-      }
-      set selectionFg(value) {
-        const parsed = value ? parseColor(value) : undefined;
-        if (this._selectionFg !== parsed) {
-          this._selectionFg = parsed;
-          if (this.leftCodeRenderable) {
-            this.leftCodeRenderable.selectionFg = parsed;
-          }
-          if (this.rightCodeRenderable) {
-            this.rightCodeRenderable.selectionFg = parsed;
-          }
-        }
-      }
-      get conceal() {
-        return this._conceal;
-      }
-      set conceal(value) {
-        if (this._conceal !== value) {
-          this._conceal = value;
-          this.rebuildView();
-        }
-      }
-      get fg() {
-        return this._fg;
-      }
-      set fg(value) {
-        const parsed = value ? parseColor(value) : undefined;
-        if (this._fg !== parsed) {
-          this._fg = parsed;
-          if (this.leftCodeRenderable) {
-            this.leftCodeRenderable.fg = parsed;
-          }
-          if (this.rightCodeRenderable) {
-            this.rightCodeRenderable.fg = parsed;
-          }
-        }
-      }
-      setLineColor(line, color) {
-        this.leftSide?.setLineColor(line, color);
-        this.rightSide?.setLineColor(line, color);
-      }
-      clearLineColor(line) {
-        this.leftSide?.clearLineColor(line);
-        this.rightSide?.clearLineColor(line);
-      }
-      setLineColors(lineColors) {
-        this.leftSide?.setLineColors(lineColors);
-        this.rightSide?.setLineColors(lineColors);
-      }
-      clearAllLineColors() {
-        this.leftSide?.clearAllLineColors();
-        this.rightSide?.clearAllLineColors();
-      }
-      highlightLines(startLine, endLine, color) {
-        this.leftSide?.highlightLines(startLine, endLine, color);
-        this.rightSide?.highlightLines(startLine, endLine, color);
-      }
-      clearHighlightLines(startLine, endLine) {
-        this.leftSide?.clearHighlightLines(startLine, endLine);
-        this.rightSide?.clearHighlightLines(startLine, endLine);
-      }
-      getHunkRowOffsets() {
-        if (this._hunkRowOffsets)
-          return [...this._hunkRowOffsets];
-        this._hunkRowOffsets = this.computeHunkRowOffsets();
-        return [...this._hunkRowOffsets];
-      }
-      computeHunkRowOffsets() {
-        if (this._hunkStartLines.length === 0)
-          return [];
-        const sources = this.leftCodeRenderable?.lineInfo.lineSources;
-        if (!sources || sources.length === 0)
-          return [...this._hunkStartLines];
-        const offsets = [];
-        let visualRow = 0;
-        for (const hunkStartLine of this._hunkStartLines) {
-          while (visualRow < sources.length && sources[visualRow] < hunkStartLine) {
-            visualRow++;
-          }
-          offsets.push(visualRow < sources.length ? visualRow : hunkStartLine);
-        }
-        return offsets;
-      }
-    };
   });
 
   // vendor/opentui/packages/core/src/renderables/text-table-width.ts
@@ -40370,26 +41604,31 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           for (let y2 = 0;y2 < rows; y2++) {
             let line = "";
             for (let x2 = 0;x2 < cols; x2++) {
-              let mask = 0, count = 0;
+              let mask = 0, count = 0, darkCount = 0;
+              const dark = [0, 0, 0];
               const sum = [0, 0, 0];
               for (let dy = 0;dy < 4; dy++)
                 for (let dx = 0;dx < 2; dx++) {
                   const c = sample(x2 * 2 + dx, y2 * 4 + dy, cols * 2, rows * 4);
-                  const visible = this.tone === 0 ? Math.max(...c) > 60 : c[0] * 0.299 + c[1] * 0.587 + c[2] * 0.114 > 90;
+                  const visible = this.tone === 6 ? Math.max(...c) > 180 : this.tone === 0 || this.tone === 4 || this.tone === 5 ? Math.max(...c) > 60 : c[0] * 0.299 + c[1] * 0.587 + c[2] * 0.114 > 90;
                   if (visible) {
                     mask |= 1 << bits[dy][dx];
                     count++;
                     for (let i = 0;i < 3; i++)
                       sum[i] += c[i];
+                  } else {
+                    darkCount++;
+                    for (let i = 0;i < 3; i++)
+                      dark[i] += c[i];
                   }
                 }
               const char = mask ? String.fromCodePoint(10240 + mask) : " ";
-              if (this.tone >= 2)
+              if (this.tone === 2 || this.tone === 3)
                 line += char;
               else
-                buffer.drawText(char, left + x2, top + y2, count ? RGBA.fromInts(...sum.map((v2) => Math.round(v2 / count))) : FG, BG);
+                buffer.drawText(char, left + x2, top + y2, count ? RGBA.fromInts(...sum.map((v2) => Math.round(v2 / count))) : FG, this.tone === 6 && darkCount ? RGBA.fromInts(...dark.map((v2) => Math.round(v2 / darkCount))) : BG);
             }
-            if (this.tone >= 2)
+            if (this.tone === 2 || this.tone === 3)
               buffer.drawText(line, left, top + y2, FG, BG);
           }
         } else {
@@ -40627,7 +41866,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       }
   }
   function App4() {
-    const scene = import_react8.useRef({ shape: 3, angle: 0, tilt: 0.7, zoom: 0.82, wire: false, palette: 0, playing: true, fps: 10, rotation_speed: 1, epoch: 0, charset: 0, cols: 60, rows: 20, tone: 0, brightness: 0, contrast: 1, dot_scale: 4, fractal_zoom: 1, center_x: -0.65, center_y: 0 });
+    const scene = import_react8.useRef({ shape: 3, angle: 0, tilt: 0.7, zoom: 0.82, wire: false, palette: 0, playing: true, fps: 10, rotation_speed: 1, epoch: 0, charset: 0, cols: 60, rows: 20, tone: 0, wash_strength: 0.3, dark_ink: 0.15, brightness: 0, contrast: 1, dot_scale: 4, fractal_zoom: 1, center_x: -0.65, center_y: 0 });
     const playing = import_react8.useRef(true), drag = import_react8.useRef(null);
     const [presetsOpen, setPresetsOpen] = import_react8.useState(false);
     const currentFrame = import_react8.useRef(null);
@@ -40702,7 +41941,11 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         }
         scene.current.charset = outputRef.current === 3 ? glyphRef.current : 0;
         if (name === "d")
-          scene.current.tone = (scene.current.tone + 1) % 4;
+          scene.current.tone = (scene.current.tone + 1) % tones.length;
+        if (name === "h" || name === "l")
+          scene.current.dark_ink = Math.max(0, Math.min(0.5, Math.round((scene.current.dark_ink + (name === "l" ? 0.025 : -0.025)) * 1000) / 1000));
+        if (name === "y" || name === "u")
+          scene.current.wash_strength = Math.max(0, Math.min(1, Math.round((scene.current.wash_strength + (name === "u" ? 0.05 : -0.05)) * 100) / 100));
         if (name === "b")
           scene.current.brightness = Math.min(1, scene.current.brightness + 0.1);
         if (name === "n")
@@ -40774,7 +42017,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     });
     const restore = (value) => {
       const { cols, rows, epoch: epoch2 } = scene.current;
-      Object.assign(scene.current, { rotation_speed: 1 }, value.scene, { cols, rows, epoch: epoch2 + 1 >>> 0 });
+      Object.assign(scene.current, { rotation_speed: 1, wash_strength: 0.3, dark_ink: 0.15 }, value.scene, { cols, rows, epoch: epoch2 + 1 >>> 0 });
       playing.current = value.scene.playing;
       drag.current = null;
       outputRef.current = value.output;
@@ -40930,6 +42173,8 @@ Please report this to https://github.com/markedjs/marked.`, e) {
               flexShrink: 0,
               fg: "#526b78",
               children: [
+                scene.current.tone === 6 ? `H/L dark ${(scene.current.dark_ink * 100).toFixed(1)}% · ` : "",
+                scene.current.tone >= 5 ? `Y/U wash ${Math.round(scene.current.wash_strength * 100)}% · ` : "",
                 "[/] rotation ",
                 Math.abs(scene.current.rotation_speed) > 0 && Math.abs(scene.current.rotation_speed) < 1 / 64 ? `${scene.current.rotation_speed < 0 ? "-" : ""}1/${Math.round(1 / Math.abs(scene.current.rotation_speed))}` : scene.current.rotation_speed,
                 "× · M ",
@@ -40990,7 +42235,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     } });
     names = ["Torus", "Orb", "Sheet", "4D hypercube", "Mandelbrot"];
     glyphNames = ["", "ASCII", "Shades", "Quadrants", "Braille + punctuation", "ASCII + braille", "Box drawing", "Blocks", "Pure braille"];
-    tones = ["Color", "Grayscale", "Screen Bayer", "Surface fractal"];
+    tones = ["Color", "Grayscale", "Screen Bayer", "Surface fractal", "Surface fractal color", "Surface fractal wash", "Surface two-shade"];
     mountDemo(App4);
     if (__host.headless)
       Object.assign(globalThis, { async __selfTest() {
@@ -41041,7 +42286,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         await wait();
         if (framesReceived <= before)
           throw new Error("Zoom must keep receiving native frames");
-        for (const [key, label] of [["=", "target 15"], ["-", "target 10"], ["4", "4D hypercube"], ["5", "Mandelbrot"], ["t", "250.0× zoom"], ["d", "Grayscale"], ["d", "Screen Bayer"], ["d", "Surface fractal"], ["m", "Half blocks"], ["m", "Braille"], ["m", "G charset"], ["g", "Shades"], ["g", "Quadrants"], ["g", "Braille + punctuation"], ["g", "ASCII + braille"], ["g", "Box drawing"], ["g", "Blocks"], ["g", "Pure braille"], ["m", "Block fallback"]]) {
+        for (const [key, label] of [["=", "target 15"], ["-", "target 10"], ["4", "4D hypercube"], ["5", "Mandelbrot"], ["t", "250.0× zoom"], ["d", "Grayscale"], ["d", "Screen Bayer"], ["d", "Surface fractal"], ["d", "Surface fractal color", "Surface fractal wash", "Surface two-shade"], ["m", "Half blocks"], ["m", "Braille"], ["m", "G charset"], ["g", "Shades"], ["g", "Quadrants"], ["g", "Braille + punctuation"], ["g", "ASCII + braille"], ["g", "Box drawing"], ["g", "Blocks"], ["g", "Pure braille"], ["m", "Block fallback"]]) {
           host.__input(new TextEncoder().encode(key).buffer);
           await wait();
           if (!host.__snapshot().includes(label))

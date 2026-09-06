@@ -359,6 +359,8 @@ pub const Converter = struct {
             for (0..cols) |x| {
                 var shape: [6]f32 = undefined;
                 var rgb: [6][3]f32 = undefined;
+                var dark_rgb: [3]f32 = @splat(0);
+                var dark_count: f32 = 0;
                 for (0..3) |ry| for (0..2) |rx| {
                     // Area sampling keeps thin edges when reducing the native frame.
                     const sx = (x * 2 + rx) * 240 / (cols * 2);
@@ -370,7 +372,13 @@ pub const Converter = struct {
                     var samples: f32 = 0;
                     for (sy..ey) |py| for (sx..ex) |px| {
                         const i = (py * 240 + px) * 4;
-                        sum += (@as(f32, @floatFromInt(pixels[i])) * 0.299 + @as(f32, @floatFromInt(pixels[i + 1])) * 0.587 + @as(f32, @floatFromInt(pixels[i + 2])) * 0.114) / 255;
+                        if (tone == 6 and @max(pixels[i], pixels[i + 1], pixels[i + 2]) <= 180) {
+                            for (0..3) |channel| dark_rgb[channel] += @floatFromInt(pixels[i + channel]);
+                            dark_count += 1;
+                            samples += 1;
+                            continue;
+                        }
+                        sum += if (tone == 4 or tone == 5 or tone == 6) @as(f32, @floatFromInt(@max(pixels[i], pixels[i + 1], pixels[i + 2]))) / 255 else (@as(f32, @floatFromInt(pixels[i])) * 0.299 + @as(f32, @floatFromInt(pixels[i + 1])) * 0.587 + @as(f32, @floatFromInt(pixels[i + 2])) * 0.114) / 255;
                         for (0..3) |channel| channels[channel] += @floatFromInt(pixels[i + channel]);
                         samples += 1;
                     };
@@ -381,8 +389,8 @@ pub const Converter = struct {
                 };
                 var colors: [6]u8 = .{ 255, 255, 255, 0, 0, 0 };
                 var cp = self.match(shape);
-                if (tone < 2) {
-                    if (charset == 3 or charset == 7) {
+                if (tone < 2 or tone == 4 or tone == 5 or tone == 6) {
+                    if ((charset == 3 or charset == 7) and tone < 5) {
                         const block = self.coloredBlock(rgb);
                         cp = block.cp;
                         colors = block.colors;
@@ -396,6 +404,9 @@ pub const Converter = struct {
                         for (0..3) |channel| colors[channel] = byte(sum[channel] / @max(1, count));
                     }
                 }
+                if (tone == 6) for (0..3) |channel| {
+                    colors[channel + 3] = byte(dark_rgb[channel] / @max(1, dark_count));
+                };
                 const color_offset = max_text_bytes + (y * cols + x) * 6;
                 @memcpy(out[color_offset..][0..6], &colors);
                 var bytes: [4]u8 = undefined;
@@ -439,6 +450,9 @@ test "glyph foreground preserves color and monochrome modes use neutral colors" 
         const len = converter.render(&pixels, 1, 1, @intCast(set_id), 0, &output);
         const colors = output[len - 6 .. len];
         try std.testing.expect(colors[0] > colors[2] or colors[3] > colors[5]);
+        const colored_len = converter.render(&pixels, 1, 1, @intCast(set_id), 4, &output);
+        const tinted = output[colored_len - 6 .. colored_len];
+        try std.testing.expect(tinted[0] > tinted[2] or tinted[3] > tinted[5]);
         const mono_len = converter.render(&pixels, 1, 1, @intCast(set_id), 3, &output);
         try std.testing.expectEqualSlices(u8, &.{ 255, 255, 255, 0, 0, 0 }, output[mono_len - 6 .. mono_len]);
     }
@@ -454,4 +468,42 @@ test "blocks preserve two distinct source colors" {
     const len = converter.render(&pixels, 1, 1, 7, 0, &output);
     const colors = output[len - 6 .. len];
     try std.testing.expect((colors[0] > 240 and colors[4] > 240) or (colors[1] > 240 and colors[3] > 240));
+}
+
+test "wash keeps monochrome glyph selection for every charset" {
+    var converter: Converter = .{};
+    var mono: [240 * 160 * 4]u8 = undefined;
+    var tint: [240 * 160 * 4]u8 = undefined;
+    for (0..240 * 160) |i| {
+        const ink: u8 = if (i % 7 < 3) 255 else 0;
+        @memcpy(mono[i * 4 ..][0..4], &[_]u8{ ink, ink, ink, 255 });
+        @memcpy(tint[i * 4 ..][0..4], &[_]u8{ ink, ink / 2, ink / 4, 255 });
+    }
+    var a: [max_bytes]u8 = undefined;
+    var b: [max_bytes]u8 = undefined;
+    for (1..9) |charset| {
+        const alen = converter.render(&mono, 20, 10, @intCast(charset), 3, &a);
+        const blen = converter.render(&tint, 20, 10, @intCast(charset), 5, &b);
+        try std.testing.expectEqualSlices(u8, a[0 .. alen - 1200], b[0 .. blen - 1200]);
+    }
+}
+
+test "two-shade glyphs retain wash shapes and add a dim background" {
+    var converter: Converter = .{};
+    var wash: [240 * 160 * 4]u8 = undefined;
+    var shaded: [240 * 160 * 4]u8 = undefined;
+    for (0..240 * 160) |i| {
+        const ink: u8 = if (i % 7 < 3) 255 else 0;
+        @memcpy(wash[i * 4 ..][0..4], &[_]u8{ ink, ink / 2, ink / 4, 255 });
+        const shade: u8 = if (ink == 0) 80 else ink;
+        @memcpy(shaded[i * 4 ..][0..4], &[_]u8{ shade, shade / 2, shade / 4, 255 });
+    }
+    var a: [max_bytes]u8 = undefined;
+    var b: [max_bytes]u8 = undefined;
+    for (1..9) |charset| {
+        const alen = converter.render(&wash, 20, 10, @intCast(charset), 5, &a);
+        const blen = converter.render(&shaded, 20, 10, @intCast(charset), 6, &b);
+        try std.testing.expectEqualSlices(u8, a[0 .. alen - 1200], b[0 .. blen - 1200]);
+        try std.testing.expect(b[blen - 3] > b[blen - 1] and b[blen - 3] > 0);
+    }
 }

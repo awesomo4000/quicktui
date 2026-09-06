@@ -451,3 +451,21 @@ through zero to +4×, with powers-of-two steps down to ±1/65,536×. This change
 the speed; older presets use 1×. **R** restores 1× along with the scene controls.
 
 Shape zoom in the graphics lab ranges from 0.3× to 8× using the scroll gesture.
+
+Press **D** past Surface fractal to select **Surface fractal color**. It uses
+the same black/ink coverage as the monochrome mode, with the lit dots tinted
+by the shaded face hue. **C** changes palette; all terminal output modes support
+the color variant. Faces retain the existing opaque depth-tested rendering.
+
+**Surface fractal wash** is the next **D** mode. **Y/U** decreases/increases
+wash strength by 5%, with 30% as the default. Zero reproduces monochrome pixels.
+Projected faces, including hidden faces, contribute to a smoothed color field;
+only the frontmost face determines the dither mask. Braille and glyph selection
+retain the monochrome pattern. Presets include wash strength.
+
+**Surface two-shade** follows wash in the **D** cycle. **H/L** lowers/raises
+dark ink in 2.5% steps, from black to 50% brightness. Its default is 15%.
+Only covered gaps receive dim color; lit dots keep the wash and exterior pixels
+stay black. Braille/glyph output uses a dim character background, so boundaries
+are approximated at character-cell resolution. **Y/U** still controls wash.
+Presets include dark ink, and zero dark ink reproduces the wash mode.

@@ -114,7 +114,7 @@ test "presets survive a new store and invalid saves preserve the previous slot" 
         _ = c.unlink(path);
         _ = c.rmdir(dir);
     }
-    const value = Preset{ .description = "Emerald braille", .scene = .{ .shape = 4, .tone = 3, .fps = 90, .rotation_speed = -0.125, .zoom = 8, .angle = 1.75 }, .output = 3, .glyph = 8 };
+    const value = Preset{ .description = "Emerald braille", .scene = .{ .shape = 4, .tone = 6, .wash_strength = 0.65, .dark_ink = 0.25, .fps = 90, .rotation_speed = -0.125, .zoom = 8, .angle = 1.75 }, .output = 3, .glyph = 8 };
     try store.save(1, value);
     var out: [4096]u8 = undefined;
     const fresh = Store{ .directory = store.directory };

@@ -2,6 +2,12 @@
 
 ## Unreleased - 09/06/2026
 
+- Add surface two-shade mode with H/L dark-ink controls, colored gaps inside projected faces, and dim braille/glyph backgrounds.
+
+- Add a surface-fractal color wash that blends projected face hues while preserving the monochrome dot mask, with Y/U strength controls.
+
+- Add surface-fractal color dithering with face-colored ink in pixel, half-block, braille, and glyph output.
+
 - Raise shape zoom from 1.4× to 8× for close inspection of surface dithering.
 
 - Add independent graphics-lab rotation speed controls, including zero, reverse rotation, and fine steps down to 1/65,536× with double-precision angle accumulation, with preset persistence.

@@ -5,7 +5,7 @@ import {Renderable} from "../vendor/opentui/packages/core/src/Renderable";
 import {NativeImage} from "../vendor/opentui/packages/core/src/image";
 import {mountDemo,keys,graphicsState} from "./platform/demo";
 const WIDTH=240,HEIGHT=160;
-type Scene={shape:number,angle:number,tilt:number,zoom:number,wire:boolean,palette:number,playing:boolean,fps:number,rotation_speed:number,epoch:number,charset:number,cols:number,rows:number,tone:number,brightness:number,contrast:number,dot_scale:number,fractal_zoom:number,center_x:number,center_y:number};
+type Scene={shape:number,angle:number,tilt:number,zoom:number,wire:boolean,palette:number,playing:boolean,fps:number,rotation_speed:number,epoch:number,charset:number,cols:number,rows:number,tone:number,wash_strength:number,dark_ink:number,brightness:number,contrast:number,dot_scale:number,fractal_zoom:number,center_x:number,center_y:number};
 type Frame={angle:number,image:NativeImage,pixels:Uint8Array,glyphs:string,glyphColors:Uint8Array,tone:number,cols:number,rows:number,charset:number,ms:number,index:number,dropped:number,serial:number};
 const ownedImages=new Map<NativeImage,number>();
 function releaseBefore<T extends {dispose():void}>(images:Map<T,number>,committed:number){
@@ -32,9 +32,9 @@ Object.assign(globalThis,{__message(message:string){
 declare const __host:{headless:boolean,postMessage(text:string):boolean,takeBuffer(id:number):ArrayBuffer|null};
 const names=["Torus","Orb","Sheet","4D hypercube","Mandelbrot"];
 const glyphNames=["","ASCII","Shades","Quadrants","Braille + punctuation","ASCII + braille","Box drawing","Blocks","Pure braille"];
-const tones=["Color","Grayscale","Screen Bayer","Surface fractal"];
+const tones=["Color","Grayscale","Screen Bayer","Surface fractal","Surface fractal color","Surface fractal wash","Surface two-shade"];
 function App(){
-  const scene=useRef<Scene>({shape:3,angle:0,tilt:.7,zoom:.82,wire:false,palette:0,playing:true,fps:10,rotation_speed:1,epoch:0,charset:0,cols:60,rows:20,tone:0,brightness:0,contrast:1,dot_scale:4,fractal_zoom:1,center_x:-.65,center_y:0});
+  const scene=useRef<Scene>({shape:3,angle:0,tilt:.7,zoom:.82,wire:false,palette:0,playing:true,fps:10,rotation_speed:1,epoch:0,charset:0,cols:60,rows:20,tone:0,wash_strength:.3,dark_ink:.15,brightness:0,contrast:1,dot_scale:4,fractal_zoom:1,center_x:-.65,center_y:0});
   const playing=useRef(true),drag=useRef<{x:number,y:number}|null>(null);
   const [presetsOpen,setPresetsOpen]=useState(false);
   const currentFrame=useRef<Frame|null>(null);
@@ -90,7 +90,9 @@ function App(){
         outputRef.current=3;setOutput(3);
       }
       scene.current.charset=outputRef.current===3?glyphRef.current:0;
-      if(name==="d")scene.current.tone=(scene.current.tone+1)%4;
+      if(name==="d")scene.current.tone=(scene.current.tone+1)%tones.length;
+      if(name==="h"||name==="l")scene.current.dark_ink=Math.max(0,Math.min(.5,Math.round((scene.current.dark_ink+(name==="l"?.025:-.025))*1000)/1000));
+      if(name==="y"||name==="u")scene.current.wash_strength=Math.max(0,Math.min(1,Math.round((scene.current.wash_strength+(name==="u"?.05:-.05))*100)/100));
       if(name==="b")scene.current.brightness=Math.min(1,scene.current.brightness+.1);
       if(name==="n")scene.current.brightness=Math.max(-1,scene.current.brightness-.1);
       if(name==="k")scene.current.contrast=Math.min(4,scene.current.contrast+.25);
@@ -125,7 +127,7 @@ function App(){
   });
   const restore=(value:any)=>{
     const {cols,rows,epoch}=scene.current;
-    Object.assign(scene.current,{rotation_speed:1},value.scene,{cols,rows,epoch:(epoch+1)>>>0});
+    Object.assign(scene.current,{rotation_speed:1,wash_strength:.3,dark_ink:.15},value.scene,{cols,rows,epoch:(epoch+1)>>>0});
     playing.current=value.scene.playing;drag.current=null;
     outputRef.current=value.output;glyphRef.current=value.glyph;
     scene.current.charset=value.output===3?value.glyph:0;
@@ -157,7 +159,7 @@ function App(){
       <text height={1} flexShrink={0} fg="#c2ced5">{names[scene.current.shape]} · {scene.current.wire?"wireframe":"shaded"} · {playing.current?"playing":"paused"} · {fps} FPS delivered · -/= target {scene.current.fps} · {frame?.ms??0} ms CPU · drop {frame?.dropped??0}</text>
       <text height={1} flexShrink={0} fg="#718b99">Drag rotate/pan · scroll zoom · W wire · C palette · P pause · R reset · T fractal target · F presets · Q exit</text>
       <text height={1} flexShrink={0} fg="#c2ced5">D {tones[scene.current.tone]} · B/N brightness {scene.current.brightness.toFixed(1)} · K/J contrast {scene.current.contrast.toFixed(2)} · O/I dots {scene.current.dot_scale.toFixed(2)} · zoom {scene.current.zoom.toFixed(2)}×</text>
-      <text height={1} flexShrink={0} fg="#526b78">[/] rotation {Math.abs(scene.current.rotation_speed)>0&&Math.abs(scene.current.rotation_speed)<1/64?`${scene.current.rotation_speed<0?"-":""}1/${Math.round(1/Math.abs(scene.current.rotation_speed))}`:scene.current.rotation_speed}× · M {output===1?"Half blocks":output===2?"Braille":output===3?glyphNames[glyphRef.current]+" · G charset":kitty?"Kitty pixels":"Block fallback"} · {WIDTH} × {HEIGHT} · {scene.current.shape===4?scene.current.fractal_zoom.toFixed(1)+"× zoom":"Zig CPU worker → React → terminal"}</text>
+      <text height={1} flexShrink={0} fg="#526b78">{scene.current.tone===6?`H/L dark ${(scene.current.dark_ink*100).toFixed(1)}% · `:""}{scene.current.tone>=5?`Y/U wash ${Math.round(scene.current.wash_strength*100)}% · `:""}[/] rotation {Math.abs(scene.current.rotation_speed)>0&&Math.abs(scene.current.rotation_speed)<1/64?`${scene.current.rotation_speed<0?"-":""}1/${Math.round(1/Math.abs(scene.current.rotation_speed))}`:scene.current.rotation_speed}× · M {output===1?"Half blocks":output===2?"Braille":output===3?glyphNames[glyphRef.current]+" · G charset":kitty?"Kitty pixels":"Block fallback"} · {WIDTH} × {HEIGHT} · {scene.current.shape===4?scene.current.fractal_zoom.toFixed(1)+"× zoom":"Zig CPU worker → React → terminal"}</text>
     </box>
     {presetsOpen&&<PresetsPanel capture={capture} restore={restore} close={()=>setPresetsOpen(false)}/>}
   </box>;
@@ -195,7 +197,7 @@ if(__host.headless)Object.assign(globalThis,{async __selfTest(){
   }
   await wait();
   if(framesReceived<=before)throw new Error("Zoom must keep receiving native frames");
-  for(const [key,label] of [["=","target 15"],["-","target 10"],["4","4D hypercube"],["5","Mandelbrot"],["t","250.0× zoom"],["d","Grayscale"],["d","Screen Bayer"],["d","Surface fractal"],["m","Half blocks"],["m","Braille"],["m","G charset"],["g","Shades"],["g","Quadrants"],["g","Braille + punctuation"],["g","ASCII + braille"],["g","Box drawing"],["g","Blocks"],["g","Pure braille"],["m","Block fallback"]]){
+  for(const [key,label] of [["=","target 15"],["-","target 10"],["4","4D hypercube"],["5","Mandelbrot"],["t","250.0× zoom"],["d","Grayscale"],["d","Screen Bayer"],["d","Surface fractal"],["d","Surface fractal color","Surface fractal wash","Surface two-shade"],["m","Half blocks"],["m","Braille"],["m","G charset"],["g","Shades"],["g","Quadrants"],["g","Braille + punctuation"],["g","ASCII + braille"],["g","Box drawing"],["g","Blocks"],["g","Pure braille"],["m","Block fallback"]]){
     host.__input(new TextEncoder().encode(key).buffer);await wait();
     if(!host.__snapshot().includes(label))throw new Error("Missing lab control state: "+label);
     if(label==="Half blocks"&&!host.__snapshot().includes("▀"))throw new Error("Half-block canvas must draw cells");
@@ -205,7 +207,7 @@ if(__host.headless)Object.assign(globalThis,{async __selfTest(){
   await new Promise(resolve=>setTimeout(resolve,250));
   const glyphNode=[...Renderable.renderablesByNumber.values()].find((node:any)=>node.glyphCols>0) as any;
   if(!glyphNode||!glyphNode.glyphs.trim())throw new Error("Native glyph rows must reach the canvas");
-  host.__input(new TextEncoder().encode("d").buffer); // Surface fractal -> color.
+  host.__input(new TextEncoder().encode("d").buffer); // Surface fractal wash -> undithered color.
   await new Promise(resolve=>setTimeout(resolve,250));
   let colored=false;
   glyphNode.renderSelf({drawText(_text:any,_x:any,_y:any,fg:any,bg:any){

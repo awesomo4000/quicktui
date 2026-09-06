@@ -9,10 +9,10 @@ pub fn main() void {
     const scenes = [6]cpu.Scene{
         .{ .shape = 3, .angle = 0.65, .zoom = 0.7 },
         .{ .shape = 3, .angle = 0.65, .zoom = 0.7, .tone = 3 },
-        .{ .shape = 4 },
-        .{ .shape = 0, .angle = 0.5, .tone = 3 },
-        .{ .shape = 2, .angle = 0.3, .tone = 3 },
-        .{ .shape = 4, .center_x = -0.743643887037151, .center_y = 0.13182590420533, .fractal_zoom = 250 },
+        .{ .shape = 3, .angle = 0.65, .zoom = 0.7, .tone = 6 },
+        .{ .shape = 3, .angle = 0.65, .zoom = 2.5, .tone = 3 },
+        .{ .shape = 3, .angle = 0.65, .zoom = 2.5, .tone = 6, .dark_ink = 0.25 },
+        .{ .shape = 3, .angle = 0.65, .zoom = 2.5, .tone = 5 },
     };
     var rasters: [6]cpu.Raster = undefined;
     for (scenes, 0..) |scene, i| rasters[i].render(scene);

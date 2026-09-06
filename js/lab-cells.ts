@@ -52,18 +52,20 @@ export class LabCells extends Renderable {
       for(let y=0;y<rows;y++){
         let line="";
         for(let x=0;x<cols;x++){
-          let mask=0,count=0;
+          let mask=0,count=0,darkCount=0;
+          const dark=[0,0,0];
           const sum=[0,0,0];
           for(let dy=0;dy<4;dy++)for(let dx=0;dx<2;dx++){
             const c=sample(x*2+dx,y*4+dy,cols*2,rows*4);
-            const visible=this.tone===0?Math.max(...c)>60:c[0]*.299+c[1]*.587+c[2]*.114>90;
+            const visible=this.tone===6?Math.max(...c)>180:(this.tone===0||this.tone===4||this.tone===5)?Math.max(...c)>60:c[0]*.299+c[1]*.587+c[2]*.114>90;
             if(visible){mask|=1<<bits[dy][dx];count++;for(let i=0;i<3;i++)sum[i]+=c[i]}
+            else {darkCount++;for(let i=0;i<3;i++)dark[i]+=c[i]}
           }
           const char=mask?String.fromCodePoint(0x2800+mask):" ";
-          if(this.tone>=2)line+=char;
-          else buffer.drawText(char,left+x,top+y,count?RGBA.fromInts(...sum.map(v=>Math.round(v/count)) as [number,number,number]):FG,BG);
+          if((this.tone===2||this.tone===3))line+=char;
+          else buffer.drawText(char,left+x,top+y,count?RGBA.fromInts(...sum.map(v=>Math.round(v/count)) as [number,number,number]):FG,this.tone===6&&darkCount?RGBA.fromInts(...dark.map(v=>Math.round(v/darkCount)) as [number,number,number]):BG);
         }
-        if(this.tone>=2)buffer.drawText(line,left,top+y,FG,BG);
+        if((this.tone===2||this.tone===3))buffer.drawText(line,left,top+y,FG,BG);
       }
     }else{
       for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
