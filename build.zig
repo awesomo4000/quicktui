@@ -70,6 +70,9 @@ pub fn build(b: *std.Build) void {
     const gallery_test = b.addRunArtifact(exe);
     gallery_test.addArg("--gallery-self-test");
     test_step.dependOn(&gallery_test.step);
+    const live_test = b.addRunArtifact(exe);
+    live_test.addArg("--live-self-test");
+    test_step.dependOn(&live_test.step);
     const lab_test = b.addRunArtifact(exe);
     lab_test.addArg("--lab-self-test");
     test_step.dependOn(&lab_test.step);
@@ -121,6 +124,10 @@ pub fn build(b: *std.Build) void {
     gallery_terminal_test.addArtifactArg(exe);
     gallery_terminal_test.addArg("--gallery");
     b.step("test-gallery", "Check gallery mouse reporting and terminal cleanup").dependOn(&gallery_terminal_test.step);
+    const live_terminal_test = b.addSystemCommand(&.{ "python3", "scripts/test-live.py" });
+    live_terminal_test.setCwd(b.path("."));
+    live_terminal_test.addArtifactArg(exe);
+    b.step("test-live", "Check disk loading and live file watching in a disposable PTY").dependOn(&live_terminal_test.step);
     const lab_terminal_test = b.addSystemCommand(&.{ "python3", "scripts/test-mouse.py" });
     lab_terminal_test.setCwd(b.path("."));
     lab_terminal_test.addArtifactArg(exe);

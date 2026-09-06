@@ -35,9 +35,18 @@ pub fn main(init: std.process.Init) !void {
         const endpoint = worker.endpoint();
         return runtime.runWithMessages(examples, "lab", std.mem.eql(u8, args[1], "--lab-self-test"), &endpoint);
     }
+    if (args.len >= 2 and (std.mem.eql(u8, args[1], "--live") or std.mem.eql(u8, args[1], "--live-self-test"))) {
+        if (args.len > 3) return error.InvalidArguments;
+        var loader: @import("examples/live_loader.zig").Loader = .{};
+        if (args.len == 3) loader.directory = args[2];
+        try loader.start();
+        defer loader.stop();
+        const endpoint = loader.endpoint();
+        return runtime.runWithMessages(examples, "live", std.mem.eql(u8, args[1], "--live-self-test"), &endpoint);
+    }
     const headless = args.len == 2 and std.mem.eql(u8, args[1], "--self-test");
     if (args.len > 1 and !headless) {
-        std.debug.print("Usage: quicktui [--lab | --messages | --gallery | --mouse | --self-test | --smoke]\n", .{});
+        std.debug.print("Usage: quicktui [--live [directory] | --lab | --messages | --gallery | --mouse | --self-test | --smoke]\n", .{});
         return error.InvalidArguments;
     }
     try runtime.runCounter(examples, headless);

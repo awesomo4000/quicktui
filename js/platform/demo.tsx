@@ -89,7 +89,7 @@ Object.assign(globalThis,{
   __inspect(){return JSON.stringify({effectMounted,keys:keys.listenerCount("key"),frame:context.frameId})},
   __snapshot(){return new TextDecoder().decode(lib.getCurrentBuffer(native).getRealCharBytes(true))},
 });
-export function mountDemo(App:()=>React.ReactNode){
+export function mountDemo(App:()=>React.ReactNode,options:{onCaughtError?:(error:unknown)=>void}={}){
 function Mounted(){
   useEffect(()=>{effectMounted=true;return()=>{effectMounted=false}},[]);
   return <App/>;
@@ -107,7 +107,7 @@ context.capabilities=lib.getTerminalCapabilities(native) as any;
 if(!__host.headless)lib.setupTerminal(native,true);
 if(!__host.headless)lib.enableMouse(native,true);
 root=new RootRenderable(context as any);
-container=reconciler.createContainer(root,1,null,false,null,"",report,report,report,()=>{});
+container=reconciler.createContainer(root,1,null,false,null,"",report,options.onCaughtError??report,report,()=>{});
 reconciler.updateContainerSync(<Mounted/>,container,null,null);
 reconciler.flushSyncWork();
 reconciler.flushPassiveEffects();

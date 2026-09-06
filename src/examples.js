@@ -39795,114 +39795,6 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       });
   });
 
-  // js/lab-cells.ts
-  var FG, BG, LabCells;
-  var init_lab_cells = __esm(() => {
-    init_Renderable();
-    init_RGBA();
-    init_catalogue();
-    FG = RGBA.fromHex("#ffffff");
-    BG = RGBA.fromHex("#000000");
-    LabCells = class LabCells extends Renderable {
-      _pixels = null;
-      _mode = "half";
-      glyphs = "";
-      glyphColors = new Uint8Array(0);
-      tone = 0;
-      glyphCols = 0;
-      glyphRows = 0;
-      constructor(ctx, options) {
-        super(ctx, options);
-        this._pixels = options.pixels;
-        this._mode = options.mode ?? "half";
-        this.glyphs = options.glyphs ?? "";
-        this.glyphCols = options.glyphCols ?? 0;
-        this.glyphRows = options.glyphRows ?? 0;
-        this.glyphColors = options.glyphColors ?? new Uint8Array(0);
-        this.tone = options.tone ?? 0;
-      }
-      set pixels(value) {
-        this._pixels = value;
-        this.requestRender();
-      }
-      set mode(value) {
-        this._mode = value;
-        this.requestRender();
-      }
-      renderSelf(buffer) {
-        if (this._mode === "glyphs") {
-          const left2 = this.x + Math.max(0, Math.floor((this.width - this.glyphCols) / 2));
-          const top2 = this.y + Math.max(0, Math.floor((this.height - this.glyphRows) / 2));
-          const lines = this.glyphs.split(`
-`);
-          for (let y2 = 0;y2 < Math.min(this.height, this.glyphRows); y2++) {
-            const chars = Array.from(lines[y2] ?? "");
-            for (let x2 = 0;x2 < chars.length; ) {
-              const offset = (y2 * this.glyphCols + x2) * 6;
-              const color = this.glyphColors.subarray(offset, offset + 6);
-              let end = x2 + 1;
-              while (end < chars.length) {
-                const other = (y2 * this.glyphCols + end) * 6;
-                if (color.some((v2, i) => v2 !== this.glyphColors[other + i]))
-                  break;
-                end++;
-              }
-              buffer.drawText(chars.slice(x2, end).join(""), left2 + x2, top2 + y2, color.length === 6 ? RGBA.fromInts(color[0], color[1], color[2]) : FG, color.length === 6 ? RGBA.fromInts(color[3], color[4], color[5]) : BG);
-              x2 = end;
-            }
-          }
-          return;
-        }
-        const data = this._pixels;
-        if (!data)
-          return;
-        const cols = Math.max(1, Math.min(this.width, Math.floor(this.height * 3)));
-        const rows = Math.max(1, Math.min(this.height, Math.floor(cols / 3)));
-        const left = this.x + Math.floor((this.width - cols) / 2), top = this.y + Math.floor((this.height - rows) / 2);
-        const sample = (x2, y2, w2, h) => {
-          const sx = Math.min(239, Math.floor(x2 * 240 / w2)), sy = Math.min(159, Math.floor(y2 * 160 / h));
-          const i = (sy * 240 + sx) * 4;
-          return [data[i], data[i + 1], data[i + 2]];
-        };
-        if (this._mode === "braille") {
-          const bits = [[0, 3], [1, 4], [2, 5], [6, 7]];
-          for (let y2 = 0;y2 < rows; y2++) {
-            let line = "";
-            for (let x2 = 0;x2 < cols; x2++) {
-              let mask = 0, count = 0;
-              const sum = [0, 0, 0];
-              for (let dy = 0;dy < 4; dy++)
-                for (let dx = 0;dx < 2; dx++) {
-                  const c = sample(x2 * 2 + dx, y2 * 4 + dy, cols * 2, rows * 4);
-                  const visible = this.tone === 0 ? Math.max(...c) > 60 : c[0] * 0.299 + c[1] * 0.587 + c[2] * 0.114 > 90;
-                  if (visible) {
-                    mask |= 1 << bits[dy][dx];
-                    count++;
-                    for (let i = 0;i < 3; i++)
-                      sum[i] += c[i];
-                  }
-                }
-              const char = mask ? String.fromCodePoint(10240 + mask) : " ";
-              if (this.tone >= 2)
-                line += char;
-              else
-                buffer.drawText(char, left + x2, top + y2, count ? RGBA.fromInts(...sum.map((v2) => Math.round(v2 / count))) : FG, BG);
-            }
-            if (this.tone >= 2)
-              buffer.drawText(line, left, top + y2, FG, BG);
-          }
-        } else {
-          for (let y2 = 0;y2 < rows; y2++)
-            for (let x2 = 0;x2 < cols; x2++) {
-              const a = sample(x2, y2 * 2, cols, rows * 2), b2 = sample(x2, y2 * 2 + 1, cols, rows * 2);
-              buffer.drawText("▀", left + x2, top + y2, RGBA.fromInts(a[0], a[1], a[2], 255), RGBA.fromInts(b2[0], b2[1], b2[2], 255));
-            }
-        }
-      }
-    };
-    extend({ labCells: LabCells });
-  });
-
   // js/platform/demo.tsx
   function interceptKeys(handler) {
     keyInterceptor = handler;
@@ -39959,7 +39851,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       }
     }
   }
-  function mountDemo(App3) {
+  function mountDemo(App3, options = {}) {
     function Mounted() {
       import_react5.useEffect(() => {
         effectMounted3 = true;
@@ -39985,7 +39877,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     if (!__host.headless)
       lib4.enableMouse(native3, true);
     root3 = new RootRenderable(context3);
-    container3 = reconciler3.createContainer(root3, 1, null, false, null, "", report3, report3, report3, () => {});
+    container3 = reconciler3.createContainer(root3, 1, null, false, null, "", report3, options.onCaughtError ?? report3, report3, () => {});
     reconciler3.updateContainerSync(/* @__PURE__ */ jsx_runtime3.jsx(Mounted, {}), container3, null, null);
     reconciler3.flushSyncWork();
     reconciler3.flushPassiveEffects();
@@ -40098,11 +39990,425 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     });
   });
 
+  // js/live.tsx
+  var exports_live = {};
+  function evaluate(source, file) {
+    const staged = new Map;
+    const api = Object.freeze({ register(id, definition) {
+      if (typeof id !== "string" || !id || id.length > 80 || typeof definition?.render !== "function" || typeof definition?.title !== "string")
+        throw new Error("register expects an ID, title, and render function");
+      if (extensions.some((item) => item.id === id && item.owner !== file))
+        throw new Error("ID belongs to another script: " + id);
+      if (staged.size >= 16 && !staged.has(id))
+        throw new Error("Limit: 16 registrations per script");
+      staged.set(id, { id, owner: file, title: definition.title, render: definition.render });
+    } });
+    try {
+      const execute = new Function("React", "h", "api", source + `
+//# sourceURL=` + file + ".js");
+      const result = execute(import_react6.default, import_react6.default.createElement, api);
+      if (result && typeof result.then === "function")
+        throw new Error("Top-level loading must be synchronous; use effects for async work");
+      revision++;
+      const remaining = new Map(staged);
+      extensions = extensions.flatMap((item) => {
+        if (item.owner !== file)
+          return [item];
+        const replacement = remaining.get(item.id);
+        remaining.delete(item.id);
+        return replacement ? [{ ...replacement, revision }] : [];
+      });
+      extensions.push(...Array.from(remaining.values(), (item) => ({ ...item, revision })));
+      keys3.emit("live-status", file + ".js loaded · " + staged.size + " component(s) · revision " + revision);
+      changed();
+      return true;
+    } catch (error) {
+      keys3.emit("live-status", "Load failed: " + String(error));
+      return false;
+    }
+  }
+  function App3() {
+    const [count, setCount] = import_react6.useState(0), [items, setItems] = import_react6.useState(extensions), [status, setStatus] = import_react6.useState("Load a script to extend this page.");
+    const [selected, setSelected] = import_react6.useState("counter"), [watch, setWatch] = import_react6.useState(false);
+    const selection = import_react6.useRef({ file: "counter", watch: false });
+    const request = (file = selection.current.file, watching = selection.current.watch) => {
+      selection.current = { file, watch: watching };
+      setSelected(file);
+      setWatch(watching);
+      if (!__host.postMessage(JSON.stringify({ load: file, watch: watching, epoch })))
+        setStatus("Loader rejected request");
+    };
+    const clear = () => {
+      epoch++;
+      __host.postMessage(JSON.stringify({ load: "clear", epoch }));
+      selection.current = { file: "counter", watch: false };
+      setSelected("counter");
+      setWatch(false);
+      extensions = [];
+      changed();
+      setStatus("Components cleared. Press 1 to load the counter, then 2 to add the clock.");
+    };
+    import_react6.useEffect(() => {
+      const update = () => setItems([...extensions]);
+      keys3.on("live-change", update);
+      keys3.on("live-status", setStatus);
+      return () => {
+        keys3.off("live-change", update);
+        keys3.off("live-status", setStatus);
+      };
+    }, []);
+    import_react6.useEffect(() => {
+      const key = (name) => {
+        if (name === "space")
+          setCount((value) => value + 1);
+        if (name === "1")
+          request("counter");
+        if (name === "2")
+          request("clock");
+        if (name === "r")
+          request();
+        if (name === "c")
+          clear();
+        if (name === "w")
+          request(selection.current.file, !selection.current.watch);
+      };
+      keys3.on("key", key);
+      return () => {
+        keys3.off("key", key);
+      };
+    }, []);
+    const button = (label, fn) => /* @__PURE__ */ jsx_runtime4.jsx("box", {
+      paddingX: 1,
+      backgroundColor: "#294650",
+      onMouseDown: fn,
+      children: /* @__PURE__ */ jsx_runtime4.jsx("text", {
+        fg: "#85ddca",
+        children: label
+      })
+    });
+    return /* @__PURE__ */ jsx_runtime4.jsx("box", {
+      width: "100%",
+      height: "100%",
+      padding: 1,
+      backgroundColor: "#101820",
+      children: /* @__PURE__ */ jsx_runtime4.jsxs("box", {
+        width: "100%",
+        height: "100%",
+        border: true,
+        borderStyle: "rounded",
+        borderColor: "#85ddca",
+        title: " 06 / Live JavaScript ",
+        padding: 1,
+        gap: 1,
+        children: [
+          /* @__PURE__ */ jsx_runtime4.jsx("text", {
+            height: 1,
+            flexShrink: 0,
+            fg: "#eee9dc",
+            children: "One running page. Load more code."
+          }),
+          /* @__PURE__ */ jsx_runtime4.jsxs("box", {
+            height: 1,
+            flexShrink: 0,
+            flexDirection: "row",
+            gap: 2,
+            children: [
+              /* @__PURE__ */ jsx_runtime4.jsxs("text", {
+                fg: "#edce86",
+                children: [
+                  "Host count: ",
+                  count
+                ]
+              }),
+              button("Space / click +1", () => setCount((value) => value + 1))
+            ]
+          }),
+          /* @__PURE__ */ jsx_runtime4.jsxs("box", {
+            height: 1,
+            flexShrink: 0,
+            flexDirection: "row",
+            gap: 1,
+            children: [
+              button("1 Load counter.js", () => request("counter")),
+              button("2 Add clock.js", () => request("clock")),
+              button("R Reload", () => request()),
+              button("C Clear", clear)
+            ]
+          }),
+          /* @__PURE__ */ jsx_runtime4.jsxs("text", {
+            height: 1,
+            flexShrink: 0,
+            fg: "#96aeb8",
+            children: [
+              "Selected: ",
+              selected,
+              ".js · W watch: ",
+              watch ? "ON" : "off",
+              " · Q exit"
+            ]
+          }),
+          /* @__PURE__ */ jsx_runtime4.jsx("scrollbox", {
+            flexGrow: 1,
+            minHeight: 0,
+            children: /* @__PURE__ */ jsx_runtime4.jsx("box", {
+              gap: 1,
+              width: "100%",
+              children: items.length === 0 ? /* @__PURE__ */ jsx_runtime4.jsx("text", {
+                fg: "#667f8b",
+                children: "No components loaded. Press 1 for the counter, then 2 to add the clock."
+              }) : items.map((item) => /* @__PURE__ */ jsx_runtime4.jsx("box", {
+                border: true,
+                borderStyle: "rounded",
+                borderColor: "#3c626d",
+                paddingX: 1,
+                width: "100%",
+                title: " " + item.id + " / " + item.owner + ".js ",
+                children: /* @__PURE__ */ jsx_runtime4.jsxs("box", {
+                  flexDirection: "column",
+                  paddingY: 1,
+                  gap: 1,
+                  width: "100%",
+                  children: [
+                    /* @__PURE__ */ jsx_runtime4.jsx("text", {
+                      fg: "#85ddca",
+                      children: item.title
+                    }),
+                    /* @__PURE__ */ jsx_runtime4.jsx(ExtensionBoundary, {
+                      children: /* @__PURE__ */ jsx_runtime4.jsx(item.render, {})
+                    }, item.revision)
+                  ]
+                })
+              }, item.id))
+            })
+          }),
+          /* @__PURE__ */ jsx_runtime4.jsx("text", {
+            height: 2,
+            flexShrink: 0,
+            fg: status.includes("failed") ? "#ee9b86" : "#85ddca",
+            children: status
+          }),
+          /* @__PURE__ */ jsx_runtime4.jsx("text", {
+            height: 2,
+            flexShrink: 0,
+            fg: "#667f8b",
+            children: "Edit examples/live/*.js, then reload. Shared React and QuickJS stay alive. Replaced extensions remount; the host and other extensions retain their state."
+          })
+        ]
+      })
+    });
+  }
+  var import_react6, jsx_runtime4, extensions, revision = 0, epoch = 0, changed = () => keys3.emit("live-change"), ExtensionBoundary;
+  var init_live = __esm(() => {
+    init_demo();
+    import_react6 = __toESM(require_react(), 1);
+    jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
+    extensions = [];
+    Object.assign(globalThis, { __message(message) {
+      const event = JSON.parse(message);
+      if (event.type !== "source" || event.epoch !== epoch)
+        return;
+      if (event.error) {
+        keys3.emit("live-status", event.file + ".js: " + event.error);
+        return;
+      }
+      const bytes = __host.takeBuffer(event.id);
+      if (!bytes)
+        return;
+      evaluate(new TextDecoder().decode(bytes), event.file);
+    } });
+    ExtensionBoundary = class ExtensionBoundary extends import_react6.default.Component {
+      state = { error: null };
+      static getDerivedStateFromError(error) {
+        return { error: String(error) };
+      }
+      render() {
+        return this.state.error ? /* @__PURE__ */ jsx_runtime4.jsxs("text", {
+          fg: "#ee9b86",
+          children: [
+            "Component failed: ",
+            this.state.error
+          ]
+        }) : this.props.children;
+      }
+    };
+    mountDemo(App3, { onCaughtError(error) {
+      keys3.emit("live-status", "Component failed: " + String(error));
+    } });
+    if (__host.headless)
+      Object.assign(globalThis, { async __selfTest() {
+        const host = globalThis;
+        host.__resize(110, 40);
+        const wait = () => new Promise((resolve) => setTimeout(resolve, 25));
+        const until = async (text) => {
+          const end = Date.now() + 3000;
+          while (!host.__snapshot().includes(text) && Date.now() < end)
+            await wait();
+          if (!host.__snapshot().includes(text))
+            throw new Error("Missing live state: " + text + `
+` + host.__snapshot());
+        };
+        host.__input(new TextEncoder().encode(" ").buffer);
+        host.__input(new TextEncoder().encode("1").buffer);
+        await until("A counter loaded from JavaScript");
+        host.__input(new TextEncoder().encode("2").buffer);
+        await until("A clock added by a second script");
+        await until("Host count: 1");
+        evaluate('api.register("counter",{title:"Replacement counter",render:()=>h("text",{},"new code")});', "counter");
+        await until("Replacement counter");
+        await until("A clock added by a second script");
+        await until("Host count: 1");
+        evaluate('api.register("counter",{title:"Effect test",render:()=>{React.useEffect(()=>{globalThis.__liveEffectMounted=true;return()=>{globalThis.__liveEffectCleaned=true}},[]);return h("text",{},"effect mounted")}});', "counter");
+        await until("effect mounted");
+        await wait();
+        if (!host.__liveEffectMounted)
+          throw new Error("Extension effect did not mount");
+        evaluate('api.register("counter",{title:"Replacement counter",render:()=>h("text",{},"new code")});', "counter");
+        await until("Replacement counter");
+        await wait();
+        if (!host.__liveEffectCleaned)
+          throw new Error("Replaced extension effect was not cleaned up");
+        if (extensions.map((item) => item.id).join(",") !== "counter,clock")
+          throw new Error("Reload moved components");
+        const before = revision;
+        if (evaluate('api.register("counter",{title:"bad",render:()=>null}); throw new Error("expected");', "counter"))
+          throw new Error("Failed load committed");
+        if (revision !== before || extensions.find((item) => item.id === "counter")?.title !== "Replacement counter")
+          throw new Error("Failed loads must preserve registrations");
+        if (evaluate("const = ;", "counter"))
+          throw new Error("Syntax error accepted");
+        evaluate('api.register("counter",{title:"Throwing component",render:()=>{throw new Error("render test")}});', "counter");
+        await until("Component failed:");
+        await until("Host count: 1");
+        await until("A clock added by a second script");
+        evaluate('api.register("counter",{title:"Recovered",render:()=>h("text",{},"working again")});', "counter");
+        await until("working again");
+        host.__input(new TextEncoder().encode("wc").buffer);
+        await until("Components cleared.");
+        await wait();
+        if (extensions.length || host.__snapshot().includes("working again"))
+          throw new Error("Clear left components mounted");
+        await until("Host count: 1");
+        await until("watch: off");
+        host.__input(new TextEncoder().encode("1").buffer);
+        await until("A counter loaded from JavaScript");
+        host.__input(new TextEncoder().encode("2").buffer);
+        await until("A clock added by a second script");
+      } });
+  });
+
+  // js/lab-cells.ts
+  var FG, BG, LabCells;
+  var init_lab_cells = __esm(() => {
+    init_Renderable();
+    init_RGBA();
+    init_catalogue();
+    FG = RGBA.fromHex("#ffffff");
+    BG = RGBA.fromHex("#000000");
+    LabCells = class LabCells extends Renderable {
+      _pixels = null;
+      _mode = "half";
+      glyphs = "";
+      glyphColors = new Uint8Array(0);
+      tone = 0;
+      glyphCols = 0;
+      glyphRows = 0;
+      constructor(ctx, options) {
+        super(ctx, options);
+        this._pixels = options.pixels;
+        this._mode = options.mode ?? "half";
+        this.glyphs = options.glyphs ?? "";
+        this.glyphCols = options.glyphCols ?? 0;
+        this.glyphRows = options.glyphRows ?? 0;
+        this.glyphColors = options.glyphColors ?? new Uint8Array(0);
+        this.tone = options.tone ?? 0;
+      }
+      set pixels(value) {
+        this._pixels = value;
+        this.requestRender();
+      }
+      set mode(value) {
+        this._mode = value;
+        this.requestRender();
+      }
+      renderSelf(buffer) {
+        if (this._mode === "glyphs") {
+          const left2 = this.x + Math.max(0, Math.floor((this.width - this.glyphCols) / 2));
+          const top2 = this.y + Math.max(0, Math.floor((this.height - this.glyphRows) / 2));
+          const lines = this.glyphs.split(`
+`);
+          for (let y2 = 0;y2 < Math.min(this.height, this.glyphRows); y2++) {
+            const chars = Array.from(lines[y2] ?? "");
+            for (let x2 = 0;x2 < chars.length; ) {
+              const offset = (y2 * this.glyphCols + x2) * 6;
+              const color = this.glyphColors.subarray(offset, offset + 6);
+              let end = x2 + 1;
+              while (end < chars.length) {
+                const other = (y2 * this.glyphCols + end) * 6;
+                if (color.some((v2, i) => v2 !== this.glyphColors[other + i]))
+                  break;
+                end++;
+              }
+              buffer.drawText(chars.slice(x2, end).join(""), left2 + x2, top2 + y2, color.length === 6 ? RGBA.fromInts(color[0], color[1], color[2]) : FG, color.length === 6 ? RGBA.fromInts(color[3], color[4], color[5]) : BG);
+              x2 = end;
+            }
+          }
+          return;
+        }
+        const data = this._pixels;
+        if (!data)
+          return;
+        const cols = Math.max(1, Math.min(this.width, Math.floor(this.height * 3)));
+        const rows = Math.max(1, Math.min(this.height, Math.floor(cols / 3)));
+        const left = this.x + Math.floor((this.width - cols) / 2), top = this.y + Math.floor((this.height - rows) / 2);
+        const sample = (x2, y2, w2, h) => {
+          const sx = Math.min(239, Math.floor(x2 * 240 / w2)), sy = Math.min(159, Math.floor(y2 * 160 / h));
+          const i = (sy * 240 + sx) * 4;
+          return [data[i], data[i + 1], data[i + 2]];
+        };
+        if (this._mode === "braille") {
+          const bits = [[0, 3], [1, 4], [2, 5], [6, 7]];
+          for (let y2 = 0;y2 < rows; y2++) {
+            let line = "";
+            for (let x2 = 0;x2 < cols; x2++) {
+              let mask = 0, count = 0;
+              const sum = [0, 0, 0];
+              for (let dy = 0;dy < 4; dy++)
+                for (let dx = 0;dx < 2; dx++) {
+                  const c = sample(x2 * 2 + dx, y2 * 4 + dy, cols * 2, rows * 4);
+                  const visible = this.tone === 0 ? Math.max(...c) > 60 : c[0] * 0.299 + c[1] * 0.587 + c[2] * 0.114 > 90;
+                  if (visible) {
+                    mask |= 1 << bits[dy][dx];
+                    count++;
+                    for (let i = 0;i < 3; i++)
+                      sum[i] += c[i];
+                  }
+                }
+              const char = mask ? String.fromCodePoint(10240 + mask) : " ";
+              if (this.tone >= 2)
+                line += char;
+              else
+                buffer.drawText(char, left + x2, top + y2, count ? RGBA.fromInts(...sum.map((v2) => Math.round(v2 / count))) : FG, BG);
+            }
+            if (this.tone >= 2)
+              buffer.drawText(line, left, top + y2, FG, BG);
+          }
+        } else {
+          for (let y2 = 0;y2 < rows; y2++)
+            for (let x2 = 0;x2 < cols; x2++) {
+              const a = sample(x2, y2 * 2, cols, rows * 2), b2 = sample(x2, y2 * 2 + 1, cols, rows * 2);
+              buffer.drawText("▀", left + x2, top + y2, RGBA.fromInts(a[0], a[1], a[2], 255), RGBA.fromInts(b2[0], b2[1], b2[2], 255));
+            }
+        }
+      }
+    };
+    extend({ labCells: LabCells });
+  });
+
   // js/lab-presets.tsx
   function PresetsPanel({ capture, restore, close }) {
-    const [slots, setSlots] = import_react6.useState(Array.from({ length: 9 }, (_2, i) => ({ slot: i + 1, description: "" })));
-    const [slot, setSlot] = import_react6.useState(1), [description, setDescription] = import_react6.useState("");
-    const [editing, setEditing] = import_react6.useState(false), [busy, setBusy] = import_react6.useState(false), [notice, setNotice] = import_react6.useState("");
+    const [slots, setSlots] = import_react7.useState(Array.from({ length: 9 }, (_2, i) => ({ slot: i + 1, description: "" })));
+    const [slot, setSlot] = import_react7.useState(1), [description, setDescription] = import_react7.useState("");
+    const [editing, setEditing] = import_react7.useState(false), [busy, setBusy] = import_react7.useState(false), [notice, setNotice] = import_react7.useState("");
     const request = (message) => {
       if (busy)
         return;
@@ -40124,7 +40430,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       setEditing(false);
     };
     const load = () => request({ preset: "load", slot });
-    import_react6.useEffect(() => {
+    import_react7.useEffect(() => {
       let listed = false;
       const reply = (event) => {
         setBusy(false);
@@ -40156,7 +40462,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         keys3.off("presets", reply);
       };
     }, []);
-    import_react6.useEffect(() => {
+    import_react7.useEffect(() => {
       interceptKeys((key) => {
         const name = key.name.toLowerCase();
         if (key.ctrl && name === "c")
@@ -40205,7 +40511,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       });
       return () => interceptKeys(null);
     }, [slot, description, editing, busy, slots]);
-    const button = (label, action) => /* @__PURE__ */ jsx_runtime4.jsx("box", {
+    const button = (label, action) => /* @__PURE__ */ jsx_runtime5.jsx("box", {
       height: 1,
       flexShrink: 0,
       paddingX: 1,
@@ -40214,12 +40520,12 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         if (!busy)
           action();
       },
-      children: /* @__PURE__ */ jsx_runtime4.jsx("text", {
+      children: /* @__PURE__ */ jsx_runtime5.jsx("text", {
         fg: "#85ddca",
         children: label
       })
     });
-    return /* @__PURE__ */ jsx_runtime4.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime5.jsxs("box", {
       position: "absolute",
       left: 1,
       top: 1,
@@ -40234,21 +40540,21 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       padding: 1,
       title: " Presets ",
       children: [
-        /* @__PURE__ */ jsx_runtime4.jsx("text", {
+        /* @__PURE__ */ jsx_runtime5.jsx("text", {
           height: 1,
           flexShrink: 0,
           fg: "#eee9dc",
           children: "Nine local slots · 1–9 select · Tab edit description"
         }),
-        /* @__PURE__ */ jsx_runtime4.jsx("scrollbox", {
+        /* @__PURE__ */ jsx_runtime5.jsx("scrollbox", {
           flexGrow: 1,
           minHeight: 0,
-          children: slots.map((entry) => /* @__PURE__ */ jsx_runtime4.jsx("box", {
+          children: slots.map((entry) => /* @__PURE__ */ jsx_runtime5.jsx("box", {
             height: 1,
             flexShrink: 0,
             backgroundColor: slot === entry.slot ? "#294650" : "#14232c",
             onMouseDown: () => choose(entry.slot),
-            children: /* @__PURE__ */ jsx_runtime4.jsxs("text", {
+            children: /* @__PURE__ */ jsx_runtime5.jsxs("text", {
               fg: slot === entry.slot ? "#85ddca" : "#96aeb8",
               children: [
                 entry.slot,
@@ -40258,11 +40564,11 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             })
           }, entry.slot))
         }),
-        /* @__PURE__ */ jsx_runtime4.jsx("box", {
+        /* @__PURE__ */ jsx_runtime5.jsx("box", {
           height: 2,
           flexShrink: 0,
           onMouseDown: () => setEditing(true),
-          children: /* @__PURE__ */ jsx_runtime4.jsxs("text", {
+          children: /* @__PURE__ */ jsx_runtime5.jsxs("text", {
             fg: editing ? "#eee9dc" : "#96aeb8",
             children: [
               "Description: ",
@@ -40271,7 +40577,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             ]
           })
         }),
-        /* @__PURE__ */ jsx_runtime4.jsxs("box", {
+        /* @__PURE__ */ jsx_runtime5.jsxs("box", {
           height: 1,
           flexShrink: 0,
           flexDirection: "row",
@@ -40282,7 +40588,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             button("Esc · Close", close)
           ]
         }),
-        /* @__PURE__ */ jsx_runtime4.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime5.jsxs("text", {
           height: 1,
           flexShrink: 0,
           fg: "#85ddca",
@@ -40291,7 +40597,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             editing ? " · Enter saves" : ""
           ]
         }),
-        /* @__PURE__ */ jsx_runtime4.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime5.jsxs("text", {
           height: 1,
           flexShrink: 0,
           fg: "#667f8b",
@@ -40304,11 +40610,11 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       ]
     });
   }
-  var import_react6, jsx_runtime4;
+  var import_react7, jsx_runtime5;
   var init_lab_presets = __esm(() => {
     init_demo();
-    import_react6 = __toESM(require_react(), 1);
-    jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
+    import_react7 = __toESM(require_react(), 1);
+    jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
   });
 
   // js/lab.tsx
@@ -40320,33 +40626,33 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         images.delete(image);
       }
   }
-  function App3() {
-    const scene = import_react7.useRef({ shape: 3, angle: 0, tilt: 0.7, zoom: 0.82, wire: false, palette: 0, playing: true, fps: 10, epoch: 0, charset: 0, cols: 60, rows: 20, tone: 0, brightness: 0, contrast: 1, dot_scale: 4, fractal_zoom: 1, center_x: -0.65, center_y: 0 });
-    const playing = import_react7.useRef(true), drag = import_react7.useRef(null);
-    const [presetsOpen, setPresetsOpen] = import_react7.useState(false);
-    const currentFrame = import_react7.useRef(null);
-    const [frame, setFrame] = import_react7.useState(null);
+  function App4() {
+    const scene = import_react8.useRef({ shape: 3, angle: 0, tilt: 0.7, zoom: 0.82, wire: false, palette: 0, playing: true, fps: 10, epoch: 0, charset: 0, cols: 60, rows: 20, tone: 0, brightness: 0, contrast: 1, dot_scale: 4, fractal_zoom: 1, center_x: -0.65, center_y: 0 });
+    const playing = import_react8.useRef(true), drag = import_react8.useRef(null);
+    const [presetsOpen, setPresetsOpen] = import_react8.useState(false);
+    const currentFrame = import_react8.useRef(null);
+    const [frame, setFrame] = import_react8.useState(null);
     currentFrame.current = frame;
-    const [fps, setFps] = import_react7.useState(0);
-    const outputRef = import_react7.useRef(0), glyphRef = import_react7.useRef(1);
-    const [output, setOutput] = import_react7.useState(0);
-    const [kitty, setKitty] = import_react7.useState(graphicsState.confirmed);
-    const [, refresh] = import_react7.useState(0);
+    const [fps, setFps] = import_react8.useState(0);
+    const outputRef = import_react8.useRef(0), glyphRef = import_react8.useRef(1);
+    const [output, setOutput] = import_react8.useState(0);
+    const [kitty, setKitty] = import_react8.useState(graphicsState.confirmed);
+    const [, refresh] = import_react8.useState(0);
     const draw = () => {
       scene.current.playing = playing.current && !drag.current;
       if (!__host.postMessage(JSON.stringify(scene.current)))
         throw new Error("Native renderer rejected scene");
       refresh((n) => n + 1);
     };
-    import_react7.useEffect(() => {
+    import_react8.useEffect(() => {
       releaseBefore(ownedImages, frame?.serial ?? 0);
     }, [frame?.image]);
-    import_react7.useEffect(() => () => {
+    import_react8.useEffect(() => () => {
       for (const image of ownedImages.keys())
         image.dispose();
       ownedImages.clear();
     }, []);
-    import_react7.useEffect(() => {
+    import_react8.useEffect(() => {
       const timer = setInterval(() => {
         const canvas = [...Renderable.renderablesByNumber.values()].find((node) => node.id === "lab-canvas");
         if (canvas) {
@@ -40365,7 +40671,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       }, 500);
       return () => clearInterval(timer);
     }, []);
-    import_react7.useEffect(() => {
+    import_react8.useEffect(() => {
       const key = (name) => {
         if (name === "f") {
           setPresetsOpen(true);
@@ -40461,8 +40767,8 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       glyph: glyphRef.current
     });
     const restore = (value) => {
-      const { cols, rows, epoch } = scene.current;
-      Object.assign(scene.current, value.scene, { cols, rows, epoch: epoch + 1 >>> 0 });
+      const { cols, rows, epoch: epoch2 } = scene.current;
+      Object.assign(scene.current, value.scene, { cols, rows, epoch: epoch2 + 1 >>> 0 });
       playing.current = value.scene.playing;
       drag.current = null;
       outputRef.current = value.output;
@@ -40472,13 +40778,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       setPresetsOpen(false);
       draw();
     };
-    return /* @__PURE__ */ jsx_runtime5.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime6.jsxs("box", {
       width: "100%",
       height: "100%",
       padding: 1,
       backgroundColor: "#101820",
       children: [
-        /* @__PURE__ */ jsx_runtime5.jsxs("box", {
+        /* @__PURE__ */ jsx_runtime6.jsxs("box", {
           border: true,
           borderStyle: "rounded",
           borderColor: "#63c7b2",
@@ -40488,27 +40794,27 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           height: "100%",
           gap: 1,
           children: [
-            /* @__PURE__ */ jsx_runtime5.jsx("text", {
+            /* @__PURE__ */ jsx_runtime6.jsx("text", {
               height: 1,
               flexShrink: 0,
               fg: "#f6f0dd",
-              children: /* @__PURE__ */ jsx_runtime5.jsx("b", {
+              children: /* @__PURE__ */ jsx_runtime6.jsx("b", {
                 children: "Light, geometry, and terminal pixels"
               })
             }),
-            /* @__PURE__ */ jsx_runtime5.jsx("box", {
+            /* @__PURE__ */ jsx_runtime6.jsx("box", {
               flexDirection: "row",
               height: 1,
               flexShrink: 0,
               gap: 1,
-              children: names.map((name, i) => /* @__PURE__ */ jsx_runtime5.jsx("box", {
+              children: names.map((name, i) => /* @__PURE__ */ jsx_runtime6.jsx("box", {
                 paddingX: 1,
                 backgroundColor: scene.current.shape === i ? "#294650" : "#192932",
                 onMouseDown: () => {
                   scene.current.shape = i;
                   draw();
                 },
-                children: /* @__PURE__ */ jsx_runtime5.jsxs("text", {
+                children: /* @__PURE__ */ jsx_runtime6.jsxs("text", {
                   fg: "#63c7b2",
                   children: [
                     i + 1,
@@ -40518,7 +40824,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                 })
               }, name))
             }),
-            /* @__PURE__ */ jsx_runtime5.jsx("box", {
+            /* @__PURE__ */ jsx_runtime6.jsx("box", {
               id: "lab-canvas",
               flexGrow: 1,
               minHeight: 0,
@@ -40556,7 +40862,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                   scene.current.zoom = Math.max(0.3, Math.min(1.4, scene.current.zoom + (e.scroll.direction === "up" ? 0.07 : -0.07)));
                 draw();
               },
-              children: frame ? output === 0 ? /* @__PURE__ */ jsx_runtime5.jsx("image", {
+              children: frame ? output === 0 ? /* @__PURE__ */ jsx_runtime6.jsx("image", {
                 source: frame.image,
                 width: "100%",
                 height: "100%",
@@ -40564,12 +40870,12 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                 onError: (error) => {
                   throw error;
                 }
-              }) : import_react7.default.createElement("labCells", { pixels: frame.pixels, mode: output === 1 ? "half" : output === 2 ? "braille" : "glyphs", glyphs: frame.glyphs, glyphColors: frame.glyphColors, tone: frame.tone, glyphCols: frame.cols, glyphRows: frame.rows, width: "100%", height: "100%" }) : /* @__PURE__ */ jsx_runtime5.jsx("text", {
+              }) : import_react8.default.createElement("labCells", { pixels: frame.pixels, mode: output === 1 ? "half" : output === 2 ? "braille" : "glyphs", glyphs: frame.glyphs, glyphColors: frame.glyphColors, tone: frame.tone, glyphCols: frame.cols, glyphRows: frame.rows, width: "100%", height: "100%" }) : /* @__PURE__ */ jsx_runtime6.jsx("text", {
                 fg: "#718b99",
                 children: "Waiting for native frame…"
               })
             }),
-            /* @__PURE__ */ jsx_runtime5.jsxs("text", {
+            /* @__PURE__ */ jsx_runtime6.jsxs("text", {
               height: 1,
               flexShrink: 0,
               fg: "#c2ced5",
@@ -40589,13 +40895,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                 frame?.dropped ?? 0
               ]
             }),
-            /* @__PURE__ */ jsx_runtime5.jsx("text", {
+            /* @__PURE__ */ jsx_runtime6.jsx("text", {
               height: 1,
               flexShrink: 0,
               fg: "#718b99",
               children: "Drag rotate/pan · scroll zoom · W wire · C palette · P pause · R reset · T fractal target · F presets · Q exit"
             }),
-            /* @__PURE__ */ jsx_runtime5.jsxs("text", {
+            /* @__PURE__ */ jsx_runtime6.jsxs("text", {
               height: 1,
               flexShrink: 0,
               fg: "#c2ced5",
@@ -40610,7 +40916,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                 scene.current.dot_scale.toFixed(2)
               ]
             }),
-            /* @__PURE__ */ jsx_runtime5.jsxs("text", {
+            /* @__PURE__ */ jsx_runtime6.jsxs("text", {
               height: 1,
               flexShrink: 0,
               fg: "#526b78",
@@ -40627,7 +40933,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             })
           ]
         }),
-        presetsOpen && /* @__PURE__ */ jsx_runtime5.jsx(PresetsPanel, {
+        presetsOpen && /* @__PURE__ */ jsx_runtime6.jsx(PresetsPanel, {
           capture,
           restore,
           close: () => setPresetsOpen(false)
@@ -40635,15 +40941,15 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       ]
     });
   }
-  var import_react7, jsx_runtime5, WIDTH = 240, HEIGHT = 160, ownedImages, frameListeners, framesReceived = 0, deliveries, names, glyphNames, tones;
+  var import_react8, jsx_runtime6, WIDTH = 240, HEIGHT = 160, ownedImages, frameListeners, framesReceived = 0, deliveries, names, glyphNames, tones;
   var init_lab = __esm(() => {
     init_lab_cells();
     init_lab_presets();
     init_Renderable();
     init_image();
     init_demo();
-    import_react7 = __toESM(require_react(), 1);
-    jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
+    import_react8 = __toESM(require_react(), 1);
+    jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
     ownedImages = new Map;
     frameListeners = new Set;
     deliveries = [];
@@ -40674,7 +40980,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     names = ["Torus", "Orb", "Sheet", "4D hypercube", "Mandelbrot"];
     glyphNames = ["", "ASCII", "Shades", "Quadrants", "Braille + punctuation", "ASCII + braille", "Box drawing", "Blocks", "Pure braille"];
     tones = ["Color", "Grayscale", "Screen Bayer", "Surface fractal"];
-    mountDemo(App3);
+    mountDemo(App4);
     if (__host.headless)
       Object.assign(globalThis, { async __selfTest() {
         const released = [];
@@ -40782,22 +41088,22 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     return "#" + color.map((channel, i) => Math.round(background[i] + (channel - background[i]) * amount).toString(16).padStart(2, "0")).join("");
   }
   function Activity({ pulse }) {
-    const [size, setSize] = import_react8.useState({ width: 24, height: 8 });
-    const [time, setTime] = import_react8.useState(0);
-    const [blink, setBlink] = import_react8.useState(null);
-    import_react8.useEffect(() => {
+    const [size, setSize] = import_react9.useState({ width: 24, height: 8 });
+    const [time, setTime] = import_react9.useState(0);
+    const [blink, setBlink] = import_react9.useState(null);
+    import_react9.useEffect(() => {
       const started = Date.now();
       const timer = setInterval(() => setTime((Date.now() - started) / 1000), 50);
       return () => clearInterval(timer);
     }, []);
     const columns = Math.max(1, Math.floor((size.width - 4) / 3));
     const rows = Math.max(1, Math.min(12, size.height - 4));
-    import_react8.useEffect(() => {
+    import_react9.useEffect(() => {
       const host = globalThis.__host;
       if (!host.postMessage(`grid:${columns}:${rows}`))
         throw new Error("Native grid configuration rejected");
     }, [columns, rows]);
-    import_react8.useEffect(() => {
+    import_react9.useEffect(() => {
       if (!pulse || pulse.columns !== columns || pulse.rows !== rows)
         return;
       setBlink({ cells: pulse.cells, columns, rows, started: Date.now() });
@@ -40807,7 +41113,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     const fade = Math.pow(Math.sin(Math.PI * (cycle % 1)), 1.4);
     const signal = 512 + 240 * Math.sin(time * 0.63) + 71 * Math.sin(time * 1.71);
     const coherence = 0.5 + 0.35 * Math.sin(time * 0.37 + 1.4);
-    return /* @__PURE__ */ jsx_runtime6.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime7.jsxs("box", {
       id: "message-activity",
       flexGrow: 1,
       minHeight: 0,
@@ -40820,7 +41126,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         setSize({ width: this.width, height: this.height });
       },
       children: [
-        Array.from({ length: rows }, (_2, y2) => /* @__PURE__ */ jsx_runtime6.jsx("box", {
+        Array.from({ length: rows }, (_2, y2) => /* @__PURE__ */ jsx_runtime7.jsx("box", {
           height: 1,
           flexShrink: 0,
           flexDirection: "row",
@@ -40831,7 +41137,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             const brightness = 0.12 + 0.88 * Math.pow(wave * 0.8 + shimmer * 0.2, 2);
             const selected = blink && blink.columns === columns && blink.rows === rows && blink.cells.includes(y2 * columns + x2) && blinkAge < 800;
             const color = selected ? Math.floor(blinkAge / 200) % 2 === 0 ? "#f5f4df" : "#101820" : tint(palette[(x2 + 2 * y2) % palette.length], brightness);
-            return /* @__PURE__ */ jsx_runtime6.jsx("box", {
+            return /* @__PURE__ */ jsx_runtime7.jsx("box", {
               id: `activity-cell-${x2}-${y2}`,
               width: 2,
               height: 1,
@@ -40840,13 +41146,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             }, x2);
           })
         }, y2)),
-        /* @__PURE__ */ jsx_runtime6.jsx("text", {
+        /* @__PURE__ */ jsx_runtime7.jsx("text", {
           height: 1,
           flexShrink: 0,
           fg: tint([164, 205, 213], fade),
           children: verbs[Math.floor(cycle) % verbs.length]
         }),
-        /* @__PURE__ */ jsx_runtime6.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime7.jsxs("text", {
           height: 1,
           flexShrink: 0,
           fg: tint([120, 157, 177], 0.55 + 0.3 * Math.sin(time * 0.9) ** 2),
@@ -40859,10 +41165,10 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       ]
     });
   }
-  var import_react8, jsx_runtime6, palette, verbs;
+  var import_react9, jsx_runtime7, palette, verbs;
   var init_activity = __esm(() => {
-    import_react8 = __toESM(require_react(), 1);
-    jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
+    import_react9 = __toESM(require_react(), 1);
+    jsx_runtime7 = __toESM(require_jsx_runtime(), 1);
     palette = [[99, 199, 178], [133, 156, 225], [181, 136, 207], [224, 168, 101], [94, 183, 205]];
     verbs = ["thinking...", "connecting...", "considering...", "imagining...", "remembering...", "reconsidering..."];
   });
@@ -40870,10 +41176,10 @@ Please report this to https://github.com/markedjs/marked.`, e) {
   // js/messages.tsx
   var exports_messages = {};
   function ProgressBar({ progress, style }) {
-    const [width, setWidth] = import_react9.useState(0);
+    const [width, setWidth] = import_react10.useState(0);
     const filled = Math.round(width * progress / 100);
     const color = progress === 100 ? "#63c7b2" : "#438b80";
-    return /* @__PURE__ */ jsx_runtime7.jsx("box", {
+    return /* @__PURE__ */ jsx_runtime8.jsx("box", {
       flexGrow: 1,
       flexBasis: 0,
       minWidth: 0,
@@ -40883,17 +41189,17 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       onSizeChange: function() {
         setWidth(Math.max(0, Math.floor(this.width)));
       },
-      children: style === 0 ? /* @__PURE__ */ jsx_runtime7.jsx("box", {
+      children: style === 0 ? /* @__PURE__ */ jsx_runtime8.jsx("box", {
         width: `${progress}%`,
         height: 1,
         backgroundColor: color
-      }) : /* @__PURE__ */ jsx_runtime7.jsxs("text", {
+      }) : /* @__PURE__ */ jsx_runtime8.jsxs("text", {
         width: "100%",
         height: 1,
         fg: color,
         children: [
           (style === 1 ? "▰" : "━").repeat(filled),
-          /* @__PURE__ */ jsx_runtime7.jsx("span", {
+          /* @__PURE__ */ jsx_runtime8.jsx("span", {
             fg: "#36535f",
             children: (style === 1 ? "·" : "─").repeat(Math.max(0, width - filled))
           })
@@ -40902,8 +41208,8 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     });
   }
   function useBorderScroll() {
-    const node = import_react9.useRef(null);
-    const attach = import_react9.useCallback((scroll) => {
+    const node = import_react10.useRef(null);
+    const attach = import_react10.useCallback((scroll) => {
       node.current = scroll;
       if (scroll) {
         scroll.verticalScrollBar.visible = false;
@@ -40913,11 +41219,11 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     return { node, attach };
   }
   function BorderThumb({ scroll, id }) {
-    const [position, setPosition] = import_react9.useState({ top: 0, visible: false });
-    const [hover, setHover] = import_react9.useState(false);
-    const [active, setActive] = import_react9.useState(false);
-    const drag = import_react9.useRef(null);
-    import_react9.useEffect(() => {
+    const [position, setPosition] = import_react10.useState({ top: 0, visible: false });
+    const [hover, setHover] = import_react10.useState(false);
+    const [active, setActive] = import_react10.useState(false);
+    const drag = import_react10.useRef(null);
+    import_react10.useEffect(() => {
       const timer = setInterval(() => {
         const node = scroll.node.current;
         if (!node)
@@ -40929,7 +41235,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       }, 16);
       return () => clearInterval(timer);
     }, [scroll.node]);
-    return /* @__PURE__ */ jsx_runtime7.jsx("text", {
+    return /* @__PURE__ */ jsx_runtime8.jsx("text", {
       id,
       position: "absolute",
       right: -1,
@@ -40967,16 +41273,16 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       children: "┃"
     });
   }
-  function App4() {
+  function App5() {
     const requestEdges = useBorderScroll();
     const replyEdges = useBorderScroll();
-    const splitRow = import_react9.useRef(null);
-    const dragging = import_react9.useRef(false);
-    const grabOffset = import_react9.useRef(0);
-    const [rowWidth, setRowWidth] = import_react9.useState(0);
-    const [split, setSplit] = import_react9.useState(0.65);
-    const [dividerHover, setDividerHover] = import_react9.useState(false);
-    const [dividerActive, setDividerActive] = import_react9.useState(false);
+    const splitRow = import_react10.useRef(null);
+    const dragging = import_react10.useRef(false);
+    const grabOffset = import_react10.useRef(0);
+    const [rowWidth, setRowWidth] = import_react10.useState(0);
+    const [split, setSplit] = import_react10.useState(0.65);
+    const [dividerHover, setDividerHover] = import_react10.useState(false);
+    const [dividerActive, setDividerActive] = import_react10.useState(false);
     function resizeSplit(x2) {
       const row = splitRow.current;
       if (!row)
@@ -40986,13 +41292,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       const minRight = Math.min(20, available * 0.3);
       setSplit(Math.max(minLeft, Math.min(available - minRight, x2 - row.x - grabOffset.current)) / available);
     }
-    const rightColumn = import_react9.useRef(null);
-    const verticalDrag = import_react9.useRef(false);
-    const verticalGrab = import_react9.useRef(0);
-    const [rightHeight, setRightHeight] = import_react9.useState(0);
-    const [verticalSplit, setVerticalSplit] = import_react9.useState(0.5);
-    const [horizontalHover, setHorizontalHover] = import_react9.useState(false);
-    const [horizontalActive, setHorizontalActive] = import_react9.useState(false);
+    const rightColumn = import_react10.useRef(null);
+    const verticalDrag = import_react10.useRef(false);
+    const verticalGrab = import_react10.useRef(0);
+    const [rightHeight, setRightHeight] = import_react10.useState(0);
+    const [verticalSplit, setVerticalSplit] = import_react10.useState(0.5);
+    const [horizontalHover, setHorizontalHover] = import_react10.useState(false);
+    const [horizontalActive, setHorizontalActive] = import_react10.useState(false);
     function resizeVertical(y2) {
       const column = rightColumn.current;
       if (!column)
@@ -41002,15 +41308,15 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       setVerticalSplit(Math.max(minTop, Math.min(available - minBottom, y2 - column.y - verticalGrab.current)) / available);
     }
     const topHeight = rightHeight ? Math.max(Math.min(3, (rightHeight - 1) * 0.4), Math.min(rightHeight - 1 - Math.min(5, (rightHeight - 1) * 0.4), Math.round((rightHeight - 1) * verticalSplit))) : "50%";
-    const [pulse, setPulse] = import_react9.useState(null);
-    const [barStyle, setBarStyle] = import_react9.useState(0);
-    const [jobs, setJobs] = import_react9.useState([]);
-    const [tick, setTick] = import_react9.useState(0);
-    const [paused, setPaused] = import_react9.useState(false);
-    const [clicks, setClicks] = import_react9.useState(0);
-    const [counts, setCounts] = import_react9.useState([0, 0]);
-    const [events, setEvents] = import_react9.useState([]);
-    const finished = import_react9.useRef(new Set);
+    const [pulse, setPulse] = import_react10.useState(null);
+    const [barStyle, setBarStyle] = import_react10.useState(0);
+    const [jobs, setJobs] = import_react10.useState([]);
+    const [tick, setTick] = import_react10.useState(0);
+    const [paused, setPaused] = import_react10.useState(false);
+    const [clicks, setClicks] = import_react10.useState(0);
+    const [counts, setCounts] = import_react10.useState([0, 0]);
+    const [events, setEvents] = import_react10.useState([]);
+    const finished = import_react10.useRef(new Set);
     function clearFinished() {
       const ids = new Set(finished.current);
       finished.current.clear();
@@ -41043,7 +41349,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         rejected += 10;
       setCounts([sent, rejected]);
     }
-    import_react9.useEffect(() => {
+    import_react10.useEffect(() => {
       const listener = (event) => {
         if (event.type === "blink") {
           setPulse(event);
@@ -41080,7 +41386,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         keys3.off("key", key);
       };
     }, []);
-    import_react9.useEffect(() => {
+    import_react10.useEffect(() => {
       if (paused)
         return;
       const timer = setInterval(() => {
@@ -41089,12 +41395,12 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       }, 100);
       return () => clearInterval(timer);
     }, [paused]);
-    return /* @__PURE__ */ jsx_runtime7.jsx("box", {
+    return /* @__PURE__ */ jsx_runtime8.jsx("box", {
       width: "100%",
       height: "100%",
       padding: 1,
       backgroundColor: "#101820",
-      children: /* @__PURE__ */ jsx_runtime7.jsxs("box", {
+      children: /* @__PURE__ */ jsx_runtime8.jsxs("box", {
         border: true,
         borderStyle: "rounded",
         borderColor: "#63c7b2",
@@ -41104,72 +41410,72 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         height: "100%",
         gap: 1,
         children: [
-          /* @__PURE__ */ jsx_runtime7.jsx("text", {
+          /* @__PURE__ */ jsx_runtime8.jsx("text", {
             height: 1,
             flexShrink: 0,
             fg: "#f6f0dd",
-            children: /* @__PURE__ */ jsx_runtime7.jsx("b", {
+            children: /* @__PURE__ */ jsx_runtime8.jsx("b", {
               children: "React → command queue → Zig worker → event queue → React"
             })
           }),
-          /* @__PURE__ */ jsx_runtime7.jsx("text", {
+          /* @__PURE__ */ jsx_runtime8.jsx("text", {
             height: 1,
             flexShrink: 0,
             fg: "#718b99",
             children: "One worker thread · 256 queued commands · 16 queued replies · copied strings"
           }),
-          /* @__PURE__ */ jsx_runtime7.jsxs("box", {
+          /* @__PURE__ */ jsx_runtime8.jsxs("box", {
             flexDirection: "row",
             height: 1,
             flexShrink: 0,
             gap: 1,
             children: [
-              /* @__PURE__ */ jsx_runtime7.jsx("box", {
+              /* @__PURE__ */ jsx_runtime8.jsx("box", {
                 flexShrink: 0,
                 backgroundColor: "#294650",
                 paddingX: 1,
                 onMouseDown: () => submit(),
-                children: /* @__PURE__ */ jsx_runtime7.jsx("text", {
+                children: /* @__PURE__ */ jsx_runtime8.jsx("text", {
                   fg: "#63c7b2",
                   children: "S Job"
                 })
               }),
-              /* @__PURE__ */ jsx_runtime7.jsx("box", {
+              /* @__PURE__ */ jsx_runtime8.jsx("box", {
                 flexShrink: 0,
                 backgroundColor: "#294650",
                 paddingX: 1,
                 onMouseDown: () => submit(12),
-                children: /* @__PURE__ */ jsx_runtime7.jsx("text", {
+                children: /* @__PURE__ */ jsx_runtime8.jsx("text", {
                   fg: "#63c7b2",
                   children: "B Burst"
                 })
               }),
-              /* @__PURE__ */ jsx_runtime7.jsx("box", {
+              /* @__PURE__ */ jsx_runtime8.jsx("box", {
                 flexShrink: 0,
                 backgroundColor: "#294650",
                 paddingX: 1,
                 onMouseDown: () => spread(),
-                children: /* @__PURE__ */ jsx_runtime7.jsx("text", {
+                children: /* @__PURE__ */ jsx_runtime8.jsx("text", {
                   fg: "#63c7b2",
                   children: "F Spread"
                 })
               }),
-              /* @__PURE__ */ jsx_runtime7.jsx("box", {
+              /* @__PURE__ */ jsx_runtime8.jsx("box", {
                 flexShrink: 0,
                 backgroundColor: "#294650",
                 paddingX: 1,
                 onMouseDown: () => spread("random"),
-                children: /* @__PURE__ */ jsx_runtime7.jsx("text", {
+                children: /* @__PURE__ */ jsx_runtime8.jsx("text", {
                   fg: "#63c7b2",
                   children: "R Random"
                 })
               }),
-              /* @__PURE__ */ jsx_runtime7.jsx("box", {
+              /* @__PURE__ */ jsx_runtime8.jsx("box", {
                 flexShrink: 0,
                 backgroundColor: "#293340",
                 paddingX: 1,
                 onMouseDown: () => setClicks((n) => n + 1),
-                children: /* @__PURE__ */ jsx_runtime7.jsxs("text", {
+                children: /* @__PURE__ */ jsx_runtime8.jsxs("text", {
                   fg: "#e9af70",
                   children: [
                     "Space UI counter ",
@@ -41179,7 +41485,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
               })
             ]
           }),
-          /* @__PURE__ */ jsx_runtime7.jsxs("text", {
+          /* @__PURE__ */ jsx_runtime8.jsxs("text", {
             height: 1,
             flexShrink: 0,
             fg: "#c2ced5",
@@ -41194,7 +41500,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
               " · Q exit"
             ]
           }),
-          /* @__PURE__ */ jsx_runtime7.jsxs("box", {
+          /* @__PURE__ */ jsx_runtime8.jsxs("box", {
             id: "message-split",
             ref: splitRow,
             onSizeChange: function() {
@@ -41206,7 +41512,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             minHeight: 0,
             overflow: "hidden",
             children: [
-              /* @__PURE__ */ jsx_runtime7.jsxs("box", {
+              /* @__PURE__ */ jsx_runtime8.jsxs("box", {
                 id: "message-request-panel",
                 width: rowWidth ? Math.max(30, Math.min(rowWidth - 21, Math.round((rowWidth - 1) * split))) : "65%",
                 flexShrink: 0,
@@ -41215,7 +41521,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                 title: ` Requests (${jobs.length}) `,
                 paddingX: 1,
                 children: [
-                  /* @__PURE__ */ jsx_runtime7.jsx("scrollbox", {
+                  /* @__PURE__ */ jsx_runtime8.jsx("scrollbox", {
                     id: "message-requests",
                     ref: requestEdges.attach,
                     width: "100%",
@@ -41225,17 +41531,17 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                     stickyScroll: true,
                     stickyStart: "bottom",
                     contentOptions: { gap: 0 },
-                    children: jobs.length === 0 ? /* @__PURE__ */ jsx_runtime7.jsx("text", {
+                    children: jobs.length === 0 ? /* @__PURE__ */ jsx_runtime8.jsx("text", {
                       fg: "#718b99",
                       children: "Send a job to start. Try a burst while it works."
-                    }) : jobs.map((job) => /* @__PURE__ */ jsx_runtime7.jsxs("box", {
+                    }) : jobs.map((job) => /* @__PURE__ */ jsx_runtime8.jsxs("box", {
                       flexDirection: "row",
                       width: "100%",
                       height: 1,
                       flexShrink: 0,
                       gap: 1,
                       children: [
-                        /* @__PURE__ */ jsx_runtime7.jsxs("text", {
+                        /* @__PURE__ */ jsx_runtime8.jsxs("text", {
                           width: 15,
                           flexShrink: 0,
                           fg: job.status === "done" ? "#63c7b2" : "#c2ced5",
@@ -41246,11 +41552,11 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                             job.status
                           ]
                         }),
-                        /* @__PURE__ */ jsx_runtime7.jsx(ProgressBar, {
+                        /* @__PURE__ */ jsx_runtime8.jsx(ProgressBar, {
                           progress: job.progress,
                           style: barStyle
                         }),
-                        /* @__PURE__ */ jsx_runtime7.jsx("text", {
+                        /* @__PURE__ */ jsx_runtime8.jsx("text", {
                           id: `message-percent-${job.id}`,
                           width: 4,
                           flexShrink: 0,
@@ -41260,13 +41566,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                       ]
                     }, job.id))
                   }),
-                  /* @__PURE__ */ jsx_runtime7.jsx(BorderThumb, {
+                  /* @__PURE__ */ jsx_runtime8.jsx(BorderThumb, {
                     id: "request-scroll-thumb",
                     scroll: requestEdges
                   })
                 ]
               }),
-              /* @__PURE__ */ jsx_runtime7.jsx("box", {
+              /* @__PURE__ */ jsx_runtime8.jsx("box", {
                 id: "message-divider",
                 width: 1,
                 flexShrink: 0,
@@ -41297,13 +41603,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                   setDividerActive(false);
                   event.stopPropagation();
                 },
-                children: /* @__PURE__ */ jsx_runtime7.jsx("box", {
+                children: /* @__PURE__ */ jsx_runtime8.jsx("box", {
                   width: 1,
                   height: "100%",
                   backgroundColor: dividerActive ? "#36535f" : dividerHover ? "#243740" : "#101820"
                 })
               }),
-              /* @__PURE__ */ jsx_runtime7.jsxs("box", {
+              /* @__PURE__ */ jsx_runtime8.jsxs("box", {
                 id: "message-right-column",
                 ref: rightColumn,
                 flexGrow: 1,
@@ -41314,7 +41620,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                   setRightHeight(this.height);
                 },
                 children: [
-                  /* @__PURE__ */ jsx_runtime7.jsxs("box", {
+                  /* @__PURE__ */ jsx_runtime8.jsxs("box", {
                     id: "message-reply-panel",
                     height: topHeight,
                     flexShrink: 0,
@@ -41323,7 +41629,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                     title: ` Native replies (${events.length}) `,
                     paddingX: 1,
                     children: [
-                      /* @__PURE__ */ jsx_runtime7.jsx("scrollbox", {
+                      /* @__PURE__ */ jsx_runtime8.jsx("scrollbox", {
                         id: "message-replies",
                         ref: replyEdges.attach,
                         width: "100%",
@@ -41333,20 +41639,20 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                         stickyScroll: true,
                         stickyStart: "bottom",
                         contentOptions: { gap: 0 },
-                        children: events.map((event, i) => /* @__PURE__ */ jsx_runtime7.jsx("text", {
+                        children: events.map((event, i) => /* @__PURE__ */ jsx_runtime8.jsx("text", {
                           height: 1,
                           flexShrink: 0,
                           fg: "#a59de0",
                           children: event.type === "blink" ? `← blink #${event.sequence}: ${event.cells.length} cells` : `← #${event.id}  ${event.type}  ${event.progress}%`
                         }, i))
                       }),
-                      /* @__PURE__ */ jsx_runtime7.jsx(BorderThumb, {
+                      /* @__PURE__ */ jsx_runtime8.jsx(BorderThumb, {
                         id: "reply-scroll-thumb",
                         scroll: replyEdges
                       })
                     ]
                   }),
-                  /* @__PURE__ */ jsx_runtime7.jsx("box", {
+                  /* @__PURE__ */ jsx_runtime8.jsx("box", {
                     id: "message-horizontal-divider",
                     width: "100%",
                     height: 1,
@@ -41376,14 +41682,14 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                       event.stopPropagation();
                     }
                   }),
-                  /* @__PURE__ */ jsx_runtime7.jsx(Activity, {
+                  /* @__PURE__ */ jsx_runtime8.jsx(Activity, {
                     pulse
                   })
                 ]
               })
             ]
           }),
-          /* @__PURE__ */ jsx_runtime7.jsxs("text", {
+          /* @__PURE__ */ jsx_runtime8.jsxs("text", {
             height: 1,
             flexShrink: 0,
             fg: "#718b99",
@@ -41397,13 +41703,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       })
     });
   }
-  var import_react9, jsx_runtime7, listeners, nativeBlinks, received, acceptedIds, nextId = 1, sent = 0, rejected = 0, uiTicks = 0, barStyles;
+  var import_react10, jsx_runtime8, listeners, nativeBlinks, received, acceptedIds, nextId = 1, sent = 0, rejected = 0, uiTicks = 0, barStyles;
   var init_messages = __esm(() => {
     init_activity();
     init_Renderable();
     init_demo();
-    import_react9 = __toESM(require_react(), 1);
-    jsx_runtime7 = __toESM(require_jsx_runtime(), 1);
+    import_react10 = __toESM(require_react(), 1);
+    jsx_runtime8 = __toESM(require_jsx_runtime(), 1);
     listeners = new Set;
     nativeBlinks = [];
     received = [];
@@ -41420,7 +41726,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         listener(event);
     } });
     barStyles = ["solid", "segmented", "thin"];
-    mountDemo(App4);
+    mountDemo(App5);
     if (__host.headless)
       Object.assign(globalThis, {
         async __selfTest() {
@@ -41782,97 +42088,97 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     return syntax ??= SyntaxStyle.fromStyles({ default: { fg: ink }, "markup.heading": { fg: accent, bold: true }, "markup.strong": { bold: true }, "markup.italic": { italic: true }, "markup.link": { fg: "#9cbde8", underline: true }, "markup.raw": { fg: "#e9af70" } });
   }
   function Hint({ children }) {
-    return /* @__PURE__ */ jsx_runtime8.jsx("text", {
+    return /* @__PURE__ */ jsx_runtime9.jsx("text", {
       fg: muted,
       children
     });
   }
   function TextDemo() {
-    return /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime8.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime9.jsxs("text", {
           fg: ink,
           children: [
             "Plain text, ",
-            /* @__PURE__ */ jsx_runtime8.jsx("b", {
+            /* @__PURE__ */ jsx_runtime9.jsx("b", {
               children: "bold"
             }),
             ", ",
-            /* @__PURE__ */ jsx_runtime8.jsx("i", {
+            /* @__PURE__ */ jsx_runtime9.jsx("i", {
               children: "italic"
             }),
             ", ",
-            /* @__PURE__ */ jsx_runtime8.jsx("u", {
+            /* @__PURE__ */ jsx_runtime9.jsx("u", {
               children: "underline"
             }),
             ".",
-            /* @__PURE__ */ jsx_runtime8.jsx("br", {}),
+            /* @__PURE__ */ jsx_runtime9.jsx("br", {}),
             "A line break and ",
-            /* @__PURE__ */ jsx_runtime8.jsx("span", {
+            /* @__PURE__ */ jsx_runtime9.jsx("span", {
               fg: accent,
               children: "a colored span"
             }),
             "."
           ]
         }),
-        /* @__PURE__ */ jsx_runtime8.jsx("text", {
-          children: /* @__PURE__ */ jsx_runtime8.jsx("a", {
+        /* @__PURE__ */ jsx_runtime9.jsx("text", {
+          children: /* @__PURE__ */ jsx_runtime9.jsx("a", {
             href: "https://opentui.com",
             children: "OpenTUI hyperlink"
           })
         }),
-        /* @__PURE__ */ jsx_runtime8.jsx("text", {
+        /* @__PURE__ */ jsx_runtime9.jsx("text", {
           fg: ink,
           children: "Unicode: café · é · 日本語 · \uD83D\uDC69‍\uD83D\uDCBB"
         }),
-        /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+        /* @__PURE__ */ jsx_runtime9.jsxs("box", {
           flexDirection: "row",
           gap: 1,
           height: 5,
           children: [
-            /* @__PURE__ */ jsx_runtime8.jsx("box", {
+            /* @__PURE__ */ jsx_runtime9.jsx("box", {
               border: true,
               borderStyle: "rounded",
               borderColor: accent,
               flexGrow: 1,
               padding: 1,
-              children: /* @__PURE__ */ jsx_runtime8.jsx("text", {
+              children: /* @__PURE__ */ jsx_runtime9.jsx("text", {
                 fg: accent,
                 children: "Flex: 1"
               })
             }),
-            /* @__PURE__ */ jsx_runtime8.jsx("box", {
+            /* @__PURE__ */ jsx_runtime9.jsx("box", {
               border: true,
               borderStyle: "double",
               borderColor: "#e9af70",
               flexGrow: 2,
               padding: 1,
-              children: /* @__PURE__ */ jsx_runtime8.jsx("text", {
+              children: /* @__PURE__ */ jsx_runtime9.jsx("text", {
                 fg: "#e9af70",
                 children: "Flex: 2"
               })
             })
           ]
         }),
-        /* @__PURE__ */ jsx_runtime8.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime9.jsx(Hint, {
           children: "Boxes provide borders, padding, alignment, clipping, and flex layout."
         })
       ]
     });
   }
   function InputDemo() {
-    const [value, setValue] = import_react10.useState("");
-    const [submitted, setSubmitted] = import_react10.useState("nothing yet");
-    const [length, setLength] = import_react10.useState(0);
-    const editor = import_react10.useRef(null);
-    return /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+    const [value, setValue] = import_react11.useState("");
+    const [submitted, setSubmitted] = import_react11.useState("nothing yet");
+    const [length, setLength] = import_react11.useState(0);
+    const editor = import_react11.useRef(null);
+    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime8.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime9.jsx(Hint, {
           children: "Click a field or press Tab. Type, paste, select with Shift+arrows."
         }),
-        /* @__PURE__ */ jsx_runtime8.jsx("input", {
+        /* @__PURE__ */ jsx_runtime9.jsx("input", {
           id: "gallery-input",
           height: 1,
           width: "100%",
@@ -41883,21 +42189,21 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           onInput: setValue,
           onSubmit: () => setSubmitted(value)
         }),
-        /* @__PURE__ */ jsx_runtime8.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime9.jsxs("text", {
           fg: accent,
           children: [
             "Name: ",
             value || "(empty)"
           ]
         }),
-        /* @__PURE__ */ jsx_runtime8.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime9.jsxs("text", {
           fg: muted,
           children: [
             "Submitted: ",
             submitted
           ]
         }),
-        /* @__PURE__ */ jsx_runtime8.jsx("textarea", {
+        /* @__PURE__ */ jsx_runtime9.jsx("textarea", {
           id: "gallery-textarea",
           ref: editor,
           height: 6,
@@ -41908,7 +42214,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           textColor: ink,
           onContentChange: () => setLength(editor.current?.plainText.length ?? 0)
         }),
-        /* @__PURE__ */ jsx_runtime8.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime9.jsxs("text", {
           fg: muted,
           children: [
             "Notes: ",
@@ -41920,16 +42226,16 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     });
   }
   function SelectDemo() {
-    const [choice, setChoice] = import_react10.useState("none");
-    const [tab, setTab] = import_react10.useState("Habitat");
+    const [choice, setChoice] = import_react11.useState("none");
+    const [tab, setTab] = import_react11.useState("Habitat");
     const options = [{ name: "Ember", description: "A curious forest dragon" }, { name: "Nimbus", description: "A sleepy cloud dragon" }, { name: "Moss", description: "A tiny garden dragon" }];
-    return /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime8.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime9.jsx(Hint, {
           children: "Tab focuses each widget. Arrow keys move; Enter chooses."
         }),
-        /* @__PURE__ */ jsx_runtime8.jsx("select", {
+        /* @__PURE__ */ jsx_runtime9.jsx("select", {
           id: "gallery-select",
           height: 7,
           width: "100%",
@@ -41939,14 +42245,14 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           textColor: ink,
           onSelect: (_i, o) => setChoice(o.name)
         }),
-        /* @__PURE__ */ jsx_runtime8.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime9.jsxs("text", {
           fg: accent,
           children: [
             "Chosen: ",
             choice
           ]
         }),
-        /* @__PURE__ */ jsx_runtime8.jsx("tab-select", {
+        /* @__PURE__ */ jsx_runtime9.jsx("tab-select", {
           id: "gallery-tabs",
           height: 3,
           width: "100%",
@@ -41954,7 +42260,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           options: [{ name: "Habitat", description: "Forest" }, { name: "Food", description: "Berries" }, { name: "Skills", description: "Flying" }],
           onChange: (_i, o) => setTab(o.name)
         }),
-        /* @__PURE__ */ jsx_runtime8.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime9.jsxs("text", {
           fg: accent,
           children: [
             "Active tab: ",
@@ -41965,14 +42271,14 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     });
   }
   function ScrollDemo() {
-    const [value, setValue] = import_react10.useState(25);
-    return /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+    const [value, setValue] = import_react11.useState(25);
+    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime8.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime9.jsx(Hint, {
           children: "Scroll with two fingers, drag the scrollbar, or focus and use arrows."
         }),
-        /* @__PURE__ */ jsx_runtime8.jsx("scrollbox", {
+        /* @__PURE__ */ jsx_runtime9.jsx("scrollbox", {
           id: "gallery-scroll",
           onMouseScroll: (e) => e.stopPropagation(),
           height: 9,
@@ -41981,7 +42287,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           borderColor: accent,
           scrollY: true,
           contentOptions: { gap: 0 },
-          children: Array.from({ length: 40 }, (_2, i) => /* @__PURE__ */ jsx_runtime8.jsxs("text", {
+          children: Array.from({ length: 40 }, (_2, i) => /* @__PURE__ */ jsx_runtime9.jsxs("text", {
             fg: i % 2 ? ink : accent,
             children: [
               "Field record ",
@@ -41990,7 +42296,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             ]
           }, i))
         }),
-        /* @__PURE__ */ jsx_runtime8.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime9.jsxs("text", {
           fg: ink,
           children: [
             "Flight altitude: ",
@@ -41998,7 +42304,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             " m"
           ]
         }),
-        /* @__PURE__ */ jsx_runtime8.jsx("slider", {
+        /* @__PURE__ */ jsx_runtime9.jsx("slider", {
           id: "gallery-slider",
           orientation: "horizontal",
           height: 1,
@@ -42009,50 +42315,50 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           onChange: setValue,
           foregroundColor: accent
         }),
-        /* @__PURE__ */ jsx_runtime8.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime9.jsx(Hint, {
           children: "The scrollbox above contains native ScrollBar and Slider widgets."
         })
       ]
     });
   }
   function FontDemo() {
-    return /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime8.jsx("ascii-font", {
+        /* @__PURE__ */ jsx_runtime9.jsx("ascii-font", {
           text: "DRAGON",
           font: "tiny",
           color: accent
         }),
-        /* @__PURE__ */ jsx_runtime8.jsx("ascii-font", {
+        /* @__PURE__ */ jsx_runtime9.jsx("ascii-font", {
           text: "ZIG",
           font: "block",
           color: "#e9af70"
         }),
-        /* @__PURE__ */ jsx_runtime8.jsx("ascii-font", {
+        /* @__PURE__ */ jsx_runtime9.jsx("ascii-font", {
           text: "JS",
           font: "shade",
           color: "#a59de0"
         }),
-        /* @__PURE__ */ jsx_runtime8.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime9.jsx(Hint, {
           children: "ASCII fonts render into an OpenTUI framebuffer."
         })
       ]
     });
   }
   function CodeDemo() {
-    return /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime8.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime9.jsx(Hint, {
           children: "Code with a line-number gutter. Plain text; syntax parsing is not enabled."
         }),
-        /* @__PURE__ */ jsx_runtime8.jsx("line-number", {
+        /* @__PURE__ */ jsx_runtime9.jsx("line-number", {
           id: "gallery-lines",
           height: 10,
           width: "100%",
           fg: muted,
-          children: /* @__PURE__ */ jsx_runtime8.jsx("code", {
+          children: /* @__PURE__ */ jsx_runtime9.jsx("code", {
             id: "gallery-code",
             content: code,
             syntaxStyle: style(),
@@ -42065,15 +42371,15 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     });
   }
   function DiffDemo() {
-    const [split, setSplit] = import_react10.useState(false);
-    return /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+    const [split, setSplit] = import_react11.useState(false);
+    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime8.jsx("box", {
+        /* @__PURE__ */ jsx_runtime9.jsx("box", {
           id: "gallery-diff-toggle",
           height: 1,
           onMouseDown: () => setSplit((v2) => !v2),
-          children: /* @__PURE__ */ jsx_runtime8.jsxs("text", {
+          children: /* @__PURE__ */ jsx_runtime9.jsxs("text", {
             fg: accent,
             children: [
               "[ Click to switch: ",
@@ -42082,7 +42388,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             ]
           })
         }),
-        /* @__PURE__ */ jsx_runtime8.jsx("diff", {
+        /* @__PURE__ */ jsx_runtime9.jsx("diff", {
           id: "gallery-diff",
           diff: patch,
           syntaxStyle: style(),
@@ -42094,10 +42400,10 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     });
   }
   function MarkdownDemo() {
-    return /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime8.jsx("markdown", {
+        /* @__PURE__ */ jsx_runtime9.jsx("markdown", {
           id: "gallery-markdown",
           width: "100%",
           syntaxStyle: style(),
@@ -42111,7 +42417,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
 > Approach with snacks.
 `
         }),
-        /* @__PURE__ */ jsx_runtime8.jsx("table", {
+        /* @__PURE__ */ jsx_runtime9.jsx("table", {
           id: "gallery-table",
           width: "100%",
           border: true,
@@ -42124,40 +42430,40 @@ Please report this to https://github.com/markedjs/marked.`, e) {
   }
   function Gallery({ page, changePage }) {
     const Demo = demos[page];
-    const [hovered, setHovered] = import_react10.useState(null);
-    return /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+    const [hovered, setHovered] = import_react11.useState(null);
+    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
       width: "100%",
       height: "100%",
       backgroundColor: "#101820",
       padding: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime8.jsx("box", {
+        /* @__PURE__ */ jsx_runtime9.jsx("box", {
           flexDirection: "row",
           width: "100%",
           height: 2,
-          children: /* @__PURE__ */ jsx_runtime8.jsx("text", {
+          children: /* @__PURE__ */ jsx_runtime9.jsx("text", {
             fg: accent,
-            children: /* @__PURE__ */ jsx_runtime8.jsx("b", {
+            children: /* @__PURE__ */ jsx_runtime9.jsx("b", {
               children: "QuickTUI / Widget gallery"
             })
           })
         }),
-        /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+        /* @__PURE__ */ jsx_runtime9.jsxs("box", {
           flexDirection: "row",
           flexGrow: 1,
           gap: 1,
           children: [
-            /* @__PURE__ */ jsx_runtime8.jsx("box", {
+            /* @__PURE__ */ jsx_runtime9.jsx("box", {
               width: 26,
               border: true,
               borderStyle: "rounded",
               borderColor: "#36535f",
               paddingX: 1,
-              children: /* @__PURE__ */ jsx_runtime8.jsx("scrollbox", {
+              children: /* @__PURE__ */ jsx_runtime9.jsx("scrollbox", {
                 flexGrow: 1,
                 width: "100%",
                 verticalScrollbarOptions: { width: 1, showArrows: true, trackOptions: { backgroundColor: "#101820", foregroundColor: "#101820" }, arrowOptions: { foregroundColor: "#526b78", backgroundColor: "#101820", arrowChars: { up: "↑", down: "↓" } } },
-                children: pages.map((name, i) => /* @__PURE__ */ jsx_runtime8.jsx("box", {
+                children: pages.map((name, i) => /* @__PURE__ */ jsx_runtime9.jsx("box", {
                   id: `gallery-nav-${i}`,
                   height: 1,
                   marginBottom: i === pages.length - 1 ? 0 : 1,
@@ -42167,7 +42473,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                   onMouseOver: () => setHovered(i),
                   onMouseOut: () => setHovered((value) => value === i ? null : value),
                   onMouseDown: () => changePage(i),
-                  children: /* @__PURE__ */ jsx_runtime8.jsxs("text", {
+                  children: /* @__PURE__ */ jsx_runtime9.jsxs("text", {
                     fg: page === i ? accent : muted,
                     children: [
                       i + 1,
@@ -42178,7 +42484,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                 }, name))
               })
             }),
-            /* @__PURE__ */ jsx_runtime8.jsx("box", {
+            /* @__PURE__ */ jsx_runtime9.jsx("box", {
               border: true,
               borderStyle: "rounded",
               borderColor: accent,
@@ -42186,23 +42492,23 @@ Please report this to https://github.com/markedjs/marked.`, e) {
               padding: 1,
               flexGrow: 1,
               minWidth: 0,
-              children: /* @__PURE__ */ jsx_runtime8.jsx("scrollbox", {
+              children: /* @__PURE__ */ jsx_runtime9.jsx("scrollbox", {
                 flexGrow: 1,
                 width: "100%",
                 contentOptions: { paddingRight: 1 },
-                children: /* @__PURE__ */ jsx_runtime8.jsx(Demo, {})
+                children: /* @__PURE__ */ jsx_runtime9.jsx(Demo, {})
               }, page)
             })
           ]
         }),
-        /* @__PURE__ */ jsx_runtime8.jsx("text", {
+        /* @__PURE__ */ jsx_runtime9.jsx("text", {
           fg: muted,
           children: "Click page · F1/F2 previous/next · Tab focus · Esc exit"
         })
       ]
     });
   }
-  var import_react10, jsx_runtime8, pages, ink = "#d5e2e8", muted = "#8299a6", accent = "#63c7b2", code = `const dragon = { name: "Ember", wings: 2 };
+  var import_react11, jsx_runtime9, pages, ink = "#d5e2e8", muted = "#8299a6", accent = "#63c7b2", code = `const dragon = { name: "Ember", wings: 2 };
 
 function fly(height) {
   return \`\${dragon.name} flies \${height}m\`;
@@ -42220,8 +42526,8 @@ console.log(fly(12));`, patch = `--- a/dragon.js
 `, syntax, demos;
   var init_gallery_app = __esm(() => {
     init_syntax_style();
-    import_react10 = __toESM(require_react(), 1);
-    jsx_runtime8 = __toESM(require_jsx_runtime(), 1);
+    import_react11 = __toESM(require_react(), 1);
+    jsx_runtime9 = __toESM(require_jsx_runtime(), 1);
     pages = ["Text & layout", "Input & textarea", "Select & tabs", "Scroll & sliders", "ASCII fonts", "Code & lines", "Diff", "Markdown & tables"];
     demos = [TextDemo, InputDemo, SelectDemo, ScrollDemo, FontDemo, CodeDemo, DiffDemo, MarkdownDemo];
   });
@@ -42269,10 +42575,10 @@ console.log(fly(12));`, patch = `--- a/dragon.js
     const current = items.indexOf(context4.currentFocusedRenderable);
     items[(current + (reverse ? -1 : 1) + items.length) % items.length]?.focus();
   }
-  function App5() {
-    const [selected, setSelected] = import_react11.useState(0);
+  function App6() {
+    const [selected, setSelected] = import_react12.useState(0);
     setPageState = setSelected;
-    import_react11.useEffect(() => {
+    import_react12.useEffect(() => {
       effectMounted4 = true;
       const key = (e) => {
         if (e.name === "escape") {
@@ -42297,7 +42603,7 @@ console.log(fly(12));`, patch = `--- a/dragon.js
         keys4.off("keypress", key);
       };
     }, []);
-    return /* @__PURE__ */ jsx_runtime9.jsx(Gallery, {
+    return /* @__PURE__ */ jsx_runtime10.jsx(Gallery, {
       page: selected,
       changePage
     });
@@ -42332,7 +42638,7 @@ console.log(fly(12));`, patch = `--- a/dragon.js
       }
     }
   }
-  var import_react11, import_react_reconciler5, import_events9, jsx_runtime9, dirty4 = true, stopped4 = false, container4, native4, root4, lib5, keys4, selection = null, selectionOwner = null, liveCount2 = 0, liveTimer2, parser4, lifecycle4, context4, reconciler4, report4 = (error) => {
+  var import_react12, import_react_reconciler5, import_events9, jsx_runtime10, dirty4 = true, stopped4 = false, container4, native4, root4, lib5, keys4, selection = null, selectionOwner = null, liveCount2 = 0, liveTimer2, parser4, lifecycle4, context4, reconciler4, report4 = (error) => {
     console.error(String(error), error?.stack ?? "");
     throw error;
   }, effectMounted4 = false, hit = (x2, y2) => x2 < 0 || y2 < 0 ? undefined : Renderable.renderablesByNumber.get(lib5.checkHit(native4, x2, y2)), mouse3, page = 0, setPageState;
@@ -42345,10 +42651,10 @@ console.log(fly(12));`, patch = `--- a/dragon.js
     init_KeyHandler();
     init_selection();
     init_gallery_app();
-    import_react11 = __toESM(require_react(), 1);
+    import_react12 = __toESM(require_react(), 1);
     import_react_reconciler5 = __toESM(require_react_reconciler(), 1);
     import_events9 = __toESM(require_events(), 1);
-    jsx_runtime9 = __toESM(require_jsx_runtime(), 1);
+    jsx_runtime10 = __toESM(require_jsx_runtime(), 1);
     keys4 = new InternalKeyHandler;
     parser4 = new StdinParser({ onTimeoutFlush: () => drainInput4() });
     lifecycle4 = new Set;
@@ -42500,7 +42806,7 @@ console.log(fly(12));`, patch = `--- a/dragon.js
       lib5.enableMouse(native4, true);
     root4 = new RootRenderable(context4);
     container4 = reconciler4.createContainer(root4, 1, null, false, null, "", report4, report4, report4, () => {});
-    reconciler4.updateContainerSync(/* @__PURE__ */ jsx_runtime9.jsx(App5, {}), container4, null, null);
+    reconciler4.updateContainerSync(/* @__PURE__ */ jsx_runtime10.jsx(App6, {}), container4, null, null);
     reconciler4.flushSyncWork();
     reconciler4.flushPassiveEffects();
     if (__host.headless)
@@ -42612,6 +42918,9 @@ Two`))
         break;
       case "mouse":
         init_mouse();
+        break;
+      case "live":
+        init_live();
         break;
       case "lab":
         init_lab();

@@ -2,6 +2,8 @@
 
 ## Unreleased - 09/05/2026
 
+- Add a separate live-JavaScript demo that loads external scripts into the running React page, supports additive components and file watching, and recovers from load/render errors.
+
 - Add nine persistent graphics presets with descriptions, a keyboard/mouse save-load panel, and atomic native-worker file writes. Restore the saved pose and display settings while retaining the current viewport.
 
 - Add a pure braille charset to native glyph selection, without ASCII or punctuation.

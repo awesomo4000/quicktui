@@ -319,6 +319,57 @@ APIs, but libraries that depend on them cannot run unchanged.
 Run `zig build test-lab` for PTY cleanup checks. `zig build test` includes scene
 and control checks using the real QuickJS and native-image bridge.
 
+## Live JavaScript
+
+Run `zig build run -- --live` for example 06. This starts one React page in one
+QuickJS context, with no external components initially loaded.
+
+- **Space** increments the host counter.
+- **1** reads and evaluates `examples/live/counter.js`.
+- **2** reads and evaluates `examples/live/clock.js`, adding a second component.
+- **R** reloads the selected file in place.
+- **C** clears loaded components and turns watching off, keeping the host counter.
+- **W** toggles watching the selected file, checking content every half second.
+- **Q** exits.
+
+Edit either file while the app runs. No rebuild is required for these files.
+For another source directory, run `quicktui --live /path/to/directory` with
+`counter.js` and `clock.js` there. Paths are relative to the working directory
+unless an absolute directory is passed.
+
+External files are plain JavaScript, evaluated as function bodies with
+`React`, `h = React.createElement`, and `api` supplied. They do not need to
+bundle React again. For example:
+
+```js
+api.register("greeting", {
+  title: "Added at runtime",
+  render: () => h("text", { fg: "#85ddca" }, "Hello from a newly loaded file")
+});
+```
+
+Each file owns its registered component IDs. A successful reload replaces that
+file's registrations, removes any it no longer declares, and leaves other files
+alone. The host stays mounted. Replaced components remount, resetting their
+local hook state and cleaning up their effects. This is runtime component
+replacement, not React Fast Refresh or automatic state migration.
+
+Registration changes are staged until evaluation succeeds. Syntax errors and
+synchronous evaluation errors preserve the previous registrations. A React
+error boundary isolates a failing component and allows a later reload to fix it.
+Registration staging does not roll back arbitrary side effects performed by a
+script. Put timers and subscriptions in effects with cleanup functions.
+
+The Zig loader reads UTF-8 files smaller than 1 MiB on a worker thread and
+delivers source through the binary message interface. Evaluation runs in the
+existing UI context. These are trusted application scripts with the same host
+access as the rest of the JS app; this is not an untrusted-code sandbox. JSX,
+ES module imports, and Node APIs need an external bundling step.
+
+`zig build test` checks same-page updates, retained host state, and error
+recovery. `zig build test-live` checks actual file edits, atomic-save watching,
+and terminal cleanup using disposable files in `/tmp`.
+
 ## Shared JavaScript bundle
 
 `js/examples.ts` selects the demo and `scripts/bundle.ts` builds one dependency
