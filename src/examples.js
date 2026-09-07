@@ -39816,6 +39816,8 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           return;
         }
         keys3.emit("key", event.key.name.toLowerCase());
+      } else if (event.type === "paste") {
+        keys3.emit("paste", event);
       } else if (event.type === "mouse") {
         mouse2.dispatch(event.event);
       } else if (event.type === "response" && native3) {
@@ -39845,6 +39847,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         root3?.destroyRecursively();
       } finally {
         try {
+          context3.clearSelection();
           mouse2.reset();
           if (native3) {
             lib4.disableMouse(native3);
@@ -39889,10 +39892,11 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     reconciler3.flushSyncWork();
     reconciler3.flushPassiveEffects();
   }
-  var import_react5, import_react_reconciler4, import_events7, jsx_runtime3, dirty3 = true, stopped3 = false, liveCount = 0, liveTimer, container3, native3, root3, lib4, keys3, keyInterceptor = null, graphicsState, parser3, lifecycle3, context3, reconciler3, report3 = (error) => {
+  var import_react5, import_react_reconciler4, import_events7, jsx_runtime3, dirty3 = true, stopped3 = false, liveCount = 0, liveTimer, container3, native3, root3, lib4, keys3, keyInterceptor = null, graphicsState, parser3, selection = null, selectionOwner = null, lifecycle3, context3, reconciler3, report3 = (error) => {
     throw error;
   }, effectMounted3 = false, mouse2;
   var init_demo = __esm(() => {
+    init_selection();
     init_host_config();
     init_Renderable();
     init_zig();
@@ -39930,12 +39934,55 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       clearHitGridScissorRects() {
         lib4.hitGridClearScissorRects(native3);
       },
-      hasSelection: false,
-      getSelection: () => null,
+      getSelection: () => selection,
       currentFocusedRenderable: null,
       currentFocusedEditor: null,
+      focusRenderable(node) {
+        const old = context3.currentFocusedRenderable;
+        if (old && old !== node)
+          old.blur();
+        context3.currentFocusedRenderable = node;
+      },
+      blurRenderable(node) {
+        if (context3.currentFocusedRenderable === node)
+          context3.currentFocusedRenderable = null;
+      },
+      setCursorPosition(x2, y2, visible) {
+        lib4.setCursorPosition(native3, x2, y2, visible);
+      },
+      setCursorStyle(style) {
+        lib4.setCursorStyleOptions(native3, style);
+      },
+      clearSelection() {
+        const old = selectionOwner;
+        selection = null;
+        selectionOwner = null;
+        if (old && !old.isDestroyed)
+          old.onSelectionChanged(null);
+        context3.emit("selection", null);
+      },
+      startSelection(node, x2, y2) {
+        context3.clearSelection();
+        selectionOwner = node;
+        selection = new Selection(node, { x: x2, y: y2 }, { x: x2, y: y2 });
+        selection.isStart = true;
+        node.onSelectionChanged(selection);
+      },
+      updateSelection(_node, x2, y2, options = {}) {
+        if (selection && selectionOwner && !selectionOwner.isDestroyed) {
+          selection.isStart = false;
+          selection.focus = { x: x2, y: y2 };
+          selection.isDragging = !options.finishDragging;
+          selectionOwner.onSelectionChanged(selection);
+          context3.emit("selection", selection);
+        }
+      },
+      requestSelectionUpdate() {
+        if (selection && selectionOwner && !selectionOwner.isDestroyed)
+          selectionOwner.onSelectionChanged(selection);
+      },
       keyInput: keys3,
-      _internalKeyInput: keys3,
+      _internalKeyInput: { onInternal: (name, handler) => keys3.on(name, handler), offInternal: (name, handler) => keys3.off(name, handler) },
       requestLive() {
         if (liveCount++ === 0) {
           const tick = () => {
@@ -39953,6 +40000,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           clearTimeout(liveTimer);
       }
     });
+    Object.defineProperty(context3, "hasSelection", { get: () => selection !== null });
     reconciler3 = import_react_reconciler4.default(hostConfig);
     mouse2 = new MouseRouter((x2, y2) => x2 < 0 || y2 < 0 ? undefined : Renderable.renderablesByNumber.get(lib4.checkHit(native3, x2, y2)));
     Object.assign(globalThis, {
@@ -40037,9 +40085,9 @@ Please report this to https://github.com/markedjs/marked.`, e) {
   function App3() {
     const [count, setCount] = import_react6.useState(0), [items, setItems] = import_react6.useState(extensions), [status, setStatus] = import_react6.useState("Load a script to extend this page.");
     const [selected, setSelected] = import_react6.useState("counter"), [watch, setWatch] = import_react6.useState(false);
-    const selection = import_react6.useRef({ file: "counter", watch: false });
-    const request = (file = selection.current.file, watching = selection.current.watch) => {
-      selection.current = { file, watch: watching };
+    const selection2 = import_react6.useRef({ file: "counter", watch: false });
+    const request = (file = selection2.current.file, watching = selection2.current.watch) => {
+      selection2.current = { file, watch: watching };
       setSelected(file);
       setWatch(watching);
       if (!__host.postMessage(JSON.stringify({ load: file, watch: watching, epoch })))
@@ -40048,7 +40096,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     const clear = () => {
       epoch++;
       __host.postMessage(JSON.stringify({ load: "clear", epoch }));
-      selection.current = { file: "counter", watch: false };
+      selection2.current = { file: "counter", watch: false };
       setSelected("counter");
       setWatch(false);
       extensions = [];
@@ -40077,7 +40125,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         if (name === "c")
           clear();
         if (name === "w")
-          request(selection.current.file, !selection.current.watch);
+          request(selection2.current.file, !selection2.current.watch);
       };
       keys3.on("key", key);
       return () => {
@@ -42436,6 +42484,590 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     };
   });
 
+  // js/editor-app.tsx
+  function receiveEditorMessage(text) {
+    const reply = JSON.parse(text), waiter = pending;
+    pending = null;
+    if (reply.error)
+      waiter?.reject(new Error(reply.error));
+    else
+      waiter?.resolve(reply);
+  }
+  function request(value) {
+    return new Promise((resolve, reject) => {
+      if (pending) {
+        reject(new Error("Worker busy"));
+        return;
+      }
+      pending = { resolve, reject };
+      if (!__host.postMessage(JSON.stringify(value))) {
+        pending = null;
+        reject(new Error("Worker busy"));
+      }
+    });
+  }
+  function Editor({ keys: keys4 }) {
+    const editor = import_react11.useRef(null), pathInput = import_react11.useRef(null), recentScroll = import_react11.useRef(null);
+    const [path2, setPath] = import_react11.useState(""), [text, setText] = import_react11.useState(""), [saved, setSaved] = import_react11.useState("");
+    const [busy, setBusy] = import_react11.useState(false), [status, setStatus] = import_react11.useState("New document");
+    const [confirm, setConfirm] = import_react11.useState(null);
+    const [menu, setMenu] = import_react11.useState(false), [item, setItem] = import_react11.useState(0), [submenu, setSubmenu] = import_react11.useState(false), [recentIndex, setRecentIndex] = import_react11.useState(0);
+    const [recents, setRecents] = import_react11.useState([]);
+    const [dialog, setDialog] = import_react11.useState(null), [filename, setFilename] = import_react11.useState("");
+    const dirty4 = text !== saved;
+    const remember = (name) => setRecents((previous) => [name, ...previous.filter((value) => value !== name)].slice(0, 16));
+    const closeMenu = () => {
+      setMenu(false);
+      setSubmenu(false);
+    };
+    const openDialog = (kind) => {
+      closeMenu();
+      setFilename(path2);
+      setDialog(kind);
+    };
+    const doLoad = async (name) => {
+      if (busy)
+        return;
+      setBusy(true);
+      setConfirm(null);
+      try {
+        const reply = await request({ op: "load", path: name });
+        const bytes = __host.takeBuffer(reply.id);
+        if (!bytes)
+          throw new Error("Missing file contents");
+        const value = new TextDecoder().decode(bytes);
+        editor.current.setText(value);
+        setText(value);
+        setSaved(value);
+        setPath(name);
+        remember(name);
+        setStatus("Loaded");
+      } catch (error) {
+        setStatus("Load failed: " + error.message);
+      } finally {
+        setBusy(false);
+      }
+    };
+    const load = (name) => {
+      closeMenu();
+      setDialog(null);
+      if (dirty4)
+        setConfirm({ label: "Discard unsaved changes and load?", action: () => void doLoad(name) });
+      else
+        doLoad(name);
+    };
+    const save = async (name = path2, overwrite = false) => {
+      if (busy)
+        return;
+      if (!name) {
+        openDialog("save");
+        return;
+      }
+      const value = editor.current.plainText;
+      if (new TextEncoder().encode(value).length > 65536) {
+        setStatus("Save limit: 64 KiB");
+        return;
+      }
+      closeMenu();
+      setDialog(null);
+      setBusy(true);
+      setConfirm(null);
+      try {
+        await request({ op: "begin" });
+        const chars = Array.from(value);
+        for (let i = 0;i < chars.length; i += 256)
+          await request({ op: "append", text: chars.slice(i, i + 256).join("") });
+        await request({ op: "save", path: name, overwrite });
+        setPath(name);
+        remember(name);
+        setSaved(value);
+        setStatus("Saved");
+      } catch (error) {
+        if (error.message === "FileExists")
+          setConfirm({ label: "Replace the existing file?", action: () => void save(name, true) });
+        else
+          setStatus("Save failed: " + error.message);
+      } finally {
+        setBusy(false);
+      }
+    };
+    const quit = () => {
+      closeMenu();
+      if (dirty4)
+        setConfirm({ label: "Quit and discard unsaved changes?", action: () => __host.quit() });
+      else
+        __host.quit();
+    };
+    const activate = (index) => {
+      if (busy)
+        return;
+      if (index === 0)
+        openDialog("open");
+      if (index === 1)
+        save();
+      if (index === 2)
+        openDialog("save");
+      if (index === 3) {
+        setSubmenu(true);
+        setRecentIndex(0);
+      }
+      if (index === 4)
+        quit();
+    };
+    const submit = () => {
+      if (!filename.trim()) {
+        setStatus("Enter a filename");
+        return;
+      }
+      if (dialog === "open")
+        load(filename);
+      else
+        save(filename);
+    };
+    import_react11.useEffect(() => {
+      request({ op: "info" }).then((reply) => {
+        setPath(reply.path);
+        if (reply.path && !__host.headless)
+          doLoad(reply.path);
+      }).catch((error) => setStatus(error.message));
+    }, []);
+    import_react11.useEffect(() => {
+      if (menu || confirm || busy) {
+        editor.current?.blur();
+        pathInput.current?.blur();
+      } else if (dialog) {
+        editor.current?.blur();
+        pathInput.current?.focus();
+      } else
+        editor.current?.focus();
+    }, [menu, dialog, confirm, busy]);
+    import_react11.useEffect(() => {
+      const node = recentScroll.current;
+      if (node) {
+        if (recentIndex < node.scrollTop)
+          node.scrollTo(recentIndex);
+        else if (recentIndex >= node.scrollTop + node.viewport.height)
+          node.scrollTo(recentIndex - node.viewport.height + 1);
+      }
+    }, [recentIndex, submenu]);
+    import_react11.useEffect(() => {
+      const key = (event) => {
+        const name = event.name;
+        const stop = () => {
+          event.preventDefault();
+          event.stopPropagation();
+        };
+        if (busy) {
+          stop();
+          return;
+        }
+        if (confirm) {
+          stop();
+          if (name === "escape")
+            setConfirm(null);
+          if (name === "return")
+            confirm.action();
+          return;
+        }
+        if (dialog) {
+          if (name === "escape") {
+            stop();
+            setDialog(null);
+          }
+          if (name === "return") {
+            stop();
+            submit();
+          }
+          return;
+        }
+        if (event.meta && name === "f") {
+          stop();
+          setMenu(!menu);
+          setSubmenu(false);
+          setItem(0);
+          return;
+        }
+        if (menu) {
+          stop();
+          if (name === "escape") {
+            if (submenu)
+              setSubmenu(false);
+            else
+              closeMenu();
+          }
+          if (submenu) {
+            if (name === "left")
+              setSubmenu(false);
+            if (recents.length) {
+              if (name === "up")
+                setRecentIndex((value) => (value + recents.length - 1) % recents.length);
+              if (name === "down")
+                setRecentIndex((value) => (value + 1) % recents.length);
+              if (name === "return")
+                load(recents[recentIndex]);
+            }
+          } else {
+            if (name === "up")
+              setItem((value) => (value + 4) % 5);
+            if (name === "down")
+              setItem((value) => (value + 1) % 5);
+            if (name === "right" && item === 3) {
+              setSubmenu(true);
+              setRecentIndex(0);
+            }
+            if (name === "return")
+              activate(item);
+          }
+          return;
+        }
+        if (name === "down" && !event.ctrl && !event.meta && !event.shift && editor.current?.focused) {
+          stop();
+          const node = editor.current, before = node.cursorOffset;
+          node.moveCursorDown();
+          if (node.cursorOffset === before && node.logicalCursor.row === node.lineCount - 1)
+            node.gotoLineTextEnd();
+          return;
+        }
+        if (event.ctrl && name === "s") {
+          stop();
+          save();
+        }
+        if (event.ctrl && name === "o") {
+          stop();
+          openDialog("open");
+        }
+        if (event.ctrl && (name === "q" || name === "c")) {
+          stop();
+          quit();
+        }
+      };
+      keys4.on("keypress", key);
+      return () => keys4.off("keypress", key);
+    }, [path2, text, saved, busy, confirm, dialog, filename, menu, item, submenu, recents, recentIndex]);
+    const labels = ["Open…        Ctrl+O", "Save         Ctrl+S", "Save as…", "Recent files      ›", "Quit         Ctrl+Q"];
+    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+      width: "100%",
+      height: "100%",
+      padding: 1,
+      backgroundColor: "#101820",
+      gap: 1,
+      children: [
+        /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+          height: 1,
+          flexDirection: "row",
+          gap: 2,
+          children: [
+            /* @__PURE__ */ jsx_runtime9.jsx("box", {
+              id: "editor-file-menu",
+              paddingX: 1,
+              backgroundColor: menu ? "#294650" : "#20353f",
+              onMouseDown: () => {
+                if (!busy && !confirm && !dialog) {
+                  setMenu(!menu);
+                  setSubmenu(false);
+                  setItem(0);
+                }
+              },
+              children: /* @__PURE__ */ jsx_runtime9.jsx("text", {
+                fg: "#85ddca",
+                children: "File"
+              })
+            }),
+            /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+              fg: "#96aeb8",
+              children: [
+                path2 || "Untitled",
+                dirty4 ? " *" : "",
+                " · 07 / Editor"
+              ]
+            })
+          ]
+        }),
+        /* @__PURE__ */ jsx_runtime9.jsx("box", {
+          border: true,
+          borderStyle: "rounded",
+          borderColor: "#36545e",
+          flexGrow: 1,
+          minHeight: 0,
+          title: " Text ",
+          children: /* @__PURE__ */ jsx_runtime9.jsx("textarea", {
+            id: "editor-text",
+            ref: editor,
+            flexGrow: 1,
+            width: "100%",
+            initialValue: "",
+            wrapMode: "word",
+            backgroundColor: "#14232c",
+            focusedBackgroundColor: "#14232c",
+            textColor: "#eee9dc",
+            onContentChange: () => setText(editor.current?.plainText ?? "")
+          })
+        }),
+        /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+          height: 1,
+          fg: "#85ddca",
+          children: [
+            busy ? "Working…" : status,
+            " · ",
+            dirty4 ? "Modified" : "Unmodified",
+            " · ",
+            text.split(`
+`).length,
+            " lines · ",
+            new TextEncoder().encode(text).length,
+            " bytes"
+          ]
+        }),
+        /* @__PURE__ */ jsx_runtime9.jsx("text", {
+          height: 1,
+          fg: "#718b99",
+          children: "Alt+F File · Ctrl+O open · Ctrl+S save · Ctrl+Q quit"
+        }),
+        (menu || dialog || confirm) && /* @__PURE__ */ jsx_runtime9.jsx("box", {
+          position: "absolute",
+          left: 0,
+          top: 2,
+          width: "100%",
+          height: "95%",
+          onMouseDown: () => {
+            if (menu)
+              closeMenu();
+          }
+        }),
+        menu && /* @__PURE__ */ jsx_runtime9.jsx("box", {
+          id: "editor-menu",
+          position: "absolute",
+          left: 1,
+          top: 2,
+          width: 28,
+          height: 7,
+          border: true,
+          backgroundColor: "#20353f",
+          borderColor: "#36545e",
+          children: labels.map((label, index) => /* @__PURE__ */ jsx_runtime9.jsx("box", {
+            height: 1,
+            paddingX: 1,
+            backgroundColor: item === index ? "#294650" : "#20353f",
+            onMouseOver: () => {
+              setItem(index);
+              if (index !== 3)
+                setSubmenu(false);
+            },
+            onMouseDown: () => {
+              setItem(index);
+              activate(index);
+            },
+            children: /* @__PURE__ */ jsx_runtime9.jsx("text", {
+              fg: "#eee9dc",
+              children: label
+            })
+          }, label))
+        }),
+        menu && submenu && /* @__PURE__ */ jsx_runtime9.jsx("box", {
+          id: "editor-recents",
+          position: "absolute",
+          left: 29,
+          top: 6,
+          width: 44,
+          maxWidth: "55%",
+          height: Math.min(8, Math.max(1, recents.length)) + 2,
+          border: true,
+          backgroundColor: "#20353f",
+          borderColor: "#36545e",
+          children: /* @__PURE__ */ jsx_runtime9.jsx("scrollbox", {
+            ref: recentScroll,
+            flexGrow: 1,
+            minHeight: 0,
+            children: recents.length ? recents.map((name, index) => /* @__PURE__ */ jsx_runtime9.jsx("box", {
+              height: 1,
+              flexShrink: 0,
+              paddingX: 1,
+              backgroundColor: recentIndex === index ? "#294650" : "#20353f",
+              onMouseOver: () => setRecentIndex(index),
+              onMouseDown: () => load(name),
+              children: /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+                wrapMode: "none",
+                fg: "#eee9dc",
+                children: [
+                  name.split("/").pop(),
+                  "  ",
+                  name
+                ]
+              })
+            }, name)) : /* @__PURE__ */ jsx_runtime9.jsx("text", {
+              fg: "#718b99",
+              children: "No recent files"
+            })
+          })
+        }),
+        dialog && /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+          position: "absolute",
+          left: 2,
+          top: 3,
+          width: "90%",
+          height: 6,
+          border: true,
+          backgroundColor: "#20353f",
+          borderColor: "#85ddca",
+          paddingX: 1,
+          title: dialog === "open" ? " Open file " : " Save as ",
+          children: [
+            /* @__PURE__ */ jsx_runtime9.jsx("input", {
+              id: "editor-path",
+              ref: pathInput,
+              width: "100%",
+              height: 1,
+              value: filename,
+              onInput: setFilename,
+              placeholder: "File path…",
+              backgroundColor: "#294650",
+              focusedBackgroundColor: "#294650",
+              textColor: "#eee9dc"
+            }),
+            /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+              height: 1,
+              flexDirection: "row",
+              gap: 2,
+              children: [
+                /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+                  fg: "#85ddca",
+                  onMouseDown: submit,
+                  children: [
+                    "[Enter: ",
+                    dialog === "open" ? "open" : "save",
+                    "]"
+                  ]
+                }),
+                /* @__PURE__ */ jsx_runtime9.jsx("text", {
+                  fg: "#85ddca",
+                  onMouseDown: () => setDialog(null),
+                  children: "[Esc: cancel]"
+                })
+              ]
+            })
+          ]
+        }),
+        confirm && /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+          position: "absolute",
+          left: 2,
+          top: 3,
+          width: "90%",
+          height: 5,
+          border: true,
+          backgroundColor: "#294650",
+          borderColor: "#85ddca",
+          paddingX: 1,
+          children: [
+            /* @__PURE__ */ jsx_runtime9.jsx("text", {
+              fg: "#eee9dc",
+              children: confirm.label
+            }),
+            /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+              flexDirection: "row",
+              gap: 2,
+              height: 1,
+              children: [
+                /* @__PURE__ */ jsx_runtime9.jsx("text", {
+                  fg: "#85ddca",
+                  onMouseDown: () => {
+                    if (!busy)
+                      confirm.action();
+                  },
+                  children: "[Enter: confirm]"
+                }),
+                /* @__PURE__ */ jsx_runtime9.jsx("text", {
+                  fg: "#85ddca",
+                  onMouseDown: () => setConfirm(null),
+                  children: "[Esc: cancel]"
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    });
+  }
+  async function testEditor(frame, feed) {
+    const host = globalThis;
+    const pause = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 80));
+      frame();
+    };
+    await pause();
+    feed("Hello café");
+    await pause();
+    feed("\x1B[H");
+    await pause();
+    feed("\x1B[B");
+    await pause();
+    feed("\rSecond line");
+    await pause();
+    const node = [...Renderable.renderablesByNumber.values()].find((node2) => node2.id === "editor-text");
+    if (node.plainText !== `Hello café
+Second line`)
+      throw new Error("Down on the last line must move to its end before Return");
+    if (!host.__snapshot().includes("Modified"))
+      throw new Error("Editor must track changes");
+    feed("\x13");
+    for (let i = 0;i < 100 && !host.__snapshot().includes("Saved"); i++)
+      await pause();
+    if (!host.__snapshot().includes("Saved"))
+      throw new Error("Editor save failed");
+    feed(" extra");
+    await pause();
+    feed("\x11");
+    await pause();
+    if (!host.__snapshot().includes("Quit and discard"))
+      throw new Error("Quit must protect unsaved changes");
+    feed("\x1B");
+    await pause();
+    feed("\x13");
+    for (let i = 0;i < 100 && !host.__snapshot().includes("Replace the existing"); i++)
+      await pause();
+    if (!host.__snapshot().includes("Replace the existing"))
+      throw new Error("Overwrite must ask before replacing a file");
+    feed("\x1B");
+    await pause();
+    feed("\x0F");
+    await pause();
+    if (!host.__snapshot().includes("Open file"))
+      throw new Error("Ctrl+O must open the path dialog");
+    feed("\r");
+    await pause();
+    if (!host.__snapshot().includes("Discard unsaved"))
+      throw new Error("Load must protect unsaved changes");
+    feed("\r");
+    await pause();
+    if (!host.__snapshot().includes("Loaded") || host.__snapshot().includes("extra"))
+      throw new Error("Editor load round trip failed");
+    feed("\x1Bf");
+    await pause();
+    if (!host.__snapshot().includes("Recent files"))
+      throw new Error("Alt+F must open File menu");
+    for (const arrow of ["\x1B[B", "\x1B[B", "\x1B[B", "\x1B[C"]) {
+      feed(arrow);
+      await pause();
+    }
+    if (![...Renderable.renderablesByNumber.values()].some((node2) => node2.id === "editor-recents"))
+      throw new Error("Right arrow must open recent files");
+    feed("\x1B[D");
+    await pause();
+    if ([...Renderable.renderablesByNumber.values()].some((node2) => node2.id === "editor-recents"))
+      throw new Error("Left arrow must close recents");
+    for (const arrow of ["\x1B[C", "\x1B[B", "\x1B[A", "\r"]) {
+      feed(arrow);
+      await pause();
+    }
+    if (!host.__snapshot().includes("Loaded") || host.__snapshot().includes("Recent files"))
+      throw new Error("Recent selection must load and close menus");
+  }
+  var import_react11, jsx_runtime9, pending = null;
+  var init_editor_app = __esm(() => {
+    init_Renderable();
+    import_react11 = __toESM(require_react(), 1);
+    jsx_runtime9 = __toESM(require_jsx_runtime(), 1);
+  });
+
   // js/gallery-app.tsx
   function disposeGallery() {
     syntax?.destroy();
@@ -42444,97 +43076,97 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     return syntax ??= SyntaxStyle.fromStyles({ default: { fg: ink }, "markup.heading": { fg: accent, bold: true }, "markup.strong": { bold: true }, "markup.italic": { italic: true }, "markup.link": { fg: "#9cbde8", underline: true }, "markup.raw": { fg: "#e9af70" } });
   }
   function Hint({ children }) {
-    return /* @__PURE__ */ jsx_runtime9.jsx("text", {
+    return /* @__PURE__ */ jsx_runtime10.jsx("text", {
       fg: muted,
       children
     });
   }
   function TextDemo() {
-    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime10.jsxs("text", {
           fg: ink,
           children: [
             "Plain text, ",
-            /* @__PURE__ */ jsx_runtime9.jsx("b", {
+            /* @__PURE__ */ jsx_runtime10.jsx("b", {
               children: "bold"
             }),
             ", ",
-            /* @__PURE__ */ jsx_runtime9.jsx("i", {
+            /* @__PURE__ */ jsx_runtime10.jsx("i", {
               children: "italic"
             }),
             ", ",
-            /* @__PURE__ */ jsx_runtime9.jsx("u", {
+            /* @__PURE__ */ jsx_runtime10.jsx("u", {
               children: "underline"
             }),
             ".",
-            /* @__PURE__ */ jsx_runtime9.jsx("br", {}),
+            /* @__PURE__ */ jsx_runtime10.jsx("br", {}),
             "A line break and ",
-            /* @__PURE__ */ jsx_runtime9.jsx("span", {
+            /* @__PURE__ */ jsx_runtime10.jsx("span", {
               fg: accent,
               children: "a colored span"
             }),
             "."
           ]
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx("text", {
-          children: /* @__PURE__ */ jsx_runtime9.jsx("a", {
+        /* @__PURE__ */ jsx_runtime10.jsx("text", {
+          children: /* @__PURE__ */ jsx_runtime10.jsx("a", {
             href: "https://opentui.com",
             children: "OpenTUI hyperlink"
           })
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx("text", {
+        /* @__PURE__ */ jsx_runtime10.jsx("text", {
           fg: ink,
           children: "Unicode: café · é · 日本語 · \uD83D\uDC69‍\uD83D\uDCBB"
         }),
-        /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+        /* @__PURE__ */ jsx_runtime10.jsxs("box", {
           flexDirection: "row",
           gap: 1,
           height: 5,
           children: [
-            /* @__PURE__ */ jsx_runtime9.jsx("box", {
+            /* @__PURE__ */ jsx_runtime10.jsx("box", {
               border: true,
               borderStyle: "rounded",
               borderColor: accent,
               flexGrow: 1,
               padding: 1,
-              children: /* @__PURE__ */ jsx_runtime9.jsx("text", {
+              children: /* @__PURE__ */ jsx_runtime10.jsx("text", {
                 fg: accent,
                 children: "Flex: 1"
               })
             }),
-            /* @__PURE__ */ jsx_runtime9.jsx("box", {
+            /* @__PURE__ */ jsx_runtime10.jsx("box", {
               border: true,
               borderStyle: "double",
               borderColor: "#e9af70",
               flexGrow: 2,
               padding: 1,
-              children: /* @__PURE__ */ jsx_runtime9.jsx("text", {
+              children: /* @__PURE__ */ jsx_runtime10.jsx("text", {
                 fg: "#e9af70",
                 children: "Flex: 2"
               })
             })
           ]
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime10.jsx(Hint, {
           children: "Boxes provide borders, padding, alignment, clipping, and flex layout."
         })
       ]
     });
   }
   function InputDemo() {
-    const [value, setValue] = import_react11.useState("");
-    const [submitted, setSubmitted] = import_react11.useState("nothing yet");
-    const [length, setLength] = import_react11.useState(0);
-    const editor = import_react11.useRef(null);
-    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+    const [value, setValue] = import_react12.useState("");
+    const [submitted, setSubmitted] = import_react12.useState("nothing yet");
+    const [length, setLength] = import_react12.useState(0);
+    const editor = import_react12.useRef(null);
+    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime9.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime10.jsx(Hint, {
           children: "Click a field or press Tab. Type, paste, select with Shift+arrows."
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx("input", {
+        /* @__PURE__ */ jsx_runtime10.jsx("input", {
           id: "gallery-input",
           height: 1,
           width: "100%",
@@ -42545,21 +43177,21 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           onInput: setValue,
           onSubmit: () => setSubmitted(value)
         }),
-        /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime10.jsxs("text", {
           fg: accent,
           children: [
             "Name: ",
             value || "(empty)"
           ]
         }),
-        /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime10.jsxs("text", {
           fg: muted,
           children: [
             "Submitted: ",
             submitted
           ]
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx("textarea", {
+        /* @__PURE__ */ jsx_runtime10.jsx("textarea", {
           id: "gallery-textarea",
           ref: editor,
           height: 6,
@@ -42570,7 +43202,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           textColor: ink,
           onContentChange: () => setLength(editor.current?.plainText.length ?? 0)
         }),
-        /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime10.jsxs("text", {
           fg: muted,
           children: [
             "Notes: ",
@@ -42582,16 +43214,16 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     });
   }
   function SelectDemo() {
-    const [choice, setChoice] = import_react11.useState("none");
-    const [tab, setTab] = import_react11.useState("Habitat");
+    const [choice, setChoice] = import_react12.useState("none");
+    const [tab, setTab] = import_react12.useState("Habitat");
     const options = [{ name: "Ember", description: "A curious forest dragon" }, { name: "Nimbus", description: "A sleepy cloud dragon" }, { name: "Moss", description: "A tiny garden dragon" }];
-    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime9.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime10.jsx(Hint, {
           children: "Tab focuses each widget. Arrow keys move; Enter chooses."
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx("select", {
+        /* @__PURE__ */ jsx_runtime10.jsx("select", {
           id: "gallery-select",
           height: 7,
           width: "100%",
@@ -42601,14 +43233,14 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           textColor: ink,
           onSelect: (_i, o) => setChoice(o.name)
         }),
-        /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime10.jsxs("text", {
           fg: accent,
           children: [
             "Chosen: ",
             choice
           ]
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx("tab-select", {
+        /* @__PURE__ */ jsx_runtime10.jsx("tab-select", {
           id: "gallery-tabs",
           height: 3,
           width: "100%",
@@ -42616,7 +43248,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           options: [{ name: "Habitat", description: "Forest" }, { name: "Food", description: "Berries" }, { name: "Skills", description: "Flying" }],
           onChange: (_i, o) => setTab(o.name)
         }),
-        /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime10.jsxs("text", {
           fg: accent,
           children: [
             "Active tab: ",
@@ -42627,14 +43259,14 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     });
   }
   function ScrollDemo() {
-    const [value, setValue] = import_react11.useState(25);
-    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+    const [value, setValue] = import_react12.useState(25);
+    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime9.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime10.jsx(Hint, {
           children: "Scroll with two fingers, drag the scrollbar, or focus and use arrows."
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx("scrollbox", {
+        /* @__PURE__ */ jsx_runtime10.jsx("scrollbox", {
           id: "gallery-scroll",
           onMouseScroll: (e) => e.stopPropagation(),
           height: 9,
@@ -42643,7 +43275,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           borderColor: accent,
           scrollY: true,
           contentOptions: { gap: 0 },
-          children: Array.from({ length: 40 }, (_2, i) => /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+          children: Array.from({ length: 40 }, (_2, i) => /* @__PURE__ */ jsx_runtime10.jsxs("text", {
             fg: i % 2 ? ink : accent,
             children: [
               "Field record ",
@@ -42652,7 +43284,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             ]
           }, i))
         }),
-        /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime10.jsxs("text", {
           fg: ink,
           children: [
             "Flight altitude: ",
@@ -42660,7 +43292,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             " m"
           ]
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx("slider", {
+        /* @__PURE__ */ jsx_runtime10.jsx("slider", {
           id: "gallery-slider",
           orientation: "horizontal",
           height: 1,
@@ -42671,50 +43303,50 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           onChange: setValue,
           foregroundColor: accent
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime10.jsx(Hint, {
           children: "The scrollbox above contains native ScrollBar and Slider widgets."
         })
       ]
     });
   }
   function FontDemo() {
-    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime9.jsx("ascii-font", {
+        /* @__PURE__ */ jsx_runtime10.jsx("ascii-font", {
           text: "DRAGON",
           font: "tiny",
           color: accent
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx("ascii-font", {
+        /* @__PURE__ */ jsx_runtime10.jsx("ascii-font", {
           text: "ZIG",
           font: "block",
           color: "#e9af70"
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx("ascii-font", {
+        /* @__PURE__ */ jsx_runtime10.jsx("ascii-font", {
           text: "JS",
           font: "shade",
           color: "#a59de0"
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime10.jsx(Hint, {
           children: "ASCII fonts render into an OpenTUI framebuffer."
         })
       ]
     });
   }
   function CodeDemo() {
-    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime9.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime10.jsx(Hint, {
           children: "Code with a line-number gutter. Plain text; syntax parsing is not enabled."
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx("line-number", {
+        /* @__PURE__ */ jsx_runtime10.jsx("line-number", {
           id: "gallery-lines",
           height: 10,
           width: "100%",
           fg: muted,
-          children: /* @__PURE__ */ jsx_runtime9.jsx("code", {
+          children: /* @__PURE__ */ jsx_runtime10.jsx("code", {
             id: "gallery-code",
             content: code,
             syntaxStyle: style(),
@@ -42727,15 +43359,15 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     });
   }
   function DiffDemo() {
-    const [split, setSplit] = import_react11.useState(false);
-    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+    const [split, setSplit] = import_react12.useState(false);
+    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime9.jsx("box", {
+        /* @__PURE__ */ jsx_runtime10.jsx("box", {
           id: "gallery-diff-toggle",
           height: 1,
           onMouseDown: () => setSplit((v2) => !v2),
-          children: /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+          children: /* @__PURE__ */ jsx_runtime10.jsxs("text", {
             fg: accent,
             children: [
               "[ Click to switch: ",
@@ -42744,7 +43376,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             ]
           })
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx("diff", {
+        /* @__PURE__ */ jsx_runtime10.jsx("diff", {
           id: "gallery-diff",
           diff: patch,
           syntaxStyle: style(),
@@ -42756,10 +43388,10 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     });
   }
   function MarkdownDemo() {
-    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime9.jsx("markdown", {
+        /* @__PURE__ */ jsx_runtime10.jsx("markdown", {
           id: "gallery-markdown",
           width: "100%",
           syntaxStyle: style(),
@@ -42773,7 +43405,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
 > Approach with snacks.
 `
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx("table", {
+        /* @__PURE__ */ jsx_runtime10.jsx("table", {
           id: "gallery-table",
           width: "100%",
           border: true,
@@ -42786,40 +43418,40 @@ Please report this to https://github.com/markedjs/marked.`, e) {
   }
   function Gallery({ page, changePage }) {
     const Demo = demos[page];
-    const [hovered, setHovered] = import_react11.useState(null);
-    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+    const [hovered, setHovered] = import_react12.useState(null);
+    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
       width: "100%",
       height: "100%",
       backgroundColor: "#101820",
       padding: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime9.jsx("box", {
+        /* @__PURE__ */ jsx_runtime10.jsx("box", {
           flexDirection: "row",
           width: "100%",
           height: 2,
-          children: /* @__PURE__ */ jsx_runtime9.jsx("text", {
+          children: /* @__PURE__ */ jsx_runtime10.jsx("text", {
             fg: accent,
-            children: /* @__PURE__ */ jsx_runtime9.jsx("b", {
+            children: /* @__PURE__ */ jsx_runtime10.jsx("b", {
               children: "QuickTUI / Widget gallery"
             })
           })
         }),
-        /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+        /* @__PURE__ */ jsx_runtime10.jsxs("box", {
           flexDirection: "row",
           flexGrow: 1,
           gap: 1,
           children: [
-            /* @__PURE__ */ jsx_runtime9.jsx("box", {
+            /* @__PURE__ */ jsx_runtime10.jsx("box", {
               width: 26,
               border: true,
               borderStyle: "rounded",
               borderColor: "#36535f",
               paddingX: 1,
-              children: /* @__PURE__ */ jsx_runtime9.jsx("scrollbox", {
+              children: /* @__PURE__ */ jsx_runtime10.jsx("scrollbox", {
                 flexGrow: 1,
                 width: "100%",
                 verticalScrollbarOptions: { width: 1, showArrows: true, trackOptions: { backgroundColor: "#101820", foregroundColor: "#101820" }, arrowOptions: { foregroundColor: "#526b78", backgroundColor: "#101820", arrowChars: { up: "↑", down: "↓" } } },
-                children: pages.map((name, i) => /* @__PURE__ */ jsx_runtime9.jsx("box", {
+                children: pages.map((name, i) => /* @__PURE__ */ jsx_runtime10.jsx("box", {
                   id: `gallery-nav-${i}`,
                   height: 1,
                   marginBottom: i === pages.length - 1 ? 0 : 1,
@@ -42829,7 +43461,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                   onMouseOver: () => setHovered(i),
                   onMouseOut: () => setHovered((value) => value === i ? null : value),
                   onMouseDown: () => changePage(i),
-                  children: /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+                  children: /* @__PURE__ */ jsx_runtime10.jsxs("text", {
                     fg: page === i ? accent : muted,
                     children: [
                       i + 1,
@@ -42840,7 +43472,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                 }, name))
               })
             }),
-            /* @__PURE__ */ jsx_runtime9.jsx("box", {
+            /* @__PURE__ */ jsx_runtime10.jsx("box", {
               border: true,
               borderStyle: "rounded",
               borderColor: accent,
@@ -42848,23 +43480,23 @@ Please report this to https://github.com/markedjs/marked.`, e) {
               padding: 1,
               flexGrow: 1,
               minWidth: 0,
-              children: /* @__PURE__ */ jsx_runtime9.jsx("scrollbox", {
+              children: /* @__PURE__ */ jsx_runtime10.jsx("scrollbox", {
                 flexGrow: 1,
                 width: "100%",
                 contentOptions: { paddingRight: 1 },
-                children: /* @__PURE__ */ jsx_runtime9.jsx(Demo, {})
+                children: /* @__PURE__ */ jsx_runtime10.jsx(Demo, {})
               }, page)
             })
           ]
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx("text", {
+        /* @__PURE__ */ jsx_runtime10.jsx("text", {
           fg: muted,
           children: "Click page · F1/F2 previous/next · Tab focus · Esc exit"
         })
       ]
     });
   }
-  var import_react11, jsx_runtime9, pages, ink = "#d5e2e8", muted = "#8299a6", accent = "#63c7b2", code = `const dragon = { name: "Ember", wings: 2 };
+  var import_react12, jsx_runtime10, pages, ink = "#d5e2e8", muted = "#8299a6", accent = "#63c7b2", code = `const dragon = { name: "Ember", wings: 2 };
 
 function fly(height) {
   return \`\${dragon.name} flies \${height}m\`;
@@ -42882,8 +43514,8 @@ console.log(fly(12));`, patch = `--- a/dragon.js
 `, syntax, demos;
   var init_gallery_app = __esm(() => {
     init_syntax_style();
-    import_react11 = __toESM(require_react(), 1);
-    jsx_runtime9 = __toESM(require_jsx_runtime(), 1);
+    import_react12 = __toESM(require_react(), 1);
+    jsx_runtime10 = __toESM(require_jsx_runtime(), 1);
     pages = ["Text & layout", "Input & textarea", "Select & tabs", "Scroll & sliders", "ASCII fonts", "Code & lines", "Diff", "Markdown & tables"];
     demos = [TextDemo, InputDemo, SelectDemo, ScrollDemo, FontDemo, CodeDemo, DiffDemo, MarkdownDemo];
   });
@@ -42893,7 +43525,7 @@ console.log(fly(12));`, patch = `--- a/dragon.js
   function drainInput4() {
     parser4.drain((event) => {
       if (event.type === "key") {
-        if (event.key.ctrl && event.key.name === "c") {
+        if (!isEditor && event.key.ctrl && event.key.name === "c") {
           __host.quit();
           return;
         }
@@ -42911,7 +43543,7 @@ console.log(fly(12));`, patch = `--- a/dragon.js
           if (raw.button === 0 && target?.shouldStartSelection(raw.x, raw.y))
             context4.startSelection(target, raw.x, raw.y);
         }
-        if (selection?.isDragging && (raw.type === "drag" || raw.type === "up"))
+        if (selection2?.isDragging && (raw.type === "drag" || raw.type === "up"))
           context4.updateSelection(target, raw.x, raw.y, { finishDragging: raw.type === "up" });
         mouse3.dispatch(raw);
       } else if (event.type === "response" && native4) {
@@ -42932,10 +43564,14 @@ console.log(fly(12));`, patch = `--- a/dragon.js
     items[(current + (reverse ? -1 : 1) + items.length) % items.length]?.focus();
   }
   function App6() {
-    const [selected, setSelected] = import_react12.useState(0);
+    const [selected, setSelected] = import_react13.useState(0);
     setPageState = setSelected;
-    import_react12.useEffect(() => {
+    import_react13.useEffect(() => {
       effectMounted4 = true;
+      if (isEditor)
+        return () => {
+          effectMounted4 = false;
+        };
       const key = (e) => {
         if (e.name === "escape") {
           __host.quit();
@@ -42959,7 +43595,9 @@ console.log(fly(12));`, patch = `--- a/dragon.js
         keys4.off("keypress", key);
       };
     }, []);
-    return /* @__PURE__ */ jsx_runtime10.jsx(Gallery, {
+    return isEditor ? /* @__PURE__ */ jsx_runtime11.jsx(Editor, {
+      keys: keys4
+    }) : /* @__PURE__ */ jsx_runtime11.jsx(Gallery, {
       page: selected,
       changePage
     });
@@ -42994,7 +43632,7 @@ console.log(fly(12));`, patch = `--- a/dragon.js
       }
     }
   }
-  var import_react12, import_react_reconciler5, import_events9, jsx_runtime10, dirty4 = true, stopped4 = false, container4, native4, root4, lib5, keys4, selection = null, selectionOwner = null, liveCount2 = 0, liveTimer2, parser4, lifecycle4, context4, reconciler4, report4 = (error) => {
+  var import_react13, import_react_reconciler5, import_events9, jsx_runtime11, isEditor, dirty4 = true, stopped4 = false, container4, native4, root4, lib5, keys4, selection2 = null, selectionOwner2 = null, liveCount2 = 0, liveTimer2, parser4, lifecycle4, context4, reconciler4, report4 = (error) => {
     console.error(String(error), error?.stack ?? "");
     throw error;
   }, effectMounted4 = false, hit = (x2, y2) => x2 < 0 || y2 < 0 ? undefined : Renderable.renderablesByNumber.get(lib5.checkHit(native4, x2, y2)), mouse3, page = 0, setPageState;
@@ -43006,11 +43644,15 @@ console.log(fly(12));`, patch = `--- a/dragon.js
     init_stdin_parser();
     init_KeyHandler();
     init_selection();
+    init_editor_app();
     init_gallery_app();
-    import_react12 = __toESM(require_react(), 1);
+    import_react13 = __toESM(require_react(), 1);
     import_react_reconciler5 = __toESM(require_react_reconciler(), 1);
     import_events9 = __toESM(require_events(), 1);
-    jsx_runtime10 = __toESM(require_jsx_runtime(), 1);
+    jsx_runtime11 = __toESM(require_jsx_runtime(), 1);
+    isEditor = __host.example === "editor";
+    if (isEditor)
+      Object.assign(globalThis, { __message: receiveEditorMessage });
     keys4 = new InternalKeyHandler;
     parser4 = new StdinParser({ onTimeoutFlush: () => drainInput4() });
     lifecycle4 = new Set;
@@ -43038,7 +43680,7 @@ console.log(fly(12));`, patch = `--- a/dragon.js
       clearHitGridScissorRects() {
         lib5.hitGridClearScissorRects(native4);
       },
-      getSelection: () => selection,
+      getSelection: () => selection2,
       currentFocusedRenderable: null,
       currentFocusedEditor: null,
       focusRenderable(node) {
@@ -43058,32 +43700,32 @@ console.log(fly(12));`, patch = `--- a/dragon.js
         lib5.setCursorStyleOptions(native4, style2);
       },
       clearSelection() {
-        const old = selectionOwner;
-        selection = null;
-        selectionOwner = null;
+        const old = selectionOwner2;
+        selection2 = null;
+        selectionOwner2 = null;
         if (old && !old.isDestroyed)
           old.onSelectionChanged(null);
         context4.emit("selection", null);
       },
       startSelection(node, x2, y2) {
         context4.clearSelection();
-        selectionOwner = node;
-        selection = new Selection(node, { x: x2, y: y2 }, { x: x2, y: y2 });
-        selection.isStart = true;
-        node.onSelectionChanged(selection);
+        selectionOwner2 = node;
+        selection2 = new Selection(node, { x: x2, y: y2 }, { x: x2, y: y2 });
+        selection2.isStart = true;
+        node.onSelectionChanged(selection2);
       },
       updateSelection(_node, x2, y2, options = {}) {
-        if (selection && selectionOwner && !selectionOwner.isDestroyed) {
-          selection.isStart = false;
-          selection.focus = { x: x2, y: y2 };
-          selection.isDragging = !options.finishDragging;
-          selectionOwner.onSelectionChanged(selection);
-          context4.emit("selection", selection);
+        if (selection2 && selectionOwner2 && !selectionOwner2.isDestroyed) {
+          selection2.isStart = false;
+          selection2.focus = { x: x2, y: y2 };
+          selection2.isDragging = !options.finishDragging;
+          selectionOwner2.onSelectionChanged(selection2);
+          context4.emit("selection", selection2);
         }
       },
       requestSelectionUpdate() {
-        if (selection && selectionOwner && !selectionOwner.isDestroyed)
-          selectionOwner.onSelectionChanged(selection);
+        if (selection2 && selectionOwner2 && !selectionOwner2.isDestroyed)
+          selectionOwner2.onSelectionChanged(selection2);
       },
       keyInput: keys4,
       _internalKeyInput: keys4,
@@ -43104,7 +43746,7 @@ console.log(fly(12));`, patch = `--- a/dragon.js
           clearTimeout(liveTimer2);
       }
     });
-    Object.defineProperty(context4, "hasSelection", { get: () => selection !== null });
+    Object.defineProperty(context4, "hasSelection", { get: () => selection2 !== null });
     reconciler4 = import_react_reconciler5.default(hostConfig);
     mouse3 = new MouseRouter(hit);
     Object.assign(globalThis, {
@@ -43162,7 +43804,7 @@ console.log(fly(12));`, patch = `--- a/dragon.js
       lib5.enableMouse(native4, true);
     root4 = new RootRenderable(context4);
     container4 = reconciler4.createContainer(root4, 1, null, false, null, "", report4, report4, report4, () => {});
-    reconciler4.updateContainerSync(/* @__PURE__ */ jsx_runtime10.jsx(App6, {}), container4, null, null);
+    reconciler4.updateContainerSync(/* @__PURE__ */ jsx_runtime11.jsx(App6, {}), container4, null, null);
     reconciler4.flushSyncWork();
     reconciler4.flushPassiveEffects();
     if (__host.headless)
@@ -43178,6 +43820,10 @@ console.log(fly(12));`, patch = `--- a/dragon.js
             reconciler4.flushSyncFromReconciler(fn);
             frame();
           };
+          if (isEditor) {
+            await testEditor(frame, (text) => sync(() => host.__input(new TextEncoder().encode(text).buffer)));
+            return;
+          }
           const expect = (text) => {
             if (!host.__snapshot().includes(text))
               throw new Error(`Gallery snapshot missing ${text}: ${host.__snapshot()}`);
@@ -43284,6 +43930,7 @@ Two`))
       case "messages":
         init_messages();
         break;
+      case "editor":
       case "gallery":
         init_gallery();
         break;

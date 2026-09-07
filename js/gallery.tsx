@@ -8,11 +8,14 @@ import { EventEmitter } from "../vendor/js/node_modules/events";
 import { StdinParser } from "../vendor/opentui/packages/core/src/lib/stdin-parser";
 import { InternalKeyHandler, KeyEvent, PasteEvent } from "../vendor/opentui/packages/core/src/lib/KeyHandler";
 import { Selection } from "../vendor/opentui/packages/core/src/lib/selection";
+import {Editor,testEditor,receiveEditorMessage} from "./editor-app";
 import { Gallery, pages, disposeGallery } from "./gallery-app";
 import { MouseRouter } from "./platform/mouse";
 
-declare const __host: {width:number,height:number,headless:boolean,env:Record<string,string>,quit():void};
+declare const __host: {width:number,height:number,headless:boolean,example:string,env:Record<string,string>,quit():void};
 declare const __timers: {tick():void,delay():number,clear():void};
+const isEditor=__host.example==="editor";
+if(isEditor)Object.assign(globalThis,{__message:receiveEditorMessage});
 let dirty=true;
 let stopped=false;
 let container:any;
@@ -27,7 +30,7 @@ let liveTimer:any;
 const parser=new StdinParser({onTimeoutFlush:()=>drainInput()});
 function drainInput(){parser.drain(event=>{
   if(event.type==="key"){
-    if(event.key.ctrl&&event.key.name==="c"){__host.quit();return}
+    if(!isEditor&&event.key.ctrl&&event.key.name==="c"){__host.quit();return}
     keys.emit(event.key.eventType==="release"?"keyrelease":"keypress",new KeyEvent(event.key));
   } else if(event.type==="paste"){
     keys.emit("paste",new PasteEvent(event.bytes));
@@ -95,6 +98,7 @@ function App(){
   const [selected,setSelected]=useState(0);setPageState=setSelected;
   useEffect(()=>{
     effectMounted=true;
+    if(isEditor)return()=>{effectMounted=false};
     const key=(e:KeyEvent)=>{
       if(e.name==="escape"){__host.quit();e.preventDefault();e.stopPropagation()}
       if(e.name==="f2"||e.name==="f1"){changePage(page+(e.name==="f2"?1:-1));e.preventDefault();e.stopPropagation()}
@@ -102,7 +106,7 @@ function App(){
     };
     keys.on("keypress",key);return ()=>{effectMounted=false;keys.off("keypress",key)};
   },[]);
-  return <Gallery page={selected} changePage={changePage}/>;
+  return isEditor?<Editor keys={keys}/>:<Gallery page={selected} changePage={changePage}/>;
 }
 function shutdown(){
   if(stopped)return;
@@ -160,6 +164,7 @@ if(__host.headless)Object.assign(globalThis,{
     const host=globalThis as any;
     const frame=()=>{reconciler.flushSyncWork();reconciler.flushPassiveEffects();host.__frame()};
     const sync=(fn:()=>void)=>{reconciler.flushSyncFromReconciler(fn);frame()};
+    if(isEditor){await testEditor(frame,text=>sync(()=>host.__input(new TextEncoder().encode(text).buffer)));return}
     const expect=(text:string)=>{if(!host.__snapshot().includes(text))throw new Error(`Gallery snapshot missing ${text}: ${host.__snapshot()}`)};
     const feed=(text:string)=>sync(()=>host.__input(new TextEncoder().encode(text).buffer));
     const node=(id:string)=>{const n=[...Renderable.renderablesByNumber.values()].find(n=>n.id===id);if(!n)throw new Error(`Missing ${id}`);return n as any};

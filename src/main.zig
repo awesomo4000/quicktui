@@ -16,6 +16,20 @@ pub fn main(init: std.process.Init) !void {
     if (args.len == 2 and (std.mem.eql(u8, args[1], "--gallery") or std.mem.eql(u8, args[1], "--gallery-self-test"))) {
         return runtime.runExample(examples, "gallery", std.mem.eql(u8, args[1], "--gallery-self-test"));
     }
+    if (args.len >= 2 and (std.mem.eql(u8, args[1], "--editor") or std.mem.eql(u8, args[1], "--editor-self-test"))) {
+        if (args.len > 3) return error.InvalidArguments;
+        const headless = std.mem.eql(u8, args[1], "--editor-self-test");
+        var temporary: @import("examples/lab_presets.zig").Temporary = .{};
+        if (headless) try temporary.init();
+        defer if (headless) temporary.deinit();
+        var worker: @import("examples/editor_worker.zig").Worker = .{};
+        worker.initial_path = if (headless) try std.fmt.allocPrint(init.arena.allocator(), "{s}/1.json", .{temporary.directory}) else if (args.len == 3) args[2] else "";
+        if (worker.initial_path.len > 512) return error.PathTooLong;
+        try worker.start();
+        defer worker.stop();
+        const endpoint = worker.endpoint();
+        return runtime.runWithMessages(examples, "editor", headless, &endpoint);
+    }
     if (args.len == 2 and (std.mem.eql(u8, args[1], "--messages") or std.mem.eql(u8, args[1], "--messages-self-test"))) {
         var worker: @import("examples/message_worker.zig").Worker = .{};
         try worker.start();
@@ -46,7 +60,7 @@ pub fn main(init: std.process.Init) !void {
     }
     const headless = args.len == 2 and std.mem.eql(u8, args[1], "--self-test");
     if (args.len > 1 and !headless) {
-        std.debug.print("Usage: quicktui [--live [directory] | --lab | --messages | --gallery | --mouse | --self-test | --smoke]\n", .{});
+        std.debug.print("Usage: quicktui [--editor [file] | --live [directory] | --lab | --messages | --gallery | --mouse | --self-test | --smoke]\n", .{});
         return error.InvalidArguments;
     }
     try runtime.runCounter(examples, headless);

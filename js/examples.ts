@@ -11,6 +11,7 @@ if(typeof __host==="undefined"){
     case "live": require("./live");break;
     case "lab": require("./lab");break;
     case "messages": require("./messages");break;
+    case "editor":
     case "gallery": require("./gallery");break;
     default:throw new Error(`Unknown example: ${__host.example}`);
   }

@@ -1,4 +1,6 @@
 import path from "node:path";
+const paint=process.argv.includes("--termpaint");
+const entry=paint?"js/termpaint-entry.ts":"js/examples.ts";
 const base=process.cwd();
 const native=path.join(base,"vendor/opentui/packages/core/src");
 const react=path.join(base,"vendor/opentui/packages/react/src");
@@ -8,14 +10,14 @@ const replacements=new Map([
   [path.join(native,"platform/runtime.ts"),path.join(platform,"runtime.ts")],
   [path.join(react,"components/index.ts"),path.join(platform,"catalogue.ts")],
 ]);
-const picture=Buffer.from(await Bun.file("assets/dragon.jpg").arrayBuffer()).toString("base64");
-const spriteFrames=await Promise.all(Array.from({length:8},async(_,i)=>Buffer.from(await Bun.file(`assets/dragon-frames/${i}.rgba`).arrayBuffer()).toString("base64")));
+const picture=paint?"":Buffer.from(await Bun.file("assets/dragon.jpg").arrayBuffer()).toString("base64");
+const spriteFrames=paint?[]:await Promise.all(Array.from({length:8},async(_,i)=>Buffer.from(await Bun.file(`assets/dragon-frames/${i}.rgba`).arrayBuffer()).toString("base64")));
 const result=await Bun.build({
-  entrypoints:["js/examples.ts"],target:"browser",format:"iife",minify:false,
+  entrypoints:[entry],target:"browser",format:"iife",minify:false,
   define:{"__SPRITE_FRAMES_BASE64__":JSON.stringify(spriteFrames),"__DEMO_PICTURE_BASE64__":JSON.stringify(picture),"process.env.NODE_ENV":'"production"',"process.env.DEV":'"false"'},
   plugins:[{name:"quicktui-shared-runtime",setup(build){
     build.onResolve({filter:/.*/},async(args)=>{
-      if(args.path === "js/examples.ts") return {path:path.join(base,args.path)};
+      if(args.path === entry) return {path:path.join(base,args.path)};
       if(args.path==="@opentui/core")return {path:path.join(platform,"core.ts")};
       if(["events","node:events","buffer","node:buffer"].includes(args.path))return {path:path.join(base,"vendor/js/node_modules",args.path.replace("node:",""),args.path.endsWith("events")?"events.js":"index.js")};
       if(args.path==="node:util")return {path:"util",namespace:"quicktui"};
@@ -63,4 +65,4 @@ for(const module of ["vendor/js/node_modules/react/cjs/react.production.js","ven
   const count=bundled.split(`// ${module}\n`).length-1;
   if(count!==1)throw new Error(`Expected one shared copy of ${module}, got ${count}`);
 }
-await Bun.write("src/examples.js",`/*!\n${licenses.join("\n")}\n*/\n${bundled}`);
+await Bun.write(paint?"src/termpaint.js":"src/examples.js",`/*!\n${licenses.join("\n")}\n*/\n${bundled}`);

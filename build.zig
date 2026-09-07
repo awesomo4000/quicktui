@@ -54,6 +54,21 @@ pub fn build(b: *std.Build) void {
         }),
     });
     b.installArtifact(exe);
+    const paint = b.addExecutable(.{
+        .name = "termpaint",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/termpaint.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{.{ .name = "quicktui", .module = runtime }},
+        }),
+    });
+    b.installArtifact(paint);
+    b.getInstallStep().dependOn(&b.addInstallDirectory(.{ .source_dir = b.path("skills"), .install_dir = .prefix, .install_subdir = "share/termpaint/skills" }).step);
+    const paint_run = b.addRunArtifact(paint);
+    if (b.args) |args| paint_run.addArgs(args);
+    b.step("termpaint", "Run the standalone paint application").dependOn(&paint_run.step);
+
     const run = b.addRunArtifact(exe);
     if (b.args) |args| run.addArgs(args);
     b.step("run", "Run the interactive React / QuickJS / OpenTUI counter").dependOn(&run.step);
@@ -62,6 +77,9 @@ pub fn build(b: *std.Build) void {
     const run_tests = b.addRunArtifact(tests);
     const test_step = b.step("test", "Test JavaScript evaluation, jobs, errors, and native ABI calls");
     test_step.dependOn(&run_tests.step);
+    const paint_test = b.addRunArtifact(paint);
+    paint_test.addArg("--self-test");
+    test_step.dependOn(&paint_test.step);
     const self_test = b.addRunArtifact(exe);
     self_test.addArg("--self-test");
     test_step.dependOn(&self_test.step);
@@ -87,6 +105,17 @@ pub fn build(b: *std.Build) void {
     }) });
     const lab_native_run = b.addRunArtifact(lab_native_test);
     test_step.dependOn(&lab_native_run.step);
+    const editor_worker_tests = b.addTest(.{ .root_module = b.createModule(.{
+        .root_source_file = b.path("src/examples/editor_worker.zig"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+        .imports = &.{.{ .name = "quicktui", .module = runtime }},
+    }) });
+    test_step.dependOn(&b.addRunArtifact(editor_worker_tests).step);
+    const editor_test = b.addRunArtifact(exe);
+    editor_test.addArg("--editor-self-test");
+    test_step.dependOn(&editor_test.step);
     const messages_test = b.addRunArtifact(exe);
     messages_test.addArg("--messages-self-test");
     test_step.dependOn(&messages_test.step);
@@ -151,4 +180,9 @@ pub fn build(b: *std.Build) void {
     const bindings = b.addSystemCommand(&.{ "bun", "scripts/generate-bindings.ts" });
     bindings.setCwd(b.path("."));
     bundle.step.dependOn(&bindings.step);
+    const paint_bundle = b.addSystemCommand(&.{ "bun", "scripts/bundle.ts", "--termpaint" });
+    paint_bundle.setCwd(b.path("."));
+    paint_bundle.step.dependOn(&bindings.step);
+    b.step("bundle-termpaint", "Regenerate the standalone paint JS bundle").dependOn(&paint_bundle.step);
+    bundle.step.dependOn(&paint_bundle.step);
 }

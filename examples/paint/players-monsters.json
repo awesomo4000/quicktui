@@ -1,0 +1,51 @@
+{
+  "tileWidth": 16,
+  "tileHeight": 16,
+  "columns": 5,
+  "rows": [
+    {
+      "character": "adventurer",
+      "poses": [
+        "idle",
+        "walk-or-squash",
+        "jump-or-wing-down",
+        "attack",
+        "hurt"
+      ],
+      "y": 0
+    },
+    {
+      "character": "slime",
+      "poses": [
+        "idle",
+        "walk-or-squash",
+        "jump-or-wing-down",
+        "attack",
+        "hurt"
+      ],
+      "y": 16
+    },
+    {
+      "character": "bat",
+      "poses": [
+        "idle",
+        "walk-or-squash",
+        "jump-or-wing-down",
+        "attack",
+        "hurt"
+      ],
+      "y": 32
+    },
+    {
+      "character": "skeleton",
+      "poses": [
+        "idle",
+        "walk-or-squash",
+        "jump-or-wing-down",
+        "attack",
+        "hurt"
+      ],
+      "y": 48
+    }
+  ]
+}

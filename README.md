@@ -497,3 +497,133 @@ For example, `QT1` alone describes the default scene. Malformed fields, unknown
 versions, and extensions beyond the decoder's known fields are rejected.
 Viewport dimensions and message epochs are not encoded. Preset files and their
 short name fingerprints remain separate from these reversible scene codes.
+
+### Editor demo
+
+Run `zig-out/bin/quicktui --editor` for a blank document, or
+`zig-out/bin/quicktui --editor path/to/notes.txt` to open a file.
+The editor uses the shared React/OpenTUI input runtime, including mouse focus,
+selection, multiline typing, undo/redo, and bracketed paste.
+
+**Alt+F** opens the File menu. Use **Up/Down** to select an item and **Enter**
+to activate it. **Right** expands Recent Files, **Up/Down** selects a recent file,
+and **Left** returns to the File menu. **Escape** closes the current menu.
+Recent Files keeps the last 16 successful opens and saves in the current session.
+
+**Ctrl+O** opens a filename dialog. **Ctrl+S** saves, asking for a filename if the
+document is untitled. File > Save as opens a filename dialog for another path.
+**Ctrl+Q** quits. Loading or quitting with unsaved changes asks before discarding
+them. Replacing an existing file requires confirmation. Failed loads and saves
+leave the editor contents intact.
+
+The application-owned Zig worker reads UTF-8 regular files up to 64 KiB.
+Save text crosses the message interface in small acknowledged chunks. A completed
+save flushes a temporary file in the destination directory before replacing the
+target. Existing regular-file permissions are retained; new files use mode 0600.
+This trusted local editor accepts filesystem paths and is not a file sandbox.
+Self-tests create disposable files under `/tmp`.
+
+Parked graphics-lab ideas: paste/load settings codes, a startup code argument,
+and a looping `<milliseconds> <code>` playlist from `-s filename` or `-s-`.
+These are not implemented by the editor demo.
+
+### termpaint: standalone paint application
+
+`zig build -Doptimize=ReleaseSmall` also installs **termpaint**, a separate
+executable with its own JS bundle and no embedded demo pictures.
+
+```sh
+zig-out/bin/termpaint
+zig-out/bin/termpaint drawing.tpaint
+# Or build and run:
+zig build termpaint -Doptimize=ReleaseSmall
+```
+
+The Amiga-inspired workspace starts with a 96×64 indexed-color canvas, 32 palette swatches,
+and pencil, round paintbrush, continuous spray, and flood-fill tools. The canvas
+defaults to crisp true-color Unicode half blocks. **M** or the display button opts
+into Kitty graphics when the terminal has confirmed support. Terminal resizing
+changes only the display; **R** or Resize scales the actual drawing through 96×64,
+192×128, and 256×192 using nearest-neighbor pixels, with confirmation and undo.
+
+- **1–4** selects tools. **[ / ]** changes brush/spray radius.
+- Click a swatch for foreground; right-click or Ctrl-click one for background. **X** swaps them.
+- Left-drag paints in foreground; right-drag or Ctrl-drag paints in background.
+- **Z / Y** undo and redo, with up to 32 stroke snapshots.
+- **E** or Transparent selects transparent paint; right-click or Ctrl-click Transparent to select it
+  as the background. Checkerboards are preview-only, and painting stores real transparency.
+- **S** saves to the supplied filename or `painting.tpaint`.
+- **N** clears to the background color after confirmation; clearing is undoable.
+- **Q** quits, with confirmation for unsaved changes.
+
+`.tpaint` files are versioned JSON containing palette indices. Version 3 adds a transparent pixel index and packs one
+index per character to keep even the largest canvas below the file worker limit;
+versions 1 and 2 paintings still load. Saving uses the
+native file worker and asks before replacing an existing file. Pass a filename
+when starting termpaint to reopen a drawing or choose a new save destination.
+`zig build bundle-termpaint` regenerates its checked-in JS using Bun;
+`zig build bundle` regenerates both application bundles. Normal builds need only Zig.
+
+The original sprite sheet `examples/paint/players-monsters.tpaint` contains twenty
+16×16 tiles: adventurer, slime, bat, and skeleton rows, with five poses each. Its
+PNG counterpart has genuine alpha and no gutters. The JSON sidecar describes tile
+positions; `python3 examples/paint/make-sprites.py` rebuilds these original pixel assets.
+
+Palette cycling in termpaint changes displayed colors without rewriting pixels.
+**C** plays/pauses, **V** reverses, **− / =** slows/speeds up, and Reset cycle restores
+original colors. Select two palette entries as FG/BG, then click Range = FG/BG to
+cycle that inclusive range. Transparent pixels are excluded. Hover a palette swatch
+to highlight its pixels in white. Range, direction, and step duration are saved with
+the painting; playback position and hover highlighting are temporary. Try
+`examples/paint/players-monsters-cycle.tpaint` for a copy with cycling green slime.
+
+`examples/paint/waterfall/waterfall.tpaint` is an imagegen waterfall prepared for
+cycling with its own saved 32-color palette. Its eight animated water colors support
+Smooth blend as well as Stepped cycling. The original image, generation prompt,
+static PNG preview, and reproducible preparation script are in the same directory.
+
+Animated GIF export: click **GIF** or press **G**, choose **480**, **960**, or
+**1440** pixels wide, then Export/Enter. Height follows the canvas aspect ratio;
+Left/Right navigates widths and Esc cancels. Files are written beside the painting
+as `<name>-<width>.gif`, with confirmation before replacement. Export uses crisp
+nearest-neighbor pixels, genuine transparency, and one looping palette cycle with
+saved speed/direction/blending. The canvas is exported without UI or cursor.
+Smooth cycles target 25 FPS, capped at 256 frames per loop; very slow cycles use
+fewer frames per second while retaining duration. Export height is limited to
+4096 pixels and compressed frame data to 64 MiB. Native worker encoding needs no
+external programs. GIF89a encoding follows the [format specification](https://www.w3.org/Graphics/GIF/spec-gif89a.txt).
+
+Two more 256×192 cycling scenes live in `examples/paint/neon-rain/` and
+`examples/paint/sunset-harbor/`. Each includes its original imagegen source,
+exact prompt, preparation script, static PNG, and editable `.tpaint` file.
+Neon Rain cycles signs and puddle reflections; Sunset Harbor cycles water
+highlights while leaving the skyline and sunset fixed.
+
+### AI Help and reusable termpaint skills
+
+Click **AI Help** or press **H** in termpaint. Choose **Use termpaint** or
+**Create cycling art**, then **C / Copy guide** to put complete instructions on
+the terminal clipboard. Paste them into your AI assistant and describe the task.
+This does not call an AI service or send your painting anywhere. Clipboard support
+depends on the terminal's OSC 52 support.
+
+The reusable skills are [termpaint](skills/termpaint/SKILL.md) and
+[termpaint-color-cycle](skills/termpaint-color-cycle/SKILL.md). They cover terminal
+operation, `.tpaint` structure, sprite preparation, imagegen prompting, selective
+palette allocation, spatial motion patterns, and native GIF export. The bundled
+copy includes the format reference, so an assistant can use it without installing
+skills first. Its next step is to locate your checkout and available tools.
+
+For assistants with filesystem skill discovery, copy **both folders** from `skills/`
+into that assistant's configured skill directory, keeping them as siblings and
+retaining `termpaint/references/`. Alternatively, ask the assistant to read the
+project files directly. No user-wide skill installation happens automatically.
+`zig build` also installs the folders under `zig-out/share/termpaint/skills/`.
+The examples' scene-specific preparation scripts remain the working recipes;
+there is no new human-facing image import wizard.
+
+Termpaint's **Open** and **Save** buttons are first in the toolbar, with the current
+filename on its own line. **Ctrl+O** opens a `.tpaint` path dialog, including paste;
+**Ctrl+S** saves. Opening another picture prompts before discarding unsaved changes.
+A failed open leaves the current painting intact. PNG/JPEG preparation remains an
+AI-guided workflow, separate from opening a termpaint document.

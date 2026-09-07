@@ -1,5 +1,33 @@
 # Changelog
 
+## Unreleased - 09/07/2026
+
+- Put Open and Save first in the termpaint toolbar, add a Ctrl+O path dialog with paste and unsaved-change protection, and move the filename to its own line.
+
+- Add bundled termpaint operating and color-cycle creation skills, with an AI Help dialog that copies complete guidance to the terminal clipboard.
+
+- Add imagegen Neon Rain and Sunset Harbor scenes with 256×192 indexed artwork and cycling neon reflections.
+
+- Add native animated GIF export at 480/960/1440 pixels wide with proportional nearest-neighbor scaling, transparency, full palette loops, and atomic file replacement confirmation.
+
+- Save per-painting palettes, add smooth color-cycle interpolation, and include an imagegen waterfall with directional water animation.
+
+- Default termpaint to Blocks and add non-destructive palette cycling with saved range/speed/direction, play/pause/reset controls, and palette-hover pixel highlighting.
+
+- Support Ctrl-click and Ctrl-drag as background-color actions in termpaint, including palette and transparency selection.
+
+- Add transparent painting and checkerboard previews, version 3 alpha-capable files, and an original twenty-tile player/monster sprite sheet with an alpha PNG.
+
+- Add automatic Kitty graphics and a block fallback to termpaint, undoable canvas resizing up to 256×192, and compact painting files with legacy loading.
+
+- Add standalone termpaint with a separate JS bundle, retro palette and tool panels, pencil/brush/spray/fill, undo/redo, and native .tpaint load/save.
+
+- Make Down at the bottom of the editor move to the end of the final line.
+
+- Replace the editor filename bar and function-key shortcuts with an Alt+F File menu, Ctrl+O/Ctrl+S dialogs, and an arrow-navigable Recent Files submenu.
+
+- Add an editor demo with UTF-8 load/save through a native worker, shared widget input, unsaved-change prompts, and confirmed atomic file replacement.
+
 ## Unreleased - 09/06/2026
 
 - Expose OSC 52 clipboard writes in the demo bridge and exercise the copy button through mouse input; report copy failures without exiting the lab.

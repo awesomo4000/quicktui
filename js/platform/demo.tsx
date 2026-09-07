@@ -1,3 +1,4 @@
+import {Selection} from "../../vendor/opentui/packages/core/src/lib/selection";
 import React, { useEffect } from "../../vendor/js/node_modules/react";
 import ReactReconciler from "../../vendor/js/node_modules/react-reconciler";
 import { hostConfig } from "../../vendor/opentui/packages/react/src/reconciler/host-config";
@@ -33,6 +34,8 @@ function drainInput(){parser.drain(event=>{
     if(keyInterceptor?.(event.key))return;
     if((event.key.ctrl&&event.key.name==="c")||event.key.name.toLowerCase()==="q"){__host.quit();return}
     keys.emit("key",event.key.name.toLowerCase());
+  } else if(event.type==="paste"){
+    keys.emit("paste",event);
   } else if(event.type==="mouse"){
     mouse.dispatch(event.event);
   } else if(event.type==="response"&&native){
@@ -44,8 +47,9 @@ function drainInput(){parser.drain(event=>{
     }
   }
 })}
+let selection:Selection|null=null,selectionOwner:Renderable|null=null;
 const lifecycle=new Set<any>();
-const context=Object.assign(new EventEmitter(),{
+const context:any=Object.assign(new EventEmitter(),{
   width:__host.width,height:__host.height,frameId:0,widthMethod:"unicode",capabilities:null,
   requestRender(){dirty=true},getLifecyclePasses:()=>lifecycle,
   registerLifecyclePass:(node:any)=>lifecycle.add(node),unregisterLifecyclePass:(node:any)=>lifecycle.delete(node),
@@ -53,11 +57,29 @@ const context=Object.assign(new EventEmitter(),{
   pushHitGridScissorRect(x:number,y:number,w:number,h:number){lib.hitGridPushScissorRect(native,x,y,w,h)},
   popHitGridScissorRect(){lib.hitGridPopScissorRect(native)},
   clearHitGridScissorRects(){lib.hitGridClearScissorRects(native)},
-  hasSelection:false,getSelection:()=>null,currentFocusedRenderable:null,currentFocusedEditor:null,
-  keyInput:keys,_internalKeyInput:keys,
+  getSelection:()=>selection,currentFocusedRenderable:null,currentFocusedEditor:null,
+  focusRenderable(node:Renderable){
+    const old=context.currentFocusedRenderable;
+    if(old&&old!==node)old.blur();
+    context.currentFocusedRenderable=node;
+  },
+  blurRenderable(node:Renderable){if(context.currentFocusedRenderable===node)context.currentFocusedRenderable=null},
+  setCursorPosition(x:number,y:number,visible:boolean){lib.setCursorPosition(native,x,y,visible)},
+  setCursorStyle(style:any){lib.setCursorStyleOptions(native,style)},
+  clearSelection(){const old=selectionOwner;selection=null;selectionOwner=null;if(old&&!old.isDestroyed)old.onSelectionChanged(null);context.emit("selection",null)},
+  startSelection(node:Renderable,x:number,y:number){
+    context.clearSelection();selectionOwner=node;selection=new Selection(node,{x,y},{x,y});selection.isStart=true;
+    node.onSelectionChanged(selection);
+  },
+  updateSelection(_node:any,x:number,y:number,options:any={}){
+    if(selection&&selectionOwner&&!selectionOwner.isDestroyed){selection.isStart=false;selection.focus={x,y};selection.isDragging=!options.finishDragging;selectionOwner.onSelectionChanged(selection);context.emit("selection",selection)}
+  },
+  requestSelectionUpdate(){if(selection&&selectionOwner&&!selectionOwner.isDestroyed)selectionOwner.onSelectionChanged(selection)},
+  keyInput:keys,_internalKeyInput:{onInternal:(name:string,handler:any)=>keys.on(name,handler),offInternal:(name:string,handler:any)=>keys.off(name,handler)},
   requestLive(){if(liveCount++===0){const tick=()=>{if(stopped||liveCount<=0)return;dirty=true;liveTimer=setTimeout(tick,16)};liveTimer=setTimeout(tick,16)}},
   dropLive(){liveCount=Math.max(0,liveCount-1);if(!liveCount)clearTimeout(liveTimer)},
 });
+Object.defineProperty(context,"hasSelection",{get:()=>selection!==null});
 const reconciler=ReactReconciler(hostConfig);
 const report=(error:unknown)=>{throw error};
 let effectMounted=false;
@@ -69,7 +91,7 @@ function shutdown(){
     if(container){reconciler.updateContainerSync(null,container,null,null);reconciler.flushSyncWork();reconciler.flushPassiveEffects()}
   } finally {
     try { root?.destroyRecursively(); }
-    finally {try{mouse.reset();if(native){lib.disableMouse(native);lib.destroyRenderer(native)}}finally{parser.destroy();lib?.dispose();__timers.clear()}}
+    finally {try{context.clearSelection();mouse.reset();if(native){lib.disableMouse(native);lib.destroyRenderer(native)}}finally{parser.destroy();lib?.dispose();__timers.clear()}}
   }
 }
 Object.assign(globalThis,{
