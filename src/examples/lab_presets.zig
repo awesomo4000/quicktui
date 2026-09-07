@@ -7,12 +7,13 @@ const c = @cImport({
     @cInclude("stdlib.h");
 });
 const allocator = std.heap.c_allocator;
-pub const Preset = struct { version: u32 = 1, description: []const u8, scene: cpu.Scene, output: u32, glyph: u32 };
-pub const Request = struct { preset: enum { list, save, load }, slot: u32 = 1, value: ?Preset = null };
+pub const Preset = struct { version: u32 = 1, description: []const u8, description_auto: ?bool = null, scene: cpu.Scene, output: u32, glyph: u32 };
+pub const max_slots = 128;
+pub const Request = struct { start: u32 = 1, preset: enum { list, save, load }, slot: u32 = 1, value: ?Preset = null };
 pub const Store = struct {
     directory: [:0]const u8 = ".quicktui-presets",
     fn path(self: Store, buf: []u8, slot: u32) ![:0]const u8 {
-        if (slot < 1 or slot > 9) return error.InvalidSlot;
+        if (slot < 1 or slot > max_slots) return error.InvalidSlot;
         return std.fmt.bufPrintZ(buf, "{s}/{d}.json", .{ self.directory, slot });
     }
     fn read(self: Store, slot: u32, buffer: []u8) ![]u8 {
@@ -28,7 +29,7 @@ pub const Store = struct {
     fn validate(value: Preset) !void {
         if (value.version != 1 or value.description.len > 240 or !std.unicode.utf8ValidateSlice(value.description) or
             !cpu.valid(value.scene) or value.output > 3 or value.glyph < 1 or value.glyph > 8) return error.InvalidPreset;
-        if (try std.unicode.utf8CountCodepoints(value.description) > 60) return error.InvalidDescription;
+        if (try std.unicode.utf8CountCodepoints(value.description) > 120) return error.InvalidDescription;
         for (value.description) |ch| if (ch < 32 or ch == 127) return error.InvalidDescription;
     }
     fn save(self: Store, slot: u32, value: Preset) !void {
@@ -77,13 +78,15 @@ pub const Store = struct {
             @memcpy(out[0..response.len], response);
             return out[0..response.len];
         }
-        const Entry = struct { slot: usize, description: []const u8 };
-        var entries: [9]Entry = undefined;
-        var descriptions: [9][240]u8 = undefined;
-        for (0..9) |i| {
-            entries[i] = .{ .slot = i + 1, .description = "" };
+        const Entry = struct { slot: usize, description: []const u8, description_auto: ?bool = null };
+        if (request.start < 1 or request.start > max_slots) return error.InvalidSlot;
+        const count = @min(4, max_slots + 1 - request.start);
+        var entries: [4]Entry = undefined;
+        var descriptions: [4][240]u8 = undefined;
+        for (0..count) |i| {
+            entries[i] = .{ .slot = request.start + i, .description = "" };
             var buffer: [4096]u8 = undefined;
-            const data = self.read(@intCast(i + 1), &buffer) catch continue;
+            const data = self.read(@intCast(request.start + i), &buffer) catch continue;
             const parsed = std.json.parseFromSlice(Preset, allocator, data, .{}) catch {
                 entries[i].description = "[invalid preset]";
                 continue;
@@ -93,11 +96,12 @@ pub const Store = struct {
                 entries[i].description = "[invalid preset]";
                 continue;
             };
+            entries[i].description_auto = parsed.value.description_auto;
             const description = parsed.value.description;
             @memcpy(descriptions[i][0..description.len], description);
             entries[i].description = descriptions[i][0..description.len];
         }
-        const response = try std.json.Stringify.valueAlloc(allocator, .{ .type = "presets", .slots = entries }, .{});
+        const response = try std.json.Stringify.valueAlloc(allocator, .{ .type = "presets", .slots = entries[0..count], .next = if (request.start + count <= max_slots) @as(?u32, request.start + count) else null, .total = max_slots }, .{});
         defer allocator.free(response);
         if (response.len > out.len) return error.ResponseTooLarge;
         @memcpy(out[0..response.len], response);
@@ -114,13 +118,14 @@ test "presets survive a new store and invalid saves preserve the previous slot" 
         _ = c.unlink(path);
         _ = c.rmdir(dir);
     }
-    const value = Preset{ .description = "Emerald braille", .scene = .{ .shape = 4, .tone = 6, .wash_strength = 0.65, .dark_ink = 0.25, .fps = 90, .rotation_speed = -0.125, .zoom = 8, .angle = 1.75 }, .output = 3, .glyph = 8 };
+    const value = Preset{ .description = "Emerald braille", .description_auto = true, .scene = .{ .shape = 4, .tone = 6, .wash_strength = 0.65, .dark_ink = 0.25, .fps = 90, .rotation_speed = -0.125, .zoom = 8, .angle = 1.75 }, .output = 3, .glyph = 8 };
     try store.save(1, value);
     var out: [4096]u8 = undefined;
     const fresh = Store{ .directory = store.directory };
     const response = fresh.execute(.{ .preset = .load, .slot = 1 }, &out);
     try std.testing.expect(std.mem.find(u8, response, "Emerald braille") != null);
     try std.testing.expect(std.mem.find(u8, response, "\"rotation_speed\":-0.125") != null);
+    try std.testing.expect(std.mem.find(u8, response, "\"description_auto\":true") != null);
     var bad = value;
     bad.scene.fps = 121;
     try std.testing.expectError(error.InvalidPreset, store.save(1, bad));
@@ -138,7 +143,7 @@ pub const Temporary = struct {
     }
     pub fn deinit(self: *Temporary) void {
         const store = Store{ .directory = self.directory };
-        for (1..10) |slot| {
+        for (1..max_slots + 1) |slot| {
             var buffer: [1024]u8 = undefined;
             const filename = store.path(&buffer, @intCast(slot)) catch continue;
             _ = c.unlink(filename);
@@ -146,3 +151,33 @@ pub const Temporary = struct {
         _ = c.rmdir(self.directory);
     }
 };
+
+test "128 slots paginate within the message limit even with escaped descriptions" {
+    var temporary: Temporary = .{};
+    try temporary.init();
+    defer temporary.deinit();
+    const store = Store{ .directory = temporary.directory };
+    const value = Preset{ .description = &(@as([120]u8, @splat('"'))), .scene = .{}, .output = 0, .glyph = 1 };
+    for (1..max_slots + 1) |slot| try store.save(@intCast(slot), value);
+    try std.testing.expectError(error.InvalidSlot, store.save(0, value));
+    try std.testing.expectError(error.InvalidSlot, store.save(129, value));
+    var out: [4096]u8 = undefined;
+    var start: u32 = 1;
+    var seen: usize = 0;
+    while (true) {
+        const response = store.execute(.{ .preset = .list, .start = start }, &out);
+        const parsed = try std.json.parseFromSlice(std.json.Value, allocator, response, .{});
+        defer parsed.deinit();
+        const slots = parsed.value.object.get("slots").?.array.items;
+        for (slots) |entry| {
+            seen += 1;
+            try std.testing.expectEqual(@as(i64, @intCast(seen)), entry.object.get("slot").?.integer);
+            try std.testing.expectEqualStrings(value.description, entry.object.get("description").?.string);
+        }
+        const next = parsed.value.object.get("next").?;
+        if (next == .null) break;
+        start = @intCast(next.integer);
+    }
+    try std.testing.expectEqual(128, seen);
+    try std.testing.expect(std.mem.find(u8, store.execute(.{ .preset = .load, .slot = 128 }, &out), "\"value\":") != null);
+}

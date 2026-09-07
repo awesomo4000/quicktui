@@ -332,6 +332,15 @@ uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
 void *a1; if (qt_pointer(ctx, argv[1], &a1) < 0) return JS_EXCEPTION;
 setCursorStyleOptions((uint32_t)a0, (void *)a1); return qt_callback_failed(ctx) ? JS_EXCEPTION : JS_UNDEFINED;
 }
+extern bool copyToClipboardOSC52(uint32_t a0, uint8_t a1, void * a2, uint32_t a3);
+static JSValue wrap_copyToClipboardOSC52(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
+(void)self; if (argc != 4) return JS_ThrowTypeError(ctx, "copyToClipboardOSC52: wrong argument count");
+uint32_t a0; if (JS_ToUint32(ctx, &a0, argv[0]) < 0) return JS_EXCEPTION;
+uint32_t a1; if (JS_ToUint32(ctx, &a1, argv[1]) < 0) return JS_EXCEPTION;
+void *a2; if (qt_pointer(ctx, argv[2], &a2) < 0) return JS_EXCEPTION;
+uint32_t a3; if (JS_ToUint32(ctx, &a3, argv[3]) < 0) return JS_EXCEPTION;
+bool value = copyToClipboardOSC52((uint32_t)a0, (uint8_t)a1, (void *)a2, (uint32_t)a3); if (qt_callback_failed(ctx)) return JS_EXCEPTION; return JS_NewBool(ctx, value);
+}
 extern void bufferDrawSuperSampleBuffer(uint32_t a0, uint32_t a1, uint32_t a2, void * a3, uint32_t a4, uint8_t a5, uint32_t a6);
 static JSValue wrap_bufferDrawSuperSampleBuffer(JSContext *ctx, JSValueConst self, int argc, JSValueConst *argv) {
 (void)self; if (argc != 7) return JS_ThrowTypeError(ctx, "bufferDrawSuperSampleBuffer: wrong argument count");
@@ -1922,6 +1931,7 @@ if (JS_SetPropertyStr(ctx, symbols, "resizeRenderer", JS_NewCFunction(ctx, wrap_
 if (JS_SetPropertyStr(ctx, symbols, "setCursorPosition", JS_NewCFunction(ctx, wrap_setCursorPosition, "setCursorPosition", 4)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "setCursorColor", JS_NewCFunction(ctx, wrap_setCursorColor, "setCursorColor", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "setCursorStyleOptions", JS_NewCFunction(ctx, wrap_setCursorStyleOptions, "setCursorStyleOptions", 2)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
+if (JS_SetPropertyStr(ctx, symbols, "copyToClipboardOSC52", JS_NewCFunction(ctx, wrap_copyToClipboardOSC52, "copyToClipboardOSC52", 4)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "bufferDrawSuperSampleBuffer", JS_NewCFunction(ctx, wrap_bufferDrawSuperSampleBuffer, "bufferDrawSuperSampleBuffer", 7)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "bufferDrawImage", JS_NewCFunction(ctx, wrap_bufferDrawImage, "bufferDrawImage", 3)) < 0) { JS_FreeValue(ctx, symbols); return -1; }
 if (JS_SetPropertyStr(ctx, symbols, "bufferDrawPackedBuffer", JS_NewCFunction(ctx, wrap_bufferDrawPackedBuffer, "bufferDrawPackedBuffer", 7)) < 0) { JS_FreeValue(ctx, symbols); return -1; }

@@ -245,5 +245,6 @@
   "yogaNodeLayoutGetEdge",
   "yogaNodeSetMeasureFunc",
   "yogaNodeHasMeasureFunc",
-  "yogaStoreMeasureResult"
+  "yogaStoreMeasureResult",
+  "copyToClipboardOSC52"
 ]

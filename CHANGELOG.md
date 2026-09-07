@@ -2,6 +2,14 @@
 
 ## Unreleased - 09/06/2026
 
+- Expose OSC 52 clipboard writes in the demo bridge and exercise the copy button through mouse input; report copy failures without exiting the lab.
+
+- Add a live graphics settings-code box with a border copy button and a reversible, append-only QT1 codec with permanent defaults.
+
+- Expand lab presets to 128 scrollable slots with paginated worker replies and compact automatic names carrying a settings fingerprint.
+
+- Generate preset names from current lab settings, preview automatic names, and distinguish automatic from custom names when overwriting slots.
+
 - Add surface two-shade mode with H/L dark-ink controls, colored gaps inside projected faces, and dim braille/glyph backgrounds.
 
 - Add a surface-fractal color wash that blends projected face hues while preserving the monochrome dot mask, with Y/U strength controls.

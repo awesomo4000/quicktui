@@ -19,6 +19,11 @@ let native:any;
 let root:RootRenderable;
 let lib:ReturnType<typeof resolveRenderLib>;
 export const keys=new EventEmitter();
+// OSC 52 writes to the terminal clipboard; success means the sequence was sent.
+export function copyTerminalText(text:string){
+  try{return lib.copyToClipboardOSC52(native,0,new TextEncoder().encode(text))}
+  catch{return false}
+}
 let keyInterceptor:((key:any)=>boolean)|null=null;
 export function interceptKeys(handler:((key:any)=>boolean)|null){keyInterceptor=handler}
 export const graphicsState={confirmed:false};

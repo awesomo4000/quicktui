@@ -1,9 +1,11 @@
 import "./lab-cells";
+import {encodeSettings,testSettingsCode} from "./lab-settings-code";
+import {presetName,automaticName,settingsHash} from "./lab-preset-names";
 import {PresetsPanel} from "./lab-presets";
 import React,{useEffect,useRef,useState} from "../vendor/js/node_modules/react";
 import {Renderable} from "../vendor/opentui/packages/core/src/Renderable";
 import {NativeImage} from "../vendor/opentui/packages/core/src/image";
-import {mountDemo,keys,graphicsState} from "./platform/demo";
+import {mountDemo,keys,graphicsState,copyTerminalText} from "./platform/demo";
 const WIDTH=240,HEIGHT=160;
 type Scene={shape:number,angle:number,tilt:number,zoom:number,wire:boolean,palette:number,playing:boolean,fps:number,rotation_speed:number,epoch:number,charset:number,cols:number,rows:number,tone:number,wash_strength:number,dark_ink:number,brightness:number,contrast:number,dot_scale:number,fractal_zoom:number,center_x:number,center_y:number};
 type Frame={angle:number,image:NativeImage,pixels:Uint8Array,glyphs:string,glyphColors:Uint8Array,tone:number,cols:number,rows:number,charset:number,ms:number,index:number,dropped:number,serial:number};
@@ -33,6 +35,21 @@ declare const __host:{headless:boolean,postMessage(text:string):boolean,takeBuff
 const names=["Torus","Orb","Sheet","4D hypercube","Mandelbrot"];
 const glyphNames=["","ASCII","Shades","Quadrants","Braille + punctuation","ASCII + braille","Box drawing","Blocks","Pure braille"];
 const tones=["Color","Grayscale","Screen Bayer","Surface fractal","Surface fractal color","Surface fractal wash","Surface two-shade"];
+function SettingsCode({code}:{code:string}){
+  const [status,setStatus]=useState("copy");
+  const [hover,setHover]=useState(false);
+  const timer=useRef<any>(null);
+  useEffect(()=>()=>clearTimeout(timer.current),[]);
+  return <box id="lab-settings-code" flexGrow={1} flexBasis={24} minWidth={24} maxWidth="100%" flexShrink={0} border borderStyle="rounded" borderColor="#36545e" title=" Settings " backgroundColor="#101820" paddingX={1}>
+    <text fg="#718b99" wrapMode="char">{code}</text>
+    <box id="lab-copy-code" position="absolute" right={1} top={-1} height={1} width={8} backgroundColor={hover?"#294650":"#101820"}
+      onMouseOver={()=>setHover(true)} onMouseOut={()=>setHover(false)} onMouseDown={(event:any)=>{
+        if(event.button!==0)return;event.stopPropagation();
+        setStatus(copyTerminalText(code)?"sent":"failed");
+        clearTimeout(timer.current);timer.current=setTimeout(()=>setStatus("copy"),1500);
+      }}><text fg="#85ddca">[{status}]</text></box>
+  </box>;
+}
 function App(){
   const scene=useRef<Scene>({shape:3,angle:0,tilt:.7,zoom:.82,wire:false,palette:0,playing:true,fps:10,rotation_speed:1,epoch:0,charset:0,cols:60,rows:20,tone:0,wash_strength:.3,dark_ink:.15,brightness:0,contrast:1,dot_scale:4,fractal_zoom:1,center_x:-.65,center_y:0});
   const playing=useRef(true),drag=useRef<{x:number,y:number}|null>(null);
@@ -120,11 +137,11 @@ function App(){
     frameListeners.add(setFrame);draw();
     return()=>{frameListeners.delete(setFrame);keys.off("key",key);keys.off("graphics",graphics)};
   },[]);
-  const capture=()=>({
-    version:1,description:names[scene.current.shape]+" / "+tones[scene.current.tone],
-    scene:{...scene.current,angle:currentFrame.current?.angle??scene.current.angle,playing:playing.current},
-    output:outputRef.current,glyph:glyphRef.current
-  });
+  const capture=()=>{
+    const saved={...scene.current,angle:currentFrame.current?.angle??scene.current.angle,playing:playing.current};
+    return {version:1,description:presetName(saved,names[saved.shape],tones[saved.tone],outputRef.current===3?glyphNames[glyphRef.current]:["Pixels","Half blocks","Braille"][outputRef.current],outputRef.current,glyphRef.current),
+      scene:saved,output:outputRef.current,glyph:glyphRef.current};
+  };
   const restore=(value:any)=>{
     const {cols,rows,epoch}=scene.current;
     Object.assign(scene.current,{rotation_speed:1,wash_strength:.3,dark_ink:.15},value.scene,{cols,rows,epoch:(epoch+1)>>>0});
@@ -136,8 +153,11 @@ function App(){
   return <box width="100%" height="100%" padding={1} backgroundColor="#101820">
     <box border borderStyle="rounded" borderColor="#63c7b2" title=" 05 / Graphics lab " paddingX={1} width="100%" height="100%" gap={1}>
       <text height={1} flexShrink={0} fg="#f6f0dd"><b>Light, geometry, and terminal pixels</b></text>
-      <box flexDirection="row" height={1} flexShrink={0} gap={1}>
-        {names.map((name,i)=><box key={name} paddingX={1} backgroundColor={scene.current.shape===i?"#294650":"#192932"} onMouseDown={()=>{scene.current.shape=i;draw()}}><text fg="#63c7b2">{i+1} {name}</text></box>)}
+      <box flexDirection="row" flexWrap="wrap" alignItems="flex-start" flexShrink={0} gap={1}>
+        <box id="lab-shape-buttons" flexDirection="row" flexWrap="wrap" maxWidth="100%" flexShrink={0} gap={1}>
+          {names.map((name,i)=><box key={name} paddingX={1} height={1} flexShrink={0} backgroundColor={scene.current.shape===i?"#294650":"#192932"} onMouseDown={()=>{scene.current.shape=i;draw()}}><text fg="#63c7b2">{i+1} {name}</text></box>)}
+        </box>
+        <SettingsCode code={encodeSettings({...scene.current,angle:frame?.angle??scene.current.angle,playing:playing.current},outputRef.current,glyphRef.current)}/>
       </box>
       <box id="lab-canvas" flexGrow={1} minHeight={0} width="100%" overflow="hidden"
         onMouseDown={(e:any)=>{if(e.button===0){drag.current={x:e.x,y:e.y};draw()}}}
@@ -166,6 +186,18 @@ function App(){
 }
 mountDemo(App);
 if(__host.headless)Object.assign(globalThis,{async __selfTest(){
+  testSettingsCode();
+  const generated=presetName({tone:6,wash_strength:.35,dark_ink:.125,rotation_speed:-1/4096,shape:3,zoom:2.4,palette:1,wire:true,brightness:-.4,contrast:2.5,dot_scale:0},"4D hypercube","Surface two-shade","Pure braille");
+  for(const text of ["Two-shade","Pure braille","#"])
+    if(!generated.includes(text))throw new Error("Missing automatic preset detail: "+text);
+  const settings={angle:1.234,zoom:2.4,rotation_speed:1/65536,tone:6,wash_strength:.35,dark_ink:.125};
+  const fingerprint=settingsHash(settings,3,8);
+  if(fingerprint!==settingsHash({...settings,zoom:Math.fround(2.4),cols:120,rows:50,epoch:999},3,8))throw new Error("Preset hash must survive native rounding and viewport changes");
+  for(const key of Object.keys(settings)){
+    if(fingerprint===settingsHash({...settings,[key]:settings[key]+.001},3,8))throw new Error("Preset hash missed "+key);
+  }
+  if(fingerprint===settingsHash(settings,2,8)||fingerprint===settingsHash(settings,3,7))throw new Error("Preset hash missed output/charset");
+  if(!automaticName({description:"4D hypercube / Surface fractal"})||automaticName({description:"My bubbles"})||automaticName({description:"4D hypercube / Surface fractal",description_auto:false}))throw new Error("Preset naming provenance failed");
   const released:number[]=[];
   const mock=new Map([1,2,3].map(serial=>[{dispose(){released.push(serial)}},serial] as const));
   releaseBefore(mock,2);
@@ -227,7 +259,17 @@ if(__host.headless)Object.assign(globalThis,{async __selfTest(){
   host.__resize(80,24);
   const press=async(text:string)=>{host.__input(new TextEncoder().encode(text).buffer);await new Promise(resolve=>setTimeout(resolve,180))};
   await press("4");
+  const codeBox=[...Renderable.renderablesByNumber.values()].find(node=>node.id==="lab-settings-code")!;
+  const copyButton=[...Renderable.renderablesByNumber.values()].find(node=>node.id==="lab-copy-code")!;
+  if(!host.__snapshot().includes("QT1")||!host.__snapshot().includes("[copy]")||copyButton.y!==codeBox.y)throw new Error("Settings code and border copy button must be visible");
+  await press(`\x1b[<0;${copyButton.x+1};${copyButton.y+1}M\x1b[<0;${copyButton.x+1};${copyButton.y+1}m`);
+  if(!host.__snapshot().includes("[sent]"))throw new Error("Copy click must reach the native clipboard operation");
   await press("f");
+  for(let i=0;i<100&&!host.__snapshot().includes("Choose a slot");i++)await new Promise(resolve=>setTimeout(resolve,30));
+  if(!host.__snapshot().includes("Auto:"))throw new Error("Preset must preview automatic name");
+  await press("\x1b[F");
+  if(!host.__snapshot().includes("128."))throw new Error("Preset picker must scroll to last slot");
+  await press("\x1b[H");
   await press("\t");
   await press("quiet cube");
   if(!host.__snapshot().includes("quiet cube"))throw new Error("Preset descriptions must accept q and spaces without triggering shortcuts");
@@ -235,7 +277,8 @@ if(__host.headless)Object.assign(globalThis,{async __selfTest(){
   await press("\x1b");
   await press("5");
   await press("f");
+  for(let i=0;i<100&&!host.__snapshot().includes("Choose a slot");i++)await new Promise(resolve=>setTimeout(resolve,30));
   await press("\r");
-  if(!host.__snapshot().includes("4D hypercube")||host.__snapshot().includes("Nine local slots"))throw new Error("Loading must restore the saved scene and close the panel");
+  if(!host.__snapshot().includes("4D hypercube")||host.__snapshot().includes("128 local slots"))throw new Error("Loading must restore the saved scene and close the panel");
   if(__host.takeBuffer(0)!==null)throw new Error("Unknown frame IDs must not expose pixels");
 }});

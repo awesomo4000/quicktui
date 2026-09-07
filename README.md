@@ -242,14 +242,15 @@ as `--messages`.
 - **T** visits a Mandelbrot detail; **R** resets view and tone adjustments.
 - Arrow keys rotate or pan; **Q** exits.
 
-**F** opens nine numbered preset slots. Select with **1–9**, arrows, or the
-mouse. **Tab** edits the description, **S** saves the current settings, and
+**F** opens 128 numbered preset slots in a scrollable picker. Select with
+arrows, **Page Up/Down**, **Home/End**, or the mouse; **1–9** jumps to the first
+nine slots. The wheel/trackpad scrolls the list. **Tab** edits the description, **S** saves the current settings, and
 **Enter** loads. While editing, **Enter** saves the description and settings;
 **Escape** leaves editing or closes the panel. Saving to an occupied slot
 replaces it.
 
 Presets are versioned JSON files in `.quicktui-presets/1.json` through
-`9.json`, relative to the app's working directory. This folder is ignored by
+`128.json`, relative to the app's working directory. This folder is ignored by
 Git. Each stores scene, current rendered angle, camera/fractal position, zoom,
 pause state, frame-rate target, palette, tone, brightness, contrast, dot size,
 output mode, and selected charset. Loading keeps the current viewport size.
@@ -469,3 +470,30 @@ Only covered gaps receive dim color; lit dots keep the wash and exterior pixels
 stay black. Braille/glyph output uses a dim character background, so boundaries
 are approximated at character-cell resolution. **Y/U** still controls wash.
 Presets include dark ink, and zero dark ink reproduces the wash mode.
+
+Preset automatic names show the shape, tone, output/charset, and a ten-digit
+hex settings fingerprint, for example `4D cube / Fractal wash / Braille #a09d317e52`.
+The reusable `settingsHash` function includes pose and all saved settings, including
+fine rotation, wash, dark ink, zoom, palette, brightness, contrast, and dot size.
+It ignores viewport dimensions and the transport epoch. Identical settings have
+the same fingerprint; this short hash is a label, not a collision-proof ID. The save form previews
+the current automatic name. **A** selects automatic naming; **Tab** enters a
+custom name. Automatic names refresh when you overwrite a slot, while custom
+names remain custom. Existing files are only changed when you explicitly save.
+
+The graphics lab also displays a live, reversible `QT1` settings code at the top
+right. Click **[copy]** on its border to send the displayed code to the terminal
+clipboard as one line, even though it wraps in the box. **[sent]** means the
+OSC 52 request was sent; clipboard access depends on the terminal configuration.
+The code changes with the current rendered pose.
+
+`js/lab-settings-code.ts` exports `encodeSettings(scene, output, glyph)` and
+`decodeSettings(code)`. The decoder returns a preset-shaped value for the lab
+restore function. This adds the codec and copy UI; a paste/load-code UI is not
+yet present. `QT1` fixes the rendering semantics and field schema. Fields use
+URL-safe base64 separated by periods, with native f32/f64 precision. Empty or
+missing trailing fields use permanent defaults, and new fields must be appended.
+For example, `QT1` alone describes the default scene. Malformed fields, unknown
+versions, and extensions beyond the decoder's known fields are rejected.
+Viewport dimensions and message epochs are not encoded. Preset files and their
+short name fingerprints remain separate from these reversible scene codes.

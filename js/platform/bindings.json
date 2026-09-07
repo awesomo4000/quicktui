@@ -734,6 +734,26 @@
     }
   },
   {
+    "name": "copyToClipboardOSC52",
+    "args": [
+      "u32",
+      "u8",
+      "ptr",
+      "u32"
+    ],
+    "returns": "bool",
+    "native": {
+      "args": [
+        "u32",
+        "u8",
+        "ptr",
+        "u32"
+      ],
+      "returns": "bool",
+      "source": "vendor/opentui/packages/native/src/lib.zig:1713"
+    }
+  },
+  {
     "name": "bufferDrawSuperSampleBuffer",
     "args": [
       "u32",
