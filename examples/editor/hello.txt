@@ -1,0 +1,27 @@
+A little editor in a terminal
+============================
+
+React components, a QuickJS runtime, and native messages.
+
+This is an ordinary text file. Click anywhere and start typing.
+Select a few words, paste a paragraph, or open the File menu.
+
+  Ctrl+O   Open a file
+  Ctrl+S   Save your changes
+  Alt+F    Browse the File menu and recent files
+  Ctrl+Q   Quit
+
+The UI owns the document on screen. A native worker reads and
+writes files, then sends its replies back to the JavaScript loop.
+
+Things to make next
+------------------
+
+[ ] Sketch a tiny platformer
+[ ] Give the dragon somewhere to land
+[ ] Paint a waterfall that never stops flowing
+[x] Make a text editor we can actually use
+
+A few characters for the road: café, 日本語, →, λ.
+
+Have fun. Save often.

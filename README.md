@@ -65,6 +65,14 @@ The commands above use the executables in `zig-out/bin/`.
 The [guide](GUIDE.md) has the controls and implementation details for each demo.
 There are editable [sprite sheets and cycling scenes](examples/paint/) to start with.
 
+<p align="center">
+  <img src="output/screenshots/herdr-wP-p3-animation.png" width="640" alt="The counter demo with both the dragon picture and animated winged dragon">
+</p>
+
+<p align="center">
+  <img src="output/screenshots/herdr-editor.png" width="800" alt="The QuickTUI text editor showing a sample document">
+</p>
+
 ## Why this combination?
 
 This is mostly a matter of taste. I like writing interfaces with React, and I
