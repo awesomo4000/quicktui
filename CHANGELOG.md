@@ -2,6 +2,8 @@
 
 ## Unreleased - 09/07/2026
 
+- Add a project introduction, dragon logo, and cycling-art preview; keep the detailed demo documentation in GUIDE.md.
+
 - Put Open and Save first in the termpaint toolbar, add a Ctrl+O path dialog with paste and unsaved-change protection, and move the filename to its own line.
 
 - Add bundled termpaint operating and color-cycle creation skills, with an AI Help dialog that copies complete guidance to the terminal clipboard.
