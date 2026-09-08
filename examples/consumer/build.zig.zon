@@ -1,0 +1,7 @@
+.{
+    .name = .quicktui_consumer,
+    .fingerprint = 0x9f510a68583db99a,
+    .version = "0.0.0",
+    .dependencies = .{ .quicktui = .{ .path = "../.." } },
+    .paths = .{""},
+}

@@ -40,7 +40,7 @@ pub fn build(b: *std.Build) void {
     runtime.addImport("poolside", poolside);
     runtime.addIncludePath(b.path("vendor/quickjs"));
     runtime.addCSourceFile(.{ .file = b.path("src/quickjs_bridge.c"), .flags = &.{"-std=c11"} });
-    runtime.addCSourceFiles(.{ .files = &.{ "src/native_bridge.c", "src/native_generated.c", "src/app_host.c" }, .flags = &.{"-std=c11"} });
+    runtime.addCSourceFiles(.{ .files = &.{ "src/native_bridge.c", "src/native_generated.c", "src/app_host.c", "src/endpoint_tests.c" }, .flags = &.{"-std=c11"} });
     runtime.linkLibrary(quickjs);
     runtime.linkLibrary(native);
 
@@ -90,6 +90,9 @@ pub fn build(b: *std.Build) void {
     const gallery_test = b.addRunArtifact(exe);
     gallery_test.addArg("--gallery-self-test");
     test_step.dependOn(&gallery_test.step);
+    const reload_test = b.addRunArtifact(exe);
+    reload_test.addArg("--reload-self-test");
+    test_step.dependOn(&reload_test.step);
     const live_test = b.addRunArtifact(exe);
     live_test.addArg("--live-self-test");
     test_step.dependOn(&live_test.step);
@@ -132,6 +135,26 @@ pub fn build(b: *std.Build) void {
     mouse_test.addArg("--mouse-self-test");
     test_step.dependOn(&mouse_test.step);
 
+    const endpoint_terminal = b.addExecutable(.{
+        .name = "endpoint-terminal-test",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/endpoint_terminal_test.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{.{ .name = "quicktui", .module = runtime }},
+        }),
+    });
+    // Import the module so its C host objects participate in linking.
+    const endpoint_pty = b.addSystemCommand(&.{ "python3", "scripts/test-endpoint-terminal.py" });
+    endpoint_pty.addArtifactArg(endpoint_terminal);
+    b.step("test-endpoint-terminal", "Stress input, resize, disconnect and quit under message flood").dependOn(&endpoint_pty.step);
+    const consumer_test = b.addSystemCommand(&.{ "python3", "scripts/test-consumer.py" });
+    b.step("test-consumer", "Build and run an external consumer, requires Bun and Python").dependOn(&consumer_test.step);
+    const bundler_test = b.addSystemCommand(&.{ "bun", "test", "tests/bundler.test.ts" });
+    b.step("test-bundler", "Check consumer imports and source maps, requires Bun").dependOn(&bundler_test.step);
+    const paste_test = b.addSystemCommand(&.{ "bun", "test", "tests/paste.test.ts" });
+    b.step("test-paste", "Exercise fragmented and oversized paste input, requires Bun").dependOn(&paste_test.step);
+
     const failure_test = b.addExecutable(.{
         .name = "quicktui-failure-test",
         .root_module = b.createModule(.{
@@ -155,6 +178,13 @@ pub fn build(b: *std.Build) void {
     gallery_terminal_test.addArtifactArg(exe);
     gallery_terminal_test.addArg("--gallery");
     b.step("test-gallery", "Check gallery mouse reporting and terminal cleanup").dependOn(&gallery_terminal_test.step);
+    const reload_consumer_test = b.addSystemCommand(&.{ "python3", "scripts/test-consumer.py", "--reload" });
+    reload_consumer_test.setCwd(b.path("."));
+    b.step("test-reload-consumer", "Build and test the public reload API outside the checkout").dependOn(&reload_consumer_test.step);
+    const reload_terminal_test = b.addSystemCommand(&.{ "python3", "scripts/test-reload.py" });
+    reload_terminal_test.setCwd(b.path("."));
+    reload_terminal_test.addArtifactArg(exe);
+    b.step("test-reload", "Check fresh runtime replacement and screen continuity in a disposable PTY").dependOn(&reload_terminal_test.step);
     const live_terminal_test = b.addSystemCommand(&.{ "python3", "scripts/test-live.py" });
     live_terminal_test.setCwd(b.path("."));
     live_terminal_test.addArtifactArg(exe);

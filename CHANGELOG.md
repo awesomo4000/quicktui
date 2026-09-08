@@ -1,6 +1,18 @@
 # Changelog
 
+## Unreleased - 09/08/2026
+
+- Expose opt-in reload through `runApp`, public JS snapshot/reload helpers, and an independently built textarea consumer with draft-restoration tests.
+
+- Label live component loading 06a and add experimental 06b whole-runtime replacement, with saved/unsaved counters, retained presentation, bounded preparation, broken-bundle recovery, and headless/PTY regression tests.
+
+- Move the demo renderer into native host ownership so React and QuickJS can retire while the last frame remains alive. Final host shutdown still destroys the renderer and restores the terminal; headless demos verify text-frame retention across runtime teardown.
+
+- Begin persistent UI reload groundwork by separating terminal-session cleanup and stopping event dispatch and endpoint sends after a UI exit or failure. Add repeated callback-boundary regression tests.
+
 ## Unreleased - 09/07/2026
+
+- Add explicit endpoint closure and send outcomes, bounded paste delivery, public application startup and consumer bundling, and disposable stress/consumer tests.
 
 - Add a project introduction, dragon logo, and cycling-art preview; keep the detailed demo documentation in GUIDE.md.
 

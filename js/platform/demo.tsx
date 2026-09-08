@@ -1,3 +1,4 @@
+import {KeyEvent,PasteEvent} from "../../vendor/opentui/packages/core/src/lib/KeyHandler";
 import {Selection} from "../../vendor/opentui/packages/core/src/lib/selection";
 import React, { useEffect } from "../../vendor/js/node_modules/react";
 import ReactReconciler from "../../vendor/js/node_modules/react-reconciler";
@@ -9,7 +10,7 @@ import { EventEmitter } from "../../vendor/js/node_modules/events";
 import { StdinParser } from "../../vendor/opentui/packages/core/src/lib/stdin-parser";
 import { MouseRouter } from "./mouse";
 
-declare const __host: {width:number,height:number,headless:boolean,env:Record<string,string>,quit():void};
+declare const __host: {width:number,height:number,headless:boolean,env:Record<string,string>,borrowRenderer():number,presentFrame():void,canDispatch():boolean,quit():void};
 declare const __timers: {tick():void,delay():number,clear():void};
 let dirty=true;
 let stopped=false;
@@ -28,14 +29,31 @@ export function copyTerminalText(text:string){
 let keyInterceptor:((key:any)=>boolean)|null=null;
 export function interceptKeys(handler:((key:any)=>boolean)|null){keyInterceptor=handler}
 export const graphicsState={confirmed:false};
-const parser=new StdinParser({onTimeoutFlush:()=>drainInput()});
+export interface AppOptions {
+  exportState?:()=>unknown;
+  onReloadError?:(notice:string)=>void;
+  onCaughtError?:(error:unknown)=>void;
+  onKey?:(key:KeyEvent)=>boolean|void;
+  onPaste?:(text:string)=>void;
+  onPasteRejected?:()=>void;
+  onMessage?:(message:string)=>void;
+  onDisconnect?:(reason:string)=>void;
+}
+let appOptions:AppOptions={};
+let demoShortcuts=false;
+const parser=new StdinParser({onTimeoutFlush:()=>drainInput(),onPasteRejected:()=>appOptions.onPasteRejected?.()});
 function drainInput(){parser.drain(event=>{
+  if(!__host.canDispatch())return;
   if(event.type==="key"){
     if(keyInterceptor?.(event.key))return;
+    const key=new KeyEvent(event.key);
+    if(appOptions.onKey?.(key)||key.defaultPrevented)return;
+    if(!demoShortcuts){keys.emit("keypress",key);return;}
     if((event.key.ctrl&&event.key.name==="c")||event.key.name.toLowerCase()==="q"){__host.quit();return}
     keys.emit("key",event.key.name.toLowerCase());
   } else if(event.type==="paste"){
-    keys.emit("paste",event);
+    if(appOptions.onPaste)appOptions.onPaste(new TextDecoder().decode(event.bytes));
+    else keys.emit("paste",demoShortcuts?event:new PasteEvent(event.bytes,event.metadata));
   } else if(event.type==="mouse"){
     mouse.dispatch(event.event);
   } else if(event.type==="response"&&native){
@@ -91,7 +109,7 @@ function shutdown(){
     if(container){reconciler.updateContainerSync(null,container,null,null);reconciler.flushSyncWork();reconciler.flushPassiveEffects()}
   } finally {
     try { root?.destroyRecursively(); }
-    finally {try{context.clearSelection();mouse.reset();if(native){lib.disableMouse(native);lib.destroyRenderer(native)}}finally{parser.destroy();lib?.dispose();__timers.clear()}}
+    finally {try{context.clearSelection();mouse.reset();native=null}finally{parser.destroy();lib?.dispose();__timers.clear()}}
   }
 }
 Object.assign(globalThis,{
@@ -111,33 +129,38 @@ Object.assign(globalThis,{
     const buffer=lib.getNextBuffer(native);
     buffer.clear(RGBA.fromHex("#101820"));
     root.render(buffer,16);
-    lib.render(native,false);
+    __host.presentFrame();
   },
   __inspect(){return JSON.stringify({effectMounted,keys:keys.listenerCount("key"),frame:context.frameId})},
   __snapshot(){return new TextDecoder().decode(lib.getCurrentBuffer(native).getRealCharBytes(true))},
 });
-export function mountDemo(App:()=>React.ReactNode,options:{onCaughtError?:(error:unknown)=>void}={}){
+export function mountDemo(App:()=>React.ReactNode,options:AppOptions={}){
+  demoShortcuts=true;
+  return mountApp(App,options);
+}
+export function mountApp(App:()=>React.ReactNode,options:AppOptions={}){
+if(container||stopped)throw new Error("Only one application mount per runtime is supported");
+appOptions=options;
+if(options.exportState)Object.assign(globalThis,{__exportState:()=>{
+  const text=JSON.stringify(options.exportState!());
+  if(text===undefined)throw new Error("exportState must return JSON-serializable data");
+  return text;
+}});
+if(options.onReloadError)Object.assign(globalThis,{__reloadNotice:options.onReloadError});
+if(options.onMessage)Object.assign(globalThis,{__message:options.onMessage});
+if(options.onDisconnect)Object.assign(globalThis,{__endpointClosed:options.onDisconnect});
 function Mounted(){
   useEffect(()=>{effectMounted=true;return()=>{effectMounted=false}},[]);
   return <App/>;
 }
 lib=resolveRenderLib();
-native=lib.createRenderer(context.width,context.height,{bufferedOutput:__host.headless?"memory":"stdout",remote:false});
-if(!native)throw new Error("Cannot create native terminal renderer");
-// Detect multiplexers before setup emits the first graphics capability query.
-for(const [key,value] of Object.entries(__host.env)) {
-  if(!lib.setTerminalEnvVar(native,key,value))throw new Error(`Cannot forward terminal environment: ${key}`);
-}
-lib.setUseThread(native,false);
+native=__host.borrowRenderer();
 lib.setBackgroundColor(native,RGBA.fromHex("#101820"));
 context.capabilities=lib.getTerminalCapabilities(native) as any;
-if(!__host.headless)lib.setupTerminal(native,true);
-if(!__host.headless)lib.enableMouse(native,true);
 root=new RootRenderable(context as any);
 container=reconciler.createContainer(root,1,null,false,null,"",report,options.onCaughtError??report,report,()=>{});
 reconciler.updateContainerSync(<Mounted/>,container,null,null);
 reconciler.flushSyncWork();
 reconciler.flushPassiveEffects();
-
-
+return {quit:()=>__host.quit(),snapshot:()=>new TextDecoder().decode(lib.getCurrentBuffer(native).getRealCharBytes(true))};
 }

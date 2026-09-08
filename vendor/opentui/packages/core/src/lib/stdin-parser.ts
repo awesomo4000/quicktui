@@ -51,6 +51,8 @@ export interface StdinParserProtocolContext {
 export interface StdinParserOptions {
   timeoutMs?: number
   maxPendingBytes?: number
+  maxPasteBytes?: number
+  onPasteRejected?: () => void
   armTimeouts?: boolean
   onTimeoutFlush?: () => void
   useKittyKeyboard?: boolean
@@ -588,6 +590,9 @@ export class StdinParser {
   private readonly pending = new ByteQueue(INITIAL_PENDING_CAPACITY)
   private readonly events: StdinEvent[] = []
   private readonly timeoutMs: number
+  private readonly maxPasteBytes: number
+  private readonly onPasteRejected?: () => void
+  private pasteOverflow = false
   private readonly maxPendingBytes: number
   private readonly armTimeouts: boolean
   private readonly onTimeoutFlush: (() => void) | null
@@ -620,6 +625,8 @@ export class StdinParser {
 
   constructor(options: StdinParserOptions = {}) {
     this.timeoutMs = normalizePositiveOption(options.timeoutMs, DEFAULT_TIMEOUT_MS)
+    this.maxPasteBytes = normalizePositiveOption(options.maxPasteBytes, 1024 * 1024)
+    this.onPasteRejected = options.onPasteRejected
     this.maxPendingBytes = normalizePositiveOption(options.maxPendingBytes, DEFAULT_MAX_PENDING_BYTES)
     this.armTimeouts = options.armTimeouts ?? true
     this.onTimeoutFlush = options.onTimeoutFlush ?? null
@@ -735,8 +742,7 @@ export class StdinParser {
   public push(data: Uint8Array): void {
     this.ensureAlive()
     if (data.length === 0) {
-      // Preserve the existing empty-chunk -> empty-keypress behavior.
-      this.emitKeyOrResponse("unknown", "")
+      // Empty transport chunks carry no input.
       return
     }
 
@@ -1229,6 +1235,7 @@ export class StdinParser {
             if (bytesEqual(rawBytes, BRACKETED_PASTE_START)) {
               this.state = { tag: "ground" }
               this.consumePrefix(end)
+              this.pasteOverflow = false
               this.paste = createPasteCollector()
               continue
             }
@@ -1957,7 +1964,8 @@ export class StdinParser {
     if (endIndex !== -1) {
       this.pushPasteBytes(combined.subarray(0, endIndex))
 
-      this.events.push({
+      if (this.pasteOverflow) this.onPasteRejected?.()
+      else this.events.push({
         type: "paste",
         bytes: joinPasteBytes(paste.parts, paste.totalLength),
       })
@@ -1986,6 +1994,13 @@ export class StdinParser {
     // Copy here because subarray() inputs may alias the caller's chunk or the
     // parser's pending buffer across pushes. The emitted paste event must keep
     // the original bytes even if those backing buffers are later reused.
+    if (this.pasteOverflow) return
+    if (bytes.length > this.maxPasteBytes - this.paste!.totalLength) {
+      this.pasteOverflow = true
+      this.paste!.parts = []
+      this.paste!.totalLength = 0
+      return
+    }
     this.paste!.parts.push(Uint8Array.from(bytes))
     this.paste!.totalLength += bytes.length
   }

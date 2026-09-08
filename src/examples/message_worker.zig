@@ -268,3 +268,24 @@ test "native blink selection is bounded and unique for small and large grids" {
         }
     }
 }
+
+test "shutdown wakes a worker blocked by a full reply queue" {
+    for (0..8) |_| {
+        var worker: Worker = .{};
+        try worker.start();
+        const endpoint_value = worker.endpoint();
+        try std.testing.expectEqual(@as(c_int, 1), endpoint_value.send(endpoint_value.context, "spread:1", 8));
+        const deadline = Worker.milliseconds() + 2000;
+        var full = false;
+        while (Worker.milliseconds() < deadline) {
+            _ = c.pthread_mutex_lock(&worker.mutex);
+            full = worker.outgoing.len == 16;
+            _ = c.pthread_mutex_unlock(&worker.mutex);
+            if (full) break;
+            var delay: c.timespec = .{ .tv_sec = 0, .tv_nsec = 1_000_000 };
+            _ = c.nanosleep(&delay, null);
+        }
+        worker.stop();
+        try std.testing.expect(full);
+    }
+}

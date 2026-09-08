@@ -57,7 +57,8 @@ Kitty passthrough configuration.
 | `quicktui --gallery` | Widgets, text editing, tabs, Markdown, tables, and more |
 | `quicktui --messages` | A native worker exchanging queued messages with React, progress bars, and blinking activity squares |
 | `quicktui --lab` | CPU-rendered shapes, a 4D hypercube, Mandelbrot, surface fractal dithering, color washes, and saved presets |
-| `quicktui --live` | Load JavaScript components into a running page and replace them without restarting the host |
+| `quicktui --live` | 06a: Load and replace components within one running JS runtime |
+| `quicktui --reload` | 06b: Replace the whole JS runtime, restore a JSON snapshot, and retain the terminal display |
 | `quicktui --editor [file]` | A small text editor with Open, Save, and recent files |
 | `termpaint [file.tpaint]` | Pencil, brush, spray, fill, transparency, palette cycling, and animated GIF export |
 
@@ -120,6 +121,12 @@ colors those indices refer to. Water moves while rocks stay put.
 Part of the fun is seeing whether these pieces can grow into tools for making
 and remixing little terminal games. For now, they are examples you can play with
 and pull apart.
+
+## Build your own app
+
+Start with the [independent consumer example](examples/consumer/) and the
+[application API](docs/application-api.md). QuickTUI supplies the consumer bundler,
+React runtime, application startup, text paste events, and native message delivery.
 
 ## Working on it
 

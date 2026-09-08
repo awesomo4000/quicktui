@@ -8,6 +8,7 @@ if(typeof __host==="undefined"){
   switch(__host.example){
     case "counter": require("./counter");break;
     case "mouse": require("./mouse");break;
+    case "reload": require("./reload");break;
     case "live": require("./live");break;
     case "lab": require("./lab");break;
     case "messages": require("./messages");break;

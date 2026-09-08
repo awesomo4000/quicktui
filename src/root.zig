@@ -6,7 +6,16 @@ const std = @import("std");
 extern "c" fn quicktui_eval(source: [*:0]const u8, len: usize, diagnostics: c_int) c_int;
 /// Optional application-owned transport. Callbacks run on the UI thread and must
 /// not block. send copies bytes before returning; receive copies into the host
-/// buffer. Return -1 for empty receive, 0 for rejected send, 1 for accepted send.
+/// buffer. Send: 1 accepted, 0 temporarily rejected, -1 closed, -2 failed.
+/// Receive: >=0 byte count, -1 empty, -2 closed after draining, -3 failed.
+/// Accepted sends copy their payload; rejected sends retain nothing. Caller owns
+/// all input storage. FIFO ordering and queue capacities are transport contracts.
+/// HUP drains replies before closure; ERR/NVAL disconnect immediately. The host
+/// stops invoking callbacks and polling after closure and emits __endpointClosed
+/// once. No reconnect/replay is automatic. The UI remains open.
+/// The owner must cancel blocked work and join workers after run returns, before
+/// freeing queue storage or closing the read descriptor. Do not close/reuse the
+/// read descriptor while the host runs; close the producer end to signal HUP.
 /// wake_fd must stay readable while replies remain queued. receive consumes its
 /// wake notification along with the message. The host never reads or closes it.
 /// Messages are UTF-8 strings, at most 4096 bytes. The endpoint outlives runWithMessages.
@@ -20,7 +29,7 @@ pub const MessageEndpoint = extern struct {
     borrow_buffer: ?*const fn (?*anyopaque, u32, *usize) callconv(.c) ?[*]const u8 = null,
     release_buffer: ?*const fn (?*anyopaque) callconv(.c) void = null,
 };
-extern "c" fn quicktui_app_messages(source: [*:0]const u8, len: usize, headless: c_int, example: [*:0]const u8, endpoint: *const MessageEndpoint) c_int;
+extern "c" fn quicktui_app_messages(source: [*:0]const u8, len: usize, headless: c_int, example: [*:0]const u8, endpoint: ?*const MessageEndpoint) c_int;
 pub fn runWithMessages(source: [:0]const u8, example: [:0]const u8, headless: bool, endpoint: *const MessageEndpoint) error{CounterFailed}!void {
     if (quicktui_app_messages(source.ptr, source.len, @intFromBool(headless), example.ptr, endpoint) != 0) return error.CounterFailed;
 }
@@ -102,4 +111,22 @@ test "statically linked Yoga computes layout" {
 test "opaque terminal buffer views reject fabrication and expired storage" {
     // Repeat to exercise runtime teardown and finalizers, too.
     for (0..2) |_| try runExample(@embedFile("buffer_views_test.js"), "buffer-views-test", true);
+}
+
+extern "c" fn quicktui_endpoint_tests() c_int;
+test "endpoint closure, poll faults, pressure and repeated teardown" {
+    try std.testing.expectEqual(@as(c_int, 0), quicktui_endpoint_tests());
+}
+
+/// Run an application. Reload is opt-in; the caller owns its endpoint.
+pub fn runApp(source: [:0]const u8, options: struct { headless: bool = false, reload: bool = false, endpoint: ?*const MessageEndpoint = null }) error{ApplicationFailed}!void {
+    if (options.reload) return runReloadable(source, "app", options.headless, options.endpoint);
+    if (quicktui_app_messages(source.ptr, source.len, @intFromBool(options.headless), "app", options.endpoint) != 0) return error.ApplicationFailed;
+}
+
+extern "c" fn quicktui_reload_app(source: [*:0]const u8, len: usize, headless: c_int, example: [*:0]const u8, endpoint: ?*const MessageEndpoint) c_int;
+/// Experimental trusted-UI replacement. Re-evaluates a bundle in a fresh runtime
+/// while retaining the native renderer and endpoint. Not an untrusted-code sandbox.
+pub fn runReloadable(source: [:0]const u8, example: [:0]const u8, headless: bool, endpoint: ?*const MessageEndpoint) error{ApplicationFailed}!void {
+    if (quicktui_reload_app(source.ptr, source.len, @intFromBool(headless), example.ptr, endpoint) != 0) return error.ApplicationFailed;
 }

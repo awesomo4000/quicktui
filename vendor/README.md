@@ -32,6 +32,8 @@ OpenTUI binary packages are not included. The native library builds from source.
 - Stop ignoring the extracted dependency directory in version control.
 - Use virtual Kitty placements and Unicode placeholder cells under tmux so pane redraws preserve images. The standard diacritic table matches the vendored Ghostty decoder.
 
+QuickTUI also bounds OpenTUI parser paste retention to 1 MiB by default and ignores empty transport chunks. See `opentui-input.patch` for this input-parser adaptation.
+
 QuickJS and the npm package sources are unmodified. OpenTUI's native dependency
 archive already contains upstream integration patches and reduced build scripts;
 QuickTUI uses those as shipped in the pinned archive.

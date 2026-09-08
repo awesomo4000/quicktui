@@ -1,6 +1,6 @@
 import { Buffer } from "../../vendor/js/node_modules/buffer";
 import { EventEmitter } from "../../vendor/js/node_modules/events";
-declare const __host: {now():number,write(s:string):void,platform:string,arch:string,env:Record<string,string>};
+declare const __host: {canDispatch?():boolean,now():number,write(s:string):void,platform:string,arch:string,env:Record<string,string>};
 Object.assign(globalThis,{Buffer});
 class TextEncoder {
   encode(value = "") { return Uint8Array.from(Buffer.from(String(value),"utf8")); }
@@ -31,7 +31,7 @@ Object.assign(globalThis,{TextEncoder,TextDecoder,AbortController,process,perfor
   clearInterval:(id:number)=>timers.delete(id),
 });
 Object.assign(globalThis,{__timers:{
-  tick(){const now=__host.now();let count=0;for(const [id,t] of [...timers])if(t.due<=now&&timers.delete(id)){if(t.interval)timers.set(id,{...t,due:now+t.interval});t.fn(...t.args);if(++count===128)break}},
+  tick(){const now=__host.now();let count=0;for(const [id,t] of [...timers])if(t.due<=now&&timers.delete(id)){if(t.interval)timers.set(id,{...t,due:now+t.interval});t.fn(...t.args);if(++count===128||(__host.canDispatch&&!__host.canDispatch()))break}},
   delay(){if(!timers.size)return -1;return Math.max(0,Math.ceil(Math.min(...[...timers.values()].map(t=>t.due))-__host.now()))},
   clear(){timers.clear()},
 }});

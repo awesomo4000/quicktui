@@ -6,5 +6,5 @@
     .dependencies = .{
         .opentui = .{ .path = "vendor/opentui/packages/native" },
     },
-    .paths = .{ "build.zig", "build.zig.zon", "src", "js", "examples", "scripts", "vendor", "README.md", "GUIDE.md", "skills", "CHANGELOG.md", "specs", "assets" },
+    .paths = .{ "build.zig", "build.zig.zon", "src", "js", "examples", "scripts", "tests", "vendor", "README.md", "GUIDE.md", "docs", "skills", "CHANGELOG.md", "specs", "assets" },
 }

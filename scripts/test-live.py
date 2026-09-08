@@ -27,7 +27,7 @@ with tempfile.TemporaryDirectory(prefix="quicktui-live-", dir="/tmp") as directo
                         if e.errno != errno.EIO: raise
                 if process.poll() is not None: break
             raise AssertionError((token, bytes(output[-2500:])))
-        wait_for(b"Live JavaScript")
+        wait_for(b"Live components")
         os.write(master, b"1")
         wait_for(b"111111111")
         os.write(master, b"2")

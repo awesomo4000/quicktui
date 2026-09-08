@@ -334,6 +334,2283 @@ SOFTWARE.
   var __commonJS = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
   var __esm = (fn, res) => () => (fn && (res = fn(fn = 0)), res);
 
+  // vendor/js/node_modules/base64-js/index.js
+  var require_base64_js = __commonJS((exports) => {
+    exports.byteLength = byteLength;
+    exports.toByteArray = toByteArray;
+    exports.fromByteArray = fromByteArray;
+    var lookup = [];
+    var revLookup = [];
+    var Arr = typeof Uint8Array !== "undefined" ? Uint8Array : Array;
+    var code = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    for (i = 0, len = code.length;i < len; ++i) {
+      lookup[i] = code[i];
+      revLookup[code.charCodeAt(i)] = i;
+    }
+    var i;
+    var len;
+    revLookup[45] = 62;
+    revLookup[95] = 63;
+    function getLens(b64) {
+      var len2 = b64.length;
+      if (len2 % 4 > 0) {
+        throw new Error("Invalid string. Length must be a multiple of 4");
+      }
+      var validLen = b64.indexOf("=");
+      if (validLen === -1)
+        validLen = len2;
+      var placeHoldersLen = validLen === len2 ? 0 : 4 - validLen % 4;
+      return [validLen, placeHoldersLen];
+    }
+    function byteLength(b64) {
+      var lens = getLens(b64);
+      var validLen = lens[0];
+      var placeHoldersLen = lens[1];
+      return (validLen + placeHoldersLen) * 3 / 4 - placeHoldersLen;
+    }
+    function _byteLength(b64, validLen, placeHoldersLen) {
+      return (validLen + placeHoldersLen) * 3 / 4 - placeHoldersLen;
+    }
+    function toByteArray(b64) {
+      var tmp;
+      var lens = getLens(b64);
+      var validLen = lens[0];
+      var placeHoldersLen = lens[1];
+      var arr = new Arr(_byteLength(b64, validLen, placeHoldersLen));
+      var curByte = 0;
+      var len2 = placeHoldersLen > 0 ? validLen - 4 : validLen;
+      var i2;
+      for (i2 = 0;i2 < len2; i2 += 4) {
+        tmp = revLookup[b64.charCodeAt(i2)] << 18 | revLookup[b64.charCodeAt(i2 + 1)] << 12 | revLookup[b64.charCodeAt(i2 + 2)] << 6 | revLookup[b64.charCodeAt(i2 + 3)];
+        arr[curByte++] = tmp >> 16 & 255;
+        arr[curByte++] = tmp >> 8 & 255;
+        arr[curByte++] = tmp & 255;
+      }
+      if (placeHoldersLen === 2) {
+        tmp = revLookup[b64.charCodeAt(i2)] << 2 | revLookup[b64.charCodeAt(i2 + 1)] >> 4;
+        arr[curByte++] = tmp & 255;
+      }
+      if (placeHoldersLen === 1) {
+        tmp = revLookup[b64.charCodeAt(i2)] << 10 | revLookup[b64.charCodeAt(i2 + 1)] << 4 | revLookup[b64.charCodeAt(i2 + 2)] >> 2;
+        arr[curByte++] = tmp >> 8 & 255;
+        arr[curByte++] = tmp & 255;
+      }
+      return arr;
+    }
+    function tripletToBase64(num) {
+      return lookup[num >> 18 & 63] + lookup[num >> 12 & 63] + lookup[num >> 6 & 63] + lookup[num & 63];
+    }
+    function encodeChunk(uint8, start, end) {
+      var tmp;
+      var output = [];
+      for (var i2 = start;i2 < end; i2 += 3) {
+        tmp = (uint8[i2] << 16 & 16711680) + (uint8[i2 + 1] << 8 & 65280) + (uint8[i2 + 2] & 255);
+        output.push(tripletToBase64(tmp));
+      }
+      return output.join("");
+    }
+    function fromByteArray(uint8) {
+      var tmp;
+      var len2 = uint8.length;
+      var extraBytes = len2 % 3;
+      var parts = [];
+      var maxChunkLength = 16383;
+      for (var i2 = 0, len22 = len2 - extraBytes;i2 < len22; i2 += maxChunkLength) {
+        parts.push(encodeChunk(uint8, i2, i2 + maxChunkLength > len22 ? len22 : i2 + maxChunkLength));
+      }
+      if (extraBytes === 1) {
+        tmp = uint8[len2 - 1];
+        parts.push(lookup[tmp >> 2] + lookup[tmp << 4 & 63] + "==");
+      } else if (extraBytes === 2) {
+        tmp = (uint8[len2 - 2] << 8) + uint8[len2 - 1];
+        parts.push(lookup[tmp >> 10] + lookup[tmp >> 4 & 63] + lookup[tmp << 2 & 63] + "=");
+      }
+      return parts.join("");
+    }
+  });
+
+  // vendor/js/node_modules/ieee754/index.js
+  var require_ieee754 = __commonJS((exports) => {
+    /*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
+    exports.read = function(buffer, offset, isLE, mLen, nBytes) {
+      var e, m;
+      var eLen = nBytes * 8 - mLen - 1;
+      var eMax = (1 << eLen) - 1;
+      var eBias = eMax >> 1;
+      var nBits = -7;
+      var i = isLE ? nBytes - 1 : 0;
+      var d = isLE ? -1 : 1;
+      var s = buffer[offset + i];
+      i += d;
+      e = s & (1 << -nBits) - 1;
+      s >>= -nBits;
+      nBits += eLen;
+      for (;nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+      m = e & (1 << -nBits) - 1;
+      e >>= -nBits;
+      nBits += mLen;
+      for (;nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+      if (e === 0) {
+        e = 1 - eBias;
+      } else if (e === eMax) {
+        return m ? NaN : (s ? -1 : 1) * Infinity;
+      } else {
+        m = m + Math.pow(2, mLen);
+        e = e - eBias;
+      }
+      return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
+    };
+    exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
+      var e, m, c;
+      var eLen = nBytes * 8 - mLen - 1;
+      var eMax = (1 << eLen) - 1;
+      var eBias = eMax >> 1;
+      var rt = mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0;
+      var i = isLE ? 0 : nBytes - 1;
+      var d = isLE ? 1 : -1;
+      var s = value < 0 || value === 0 && 1 / value < 0 ? 1 : 0;
+      value = Math.abs(value);
+      if (isNaN(value) || value === Infinity) {
+        m = isNaN(value) ? 1 : 0;
+        e = eMax;
+      } else {
+        e = Math.floor(Math.log(value) / Math.LN2);
+        if (value * (c = Math.pow(2, -e)) < 1) {
+          e--;
+          c *= 2;
+        }
+        if (e + eBias >= 1) {
+          value += rt / c;
+        } else {
+          value += rt * Math.pow(2, 1 - eBias);
+        }
+        if (value * c >= 2) {
+          e++;
+          c /= 2;
+        }
+        if (e + eBias >= eMax) {
+          m = 0;
+          e = eMax;
+        } else if (e + eBias >= 1) {
+          m = (value * c - 1) * Math.pow(2, mLen);
+          e = e + eBias;
+        } else {
+          m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
+          e = 0;
+        }
+      }
+      for (;mLen >= 8; buffer[offset + i] = m & 255, i += d, m /= 256, mLen -= 8) {}
+      e = e << mLen | m;
+      eLen += mLen;
+      for (;eLen > 0; buffer[offset + i] = e & 255, i += d, e /= 256, eLen -= 8) {}
+      buffer[offset + i - d] |= s * 128;
+    };
+  });
+
+  // vendor/js/node_modules/buffer/index.js
+  var require_buffer = __commonJS((exports) => {
+    /*!
+     * The buffer module from node.js, for the browser.
+     *
+     * @author   Feross Aboukhadijeh <https://feross.org>
+     * @license  MIT
+     */
+    var base64 = require_base64_js();
+    var ieee754 = require_ieee754();
+    var customInspectSymbol = typeof Symbol === "function" && typeof Symbol["for"] === "function" ? Symbol["for"]("nodejs.util.inspect.custom") : null;
+    exports.Buffer = Buffer2;
+    exports.SlowBuffer = SlowBuffer;
+    exports.INSPECT_MAX_BYTES = 50;
+    var K_MAX_LENGTH = 2147483647;
+    exports.kMaxLength = K_MAX_LENGTH;
+    Buffer2.TYPED_ARRAY_SUPPORT = typedArraySupport();
+    if (!Buffer2.TYPED_ARRAY_SUPPORT && typeof console !== "undefined" && typeof console.error === "function") {
+      console.error("This browser lacks typed array (Uint8Array) support which is required by " + "`buffer` v5.x. Use `buffer` v4.x if you require old browser support.");
+    }
+    function typedArraySupport() {
+      try {
+        const arr = new Uint8Array(1);
+        const proto = { foo: function() {
+          return 42;
+        } };
+        Object.setPrototypeOf(proto, Uint8Array.prototype);
+        Object.setPrototypeOf(arr, proto);
+        return arr.foo() === 42;
+      } catch (e) {
+        return false;
+      }
+    }
+    Object.defineProperty(Buffer2.prototype, "parent", {
+      enumerable: true,
+      get: function() {
+        if (!Buffer2.isBuffer(this))
+          return;
+        return this.buffer;
+      }
+    });
+    Object.defineProperty(Buffer2.prototype, "offset", {
+      enumerable: true,
+      get: function() {
+        if (!Buffer2.isBuffer(this))
+          return;
+        return this.byteOffset;
+      }
+    });
+    function createBuffer(length) {
+      if (length > K_MAX_LENGTH) {
+        throw new RangeError('The value "' + length + '" is invalid for option "size"');
+      }
+      const buf = new Uint8Array(length);
+      Object.setPrototypeOf(buf, Buffer2.prototype);
+      return buf;
+    }
+    function Buffer2(arg, encodingOrOffset, length) {
+      if (typeof arg === "number") {
+        if (typeof encodingOrOffset === "string") {
+          throw new TypeError('The "string" argument must be of type string. Received type number');
+        }
+        return allocUnsafe(arg);
+      }
+      return from(arg, encodingOrOffset, length);
+    }
+    Buffer2.poolSize = 8192;
+    function from(value, encodingOrOffset, length) {
+      if (typeof value === "string") {
+        return fromString(value, encodingOrOffset);
+      }
+      if (ArrayBuffer.isView(value)) {
+        return fromArrayView(value);
+      }
+      if (value == null) {
+        throw new TypeError("The first argument must be one of type string, Buffer, ArrayBuffer, Array, " + "or Array-like Object. Received type " + typeof value);
+      }
+      if (isInstance(value, ArrayBuffer) || value && isInstance(value.buffer, ArrayBuffer)) {
+        return fromArrayBuffer(value, encodingOrOffset, length);
+      }
+      if (typeof SharedArrayBuffer !== "undefined" && (isInstance(value, SharedArrayBuffer) || value && isInstance(value.buffer, SharedArrayBuffer))) {
+        return fromArrayBuffer(value, encodingOrOffset, length);
+      }
+      if (typeof value === "number") {
+        throw new TypeError('The "value" argument must not be of type number. Received type number');
+      }
+      const valueOf = value.valueOf && value.valueOf();
+      if (valueOf != null && valueOf !== value) {
+        return Buffer2.from(valueOf, encodingOrOffset, length);
+      }
+      const b = fromObject(value);
+      if (b)
+        return b;
+      if (typeof Symbol !== "undefined" && Symbol.toPrimitive != null && typeof value[Symbol.toPrimitive] === "function") {
+        return Buffer2.from(value[Symbol.toPrimitive]("string"), encodingOrOffset, length);
+      }
+      throw new TypeError("The first argument must be one of type string, Buffer, ArrayBuffer, Array, " + "or Array-like Object. Received type " + typeof value);
+    }
+    Buffer2.from = function(value, encodingOrOffset, length) {
+      return from(value, encodingOrOffset, length);
+    };
+    Object.setPrototypeOf(Buffer2.prototype, Uint8Array.prototype);
+    Object.setPrototypeOf(Buffer2, Uint8Array);
+    function assertSize(size) {
+      if (typeof size !== "number") {
+        throw new TypeError('"size" argument must be of type number');
+      } else if (size < 0) {
+        throw new RangeError('The value "' + size + '" is invalid for option "size"');
+      }
+    }
+    function alloc(size, fill, encoding) {
+      assertSize(size);
+      if (size <= 0) {
+        return createBuffer(size);
+      }
+      if (fill !== undefined) {
+        return typeof encoding === "string" ? createBuffer(size).fill(fill, encoding) : createBuffer(size).fill(fill);
+      }
+      return createBuffer(size);
+    }
+    Buffer2.alloc = function(size, fill, encoding) {
+      return alloc(size, fill, encoding);
+    };
+    function allocUnsafe(size) {
+      assertSize(size);
+      return createBuffer(size < 0 ? 0 : checked(size) | 0);
+    }
+    Buffer2.allocUnsafe = function(size) {
+      return allocUnsafe(size);
+    };
+    Buffer2.allocUnsafeSlow = function(size) {
+      return allocUnsafe(size);
+    };
+    function fromString(string, encoding) {
+      if (typeof encoding !== "string" || encoding === "") {
+        encoding = "utf8";
+      }
+      if (!Buffer2.isEncoding(encoding)) {
+        throw new TypeError("Unknown encoding: " + encoding);
+      }
+      const length = byteLength(string, encoding) | 0;
+      let buf = createBuffer(length);
+      const actual = buf.write(string, encoding);
+      if (actual !== length) {
+        buf = buf.slice(0, actual);
+      }
+      return buf;
+    }
+    function fromArrayLike(array) {
+      const length = array.length < 0 ? 0 : checked(array.length) | 0;
+      const buf = createBuffer(length);
+      for (let i = 0;i < length; i += 1) {
+        buf[i] = array[i] & 255;
+      }
+      return buf;
+    }
+    function fromArrayView(arrayView) {
+      if (isInstance(arrayView, Uint8Array)) {
+        const copy = new Uint8Array(arrayView);
+        return fromArrayBuffer(copy.buffer, copy.byteOffset, copy.byteLength);
+      }
+      return fromArrayLike(arrayView);
+    }
+    function fromArrayBuffer(array, byteOffset, length) {
+      if (byteOffset < 0 || array.byteLength < byteOffset) {
+        throw new RangeError('"offset" is outside of buffer bounds');
+      }
+      if (array.byteLength < byteOffset + (length || 0)) {
+        throw new RangeError('"length" is outside of buffer bounds');
+      }
+      let buf;
+      if (byteOffset === undefined && length === undefined) {
+        buf = new Uint8Array(array);
+      } else if (length === undefined) {
+        buf = new Uint8Array(array, byteOffset);
+      } else {
+        buf = new Uint8Array(array, byteOffset, length);
+      }
+      Object.setPrototypeOf(buf, Buffer2.prototype);
+      return buf;
+    }
+    function fromObject(obj) {
+      if (Buffer2.isBuffer(obj)) {
+        const len = checked(obj.length) | 0;
+        const buf = createBuffer(len);
+        if (buf.length === 0) {
+          return buf;
+        }
+        obj.copy(buf, 0, 0, len);
+        return buf;
+      }
+      if (obj.length !== undefined) {
+        if (typeof obj.length !== "number" || numberIsNaN(obj.length)) {
+          return createBuffer(0);
+        }
+        return fromArrayLike(obj);
+      }
+      if (obj.type === "Buffer" && Array.isArray(obj.data)) {
+        return fromArrayLike(obj.data);
+      }
+    }
+    function checked(length) {
+      if (length >= K_MAX_LENGTH) {
+        throw new RangeError("Attempt to allocate Buffer larger than maximum " + "size: 0x" + K_MAX_LENGTH.toString(16) + " bytes");
+      }
+      return length | 0;
+    }
+    function SlowBuffer(length) {
+      if (+length != length) {
+        length = 0;
+      }
+      return Buffer2.alloc(+length);
+    }
+    Buffer2.isBuffer = function isBuffer(b) {
+      return b != null && b._isBuffer === true && b !== Buffer2.prototype;
+    };
+    Buffer2.compare = function compare(a, b) {
+      if (isInstance(a, Uint8Array))
+        a = Buffer2.from(a, a.offset, a.byteLength);
+      if (isInstance(b, Uint8Array))
+        b = Buffer2.from(b, b.offset, b.byteLength);
+      if (!Buffer2.isBuffer(a) || !Buffer2.isBuffer(b)) {
+        throw new TypeError('The "buf1", "buf2" arguments must be one of type Buffer or Uint8Array');
+      }
+      if (a === b)
+        return 0;
+      let x = a.length;
+      let y = b.length;
+      for (let i = 0, len = Math.min(x, y);i < len; ++i) {
+        if (a[i] !== b[i]) {
+          x = a[i];
+          y = b[i];
+          break;
+        }
+      }
+      if (x < y)
+        return -1;
+      if (y < x)
+        return 1;
+      return 0;
+    };
+    Buffer2.isEncoding = function isEncoding(encoding) {
+      switch (String(encoding).toLowerCase()) {
+        case "hex":
+        case "utf8":
+        case "utf-8":
+        case "ascii":
+        case "latin1":
+        case "binary":
+        case "base64":
+        case "ucs2":
+        case "ucs-2":
+        case "utf16le":
+        case "utf-16le":
+          return true;
+        default:
+          return false;
+      }
+    };
+    Buffer2.concat = function concat(list, length) {
+      if (!Array.isArray(list)) {
+        throw new TypeError('"list" argument must be an Array of Buffers');
+      }
+      if (list.length === 0) {
+        return Buffer2.alloc(0);
+      }
+      let i;
+      if (length === undefined) {
+        length = 0;
+        for (i = 0;i < list.length; ++i) {
+          length += list[i].length;
+        }
+      }
+      const buffer = Buffer2.allocUnsafe(length);
+      let pos = 0;
+      for (i = 0;i < list.length; ++i) {
+        let buf = list[i];
+        if (isInstance(buf, Uint8Array)) {
+          if (pos + buf.length > buffer.length) {
+            if (!Buffer2.isBuffer(buf))
+              buf = Buffer2.from(buf);
+            buf.copy(buffer, pos);
+          } else {
+            Uint8Array.prototype.set.call(buffer, buf, pos);
+          }
+        } else if (!Buffer2.isBuffer(buf)) {
+          throw new TypeError('"list" argument must be an Array of Buffers');
+        } else {
+          buf.copy(buffer, pos);
+        }
+        pos += buf.length;
+      }
+      return buffer;
+    };
+    function byteLength(string, encoding) {
+      if (Buffer2.isBuffer(string)) {
+        return string.length;
+      }
+      if (ArrayBuffer.isView(string) || isInstance(string, ArrayBuffer)) {
+        return string.byteLength;
+      }
+      if (typeof string !== "string") {
+        throw new TypeError('The "string" argument must be one of type string, Buffer, or ArrayBuffer. ' + "Received type " + typeof string);
+      }
+      const len = string.length;
+      const mustMatch = arguments.length > 2 && arguments[2] === true;
+      if (!mustMatch && len === 0)
+        return 0;
+      let loweredCase = false;
+      for (;; ) {
+        switch (encoding) {
+          case "ascii":
+          case "latin1":
+          case "binary":
+            return len;
+          case "utf8":
+          case "utf-8":
+            return utf8ToBytes(string).length;
+          case "ucs2":
+          case "ucs-2":
+          case "utf16le":
+          case "utf-16le":
+            return len * 2;
+          case "hex":
+            return len >>> 1;
+          case "base64":
+            return base64ToBytes(string).length;
+          default:
+            if (loweredCase) {
+              return mustMatch ? -1 : utf8ToBytes(string).length;
+            }
+            encoding = ("" + encoding).toLowerCase();
+            loweredCase = true;
+        }
+      }
+    }
+    Buffer2.byteLength = byteLength;
+    function slowToString(encoding, start, end) {
+      let loweredCase = false;
+      if (start === undefined || start < 0) {
+        start = 0;
+      }
+      if (start > this.length) {
+        return "";
+      }
+      if (end === undefined || end > this.length) {
+        end = this.length;
+      }
+      if (end <= 0) {
+        return "";
+      }
+      end >>>= 0;
+      start >>>= 0;
+      if (end <= start) {
+        return "";
+      }
+      if (!encoding)
+        encoding = "utf8";
+      while (true) {
+        switch (encoding) {
+          case "hex":
+            return hexSlice(this, start, end);
+          case "utf8":
+          case "utf-8":
+            return utf8Slice(this, start, end);
+          case "ascii":
+            return asciiSlice(this, start, end);
+          case "latin1":
+          case "binary":
+            return latin1Slice(this, start, end);
+          case "base64":
+            return base64Slice(this, start, end);
+          case "ucs2":
+          case "ucs-2":
+          case "utf16le":
+          case "utf-16le":
+            return utf16leSlice(this, start, end);
+          default:
+            if (loweredCase)
+              throw new TypeError("Unknown encoding: " + encoding);
+            encoding = (encoding + "").toLowerCase();
+            loweredCase = true;
+        }
+      }
+    }
+    Buffer2.prototype._isBuffer = true;
+    function swap(b, n, m) {
+      const i = b[n];
+      b[n] = b[m];
+      b[m] = i;
+    }
+    Buffer2.prototype.swap16 = function swap16() {
+      const len = this.length;
+      if (len % 2 !== 0) {
+        throw new RangeError("Buffer size must be a multiple of 16-bits");
+      }
+      for (let i = 0;i < len; i += 2) {
+        swap(this, i, i + 1);
+      }
+      return this;
+    };
+    Buffer2.prototype.swap32 = function swap32() {
+      const len = this.length;
+      if (len % 4 !== 0) {
+        throw new RangeError("Buffer size must be a multiple of 32-bits");
+      }
+      for (let i = 0;i < len; i += 4) {
+        swap(this, i, i + 3);
+        swap(this, i + 1, i + 2);
+      }
+      return this;
+    };
+    Buffer2.prototype.swap64 = function swap64() {
+      const len = this.length;
+      if (len % 8 !== 0) {
+        throw new RangeError("Buffer size must be a multiple of 64-bits");
+      }
+      for (let i = 0;i < len; i += 8) {
+        swap(this, i, i + 7);
+        swap(this, i + 1, i + 6);
+        swap(this, i + 2, i + 5);
+        swap(this, i + 3, i + 4);
+      }
+      return this;
+    };
+    Buffer2.prototype.toString = function toString() {
+      const length = this.length;
+      if (length === 0)
+        return "";
+      if (arguments.length === 0)
+        return utf8Slice(this, 0, length);
+      return slowToString.apply(this, arguments);
+    };
+    Buffer2.prototype.toLocaleString = Buffer2.prototype.toString;
+    Buffer2.prototype.equals = function equals(b) {
+      if (!Buffer2.isBuffer(b))
+        throw new TypeError("Argument must be a Buffer");
+      if (this === b)
+        return true;
+      return Buffer2.compare(this, b) === 0;
+    };
+    Buffer2.prototype.inspect = function inspect() {
+      let str = "";
+      const max = exports.INSPECT_MAX_BYTES;
+      str = this.toString("hex", 0, max).replace(/(.{2})/g, "$1 ").trim();
+      if (this.length > max)
+        str += " ... ";
+      return "<Buffer " + str + ">";
+    };
+    if (customInspectSymbol) {
+      Buffer2.prototype[customInspectSymbol] = Buffer2.prototype.inspect;
+    }
+    Buffer2.prototype.compare = function compare(target, start, end, thisStart, thisEnd) {
+      if (isInstance(target, Uint8Array)) {
+        target = Buffer2.from(target, target.offset, target.byteLength);
+      }
+      if (!Buffer2.isBuffer(target)) {
+        throw new TypeError('The "target" argument must be one of type Buffer or Uint8Array. ' + "Received type " + typeof target);
+      }
+      if (start === undefined) {
+        start = 0;
+      }
+      if (end === undefined) {
+        end = target ? target.length : 0;
+      }
+      if (thisStart === undefined) {
+        thisStart = 0;
+      }
+      if (thisEnd === undefined) {
+        thisEnd = this.length;
+      }
+      if (start < 0 || end > target.length || thisStart < 0 || thisEnd > this.length) {
+        throw new RangeError("out of range index");
+      }
+      if (thisStart >= thisEnd && start >= end) {
+        return 0;
+      }
+      if (thisStart >= thisEnd) {
+        return -1;
+      }
+      if (start >= end) {
+        return 1;
+      }
+      start >>>= 0;
+      end >>>= 0;
+      thisStart >>>= 0;
+      thisEnd >>>= 0;
+      if (this === target)
+        return 0;
+      let x = thisEnd - thisStart;
+      let y = end - start;
+      const len = Math.min(x, y);
+      const thisCopy = this.slice(thisStart, thisEnd);
+      const targetCopy = target.slice(start, end);
+      for (let i = 0;i < len; ++i) {
+        if (thisCopy[i] !== targetCopy[i]) {
+          x = thisCopy[i];
+          y = targetCopy[i];
+          break;
+        }
+      }
+      if (x < y)
+        return -1;
+      if (y < x)
+        return 1;
+      return 0;
+    };
+    function bidirectionalIndexOf(buffer, val, byteOffset, encoding, dir) {
+      if (buffer.length === 0)
+        return -1;
+      if (typeof byteOffset === "string") {
+        encoding = byteOffset;
+        byteOffset = 0;
+      } else if (byteOffset > 2147483647) {
+        byteOffset = 2147483647;
+      } else if (byteOffset < -2147483648) {
+        byteOffset = -2147483648;
+      }
+      byteOffset = +byteOffset;
+      if (numberIsNaN(byteOffset)) {
+        byteOffset = dir ? 0 : buffer.length - 1;
+      }
+      if (byteOffset < 0)
+        byteOffset = buffer.length + byteOffset;
+      if (byteOffset >= buffer.length) {
+        if (dir)
+          return -1;
+        else
+          byteOffset = buffer.length - 1;
+      } else if (byteOffset < 0) {
+        if (dir)
+          byteOffset = 0;
+        else
+          return -1;
+      }
+      if (typeof val === "string") {
+        val = Buffer2.from(val, encoding);
+      }
+      if (Buffer2.isBuffer(val)) {
+        if (val.length === 0) {
+          return -1;
+        }
+        return arrayIndexOf(buffer, val, byteOffset, encoding, dir);
+      } else if (typeof val === "number") {
+        val = val & 255;
+        if (typeof Uint8Array.prototype.indexOf === "function") {
+          if (dir) {
+            return Uint8Array.prototype.indexOf.call(buffer, val, byteOffset);
+          } else {
+            return Uint8Array.prototype.lastIndexOf.call(buffer, val, byteOffset);
+          }
+        }
+        return arrayIndexOf(buffer, [val], byteOffset, encoding, dir);
+      }
+      throw new TypeError("val must be string, number or Buffer");
+    }
+    function arrayIndexOf(arr, val, byteOffset, encoding, dir) {
+      let indexSize = 1;
+      let arrLength = arr.length;
+      let valLength = val.length;
+      if (encoding !== undefined) {
+        encoding = String(encoding).toLowerCase();
+        if (encoding === "ucs2" || encoding === "ucs-2" || encoding === "utf16le" || encoding === "utf-16le") {
+          if (arr.length < 2 || val.length < 2) {
+            return -1;
+          }
+          indexSize = 2;
+          arrLength /= 2;
+          valLength /= 2;
+          byteOffset /= 2;
+        }
+      }
+      function read(buf, i2) {
+        if (indexSize === 1) {
+          return buf[i2];
+        } else {
+          return buf.readUInt16BE(i2 * indexSize);
+        }
+      }
+      let i;
+      if (dir) {
+        let foundIndex = -1;
+        for (i = byteOffset;i < arrLength; i++) {
+          if (read(arr, i) === read(val, foundIndex === -1 ? 0 : i - foundIndex)) {
+            if (foundIndex === -1)
+              foundIndex = i;
+            if (i - foundIndex + 1 === valLength)
+              return foundIndex * indexSize;
+          } else {
+            if (foundIndex !== -1)
+              i -= i - foundIndex;
+            foundIndex = -1;
+          }
+        }
+      } else {
+        if (byteOffset + valLength > arrLength)
+          byteOffset = arrLength - valLength;
+        for (i = byteOffset;i >= 0; i--) {
+          let found = true;
+          for (let j = 0;j < valLength; j++) {
+            if (read(arr, i + j) !== read(val, j)) {
+              found = false;
+              break;
+            }
+          }
+          if (found)
+            return i;
+        }
+      }
+      return -1;
+    }
+    Buffer2.prototype.includes = function includes(val, byteOffset, encoding) {
+      return this.indexOf(val, byteOffset, encoding) !== -1;
+    };
+    Buffer2.prototype.indexOf = function indexOf(val, byteOffset, encoding) {
+      return bidirectionalIndexOf(this, val, byteOffset, encoding, true);
+    };
+    Buffer2.prototype.lastIndexOf = function lastIndexOf(val, byteOffset, encoding) {
+      return bidirectionalIndexOf(this, val, byteOffset, encoding, false);
+    };
+    function hexWrite(buf, string, offset, length) {
+      offset = Number(offset) || 0;
+      const remaining = buf.length - offset;
+      if (!length) {
+        length = remaining;
+      } else {
+        length = Number(length);
+        if (length > remaining) {
+          length = remaining;
+        }
+      }
+      const strLen = string.length;
+      if (length > strLen / 2) {
+        length = strLen / 2;
+      }
+      let i;
+      for (i = 0;i < length; ++i) {
+        const parsed = parseInt(string.substr(i * 2, 2), 16);
+        if (numberIsNaN(parsed))
+          return i;
+        buf[offset + i] = parsed;
+      }
+      return i;
+    }
+    function utf8Write(buf, string, offset, length) {
+      return blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length);
+    }
+    function asciiWrite(buf, string, offset, length) {
+      return blitBuffer(asciiToBytes(string), buf, offset, length);
+    }
+    function base64Write(buf, string, offset, length) {
+      return blitBuffer(base64ToBytes(string), buf, offset, length);
+    }
+    function ucs2Write(buf, string, offset, length) {
+      return blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length);
+    }
+    Buffer2.prototype.write = function write(string, offset, length, encoding) {
+      if (offset === undefined) {
+        encoding = "utf8";
+        length = this.length;
+        offset = 0;
+      } else if (length === undefined && typeof offset === "string") {
+        encoding = offset;
+        length = this.length;
+        offset = 0;
+      } else if (isFinite(offset)) {
+        offset = offset >>> 0;
+        if (isFinite(length)) {
+          length = length >>> 0;
+          if (encoding === undefined)
+            encoding = "utf8";
+        } else {
+          encoding = length;
+          length = undefined;
+        }
+      } else {
+        throw new Error("Buffer.write(string, encoding, offset[, length]) is no longer supported");
+      }
+      const remaining = this.length - offset;
+      if (length === undefined || length > remaining)
+        length = remaining;
+      if (string.length > 0 && (length < 0 || offset < 0) || offset > this.length) {
+        throw new RangeError("Attempt to write outside buffer bounds");
+      }
+      if (!encoding)
+        encoding = "utf8";
+      let loweredCase = false;
+      for (;; ) {
+        switch (encoding) {
+          case "hex":
+            return hexWrite(this, string, offset, length);
+          case "utf8":
+          case "utf-8":
+            return utf8Write(this, string, offset, length);
+          case "ascii":
+          case "latin1":
+          case "binary":
+            return asciiWrite(this, string, offset, length);
+          case "base64":
+            return base64Write(this, string, offset, length);
+          case "ucs2":
+          case "ucs-2":
+          case "utf16le":
+          case "utf-16le":
+            return ucs2Write(this, string, offset, length);
+          default:
+            if (loweredCase)
+              throw new TypeError("Unknown encoding: " + encoding);
+            encoding = ("" + encoding).toLowerCase();
+            loweredCase = true;
+        }
+      }
+    };
+    Buffer2.prototype.toJSON = function toJSON() {
+      return {
+        type: "Buffer",
+        data: Array.prototype.slice.call(this._arr || this, 0)
+      };
+    };
+    function base64Slice(buf, start, end) {
+      if (start === 0 && end === buf.length) {
+        return base64.fromByteArray(buf);
+      } else {
+        return base64.fromByteArray(buf.slice(start, end));
+      }
+    }
+    function utf8Slice(buf, start, end) {
+      end = Math.min(buf.length, end);
+      const res = [];
+      let i = start;
+      while (i < end) {
+        const firstByte = buf[i];
+        let codePoint = null;
+        let bytesPerSequence = firstByte > 239 ? 4 : firstByte > 223 ? 3 : firstByte > 191 ? 2 : 1;
+        if (i + bytesPerSequence <= end) {
+          let secondByte, thirdByte, fourthByte, tempCodePoint;
+          switch (bytesPerSequence) {
+            case 1:
+              if (firstByte < 128) {
+                codePoint = firstByte;
+              }
+              break;
+            case 2:
+              secondByte = buf[i + 1];
+              if ((secondByte & 192) === 128) {
+                tempCodePoint = (firstByte & 31) << 6 | secondByte & 63;
+                if (tempCodePoint > 127) {
+                  codePoint = tempCodePoint;
+                }
+              }
+              break;
+            case 3:
+              secondByte = buf[i + 1];
+              thirdByte = buf[i + 2];
+              if ((secondByte & 192) === 128 && (thirdByte & 192) === 128) {
+                tempCodePoint = (firstByte & 15) << 12 | (secondByte & 63) << 6 | thirdByte & 63;
+                if (tempCodePoint > 2047 && (tempCodePoint < 55296 || tempCodePoint > 57343)) {
+                  codePoint = tempCodePoint;
+                }
+              }
+              break;
+            case 4:
+              secondByte = buf[i + 1];
+              thirdByte = buf[i + 2];
+              fourthByte = buf[i + 3];
+              if ((secondByte & 192) === 128 && (thirdByte & 192) === 128 && (fourthByte & 192) === 128) {
+                tempCodePoint = (firstByte & 15) << 18 | (secondByte & 63) << 12 | (thirdByte & 63) << 6 | fourthByte & 63;
+                if (tempCodePoint > 65535 && tempCodePoint < 1114112) {
+                  codePoint = tempCodePoint;
+                }
+              }
+          }
+        }
+        if (codePoint === null) {
+          codePoint = 65533;
+          bytesPerSequence = 1;
+        } else if (codePoint > 65535) {
+          codePoint -= 65536;
+          res.push(codePoint >>> 10 & 1023 | 55296);
+          codePoint = 56320 | codePoint & 1023;
+        }
+        res.push(codePoint);
+        i += bytesPerSequence;
+      }
+      return decodeCodePointsArray(res);
+    }
+    var MAX_ARGUMENTS_LENGTH = 4096;
+    function decodeCodePointsArray(codePoints) {
+      const len = codePoints.length;
+      if (len <= MAX_ARGUMENTS_LENGTH) {
+        return String.fromCharCode.apply(String, codePoints);
+      }
+      let res = "";
+      let i = 0;
+      while (i < len) {
+        res += String.fromCharCode.apply(String, codePoints.slice(i, i += MAX_ARGUMENTS_LENGTH));
+      }
+      return res;
+    }
+    function asciiSlice(buf, start, end) {
+      let ret = "";
+      end = Math.min(buf.length, end);
+      for (let i = start;i < end; ++i) {
+        ret += String.fromCharCode(buf[i] & 127);
+      }
+      return ret;
+    }
+    function latin1Slice(buf, start, end) {
+      let ret = "";
+      end = Math.min(buf.length, end);
+      for (let i = start;i < end; ++i) {
+        ret += String.fromCharCode(buf[i]);
+      }
+      return ret;
+    }
+    function hexSlice(buf, start, end) {
+      const len = buf.length;
+      if (!start || start < 0)
+        start = 0;
+      if (!end || end < 0 || end > len)
+        end = len;
+      let out = "";
+      for (let i = start;i < end; ++i) {
+        out += hexSliceLookupTable[buf[i]];
+      }
+      return out;
+    }
+    function utf16leSlice(buf, start, end) {
+      const bytes = buf.slice(start, end);
+      let res = "";
+      for (let i = 0;i < bytes.length - 1; i += 2) {
+        res += String.fromCharCode(bytes[i] + bytes[i + 1] * 256);
+      }
+      return res;
+    }
+    Buffer2.prototype.slice = function slice(start, end) {
+      const len = this.length;
+      start = ~~start;
+      end = end === undefined ? len : ~~end;
+      if (start < 0) {
+        start += len;
+        if (start < 0)
+          start = 0;
+      } else if (start > len) {
+        start = len;
+      }
+      if (end < 0) {
+        end += len;
+        if (end < 0)
+          end = 0;
+      } else if (end > len) {
+        end = len;
+      }
+      if (end < start)
+        end = start;
+      const newBuf = this.subarray(start, end);
+      Object.setPrototypeOf(newBuf, Buffer2.prototype);
+      return newBuf;
+    };
+    function checkOffset(offset, ext, length) {
+      if (offset % 1 !== 0 || offset < 0)
+        throw new RangeError("offset is not uint");
+      if (offset + ext > length)
+        throw new RangeError("Trying to access beyond buffer length");
+    }
+    Buffer2.prototype.readUintLE = Buffer2.prototype.readUIntLE = function readUIntLE(offset, byteLength2, noAssert) {
+      offset = offset >>> 0;
+      byteLength2 = byteLength2 >>> 0;
+      if (!noAssert)
+        checkOffset(offset, byteLength2, this.length);
+      let val = this[offset];
+      let mul = 1;
+      let i = 0;
+      while (++i < byteLength2 && (mul *= 256)) {
+        val += this[offset + i] * mul;
+      }
+      return val;
+    };
+    Buffer2.prototype.readUintBE = Buffer2.prototype.readUIntBE = function readUIntBE(offset, byteLength2, noAssert) {
+      offset = offset >>> 0;
+      byteLength2 = byteLength2 >>> 0;
+      if (!noAssert) {
+        checkOffset(offset, byteLength2, this.length);
+      }
+      let val = this[offset + --byteLength2];
+      let mul = 1;
+      while (byteLength2 > 0 && (mul *= 256)) {
+        val += this[offset + --byteLength2] * mul;
+      }
+      return val;
+    };
+    Buffer2.prototype.readUint8 = Buffer2.prototype.readUInt8 = function readUInt8(offset, noAssert) {
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkOffset(offset, 1, this.length);
+      return this[offset];
+    };
+    Buffer2.prototype.readUint16LE = Buffer2.prototype.readUInt16LE = function readUInt16LE(offset, noAssert) {
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkOffset(offset, 2, this.length);
+      return this[offset] | this[offset + 1] << 8;
+    };
+    Buffer2.prototype.readUint16BE = Buffer2.prototype.readUInt16BE = function readUInt16BE(offset, noAssert) {
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkOffset(offset, 2, this.length);
+      return this[offset] << 8 | this[offset + 1];
+    };
+    Buffer2.prototype.readUint32LE = Buffer2.prototype.readUInt32LE = function readUInt32LE(offset, noAssert) {
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkOffset(offset, 4, this.length);
+      return (this[offset] | this[offset + 1] << 8 | this[offset + 2] << 16) + this[offset + 3] * 16777216;
+    };
+    Buffer2.prototype.readUint32BE = Buffer2.prototype.readUInt32BE = function readUInt32BE(offset, noAssert) {
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkOffset(offset, 4, this.length);
+      return this[offset] * 16777216 + (this[offset + 1] << 16 | this[offset + 2] << 8 | this[offset + 3]);
+    };
+    Buffer2.prototype.readBigUInt64LE = defineBigIntMethod(function readBigUInt64LE(offset) {
+      offset = offset >>> 0;
+      validateNumber(offset, "offset");
+      const first = this[offset];
+      const last = this[offset + 7];
+      if (first === undefined || last === undefined) {
+        boundsError(offset, this.length - 8);
+      }
+      const lo = first + this[++offset] * 2 ** 8 + this[++offset] * 2 ** 16 + this[++offset] * 2 ** 24;
+      const hi = this[++offset] + this[++offset] * 2 ** 8 + this[++offset] * 2 ** 16 + last * 2 ** 24;
+      return BigInt(lo) + (BigInt(hi) << BigInt(32));
+    });
+    Buffer2.prototype.readBigUInt64BE = defineBigIntMethod(function readBigUInt64BE(offset) {
+      offset = offset >>> 0;
+      validateNumber(offset, "offset");
+      const first = this[offset];
+      const last = this[offset + 7];
+      if (first === undefined || last === undefined) {
+        boundsError(offset, this.length - 8);
+      }
+      const hi = first * 2 ** 24 + this[++offset] * 2 ** 16 + this[++offset] * 2 ** 8 + this[++offset];
+      const lo = this[++offset] * 2 ** 24 + this[++offset] * 2 ** 16 + this[++offset] * 2 ** 8 + last;
+      return (BigInt(hi) << BigInt(32)) + BigInt(lo);
+    });
+    Buffer2.prototype.readIntLE = function readIntLE(offset, byteLength2, noAssert) {
+      offset = offset >>> 0;
+      byteLength2 = byteLength2 >>> 0;
+      if (!noAssert)
+        checkOffset(offset, byteLength2, this.length);
+      let val = this[offset];
+      let mul = 1;
+      let i = 0;
+      while (++i < byteLength2 && (mul *= 256)) {
+        val += this[offset + i] * mul;
+      }
+      mul *= 128;
+      if (val >= mul)
+        val -= Math.pow(2, 8 * byteLength2);
+      return val;
+    };
+    Buffer2.prototype.readIntBE = function readIntBE(offset, byteLength2, noAssert) {
+      offset = offset >>> 0;
+      byteLength2 = byteLength2 >>> 0;
+      if (!noAssert)
+        checkOffset(offset, byteLength2, this.length);
+      let i = byteLength2;
+      let mul = 1;
+      let val = this[offset + --i];
+      while (i > 0 && (mul *= 256)) {
+        val += this[offset + --i] * mul;
+      }
+      mul *= 128;
+      if (val >= mul)
+        val -= Math.pow(2, 8 * byteLength2);
+      return val;
+    };
+    Buffer2.prototype.readInt8 = function readInt8(offset, noAssert) {
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkOffset(offset, 1, this.length);
+      if (!(this[offset] & 128))
+        return this[offset];
+      return (255 - this[offset] + 1) * -1;
+    };
+    Buffer2.prototype.readInt16LE = function readInt16LE(offset, noAssert) {
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkOffset(offset, 2, this.length);
+      const val = this[offset] | this[offset + 1] << 8;
+      return val & 32768 ? val | 4294901760 : val;
+    };
+    Buffer2.prototype.readInt16BE = function readInt16BE(offset, noAssert) {
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkOffset(offset, 2, this.length);
+      const val = this[offset + 1] | this[offset] << 8;
+      return val & 32768 ? val | 4294901760 : val;
+    };
+    Buffer2.prototype.readInt32LE = function readInt32LE(offset, noAssert) {
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkOffset(offset, 4, this.length);
+      return this[offset] | this[offset + 1] << 8 | this[offset + 2] << 16 | this[offset + 3] << 24;
+    };
+    Buffer2.prototype.readInt32BE = function readInt32BE(offset, noAssert) {
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkOffset(offset, 4, this.length);
+      return this[offset] << 24 | this[offset + 1] << 16 | this[offset + 2] << 8 | this[offset + 3];
+    };
+    Buffer2.prototype.readBigInt64LE = defineBigIntMethod(function readBigInt64LE(offset) {
+      offset = offset >>> 0;
+      validateNumber(offset, "offset");
+      const first = this[offset];
+      const last = this[offset + 7];
+      if (first === undefined || last === undefined) {
+        boundsError(offset, this.length - 8);
+      }
+      const val = this[offset + 4] + this[offset + 5] * 2 ** 8 + this[offset + 6] * 2 ** 16 + (last << 24);
+      return (BigInt(val) << BigInt(32)) + BigInt(first + this[++offset] * 2 ** 8 + this[++offset] * 2 ** 16 + this[++offset] * 2 ** 24);
+    });
+    Buffer2.prototype.readBigInt64BE = defineBigIntMethod(function readBigInt64BE(offset) {
+      offset = offset >>> 0;
+      validateNumber(offset, "offset");
+      const first = this[offset];
+      const last = this[offset + 7];
+      if (first === undefined || last === undefined) {
+        boundsError(offset, this.length - 8);
+      }
+      const val = (first << 24) + this[++offset] * 2 ** 16 + this[++offset] * 2 ** 8 + this[++offset];
+      return (BigInt(val) << BigInt(32)) + BigInt(this[++offset] * 2 ** 24 + this[++offset] * 2 ** 16 + this[++offset] * 2 ** 8 + last);
+    });
+    Buffer2.prototype.readFloatLE = function readFloatLE(offset, noAssert) {
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkOffset(offset, 4, this.length);
+      return ieee754.read(this, offset, true, 23, 4);
+    };
+    Buffer2.prototype.readFloatBE = function readFloatBE(offset, noAssert) {
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkOffset(offset, 4, this.length);
+      return ieee754.read(this, offset, false, 23, 4);
+    };
+    Buffer2.prototype.readDoubleLE = function readDoubleLE(offset, noAssert) {
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkOffset(offset, 8, this.length);
+      return ieee754.read(this, offset, true, 52, 8);
+    };
+    Buffer2.prototype.readDoubleBE = function readDoubleBE(offset, noAssert) {
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkOffset(offset, 8, this.length);
+      return ieee754.read(this, offset, false, 52, 8);
+    };
+    function checkInt(buf, value, offset, ext, max, min) {
+      if (!Buffer2.isBuffer(buf))
+        throw new TypeError('"buffer" argument must be a Buffer instance');
+      if (value > max || value < min)
+        throw new RangeError('"value" argument is out of bounds');
+      if (offset + ext > buf.length)
+        throw new RangeError("Index out of range");
+    }
+    Buffer2.prototype.writeUintLE = Buffer2.prototype.writeUIntLE = function writeUIntLE(value, offset, byteLength2, noAssert) {
+      value = +value;
+      offset = offset >>> 0;
+      byteLength2 = byteLength2 >>> 0;
+      if (!noAssert) {
+        const maxBytes = Math.pow(2, 8 * byteLength2) - 1;
+        checkInt(this, value, offset, byteLength2, maxBytes, 0);
+      }
+      let mul = 1;
+      let i = 0;
+      this[offset] = value & 255;
+      while (++i < byteLength2 && (mul *= 256)) {
+        this[offset + i] = value / mul & 255;
+      }
+      return offset + byteLength2;
+    };
+    Buffer2.prototype.writeUintBE = Buffer2.prototype.writeUIntBE = function writeUIntBE(value, offset, byteLength2, noAssert) {
+      value = +value;
+      offset = offset >>> 0;
+      byteLength2 = byteLength2 >>> 0;
+      if (!noAssert) {
+        const maxBytes = Math.pow(2, 8 * byteLength2) - 1;
+        checkInt(this, value, offset, byteLength2, maxBytes, 0);
+      }
+      let i = byteLength2 - 1;
+      let mul = 1;
+      this[offset + i] = value & 255;
+      while (--i >= 0 && (mul *= 256)) {
+        this[offset + i] = value / mul & 255;
+      }
+      return offset + byteLength2;
+    };
+    Buffer2.prototype.writeUint8 = Buffer2.prototype.writeUInt8 = function writeUInt8(value, offset, noAssert) {
+      value = +value;
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkInt(this, value, offset, 1, 255, 0);
+      this[offset] = value & 255;
+      return offset + 1;
+    };
+    Buffer2.prototype.writeUint16LE = Buffer2.prototype.writeUInt16LE = function writeUInt16LE(value, offset, noAssert) {
+      value = +value;
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkInt(this, value, offset, 2, 65535, 0);
+      this[offset] = value & 255;
+      this[offset + 1] = value >>> 8;
+      return offset + 2;
+    };
+    Buffer2.prototype.writeUint16BE = Buffer2.prototype.writeUInt16BE = function writeUInt16BE(value, offset, noAssert) {
+      value = +value;
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkInt(this, value, offset, 2, 65535, 0);
+      this[offset] = value >>> 8;
+      this[offset + 1] = value & 255;
+      return offset + 2;
+    };
+    Buffer2.prototype.writeUint32LE = Buffer2.prototype.writeUInt32LE = function writeUInt32LE(value, offset, noAssert) {
+      value = +value;
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkInt(this, value, offset, 4, 4294967295, 0);
+      this[offset + 3] = value >>> 24;
+      this[offset + 2] = value >>> 16;
+      this[offset + 1] = value >>> 8;
+      this[offset] = value & 255;
+      return offset + 4;
+    };
+    Buffer2.prototype.writeUint32BE = Buffer2.prototype.writeUInt32BE = function writeUInt32BE(value, offset, noAssert) {
+      value = +value;
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkInt(this, value, offset, 4, 4294967295, 0);
+      this[offset] = value >>> 24;
+      this[offset + 1] = value >>> 16;
+      this[offset + 2] = value >>> 8;
+      this[offset + 3] = value & 255;
+      return offset + 4;
+    };
+    function wrtBigUInt64LE(buf, value, offset, min, max) {
+      checkIntBI(value, min, max, buf, offset, 7);
+      let lo = Number(value & BigInt(4294967295));
+      buf[offset++] = lo;
+      lo = lo >> 8;
+      buf[offset++] = lo;
+      lo = lo >> 8;
+      buf[offset++] = lo;
+      lo = lo >> 8;
+      buf[offset++] = lo;
+      let hi = Number(value >> BigInt(32) & BigInt(4294967295));
+      buf[offset++] = hi;
+      hi = hi >> 8;
+      buf[offset++] = hi;
+      hi = hi >> 8;
+      buf[offset++] = hi;
+      hi = hi >> 8;
+      buf[offset++] = hi;
+      return offset;
+    }
+    function wrtBigUInt64BE(buf, value, offset, min, max) {
+      checkIntBI(value, min, max, buf, offset, 7);
+      let lo = Number(value & BigInt(4294967295));
+      buf[offset + 7] = lo;
+      lo = lo >> 8;
+      buf[offset + 6] = lo;
+      lo = lo >> 8;
+      buf[offset + 5] = lo;
+      lo = lo >> 8;
+      buf[offset + 4] = lo;
+      let hi = Number(value >> BigInt(32) & BigInt(4294967295));
+      buf[offset + 3] = hi;
+      hi = hi >> 8;
+      buf[offset + 2] = hi;
+      hi = hi >> 8;
+      buf[offset + 1] = hi;
+      hi = hi >> 8;
+      buf[offset] = hi;
+      return offset + 8;
+    }
+    Buffer2.prototype.writeBigUInt64LE = defineBigIntMethod(function writeBigUInt64LE(value, offset = 0) {
+      return wrtBigUInt64LE(this, value, offset, BigInt(0), BigInt("0xffffffffffffffff"));
+    });
+    Buffer2.prototype.writeBigUInt64BE = defineBigIntMethod(function writeBigUInt64BE(value, offset = 0) {
+      return wrtBigUInt64BE(this, value, offset, BigInt(0), BigInt("0xffffffffffffffff"));
+    });
+    Buffer2.prototype.writeIntLE = function writeIntLE(value, offset, byteLength2, noAssert) {
+      value = +value;
+      offset = offset >>> 0;
+      if (!noAssert) {
+        const limit = Math.pow(2, 8 * byteLength2 - 1);
+        checkInt(this, value, offset, byteLength2, limit - 1, -limit);
+      }
+      let i = 0;
+      let mul = 1;
+      let sub = 0;
+      this[offset] = value & 255;
+      while (++i < byteLength2 && (mul *= 256)) {
+        if (value < 0 && sub === 0 && this[offset + i - 1] !== 0) {
+          sub = 1;
+        }
+        this[offset + i] = (value / mul >> 0) - sub & 255;
+      }
+      return offset + byteLength2;
+    };
+    Buffer2.prototype.writeIntBE = function writeIntBE(value, offset, byteLength2, noAssert) {
+      value = +value;
+      offset = offset >>> 0;
+      if (!noAssert) {
+        const limit = Math.pow(2, 8 * byteLength2 - 1);
+        checkInt(this, value, offset, byteLength2, limit - 1, -limit);
+      }
+      let i = byteLength2 - 1;
+      let mul = 1;
+      let sub = 0;
+      this[offset + i] = value & 255;
+      while (--i >= 0 && (mul *= 256)) {
+        if (value < 0 && sub === 0 && this[offset + i + 1] !== 0) {
+          sub = 1;
+        }
+        this[offset + i] = (value / mul >> 0) - sub & 255;
+      }
+      return offset + byteLength2;
+    };
+    Buffer2.prototype.writeInt8 = function writeInt8(value, offset, noAssert) {
+      value = +value;
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkInt(this, value, offset, 1, 127, -128);
+      if (value < 0)
+        value = 255 + value + 1;
+      this[offset] = value & 255;
+      return offset + 1;
+    };
+    Buffer2.prototype.writeInt16LE = function writeInt16LE(value, offset, noAssert) {
+      value = +value;
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkInt(this, value, offset, 2, 32767, -32768);
+      this[offset] = value & 255;
+      this[offset + 1] = value >>> 8;
+      return offset + 2;
+    };
+    Buffer2.prototype.writeInt16BE = function writeInt16BE(value, offset, noAssert) {
+      value = +value;
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkInt(this, value, offset, 2, 32767, -32768);
+      this[offset] = value >>> 8;
+      this[offset + 1] = value & 255;
+      return offset + 2;
+    };
+    Buffer2.prototype.writeInt32LE = function writeInt32LE(value, offset, noAssert) {
+      value = +value;
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkInt(this, value, offset, 4, 2147483647, -2147483648);
+      this[offset] = value & 255;
+      this[offset + 1] = value >>> 8;
+      this[offset + 2] = value >>> 16;
+      this[offset + 3] = value >>> 24;
+      return offset + 4;
+    };
+    Buffer2.prototype.writeInt32BE = function writeInt32BE(value, offset, noAssert) {
+      value = +value;
+      offset = offset >>> 0;
+      if (!noAssert)
+        checkInt(this, value, offset, 4, 2147483647, -2147483648);
+      if (value < 0)
+        value = 4294967295 + value + 1;
+      this[offset] = value >>> 24;
+      this[offset + 1] = value >>> 16;
+      this[offset + 2] = value >>> 8;
+      this[offset + 3] = value & 255;
+      return offset + 4;
+    };
+    Buffer2.prototype.writeBigInt64LE = defineBigIntMethod(function writeBigInt64LE(value, offset = 0) {
+      return wrtBigUInt64LE(this, value, offset, -BigInt("0x8000000000000000"), BigInt("0x7fffffffffffffff"));
+    });
+    Buffer2.prototype.writeBigInt64BE = defineBigIntMethod(function writeBigInt64BE(value, offset = 0) {
+      return wrtBigUInt64BE(this, value, offset, -BigInt("0x8000000000000000"), BigInt("0x7fffffffffffffff"));
+    });
+    function checkIEEE754(buf, value, offset, ext, max, min) {
+      if (offset + ext > buf.length)
+        throw new RangeError("Index out of range");
+      if (offset < 0)
+        throw new RangeError("Index out of range");
+    }
+    function writeFloat(buf, value, offset, littleEndian, noAssert) {
+      value = +value;
+      offset = offset >>> 0;
+      if (!noAssert) {
+        checkIEEE754(buf, value, offset, 4, 340282346638528860000000000000000000000, -340282346638528860000000000000000000000);
+      }
+      ieee754.write(buf, value, offset, littleEndian, 23, 4);
+      return offset + 4;
+    }
+    Buffer2.prototype.writeFloatLE = function writeFloatLE(value, offset, noAssert) {
+      return writeFloat(this, value, offset, true, noAssert);
+    };
+    Buffer2.prototype.writeFloatBE = function writeFloatBE(value, offset, noAssert) {
+      return writeFloat(this, value, offset, false, noAssert);
+    };
+    function writeDouble(buf, value, offset, littleEndian, noAssert) {
+      value = +value;
+      offset = offset >>> 0;
+      if (!noAssert) {
+        checkIEEE754(buf, value, offset, 8, 179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000, -179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000);
+      }
+      ieee754.write(buf, value, offset, littleEndian, 52, 8);
+      return offset + 8;
+    }
+    Buffer2.prototype.writeDoubleLE = function writeDoubleLE(value, offset, noAssert) {
+      return writeDouble(this, value, offset, true, noAssert);
+    };
+    Buffer2.prototype.writeDoubleBE = function writeDoubleBE(value, offset, noAssert) {
+      return writeDouble(this, value, offset, false, noAssert);
+    };
+    Buffer2.prototype.copy = function copy(target, targetStart, start, end) {
+      if (!Buffer2.isBuffer(target))
+        throw new TypeError("argument should be a Buffer");
+      if (!start)
+        start = 0;
+      if (!end && end !== 0)
+        end = this.length;
+      if (targetStart >= target.length)
+        targetStart = target.length;
+      if (!targetStart)
+        targetStart = 0;
+      if (end > 0 && end < start)
+        end = start;
+      if (end === start)
+        return 0;
+      if (target.length === 0 || this.length === 0)
+        return 0;
+      if (targetStart < 0) {
+        throw new RangeError("targetStart out of bounds");
+      }
+      if (start < 0 || start >= this.length)
+        throw new RangeError("Index out of range");
+      if (end < 0)
+        throw new RangeError("sourceEnd out of bounds");
+      if (end > this.length)
+        end = this.length;
+      if (target.length - targetStart < end - start) {
+        end = target.length - targetStart + start;
+      }
+      const len = end - start;
+      if (this === target && typeof Uint8Array.prototype.copyWithin === "function") {
+        this.copyWithin(targetStart, start, end);
+      } else {
+        Uint8Array.prototype.set.call(target, this.subarray(start, end), targetStart);
+      }
+      return len;
+    };
+    Buffer2.prototype.fill = function fill(val, start, end, encoding) {
+      if (typeof val === "string") {
+        if (typeof start === "string") {
+          encoding = start;
+          start = 0;
+          end = this.length;
+        } else if (typeof end === "string") {
+          encoding = end;
+          end = this.length;
+        }
+        if (encoding !== undefined && typeof encoding !== "string") {
+          throw new TypeError("encoding must be a string");
+        }
+        if (typeof encoding === "string" && !Buffer2.isEncoding(encoding)) {
+          throw new TypeError("Unknown encoding: " + encoding);
+        }
+        if (val.length === 1) {
+          const code = val.charCodeAt(0);
+          if (encoding === "utf8" && code < 128 || encoding === "latin1") {
+            val = code;
+          }
+        }
+      } else if (typeof val === "number") {
+        val = val & 255;
+      } else if (typeof val === "boolean") {
+        val = Number(val);
+      }
+      if (start < 0 || this.length < start || this.length < end) {
+        throw new RangeError("Out of range index");
+      }
+      if (end <= start) {
+        return this;
+      }
+      start = start >>> 0;
+      end = end === undefined ? this.length : end >>> 0;
+      if (!val)
+        val = 0;
+      let i;
+      if (typeof val === "number") {
+        for (i = start;i < end; ++i) {
+          this[i] = val;
+        }
+      } else {
+        const bytes = Buffer2.isBuffer(val) ? val : Buffer2.from(val, encoding);
+        const len = bytes.length;
+        if (len === 0) {
+          throw new TypeError('The value "' + val + '" is invalid for argument "value"');
+        }
+        for (i = 0;i < end - start; ++i) {
+          this[i + start] = bytes[i % len];
+        }
+      }
+      return this;
+    };
+    var errors = {};
+    function E(sym, getMessage, Base) {
+      errors[sym] = class NodeError extends Base {
+        constructor() {
+          super();
+          Object.defineProperty(this, "message", {
+            value: getMessage.apply(this, arguments),
+            writable: true,
+            configurable: true
+          });
+          this.name = `${this.name} [${sym}]`;
+          this.stack;
+          delete this.name;
+        }
+        get code() {
+          return sym;
+        }
+        set code(value) {
+          Object.defineProperty(this, "code", {
+            configurable: true,
+            enumerable: true,
+            value,
+            writable: true
+          });
+        }
+        toString() {
+          return `${this.name} [${sym}]: ${this.message}`;
+        }
+      };
+    }
+    E("ERR_BUFFER_OUT_OF_BOUNDS", function(name) {
+      if (name) {
+        return `${name} is outside of buffer bounds`;
+      }
+      return "Attempt to access memory outside buffer bounds";
+    }, RangeError);
+    E("ERR_INVALID_ARG_TYPE", function(name, actual) {
+      return `The "${name}" argument must be of type number. Received type ${typeof actual}`;
+    }, TypeError);
+    E("ERR_OUT_OF_RANGE", function(str, range, input) {
+      let msg = `The value of "${str}" is out of range.`;
+      let received = input;
+      if (Number.isInteger(input) && Math.abs(input) > 2 ** 32) {
+        received = addNumericalSeparator(String(input));
+      } else if (typeof input === "bigint") {
+        received = String(input);
+        if (input > BigInt(2) ** BigInt(32) || input < -(BigInt(2) ** BigInt(32))) {
+          received = addNumericalSeparator(received);
+        }
+        received += "n";
+      }
+      msg += ` It must be ${range}. Received ${received}`;
+      return msg;
+    }, RangeError);
+    function addNumericalSeparator(val) {
+      let res = "";
+      let i = val.length;
+      const start = val[0] === "-" ? 1 : 0;
+      for (;i >= start + 4; i -= 3) {
+        res = `_${val.slice(i - 3, i)}${res}`;
+      }
+      return `${val.slice(0, i)}${res}`;
+    }
+    function checkBounds(buf, offset, byteLength2) {
+      validateNumber(offset, "offset");
+      if (buf[offset] === undefined || buf[offset + byteLength2] === undefined) {
+        boundsError(offset, buf.length - (byteLength2 + 1));
+      }
+    }
+    function checkIntBI(value, min, max, buf, offset, byteLength2) {
+      if (value > max || value < min) {
+        const n = typeof min === "bigint" ? "n" : "";
+        let range;
+        if (byteLength2 > 3) {
+          if (min === 0 || min === BigInt(0)) {
+            range = `>= 0${n} and < 2${n} ** ${(byteLength2 + 1) * 8}${n}`;
+          } else {
+            range = `>= -(2${n} ** ${(byteLength2 + 1) * 8 - 1}${n}) and < 2 ** ` + `${(byteLength2 + 1) * 8 - 1}${n}`;
+          }
+        } else {
+          range = `>= ${min}${n} and <= ${max}${n}`;
+        }
+        throw new errors.ERR_OUT_OF_RANGE("value", range, value);
+      }
+      checkBounds(buf, offset, byteLength2);
+    }
+    function validateNumber(value, name) {
+      if (typeof value !== "number") {
+        throw new errors.ERR_INVALID_ARG_TYPE(name, "number", value);
+      }
+    }
+    function boundsError(value, length, type) {
+      if (Math.floor(value) !== value) {
+        validateNumber(value, type);
+        throw new errors.ERR_OUT_OF_RANGE(type || "offset", "an integer", value);
+      }
+      if (length < 0) {
+        throw new errors.ERR_BUFFER_OUT_OF_BOUNDS;
+      }
+      throw new errors.ERR_OUT_OF_RANGE(type || "offset", `>= ${type ? 1 : 0} and <= ${length}`, value);
+    }
+    var INVALID_BASE64_RE = /[^+/0-9A-Za-z-_]/g;
+    function base64clean(str) {
+      str = str.split("=")[0];
+      str = str.trim().replace(INVALID_BASE64_RE, "");
+      if (str.length < 2)
+        return "";
+      while (str.length % 4 !== 0) {
+        str = str + "=";
+      }
+      return str;
+    }
+    function utf8ToBytes(string, units) {
+      units = units || Infinity;
+      let codePoint;
+      const length = string.length;
+      let leadSurrogate = null;
+      const bytes = [];
+      for (let i = 0;i < length; ++i) {
+        codePoint = string.charCodeAt(i);
+        if (codePoint > 55295 && codePoint < 57344) {
+          if (!leadSurrogate) {
+            if (codePoint > 56319) {
+              if ((units -= 3) > -1)
+                bytes.push(239, 191, 189);
+              continue;
+            } else if (i + 1 === length) {
+              if ((units -= 3) > -1)
+                bytes.push(239, 191, 189);
+              continue;
+            }
+            leadSurrogate = codePoint;
+            continue;
+          }
+          if (codePoint < 56320) {
+            if ((units -= 3) > -1)
+              bytes.push(239, 191, 189);
+            leadSurrogate = codePoint;
+            continue;
+          }
+          codePoint = (leadSurrogate - 55296 << 10 | codePoint - 56320) + 65536;
+        } else if (leadSurrogate) {
+          if ((units -= 3) > -1)
+            bytes.push(239, 191, 189);
+        }
+        leadSurrogate = null;
+        if (codePoint < 128) {
+          if ((units -= 1) < 0)
+            break;
+          bytes.push(codePoint);
+        } else if (codePoint < 2048) {
+          if ((units -= 2) < 0)
+            break;
+          bytes.push(codePoint >> 6 | 192, codePoint & 63 | 128);
+        } else if (codePoint < 65536) {
+          if ((units -= 3) < 0)
+            break;
+          bytes.push(codePoint >> 12 | 224, codePoint >> 6 & 63 | 128, codePoint & 63 | 128);
+        } else if (codePoint < 1114112) {
+          if ((units -= 4) < 0)
+            break;
+          bytes.push(codePoint >> 18 | 240, codePoint >> 12 & 63 | 128, codePoint >> 6 & 63 | 128, codePoint & 63 | 128);
+        } else {
+          throw new Error("Invalid code point");
+        }
+      }
+      return bytes;
+    }
+    function asciiToBytes(str) {
+      const byteArray = [];
+      for (let i = 0;i < str.length; ++i) {
+        byteArray.push(str.charCodeAt(i) & 255);
+      }
+      return byteArray;
+    }
+    function utf16leToBytes(str, units) {
+      let c, hi, lo;
+      const byteArray = [];
+      for (let i = 0;i < str.length; ++i) {
+        if ((units -= 2) < 0)
+          break;
+        c = str.charCodeAt(i);
+        hi = c >> 8;
+        lo = c % 256;
+        byteArray.push(lo);
+        byteArray.push(hi);
+      }
+      return byteArray;
+    }
+    function base64ToBytes(str) {
+      return base64.toByteArray(base64clean(str));
+    }
+    function blitBuffer(src, dst, offset, length) {
+      let i;
+      for (i = 0;i < length; ++i) {
+        if (i + offset >= dst.length || i >= src.length)
+          break;
+        dst[i + offset] = src[i];
+      }
+      return i;
+    }
+    function isInstance(obj, type) {
+      return obj instanceof type || obj != null && obj.constructor != null && obj.constructor.name != null && obj.constructor.name === type.name;
+    }
+    function numberIsNaN(obj) {
+      return obj !== obj;
+    }
+    var hexSliceLookupTable = function() {
+      const alphabet = "0123456789abcdef";
+      const table = new Array(256);
+      for (let i = 0;i < 16; ++i) {
+        const i16 = i * 16;
+        for (let j = 0;j < 16; ++j) {
+          table[i16 + j] = alphabet[i] + alphabet[j];
+        }
+      }
+      return table;
+    }();
+    function defineBigIntMethod(fn) {
+      return typeof BigInt === "undefined" ? BufferBigIntNotDefined : fn;
+    }
+    function BufferBigIntNotDefined() {
+      throw new Error("BigInt not supported");
+    }
+  });
+
+  // vendor/js/node_modules/events/events.js
+  var require_events = __commonJS((exports, module) => {
+    var R = typeof Reflect === "object" ? Reflect : null;
+    var ReflectApply = R && typeof R.apply === "function" ? R.apply : function ReflectApply2(target, receiver, args) {
+      return Function.prototype.apply.call(target, receiver, args);
+    };
+    var ReflectOwnKeys;
+    if (R && typeof R.ownKeys === "function") {
+      ReflectOwnKeys = R.ownKeys;
+    } else if (Object.getOwnPropertySymbols) {
+      ReflectOwnKeys = function ReflectOwnKeys2(target) {
+        return Object.getOwnPropertyNames(target).concat(Object.getOwnPropertySymbols(target));
+      };
+    } else {
+      ReflectOwnKeys = function ReflectOwnKeys2(target) {
+        return Object.getOwnPropertyNames(target);
+      };
+    }
+    function ProcessEmitWarning(warning) {
+      if (console && console.warn)
+        console.warn(warning);
+    }
+    var NumberIsNaN = Number.isNaN || function NumberIsNaN2(value) {
+      return value !== value;
+    };
+    function EventEmitter() {
+      EventEmitter.init.call(this);
+    }
+    module.exports = EventEmitter;
+    module.exports.once = once;
+    EventEmitter.EventEmitter = EventEmitter;
+    EventEmitter.prototype._events = undefined;
+    EventEmitter.prototype._eventsCount = 0;
+    EventEmitter.prototype._maxListeners = undefined;
+    var defaultMaxListeners = 10;
+    function checkListener(listener) {
+      if (typeof listener !== "function") {
+        throw new TypeError('The "listener" argument must be of type Function. Received type ' + typeof listener);
+      }
+    }
+    Object.defineProperty(EventEmitter, "defaultMaxListeners", {
+      enumerable: true,
+      get: function() {
+        return defaultMaxListeners;
+      },
+      set: function(arg) {
+        if (typeof arg !== "number" || arg < 0 || NumberIsNaN(arg)) {
+          throw new RangeError('The value of "defaultMaxListeners" is out of range. It must be a non-negative number. Received ' + arg + ".");
+        }
+        defaultMaxListeners = arg;
+      }
+    });
+    EventEmitter.init = function() {
+      if (this._events === undefined || this._events === Object.getPrototypeOf(this)._events) {
+        this._events = Object.create(null);
+        this._eventsCount = 0;
+      }
+      this._maxListeners = this._maxListeners || undefined;
+    };
+    EventEmitter.prototype.setMaxListeners = function setMaxListeners(n) {
+      if (typeof n !== "number" || n < 0 || NumberIsNaN(n)) {
+        throw new RangeError('The value of "n" is out of range. It must be a non-negative number. Received ' + n + ".");
+      }
+      this._maxListeners = n;
+      return this;
+    };
+    function _getMaxListeners(that) {
+      if (that._maxListeners === undefined)
+        return EventEmitter.defaultMaxListeners;
+      return that._maxListeners;
+    }
+    EventEmitter.prototype.getMaxListeners = function getMaxListeners() {
+      return _getMaxListeners(this);
+    };
+    EventEmitter.prototype.emit = function emit(type) {
+      var args = [];
+      for (var i = 1;i < arguments.length; i++)
+        args.push(arguments[i]);
+      var doError = type === "error";
+      var events = this._events;
+      if (events !== undefined)
+        doError = doError && events.error === undefined;
+      else if (!doError)
+        return false;
+      if (doError) {
+        var er;
+        if (args.length > 0)
+          er = args[0];
+        if (er instanceof Error) {
+          throw er;
+        }
+        var err = new Error("Unhandled error." + (er ? " (" + er.message + ")" : ""));
+        err.context = er;
+        throw err;
+      }
+      var handler = events[type];
+      if (handler === undefined)
+        return false;
+      if (typeof handler === "function") {
+        ReflectApply(handler, this, args);
+      } else {
+        var len = handler.length;
+        var listeners = arrayClone(handler, len);
+        for (var i = 0;i < len; ++i)
+          ReflectApply(listeners[i], this, args);
+      }
+      return true;
+    };
+    function _addListener(target, type, listener, prepend) {
+      var m;
+      var events;
+      var existing;
+      checkListener(listener);
+      events = target._events;
+      if (events === undefined) {
+        events = target._events = Object.create(null);
+        target._eventsCount = 0;
+      } else {
+        if (events.newListener !== undefined) {
+          target.emit("newListener", type, listener.listener ? listener.listener : listener);
+          events = target._events;
+        }
+        existing = events[type];
+      }
+      if (existing === undefined) {
+        existing = events[type] = listener;
+        ++target._eventsCount;
+      } else {
+        if (typeof existing === "function") {
+          existing = events[type] = prepend ? [listener, existing] : [existing, listener];
+        } else if (prepend) {
+          existing.unshift(listener);
+        } else {
+          existing.push(listener);
+        }
+        m = _getMaxListeners(target);
+        if (m > 0 && existing.length > m && !existing.warned) {
+          existing.warned = true;
+          var w = new Error("Possible EventEmitter memory leak detected. " + existing.length + " " + String(type) + " listeners " + "added. Use emitter.setMaxListeners() to " + "increase limit");
+          w.name = "MaxListenersExceededWarning";
+          w.emitter = target;
+          w.type = type;
+          w.count = existing.length;
+          ProcessEmitWarning(w);
+        }
+      }
+      return target;
+    }
+    EventEmitter.prototype.addListener = function addListener(type, listener) {
+      return _addListener(this, type, listener, false);
+    };
+    EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+    EventEmitter.prototype.prependListener = function prependListener(type, listener) {
+      return _addListener(this, type, listener, true);
+    };
+    function onceWrapper() {
+      if (!this.fired) {
+        this.target.removeListener(this.type, this.wrapFn);
+        this.fired = true;
+        if (arguments.length === 0)
+          return this.listener.call(this.target);
+        return this.listener.apply(this.target, arguments);
+      }
+    }
+    function _onceWrap(target, type, listener) {
+      var state = { fired: false, wrapFn: undefined, target, type, listener };
+      var wrapped = onceWrapper.bind(state);
+      wrapped.listener = listener;
+      state.wrapFn = wrapped;
+      return wrapped;
+    }
+    EventEmitter.prototype.once = function once2(type, listener) {
+      checkListener(listener);
+      this.on(type, _onceWrap(this, type, listener));
+      return this;
+    };
+    EventEmitter.prototype.prependOnceListener = function prependOnceListener(type, listener) {
+      checkListener(listener);
+      this.prependListener(type, _onceWrap(this, type, listener));
+      return this;
+    };
+    EventEmitter.prototype.removeListener = function removeListener(type, listener) {
+      var list, events, position, i, originalListener;
+      checkListener(listener);
+      events = this._events;
+      if (events === undefined)
+        return this;
+      list = events[type];
+      if (list === undefined)
+        return this;
+      if (list === listener || list.listener === listener) {
+        if (--this._eventsCount === 0)
+          this._events = Object.create(null);
+        else {
+          delete events[type];
+          if (events.removeListener)
+            this.emit("removeListener", type, list.listener || listener);
+        }
+      } else if (typeof list !== "function") {
+        position = -1;
+        for (i = list.length - 1;i >= 0; i--) {
+          if (list[i] === listener || list[i].listener === listener) {
+            originalListener = list[i].listener;
+            position = i;
+            break;
+          }
+        }
+        if (position < 0)
+          return this;
+        if (position === 0)
+          list.shift();
+        else {
+          spliceOne(list, position);
+        }
+        if (list.length === 1)
+          events[type] = list[0];
+        if (events.removeListener !== undefined)
+          this.emit("removeListener", type, originalListener || listener);
+      }
+      return this;
+    };
+    EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
+    EventEmitter.prototype.removeAllListeners = function removeAllListeners(type) {
+      var listeners, events, i;
+      events = this._events;
+      if (events === undefined)
+        return this;
+      if (events.removeListener === undefined) {
+        if (arguments.length === 0) {
+          this._events = Object.create(null);
+          this._eventsCount = 0;
+        } else if (events[type] !== undefined) {
+          if (--this._eventsCount === 0)
+            this._events = Object.create(null);
+          else
+            delete events[type];
+        }
+        return this;
+      }
+      if (arguments.length === 0) {
+        var keys = Object.keys(events);
+        var key;
+        for (i = 0;i < keys.length; ++i) {
+          key = keys[i];
+          if (key === "removeListener")
+            continue;
+          this.removeAllListeners(key);
+        }
+        this.removeAllListeners("removeListener");
+        this._events = Object.create(null);
+        this._eventsCount = 0;
+        return this;
+      }
+      listeners = events[type];
+      if (typeof listeners === "function") {
+        this.removeListener(type, listeners);
+      } else if (listeners !== undefined) {
+        for (i = listeners.length - 1;i >= 0; i--) {
+          this.removeListener(type, listeners[i]);
+        }
+      }
+      return this;
+    };
+    function _listeners(target, type, unwrap) {
+      var events = target._events;
+      if (events === undefined)
+        return [];
+      var evlistener = events[type];
+      if (evlistener === undefined)
+        return [];
+      if (typeof evlistener === "function")
+        return unwrap ? [evlistener.listener || evlistener] : [evlistener];
+      return unwrap ? unwrapListeners(evlistener) : arrayClone(evlistener, evlistener.length);
+    }
+    EventEmitter.prototype.listeners = function listeners(type) {
+      return _listeners(this, type, true);
+    };
+    EventEmitter.prototype.rawListeners = function rawListeners(type) {
+      return _listeners(this, type, false);
+    };
+    EventEmitter.listenerCount = function(emitter, type) {
+      if (typeof emitter.listenerCount === "function") {
+        return emitter.listenerCount(type);
+      } else {
+        return listenerCount.call(emitter, type);
+      }
+    };
+    EventEmitter.prototype.listenerCount = listenerCount;
+    function listenerCount(type) {
+      var events = this._events;
+      if (events !== undefined) {
+        var evlistener = events[type];
+        if (typeof evlistener === "function") {
+          return 1;
+        } else if (evlistener !== undefined) {
+          return evlistener.length;
+        }
+      }
+      return 0;
+    }
+    EventEmitter.prototype.eventNames = function eventNames() {
+      return this._eventsCount > 0 ? ReflectOwnKeys(this._events) : [];
+    };
+    function arrayClone(arr, n) {
+      var copy = new Array(n);
+      for (var i = 0;i < n; ++i)
+        copy[i] = arr[i];
+      return copy;
+    }
+    function spliceOne(list, index) {
+      for (;index + 1 < list.length; index++)
+        list[index] = list[index + 1];
+      list.pop();
+    }
+    function unwrapListeners(arr) {
+      var ret = new Array(arr.length);
+      for (var i = 0;i < ret.length; ++i) {
+        ret[i] = arr[i].listener || arr[i];
+      }
+      return ret;
+    }
+    function once(emitter, name) {
+      return new Promise(function(resolve, reject) {
+        function errorListener(err) {
+          emitter.removeListener(name, resolver);
+          reject(err);
+        }
+        function resolver() {
+          if (typeof emitter.removeListener === "function") {
+            emitter.removeListener("error", errorListener);
+          }
+          resolve([].slice.call(arguments));
+        }
+        eventTargetAgnosticAddListener(emitter, name, resolver, { once: true });
+        if (name !== "error") {
+          addErrorHandlerIfEventEmitter(emitter, errorListener, { once: true });
+        }
+      });
+    }
+    function addErrorHandlerIfEventEmitter(emitter, handler, flags) {
+      if (typeof emitter.on === "function") {
+        eventTargetAgnosticAddListener(emitter, "error", handler, flags);
+      }
+    }
+    function eventTargetAgnosticAddListener(emitter, name, listener, flags) {
+      if (typeof emitter.on === "function") {
+        if (flags.once) {
+          emitter.once(name, listener);
+        } else {
+          emitter.on(name, listener);
+        }
+      } else if (typeof emitter.addEventListener === "function") {
+        emitter.addEventListener(name, function wrapListener(arg) {
+          if (flags.once) {
+            emitter.removeEventListener(name, wrapListener);
+          }
+          listener(arg);
+        });
+      } else {
+        throw new TypeError('The "emitter" argument must be of type EventEmitter. Received type ' + typeof emitter);
+      }
+    }
+  });
+
+  // js/platform/bootstrap.ts
+  var exports_bootstrap = {};
+
+  class TextEncoder2 {
+    encode(value = "") {
+      return Uint8Array.from(import_buffer.Buffer.from(String(value), "utf8"));
+    }
+    encodeInto(value, destination) {
+      let read = 0, written = 0;
+      for (const char of value) {
+        const bytes = this.encode(char);
+        if (written + bytes.length > destination.length)
+          break;
+        destination.set(bytes, written);
+        written += bytes.length;
+        read += char.length;
+      }
+      return { read, written };
+    }
+  }
+
+  class TextDecoder2 {
+    constructor(label = "utf-8", options = {}) {
+      if (!["utf-8", "utf8"].includes(label.toLowerCase()) || options.fatal)
+        throw new Error("Only nonfatal UTF-8 decoding is supported");
+    }
+    decode(value = new Uint8Array, options = {}) {
+      if (options.stream)
+        throw new Error("Streaming decoding is not supported");
+      return import_buffer.Buffer.from(value.buffer ?? value, value.byteOffset ?? 0, value.byteLength).toString("utf8");
+    }
+  }
+
+  class AbortController2 {
+    signal = { aborted: false, reason: undefined, throwIfAborted() {
+      if (this.aborted)
+        throw this.reason;
+    } };
+    abort(reason = new Error("Operation aborted")) {
+      this.signal.aborted = true;
+      this.signal.reason = reason;
+    }
+  }
+  var import_buffer, import_events, process2, nextTimer = 1, timers;
+  var init_bootstrap = __esm(() => {
+    import_buffer = __toESM(require_buffer(), 1);
+    import_events = __toESM(require_events(), 1);
+    Object.assign(globalThis, { Buffer: import_buffer.Buffer });
+    process2 = Object.assign(new import_events.EventEmitter, { env: __host.env, arch: __host.arch, platform: __host.platform, versions: { quickjs: "2026-06-04" }, cwd: () => ".", nextTick: (fn, ...args) => Promise.resolve().then(() => fn(...args)), hrtime: Object.assign(() => {
+      const n = __host.now();
+      return [Math.floor(n / 1000), Math.floor(n % 1000 * 1e6)];
+    }, { bigint: () => BigInt(Math.floor(__host.now() * 1e6)) }) });
+    timers = new Map;
+    Object.assign(globalThis, {
+      TextEncoder: TextEncoder2,
+      TextDecoder: TextDecoder2,
+      AbortController: AbortController2,
+      process: process2,
+      performance: { now: __host.now },
+      console: Object.fromEntries(["log", "info", "warn", "error", "debug"].map((name) => [name, (...args) => __host.write(args.map(String).join(" ") + `
+`)])),
+      queueMicrotask: (fn) => Promise.resolve().then(() => fn()),
+      setTimeout: (fn, delay = 0, ...args) => {
+        const id = nextTimer++;
+        timers.set(id, { due: __host.now() + Math.max(0, Number(delay) || 0), fn, args });
+        return id;
+      },
+      clearTimeout: (id) => timers.delete(id),
+      setInterval: (fn, delay = 0, ...args) => {
+        const id = nextTimer++;
+        const interval = Math.max(1, Number(delay) || 0);
+        timers.set(id, { due: __host.now() + interval, fn, args, interval });
+        return id;
+      },
+      clearInterval: (id) => timers.delete(id)
+    });
+    Object.assign(globalThis, { __timers: {
+      tick() {
+        const now = __host.now();
+        let count = 0;
+        for (const [id, t] of [...timers])
+          if (t.due <= now && timers.delete(id)) {
+            if (t.interval)
+              timers.set(id, { ...t, due: now + t.interval });
+            t.fn(...t.args);
+            if (++count === 128 || __host.canDispatch && !__host.canDispatch())
+              break;
+          }
+      },
+      delay() {
+        if (!timers.size)
+          return -1;
+        return Math.max(0, Math.ceil(Math.min(...[...timers.values()].map((t) => t.due)) - __host.now()));
+      },
+      clear() {
+        timers.clear();
+      }
+    } });
+  });
+
   // vendor/js/node_modules/react/cjs/react.production.js
   var require_react_production = __commonJS((exports) => {
     var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element");
@@ -7783,2283 +10060,6 @@ No matching component was found for:
       print(`QuickTUI: React ${import_react.default.version}, QuickJS, and static OpenTUI are ready.`);
       print("Shared React libraries and native buffer bindings verified.");
     });
-  });
-
-  // vendor/js/node_modules/base64-js/index.js
-  var require_base64_js = __commonJS((exports) => {
-    exports.byteLength = byteLength;
-    exports.toByteArray = toByteArray;
-    exports.fromByteArray = fromByteArray;
-    var lookup = [];
-    var revLookup = [];
-    var Arr = typeof Uint8Array !== "undefined" ? Uint8Array : Array;
-    var code = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    for (i = 0, len = code.length;i < len; ++i) {
-      lookup[i] = code[i];
-      revLookup[code.charCodeAt(i)] = i;
-    }
-    var i;
-    var len;
-    revLookup[45] = 62;
-    revLookup[95] = 63;
-    function getLens(b64) {
-      var len2 = b64.length;
-      if (len2 % 4 > 0) {
-        throw new Error("Invalid string. Length must be a multiple of 4");
-      }
-      var validLen = b64.indexOf("=");
-      if (validLen === -1)
-        validLen = len2;
-      var placeHoldersLen = validLen === len2 ? 0 : 4 - validLen % 4;
-      return [validLen, placeHoldersLen];
-    }
-    function byteLength(b64) {
-      var lens = getLens(b64);
-      var validLen = lens[0];
-      var placeHoldersLen = lens[1];
-      return (validLen + placeHoldersLen) * 3 / 4 - placeHoldersLen;
-    }
-    function _byteLength(b64, validLen, placeHoldersLen) {
-      return (validLen + placeHoldersLen) * 3 / 4 - placeHoldersLen;
-    }
-    function toByteArray(b64) {
-      var tmp;
-      var lens = getLens(b64);
-      var validLen = lens[0];
-      var placeHoldersLen = lens[1];
-      var arr = new Arr(_byteLength(b64, validLen, placeHoldersLen));
-      var curByte = 0;
-      var len2 = placeHoldersLen > 0 ? validLen - 4 : validLen;
-      var i2;
-      for (i2 = 0;i2 < len2; i2 += 4) {
-        tmp = revLookup[b64.charCodeAt(i2)] << 18 | revLookup[b64.charCodeAt(i2 + 1)] << 12 | revLookup[b64.charCodeAt(i2 + 2)] << 6 | revLookup[b64.charCodeAt(i2 + 3)];
-        arr[curByte++] = tmp >> 16 & 255;
-        arr[curByte++] = tmp >> 8 & 255;
-        arr[curByte++] = tmp & 255;
-      }
-      if (placeHoldersLen === 2) {
-        tmp = revLookup[b64.charCodeAt(i2)] << 2 | revLookup[b64.charCodeAt(i2 + 1)] >> 4;
-        arr[curByte++] = tmp & 255;
-      }
-      if (placeHoldersLen === 1) {
-        tmp = revLookup[b64.charCodeAt(i2)] << 10 | revLookup[b64.charCodeAt(i2 + 1)] << 4 | revLookup[b64.charCodeAt(i2 + 2)] >> 2;
-        arr[curByte++] = tmp >> 8 & 255;
-        arr[curByte++] = tmp & 255;
-      }
-      return arr;
-    }
-    function tripletToBase64(num) {
-      return lookup[num >> 18 & 63] + lookup[num >> 12 & 63] + lookup[num >> 6 & 63] + lookup[num & 63];
-    }
-    function encodeChunk(uint8, start, end) {
-      var tmp;
-      var output = [];
-      for (var i2 = start;i2 < end; i2 += 3) {
-        tmp = (uint8[i2] << 16 & 16711680) + (uint8[i2 + 1] << 8 & 65280) + (uint8[i2 + 2] & 255);
-        output.push(tripletToBase64(tmp));
-      }
-      return output.join("");
-    }
-    function fromByteArray(uint8) {
-      var tmp;
-      var len2 = uint8.length;
-      var extraBytes = len2 % 3;
-      var parts = [];
-      var maxChunkLength = 16383;
-      for (var i2 = 0, len22 = len2 - extraBytes;i2 < len22; i2 += maxChunkLength) {
-        parts.push(encodeChunk(uint8, i2, i2 + maxChunkLength > len22 ? len22 : i2 + maxChunkLength));
-      }
-      if (extraBytes === 1) {
-        tmp = uint8[len2 - 1];
-        parts.push(lookup[tmp >> 2] + lookup[tmp << 4 & 63] + "==");
-      } else if (extraBytes === 2) {
-        tmp = (uint8[len2 - 2] << 8) + uint8[len2 - 1];
-        parts.push(lookup[tmp >> 10] + lookup[tmp >> 4 & 63] + lookup[tmp << 2 & 63] + "=");
-      }
-      return parts.join("");
-    }
-  });
-
-  // vendor/js/node_modules/ieee754/index.js
-  var require_ieee754 = __commonJS((exports) => {
-    /*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
-    exports.read = function(buffer, offset, isLE, mLen, nBytes) {
-      var e, m;
-      var eLen = nBytes * 8 - mLen - 1;
-      var eMax = (1 << eLen) - 1;
-      var eBias = eMax >> 1;
-      var nBits = -7;
-      var i = isLE ? nBytes - 1 : 0;
-      var d = isLE ? -1 : 1;
-      var s = buffer[offset + i];
-      i += d;
-      e = s & (1 << -nBits) - 1;
-      s >>= -nBits;
-      nBits += eLen;
-      for (;nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
-      m = e & (1 << -nBits) - 1;
-      e >>= -nBits;
-      nBits += mLen;
-      for (;nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
-      if (e === 0) {
-        e = 1 - eBias;
-      } else if (e === eMax) {
-        return m ? NaN : (s ? -1 : 1) * Infinity;
-      } else {
-        m = m + Math.pow(2, mLen);
-        e = e - eBias;
-      }
-      return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
-    };
-    exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
-      var e, m, c;
-      var eLen = nBytes * 8 - mLen - 1;
-      var eMax = (1 << eLen) - 1;
-      var eBias = eMax >> 1;
-      var rt = mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0;
-      var i = isLE ? 0 : nBytes - 1;
-      var d = isLE ? 1 : -1;
-      var s = value < 0 || value === 0 && 1 / value < 0 ? 1 : 0;
-      value = Math.abs(value);
-      if (isNaN(value) || value === Infinity) {
-        m = isNaN(value) ? 1 : 0;
-        e = eMax;
-      } else {
-        e = Math.floor(Math.log(value) / Math.LN2);
-        if (value * (c = Math.pow(2, -e)) < 1) {
-          e--;
-          c *= 2;
-        }
-        if (e + eBias >= 1) {
-          value += rt / c;
-        } else {
-          value += rt * Math.pow(2, 1 - eBias);
-        }
-        if (value * c >= 2) {
-          e++;
-          c /= 2;
-        }
-        if (e + eBias >= eMax) {
-          m = 0;
-          e = eMax;
-        } else if (e + eBias >= 1) {
-          m = (value * c - 1) * Math.pow(2, mLen);
-          e = e + eBias;
-        } else {
-          m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
-          e = 0;
-        }
-      }
-      for (;mLen >= 8; buffer[offset + i] = m & 255, i += d, m /= 256, mLen -= 8) {}
-      e = e << mLen | m;
-      eLen += mLen;
-      for (;eLen > 0; buffer[offset + i] = e & 255, i += d, e /= 256, eLen -= 8) {}
-      buffer[offset + i - d] |= s * 128;
-    };
-  });
-
-  // vendor/js/node_modules/buffer/index.js
-  var require_buffer = __commonJS((exports) => {
-    /*!
-     * The buffer module from node.js, for the browser.
-     *
-     * @author   Feross Aboukhadijeh <https://feross.org>
-     * @license  MIT
-     */
-    var base64 = require_base64_js();
-    var ieee754 = require_ieee754();
-    var customInspectSymbol = typeof Symbol === "function" && typeof Symbol["for"] === "function" ? Symbol["for"]("nodejs.util.inspect.custom") : null;
-    exports.Buffer = Buffer2;
-    exports.SlowBuffer = SlowBuffer;
-    exports.INSPECT_MAX_BYTES = 50;
-    var K_MAX_LENGTH = 2147483647;
-    exports.kMaxLength = K_MAX_LENGTH;
-    Buffer2.TYPED_ARRAY_SUPPORT = typedArraySupport();
-    if (!Buffer2.TYPED_ARRAY_SUPPORT && typeof console !== "undefined" && typeof console.error === "function") {
-      console.error("This browser lacks typed array (Uint8Array) support which is required by " + "`buffer` v5.x. Use `buffer` v4.x if you require old browser support.");
-    }
-    function typedArraySupport() {
-      try {
-        const arr = new Uint8Array(1);
-        const proto = { foo: function() {
-          return 42;
-        } };
-        Object.setPrototypeOf(proto, Uint8Array.prototype);
-        Object.setPrototypeOf(arr, proto);
-        return arr.foo() === 42;
-      } catch (e) {
-        return false;
-      }
-    }
-    Object.defineProperty(Buffer2.prototype, "parent", {
-      enumerable: true,
-      get: function() {
-        if (!Buffer2.isBuffer(this))
-          return;
-        return this.buffer;
-      }
-    });
-    Object.defineProperty(Buffer2.prototype, "offset", {
-      enumerable: true,
-      get: function() {
-        if (!Buffer2.isBuffer(this))
-          return;
-        return this.byteOffset;
-      }
-    });
-    function createBuffer(length) {
-      if (length > K_MAX_LENGTH) {
-        throw new RangeError('The value "' + length + '" is invalid for option "size"');
-      }
-      const buf = new Uint8Array(length);
-      Object.setPrototypeOf(buf, Buffer2.prototype);
-      return buf;
-    }
-    function Buffer2(arg, encodingOrOffset, length) {
-      if (typeof arg === "number") {
-        if (typeof encodingOrOffset === "string") {
-          throw new TypeError('The "string" argument must be of type string. Received type number');
-        }
-        return allocUnsafe(arg);
-      }
-      return from(arg, encodingOrOffset, length);
-    }
-    Buffer2.poolSize = 8192;
-    function from(value, encodingOrOffset, length) {
-      if (typeof value === "string") {
-        return fromString(value, encodingOrOffset);
-      }
-      if (ArrayBuffer.isView(value)) {
-        return fromArrayView(value);
-      }
-      if (value == null) {
-        throw new TypeError("The first argument must be one of type string, Buffer, ArrayBuffer, Array, " + "or Array-like Object. Received type " + typeof value);
-      }
-      if (isInstance(value, ArrayBuffer) || value && isInstance(value.buffer, ArrayBuffer)) {
-        return fromArrayBuffer(value, encodingOrOffset, length);
-      }
-      if (typeof SharedArrayBuffer !== "undefined" && (isInstance(value, SharedArrayBuffer) || value && isInstance(value.buffer, SharedArrayBuffer))) {
-        return fromArrayBuffer(value, encodingOrOffset, length);
-      }
-      if (typeof value === "number") {
-        throw new TypeError('The "value" argument must not be of type number. Received type number');
-      }
-      const valueOf = value.valueOf && value.valueOf();
-      if (valueOf != null && valueOf !== value) {
-        return Buffer2.from(valueOf, encodingOrOffset, length);
-      }
-      const b = fromObject(value);
-      if (b)
-        return b;
-      if (typeof Symbol !== "undefined" && Symbol.toPrimitive != null && typeof value[Symbol.toPrimitive] === "function") {
-        return Buffer2.from(value[Symbol.toPrimitive]("string"), encodingOrOffset, length);
-      }
-      throw new TypeError("The first argument must be one of type string, Buffer, ArrayBuffer, Array, " + "or Array-like Object. Received type " + typeof value);
-    }
-    Buffer2.from = function(value, encodingOrOffset, length) {
-      return from(value, encodingOrOffset, length);
-    };
-    Object.setPrototypeOf(Buffer2.prototype, Uint8Array.prototype);
-    Object.setPrototypeOf(Buffer2, Uint8Array);
-    function assertSize(size) {
-      if (typeof size !== "number") {
-        throw new TypeError('"size" argument must be of type number');
-      } else if (size < 0) {
-        throw new RangeError('The value "' + size + '" is invalid for option "size"');
-      }
-    }
-    function alloc(size, fill, encoding) {
-      assertSize(size);
-      if (size <= 0) {
-        return createBuffer(size);
-      }
-      if (fill !== undefined) {
-        return typeof encoding === "string" ? createBuffer(size).fill(fill, encoding) : createBuffer(size).fill(fill);
-      }
-      return createBuffer(size);
-    }
-    Buffer2.alloc = function(size, fill, encoding) {
-      return alloc(size, fill, encoding);
-    };
-    function allocUnsafe(size) {
-      assertSize(size);
-      return createBuffer(size < 0 ? 0 : checked(size) | 0);
-    }
-    Buffer2.allocUnsafe = function(size) {
-      return allocUnsafe(size);
-    };
-    Buffer2.allocUnsafeSlow = function(size) {
-      return allocUnsafe(size);
-    };
-    function fromString(string, encoding) {
-      if (typeof encoding !== "string" || encoding === "") {
-        encoding = "utf8";
-      }
-      if (!Buffer2.isEncoding(encoding)) {
-        throw new TypeError("Unknown encoding: " + encoding);
-      }
-      const length = byteLength(string, encoding) | 0;
-      let buf = createBuffer(length);
-      const actual = buf.write(string, encoding);
-      if (actual !== length) {
-        buf = buf.slice(0, actual);
-      }
-      return buf;
-    }
-    function fromArrayLike(array) {
-      const length = array.length < 0 ? 0 : checked(array.length) | 0;
-      const buf = createBuffer(length);
-      for (let i = 0;i < length; i += 1) {
-        buf[i] = array[i] & 255;
-      }
-      return buf;
-    }
-    function fromArrayView(arrayView) {
-      if (isInstance(arrayView, Uint8Array)) {
-        const copy = new Uint8Array(arrayView);
-        return fromArrayBuffer(copy.buffer, copy.byteOffset, copy.byteLength);
-      }
-      return fromArrayLike(arrayView);
-    }
-    function fromArrayBuffer(array, byteOffset, length) {
-      if (byteOffset < 0 || array.byteLength < byteOffset) {
-        throw new RangeError('"offset" is outside of buffer bounds');
-      }
-      if (array.byteLength < byteOffset + (length || 0)) {
-        throw new RangeError('"length" is outside of buffer bounds');
-      }
-      let buf;
-      if (byteOffset === undefined && length === undefined) {
-        buf = new Uint8Array(array);
-      } else if (length === undefined) {
-        buf = new Uint8Array(array, byteOffset);
-      } else {
-        buf = new Uint8Array(array, byteOffset, length);
-      }
-      Object.setPrototypeOf(buf, Buffer2.prototype);
-      return buf;
-    }
-    function fromObject(obj) {
-      if (Buffer2.isBuffer(obj)) {
-        const len = checked(obj.length) | 0;
-        const buf = createBuffer(len);
-        if (buf.length === 0) {
-          return buf;
-        }
-        obj.copy(buf, 0, 0, len);
-        return buf;
-      }
-      if (obj.length !== undefined) {
-        if (typeof obj.length !== "number" || numberIsNaN(obj.length)) {
-          return createBuffer(0);
-        }
-        return fromArrayLike(obj);
-      }
-      if (obj.type === "Buffer" && Array.isArray(obj.data)) {
-        return fromArrayLike(obj.data);
-      }
-    }
-    function checked(length) {
-      if (length >= K_MAX_LENGTH) {
-        throw new RangeError("Attempt to allocate Buffer larger than maximum " + "size: 0x" + K_MAX_LENGTH.toString(16) + " bytes");
-      }
-      return length | 0;
-    }
-    function SlowBuffer(length) {
-      if (+length != length) {
-        length = 0;
-      }
-      return Buffer2.alloc(+length);
-    }
-    Buffer2.isBuffer = function isBuffer(b) {
-      return b != null && b._isBuffer === true && b !== Buffer2.prototype;
-    };
-    Buffer2.compare = function compare(a, b) {
-      if (isInstance(a, Uint8Array))
-        a = Buffer2.from(a, a.offset, a.byteLength);
-      if (isInstance(b, Uint8Array))
-        b = Buffer2.from(b, b.offset, b.byteLength);
-      if (!Buffer2.isBuffer(a) || !Buffer2.isBuffer(b)) {
-        throw new TypeError('The "buf1", "buf2" arguments must be one of type Buffer or Uint8Array');
-      }
-      if (a === b)
-        return 0;
-      let x = a.length;
-      let y = b.length;
-      for (let i = 0, len = Math.min(x, y);i < len; ++i) {
-        if (a[i] !== b[i]) {
-          x = a[i];
-          y = b[i];
-          break;
-        }
-      }
-      if (x < y)
-        return -1;
-      if (y < x)
-        return 1;
-      return 0;
-    };
-    Buffer2.isEncoding = function isEncoding(encoding) {
-      switch (String(encoding).toLowerCase()) {
-        case "hex":
-        case "utf8":
-        case "utf-8":
-        case "ascii":
-        case "latin1":
-        case "binary":
-        case "base64":
-        case "ucs2":
-        case "ucs-2":
-        case "utf16le":
-        case "utf-16le":
-          return true;
-        default:
-          return false;
-      }
-    };
-    Buffer2.concat = function concat(list, length) {
-      if (!Array.isArray(list)) {
-        throw new TypeError('"list" argument must be an Array of Buffers');
-      }
-      if (list.length === 0) {
-        return Buffer2.alloc(0);
-      }
-      let i;
-      if (length === undefined) {
-        length = 0;
-        for (i = 0;i < list.length; ++i) {
-          length += list[i].length;
-        }
-      }
-      const buffer = Buffer2.allocUnsafe(length);
-      let pos = 0;
-      for (i = 0;i < list.length; ++i) {
-        let buf = list[i];
-        if (isInstance(buf, Uint8Array)) {
-          if (pos + buf.length > buffer.length) {
-            if (!Buffer2.isBuffer(buf))
-              buf = Buffer2.from(buf);
-            buf.copy(buffer, pos);
-          } else {
-            Uint8Array.prototype.set.call(buffer, buf, pos);
-          }
-        } else if (!Buffer2.isBuffer(buf)) {
-          throw new TypeError('"list" argument must be an Array of Buffers');
-        } else {
-          buf.copy(buffer, pos);
-        }
-        pos += buf.length;
-      }
-      return buffer;
-    };
-    function byteLength(string, encoding) {
-      if (Buffer2.isBuffer(string)) {
-        return string.length;
-      }
-      if (ArrayBuffer.isView(string) || isInstance(string, ArrayBuffer)) {
-        return string.byteLength;
-      }
-      if (typeof string !== "string") {
-        throw new TypeError('The "string" argument must be one of type string, Buffer, or ArrayBuffer. ' + "Received type " + typeof string);
-      }
-      const len = string.length;
-      const mustMatch = arguments.length > 2 && arguments[2] === true;
-      if (!mustMatch && len === 0)
-        return 0;
-      let loweredCase = false;
-      for (;; ) {
-        switch (encoding) {
-          case "ascii":
-          case "latin1":
-          case "binary":
-            return len;
-          case "utf8":
-          case "utf-8":
-            return utf8ToBytes(string).length;
-          case "ucs2":
-          case "ucs-2":
-          case "utf16le":
-          case "utf-16le":
-            return len * 2;
-          case "hex":
-            return len >>> 1;
-          case "base64":
-            return base64ToBytes(string).length;
-          default:
-            if (loweredCase) {
-              return mustMatch ? -1 : utf8ToBytes(string).length;
-            }
-            encoding = ("" + encoding).toLowerCase();
-            loweredCase = true;
-        }
-      }
-    }
-    Buffer2.byteLength = byteLength;
-    function slowToString(encoding, start, end) {
-      let loweredCase = false;
-      if (start === undefined || start < 0) {
-        start = 0;
-      }
-      if (start > this.length) {
-        return "";
-      }
-      if (end === undefined || end > this.length) {
-        end = this.length;
-      }
-      if (end <= 0) {
-        return "";
-      }
-      end >>>= 0;
-      start >>>= 0;
-      if (end <= start) {
-        return "";
-      }
-      if (!encoding)
-        encoding = "utf8";
-      while (true) {
-        switch (encoding) {
-          case "hex":
-            return hexSlice(this, start, end);
-          case "utf8":
-          case "utf-8":
-            return utf8Slice(this, start, end);
-          case "ascii":
-            return asciiSlice(this, start, end);
-          case "latin1":
-          case "binary":
-            return latin1Slice(this, start, end);
-          case "base64":
-            return base64Slice(this, start, end);
-          case "ucs2":
-          case "ucs-2":
-          case "utf16le":
-          case "utf-16le":
-            return utf16leSlice(this, start, end);
-          default:
-            if (loweredCase)
-              throw new TypeError("Unknown encoding: " + encoding);
-            encoding = (encoding + "").toLowerCase();
-            loweredCase = true;
-        }
-      }
-    }
-    Buffer2.prototype._isBuffer = true;
-    function swap(b, n, m) {
-      const i = b[n];
-      b[n] = b[m];
-      b[m] = i;
-    }
-    Buffer2.prototype.swap16 = function swap16() {
-      const len = this.length;
-      if (len % 2 !== 0) {
-        throw new RangeError("Buffer size must be a multiple of 16-bits");
-      }
-      for (let i = 0;i < len; i += 2) {
-        swap(this, i, i + 1);
-      }
-      return this;
-    };
-    Buffer2.prototype.swap32 = function swap32() {
-      const len = this.length;
-      if (len % 4 !== 0) {
-        throw new RangeError("Buffer size must be a multiple of 32-bits");
-      }
-      for (let i = 0;i < len; i += 4) {
-        swap(this, i, i + 3);
-        swap(this, i + 1, i + 2);
-      }
-      return this;
-    };
-    Buffer2.prototype.swap64 = function swap64() {
-      const len = this.length;
-      if (len % 8 !== 0) {
-        throw new RangeError("Buffer size must be a multiple of 64-bits");
-      }
-      for (let i = 0;i < len; i += 8) {
-        swap(this, i, i + 7);
-        swap(this, i + 1, i + 6);
-        swap(this, i + 2, i + 5);
-        swap(this, i + 3, i + 4);
-      }
-      return this;
-    };
-    Buffer2.prototype.toString = function toString() {
-      const length = this.length;
-      if (length === 0)
-        return "";
-      if (arguments.length === 0)
-        return utf8Slice(this, 0, length);
-      return slowToString.apply(this, arguments);
-    };
-    Buffer2.prototype.toLocaleString = Buffer2.prototype.toString;
-    Buffer2.prototype.equals = function equals(b) {
-      if (!Buffer2.isBuffer(b))
-        throw new TypeError("Argument must be a Buffer");
-      if (this === b)
-        return true;
-      return Buffer2.compare(this, b) === 0;
-    };
-    Buffer2.prototype.inspect = function inspect() {
-      let str = "";
-      const max = exports.INSPECT_MAX_BYTES;
-      str = this.toString("hex", 0, max).replace(/(.{2})/g, "$1 ").trim();
-      if (this.length > max)
-        str += " ... ";
-      return "<Buffer " + str + ">";
-    };
-    if (customInspectSymbol) {
-      Buffer2.prototype[customInspectSymbol] = Buffer2.prototype.inspect;
-    }
-    Buffer2.prototype.compare = function compare(target, start, end, thisStart, thisEnd) {
-      if (isInstance(target, Uint8Array)) {
-        target = Buffer2.from(target, target.offset, target.byteLength);
-      }
-      if (!Buffer2.isBuffer(target)) {
-        throw new TypeError('The "target" argument must be one of type Buffer or Uint8Array. ' + "Received type " + typeof target);
-      }
-      if (start === undefined) {
-        start = 0;
-      }
-      if (end === undefined) {
-        end = target ? target.length : 0;
-      }
-      if (thisStart === undefined) {
-        thisStart = 0;
-      }
-      if (thisEnd === undefined) {
-        thisEnd = this.length;
-      }
-      if (start < 0 || end > target.length || thisStart < 0 || thisEnd > this.length) {
-        throw new RangeError("out of range index");
-      }
-      if (thisStart >= thisEnd && start >= end) {
-        return 0;
-      }
-      if (thisStart >= thisEnd) {
-        return -1;
-      }
-      if (start >= end) {
-        return 1;
-      }
-      start >>>= 0;
-      end >>>= 0;
-      thisStart >>>= 0;
-      thisEnd >>>= 0;
-      if (this === target)
-        return 0;
-      let x = thisEnd - thisStart;
-      let y = end - start;
-      const len = Math.min(x, y);
-      const thisCopy = this.slice(thisStart, thisEnd);
-      const targetCopy = target.slice(start, end);
-      for (let i = 0;i < len; ++i) {
-        if (thisCopy[i] !== targetCopy[i]) {
-          x = thisCopy[i];
-          y = targetCopy[i];
-          break;
-        }
-      }
-      if (x < y)
-        return -1;
-      if (y < x)
-        return 1;
-      return 0;
-    };
-    function bidirectionalIndexOf(buffer, val, byteOffset, encoding, dir) {
-      if (buffer.length === 0)
-        return -1;
-      if (typeof byteOffset === "string") {
-        encoding = byteOffset;
-        byteOffset = 0;
-      } else if (byteOffset > 2147483647) {
-        byteOffset = 2147483647;
-      } else if (byteOffset < -2147483648) {
-        byteOffset = -2147483648;
-      }
-      byteOffset = +byteOffset;
-      if (numberIsNaN(byteOffset)) {
-        byteOffset = dir ? 0 : buffer.length - 1;
-      }
-      if (byteOffset < 0)
-        byteOffset = buffer.length + byteOffset;
-      if (byteOffset >= buffer.length) {
-        if (dir)
-          return -1;
-        else
-          byteOffset = buffer.length - 1;
-      } else if (byteOffset < 0) {
-        if (dir)
-          byteOffset = 0;
-        else
-          return -1;
-      }
-      if (typeof val === "string") {
-        val = Buffer2.from(val, encoding);
-      }
-      if (Buffer2.isBuffer(val)) {
-        if (val.length === 0) {
-          return -1;
-        }
-        return arrayIndexOf(buffer, val, byteOffset, encoding, dir);
-      } else if (typeof val === "number") {
-        val = val & 255;
-        if (typeof Uint8Array.prototype.indexOf === "function") {
-          if (dir) {
-            return Uint8Array.prototype.indexOf.call(buffer, val, byteOffset);
-          } else {
-            return Uint8Array.prototype.lastIndexOf.call(buffer, val, byteOffset);
-          }
-        }
-        return arrayIndexOf(buffer, [val], byteOffset, encoding, dir);
-      }
-      throw new TypeError("val must be string, number or Buffer");
-    }
-    function arrayIndexOf(arr, val, byteOffset, encoding, dir) {
-      let indexSize = 1;
-      let arrLength = arr.length;
-      let valLength = val.length;
-      if (encoding !== undefined) {
-        encoding = String(encoding).toLowerCase();
-        if (encoding === "ucs2" || encoding === "ucs-2" || encoding === "utf16le" || encoding === "utf-16le") {
-          if (arr.length < 2 || val.length < 2) {
-            return -1;
-          }
-          indexSize = 2;
-          arrLength /= 2;
-          valLength /= 2;
-          byteOffset /= 2;
-        }
-      }
-      function read(buf, i2) {
-        if (indexSize === 1) {
-          return buf[i2];
-        } else {
-          return buf.readUInt16BE(i2 * indexSize);
-        }
-      }
-      let i;
-      if (dir) {
-        let foundIndex = -1;
-        for (i = byteOffset;i < arrLength; i++) {
-          if (read(arr, i) === read(val, foundIndex === -1 ? 0 : i - foundIndex)) {
-            if (foundIndex === -1)
-              foundIndex = i;
-            if (i - foundIndex + 1 === valLength)
-              return foundIndex * indexSize;
-          } else {
-            if (foundIndex !== -1)
-              i -= i - foundIndex;
-            foundIndex = -1;
-          }
-        }
-      } else {
-        if (byteOffset + valLength > arrLength)
-          byteOffset = arrLength - valLength;
-        for (i = byteOffset;i >= 0; i--) {
-          let found = true;
-          for (let j = 0;j < valLength; j++) {
-            if (read(arr, i + j) !== read(val, j)) {
-              found = false;
-              break;
-            }
-          }
-          if (found)
-            return i;
-        }
-      }
-      return -1;
-    }
-    Buffer2.prototype.includes = function includes(val, byteOffset, encoding) {
-      return this.indexOf(val, byteOffset, encoding) !== -1;
-    };
-    Buffer2.prototype.indexOf = function indexOf(val, byteOffset, encoding) {
-      return bidirectionalIndexOf(this, val, byteOffset, encoding, true);
-    };
-    Buffer2.prototype.lastIndexOf = function lastIndexOf(val, byteOffset, encoding) {
-      return bidirectionalIndexOf(this, val, byteOffset, encoding, false);
-    };
-    function hexWrite(buf, string, offset, length) {
-      offset = Number(offset) || 0;
-      const remaining = buf.length - offset;
-      if (!length) {
-        length = remaining;
-      } else {
-        length = Number(length);
-        if (length > remaining) {
-          length = remaining;
-        }
-      }
-      const strLen = string.length;
-      if (length > strLen / 2) {
-        length = strLen / 2;
-      }
-      let i;
-      for (i = 0;i < length; ++i) {
-        const parsed = parseInt(string.substr(i * 2, 2), 16);
-        if (numberIsNaN(parsed))
-          return i;
-        buf[offset + i] = parsed;
-      }
-      return i;
-    }
-    function utf8Write(buf, string, offset, length) {
-      return blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length);
-    }
-    function asciiWrite(buf, string, offset, length) {
-      return blitBuffer(asciiToBytes(string), buf, offset, length);
-    }
-    function base64Write(buf, string, offset, length) {
-      return blitBuffer(base64ToBytes(string), buf, offset, length);
-    }
-    function ucs2Write(buf, string, offset, length) {
-      return blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length);
-    }
-    Buffer2.prototype.write = function write(string, offset, length, encoding) {
-      if (offset === undefined) {
-        encoding = "utf8";
-        length = this.length;
-        offset = 0;
-      } else if (length === undefined && typeof offset === "string") {
-        encoding = offset;
-        length = this.length;
-        offset = 0;
-      } else if (isFinite(offset)) {
-        offset = offset >>> 0;
-        if (isFinite(length)) {
-          length = length >>> 0;
-          if (encoding === undefined)
-            encoding = "utf8";
-        } else {
-          encoding = length;
-          length = undefined;
-        }
-      } else {
-        throw new Error("Buffer.write(string, encoding, offset[, length]) is no longer supported");
-      }
-      const remaining = this.length - offset;
-      if (length === undefined || length > remaining)
-        length = remaining;
-      if (string.length > 0 && (length < 0 || offset < 0) || offset > this.length) {
-        throw new RangeError("Attempt to write outside buffer bounds");
-      }
-      if (!encoding)
-        encoding = "utf8";
-      let loweredCase = false;
-      for (;; ) {
-        switch (encoding) {
-          case "hex":
-            return hexWrite(this, string, offset, length);
-          case "utf8":
-          case "utf-8":
-            return utf8Write(this, string, offset, length);
-          case "ascii":
-          case "latin1":
-          case "binary":
-            return asciiWrite(this, string, offset, length);
-          case "base64":
-            return base64Write(this, string, offset, length);
-          case "ucs2":
-          case "ucs-2":
-          case "utf16le":
-          case "utf-16le":
-            return ucs2Write(this, string, offset, length);
-          default:
-            if (loweredCase)
-              throw new TypeError("Unknown encoding: " + encoding);
-            encoding = ("" + encoding).toLowerCase();
-            loweredCase = true;
-        }
-      }
-    };
-    Buffer2.prototype.toJSON = function toJSON() {
-      return {
-        type: "Buffer",
-        data: Array.prototype.slice.call(this._arr || this, 0)
-      };
-    };
-    function base64Slice(buf, start, end) {
-      if (start === 0 && end === buf.length) {
-        return base64.fromByteArray(buf);
-      } else {
-        return base64.fromByteArray(buf.slice(start, end));
-      }
-    }
-    function utf8Slice(buf, start, end) {
-      end = Math.min(buf.length, end);
-      const res = [];
-      let i = start;
-      while (i < end) {
-        const firstByte = buf[i];
-        let codePoint = null;
-        let bytesPerSequence = firstByte > 239 ? 4 : firstByte > 223 ? 3 : firstByte > 191 ? 2 : 1;
-        if (i + bytesPerSequence <= end) {
-          let secondByte, thirdByte, fourthByte, tempCodePoint;
-          switch (bytesPerSequence) {
-            case 1:
-              if (firstByte < 128) {
-                codePoint = firstByte;
-              }
-              break;
-            case 2:
-              secondByte = buf[i + 1];
-              if ((secondByte & 192) === 128) {
-                tempCodePoint = (firstByte & 31) << 6 | secondByte & 63;
-                if (tempCodePoint > 127) {
-                  codePoint = tempCodePoint;
-                }
-              }
-              break;
-            case 3:
-              secondByte = buf[i + 1];
-              thirdByte = buf[i + 2];
-              if ((secondByte & 192) === 128 && (thirdByte & 192) === 128) {
-                tempCodePoint = (firstByte & 15) << 12 | (secondByte & 63) << 6 | thirdByte & 63;
-                if (tempCodePoint > 2047 && (tempCodePoint < 55296 || tempCodePoint > 57343)) {
-                  codePoint = tempCodePoint;
-                }
-              }
-              break;
-            case 4:
-              secondByte = buf[i + 1];
-              thirdByte = buf[i + 2];
-              fourthByte = buf[i + 3];
-              if ((secondByte & 192) === 128 && (thirdByte & 192) === 128 && (fourthByte & 192) === 128) {
-                tempCodePoint = (firstByte & 15) << 18 | (secondByte & 63) << 12 | (thirdByte & 63) << 6 | fourthByte & 63;
-                if (tempCodePoint > 65535 && tempCodePoint < 1114112) {
-                  codePoint = tempCodePoint;
-                }
-              }
-          }
-        }
-        if (codePoint === null) {
-          codePoint = 65533;
-          bytesPerSequence = 1;
-        } else if (codePoint > 65535) {
-          codePoint -= 65536;
-          res.push(codePoint >>> 10 & 1023 | 55296);
-          codePoint = 56320 | codePoint & 1023;
-        }
-        res.push(codePoint);
-        i += bytesPerSequence;
-      }
-      return decodeCodePointsArray(res);
-    }
-    var MAX_ARGUMENTS_LENGTH = 4096;
-    function decodeCodePointsArray(codePoints) {
-      const len = codePoints.length;
-      if (len <= MAX_ARGUMENTS_LENGTH) {
-        return String.fromCharCode.apply(String, codePoints);
-      }
-      let res = "";
-      let i = 0;
-      while (i < len) {
-        res += String.fromCharCode.apply(String, codePoints.slice(i, i += MAX_ARGUMENTS_LENGTH));
-      }
-      return res;
-    }
-    function asciiSlice(buf, start, end) {
-      let ret = "";
-      end = Math.min(buf.length, end);
-      for (let i = start;i < end; ++i) {
-        ret += String.fromCharCode(buf[i] & 127);
-      }
-      return ret;
-    }
-    function latin1Slice(buf, start, end) {
-      let ret = "";
-      end = Math.min(buf.length, end);
-      for (let i = start;i < end; ++i) {
-        ret += String.fromCharCode(buf[i]);
-      }
-      return ret;
-    }
-    function hexSlice(buf, start, end) {
-      const len = buf.length;
-      if (!start || start < 0)
-        start = 0;
-      if (!end || end < 0 || end > len)
-        end = len;
-      let out = "";
-      for (let i = start;i < end; ++i) {
-        out += hexSliceLookupTable[buf[i]];
-      }
-      return out;
-    }
-    function utf16leSlice(buf, start, end) {
-      const bytes = buf.slice(start, end);
-      let res = "";
-      for (let i = 0;i < bytes.length - 1; i += 2) {
-        res += String.fromCharCode(bytes[i] + bytes[i + 1] * 256);
-      }
-      return res;
-    }
-    Buffer2.prototype.slice = function slice(start, end) {
-      const len = this.length;
-      start = ~~start;
-      end = end === undefined ? len : ~~end;
-      if (start < 0) {
-        start += len;
-        if (start < 0)
-          start = 0;
-      } else if (start > len) {
-        start = len;
-      }
-      if (end < 0) {
-        end += len;
-        if (end < 0)
-          end = 0;
-      } else if (end > len) {
-        end = len;
-      }
-      if (end < start)
-        end = start;
-      const newBuf = this.subarray(start, end);
-      Object.setPrototypeOf(newBuf, Buffer2.prototype);
-      return newBuf;
-    };
-    function checkOffset(offset, ext, length) {
-      if (offset % 1 !== 0 || offset < 0)
-        throw new RangeError("offset is not uint");
-      if (offset + ext > length)
-        throw new RangeError("Trying to access beyond buffer length");
-    }
-    Buffer2.prototype.readUintLE = Buffer2.prototype.readUIntLE = function readUIntLE(offset, byteLength2, noAssert) {
-      offset = offset >>> 0;
-      byteLength2 = byteLength2 >>> 0;
-      if (!noAssert)
-        checkOffset(offset, byteLength2, this.length);
-      let val = this[offset];
-      let mul = 1;
-      let i = 0;
-      while (++i < byteLength2 && (mul *= 256)) {
-        val += this[offset + i] * mul;
-      }
-      return val;
-    };
-    Buffer2.prototype.readUintBE = Buffer2.prototype.readUIntBE = function readUIntBE(offset, byteLength2, noAssert) {
-      offset = offset >>> 0;
-      byteLength2 = byteLength2 >>> 0;
-      if (!noAssert) {
-        checkOffset(offset, byteLength2, this.length);
-      }
-      let val = this[offset + --byteLength2];
-      let mul = 1;
-      while (byteLength2 > 0 && (mul *= 256)) {
-        val += this[offset + --byteLength2] * mul;
-      }
-      return val;
-    };
-    Buffer2.prototype.readUint8 = Buffer2.prototype.readUInt8 = function readUInt8(offset, noAssert) {
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkOffset(offset, 1, this.length);
-      return this[offset];
-    };
-    Buffer2.prototype.readUint16LE = Buffer2.prototype.readUInt16LE = function readUInt16LE(offset, noAssert) {
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkOffset(offset, 2, this.length);
-      return this[offset] | this[offset + 1] << 8;
-    };
-    Buffer2.prototype.readUint16BE = Buffer2.prototype.readUInt16BE = function readUInt16BE(offset, noAssert) {
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkOffset(offset, 2, this.length);
-      return this[offset] << 8 | this[offset + 1];
-    };
-    Buffer2.prototype.readUint32LE = Buffer2.prototype.readUInt32LE = function readUInt32LE(offset, noAssert) {
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkOffset(offset, 4, this.length);
-      return (this[offset] | this[offset + 1] << 8 | this[offset + 2] << 16) + this[offset + 3] * 16777216;
-    };
-    Buffer2.prototype.readUint32BE = Buffer2.prototype.readUInt32BE = function readUInt32BE(offset, noAssert) {
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkOffset(offset, 4, this.length);
-      return this[offset] * 16777216 + (this[offset + 1] << 16 | this[offset + 2] << 8 | this[offset + 3]);
-    };
-    Buffer2.prototype.readBigUInt64LE = defineBigIntMethod(function readBigUInt64LE(offset) {
-      offset = offset >>> 0;
-      validateNumber(offset, "offset");
-      const first = this[offset];
-      const last = this[offset + 7];
-      if (first === undefined || last === undefined) {
-        boundsError(offset, this.length - 8);
-      }
-      const lo = first + this[++offset] * 2 ** 8 + this[++offset] * 2 ** 16 + this[++offset] * 2 ** 24;
-      const hi = this[++offset] + this[++offset] * 2 ** 8 + this[++offset] * 2 ** 16 + last * 2 ** 24;
-      return BigInt(lo) + (BigInt(hi) << BigInt(32));
-    });
-    Buffer2.prototype.readBigUInt64BE = defineBigIntMethod(function readBigUInt64BE(offset) {
-      offset = offset >>> 0;
-      validateNumber(offset, "offset");
-      const first = this[offset];
-      const last = this[offset + 7];
-      if (first === undefined || last === undefined) {
-        boundsError(offset, this.length - 8);
-      }
-      const hi = first * 2 ** 24 + this[++offset] * 2 ** 16 + this[++offset] * 2 ** 8 + this[++offset];
-      const lo = this[++offset] * 2 ** 24 + this[++offset] * 2 ** 16 + this[++offset] * 2 ** 8 + last;
-      return (BigInt(hi) << BigInt(32)) + BigInt(lo);
-    });
-    Buffer2.prototype.readIntLE = function readIntLE(offset, byteLength2, noAssert) {
-      offset = offset >>> 0;
-      byteLength2 = byteLength2 >>> 0;
-      if (!noAssert)
-        checkOffset(offset, byteLength2, this.length);
-      let val = this[offset];
-      let mul = 1;
-      let i = 0;
-      while (++i < byteLength2 && (mul *= 256)) {
-        val += this[offset + i] * mul;
-      }
-      mul *= 128;
-      if (val >= mul)
-        val -= Math.pow(2, 8 * byteLength2);
-      return val;
-    };
-    Buffer2.prototype.readIntBE = function readIntBE(offset, byteLength2, noAssert) {
-      offset = offset >>> 0;
-      byteLength2 = byteLength2 >>> 0;
-      if (!noAssert)
-        checkOffset(offset, byteLength2, this.length);
-      let i = byteLength2;
-      let mul = 1;
-      let val = this[offset + --i];
-      while (i > 0 && (mul *= 256)) {
-        val += this[offset + --i] * mul;
-      }
-      mul *= 128;
-      if (val >= mul)
-        val -= Math.pow(2, 8 * byteLength2);
-      return val;
-    };
-    Buffer2.prototype.readInt8 = function readInt8(offset, noAssert) {
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkOffset(offset, 1, this.length);
-      if (!(this[offset] & 128))
-        return this[offset];
-      return (255 - this[offset] + 1) * -1;
-    };
-    Buffer2.prototype.readInt16LE = function readInt16LE(offset, noAssert) {
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkOffset(offset, 2, this.length);
-      const val = this[offset] | this[offset + 1] << 8;
-      return val & 32768 ? val | 4294901760 : val;
-    };
-    Buffer2.prototype.readInt16BE = function readInt16BE(offset, noAssert) {
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkOffset(offset, 2, this.length);
-      const val = this[offset + 1] | this[offset] << 8;
-      return val & 32768 ? val | 4294901760 : val;
-    };
-    Buffer2.prototype.readInt32LE = function readInt32LE(offset, noAssert) {
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkOffset(offset, 4, this.length);
-      return this[offset] | this[offset + 1] << 8 | this[offset + 2] << 16 | this[offset + 3] << 24;
-    };
-    Buffer2.prototype.readInt32BE = function readInt32BE(offset, noAssert) {
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkOffset(offset, 4, this.length);
-      return this[offset] << 24 | this[offset + 1] << 16 | this[offset + 2] << 8 | this[offset + 3];
-    };
-    Buffer2.prototype.readBigInt64LE = defineBigIntMethod(function readBigInt64LE(offset) {
-      offset = offset >>> 0;
-      validateNumber(offset, "offset");
-      const first = this[offset];
-      const last = this[offset + 7];
-      if (first === undefined || last === undefined) {
-        boundsError(offset, this.length - 8);
-      }
-      const val = this[offset + 4] + this[offset + 5] * 2 ** 8 + this[offset + 6] * 2 ** 16 + (last << 24);
-      return (BigInt(val) << BigInt(32)) + BigInt(first + this[++offset] * 2 ** 8 + this[++offset] * 2 ** 16 + this[++offset] * 2 ** 24);
-    });
-    Buffer2.prototype.readBigInt64BE = defineBigIntMethod(function readBigInt64BE(offset) {
-      offset = offset >>> 0;
-      validateNumber(offset, "offset");
-      const first = this[offset];
-      const last = this[offset + 7];
-      if (first === undefined || last === undefined) {
-        boundsError(offset, this.length - 8);
-      }
-      const val = (first << 24) + this[++offset] * 2 ** 16 + this[++offset] * 2 ** 8 + this[++offset];
-      return (BigInt(val) << BigInt(32)) + BigInt(this[++offset] * 2 ** 24 + this[++offset] * 2 ** 16 + this[++offset] * 2 ** 8 + last);
-    });
-    Buffer2.prototype.readFloatLE = function readFloatLE(offset, noAssert) {
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkOffset(offset, 4, this.length);
-      return ieee754.read(this, offset, true, 23, 4);
-    };
-    Buffer2.prototype.readFloatBE = function readFloatBE(offset, noAssert) {
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkOffset(offset, 4, this.length);
-      return ieee754.read(this, offset, false, 23, 4);
-    };
-    Buffer2.prototype.readDoubleLE = function readDoubleLE(offset, noAssert) {
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkOffset(offset, 8, this.length);
-      return ieee754.read(this, offset, true, 52, 8);
-    };
-    Buffer2.prototype.readDoubleBE = function readDoubleBE(offset, noAssert) {
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkOffset(offset, 8, this.length);
-      return ieee754.read(this, offset, false, 52, 8);
-    };
-    function checkInt(buf, value, offset, ext, max, min) {
-      if (!Buffer2.isBuffer(buf))
-        throw new TypeError('"buffer" argument must be a Buffer instance');
-      if (value > max || value < min)
-        throw new RangeError('"value" argument is out of bounds');
-      if (offset + ext > buf.length)
-        throw new RangeError("Index out of range");
-    }
-    Buffer2.prototype.writeUintLE = Buffer2.prototype.writeUIntLE = function writeUIntLE(value, offset, byteLength2, noAssert) {
-      value = +value;
-      offset = offset >>> 0;
-      byteLength2 = byteLength2 >>> 0;
-      if (!noAssert) {
-        const maxBytes = Math.pow(2, 8 * byteLength2) - 1;
-        checkInt(this, value, offset, byteLength2, maxBytes, 0);
-      }
-      let mul = 1;
-      let i = 0;
-      this[offset] = value & 255;
-      while (++i < byteLength2 && (mul *= 256)) {
-        this[offset + i] = value / mul & 255;
-      }
-      return offset + byteLength2;
-    };
-    Buffer2.prototype.writeUintBE = Buffer2.prototype.writeUIntBE = function writeUIntBE(value, offset, byteLength2, noAssert) {
-      value = +value;
-      offset = offset >>> 0;
-      byteLength2 = byteLength2 >>> 0;
-      if (!noAssert) {
-        const maxBytes = Math.pow(2, 8 * byteLength2) - 1;
-        checkInt(this, value, offset, byteLength2, maxBytes, 0);
-      }
-      let i = byteLength2 - 1;
-      let mul = 1;
-      this[offset + i] = value & 255;
-      while (--i >= 0 && (mul *= 256)) {
-        this[offset + i] = value / mul & 255;
-      }
-      return offset + byteLength2;
-    };
-    Buffer2.prototype.writeUint8 = Buffer2.prototype.writeUInt8 = function writeUInt8(value, offset, noAssert) {
-      value = +value;
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkInt(this, value, offset, 1, 255, 0);
-      this[offset] = value & 255;
-      return offset + 1;
-    };
-    Buffer2.prototype.writeUint16LE = Buffer2.prototype.writeUInt16LE = function writeUInt16LE(value, offset, noAssert) {
-      value = +value;
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkInt(this, value, offset, 2, 65535, 0);
-      this[offset] = value & 255;
-      this[offset + 1] = value >>> 8;
-      return offset + 2;
-    };
-    Buffer2.prototype.writeUint16BE = Buffer2.prototype.writeUInt16BE = function writeUInt16BE(value, offset, noAssert) {
-      value = +value;
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkInt(this, value, offset, 2, 65535, 0);
-      this[offset] = value >>> 8;
-      this[offset + 1] = value & 255;
-      return offset + 2;
-    };
-    Buffer2.prototype.writeUint32LE = Buffer2.prototype.writeUInt32LE = function writeUInt32LE(value, offset, noAssert) {
-      value = +value;
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkInt(this, value, offset, 4, 4294967295, 0);
-      this[offset + 3] = value >>> 24;
-      this[offset + 2] = value >>> 16;
-      this[offset + 1] = value >>> 8;
-      this[offset] = value & 255;
-      return offset + 4;
-    };
-    Buffer2.prototype.writeUint32BE = Buffer2.prototype.writeUInt32BE = function writeUInt32BE(value, offset, noAssert) {
-      value = +value;
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkInt(this, value, offset, 4, 4294967295, 0);
-      this[offset] = value >>> 24;
-      this[offset + 1] = value >>> 16;
-      this[offset + 2] = value >>> 8;
-      this[offset + 3] = value & 255;
-      return offset + 4;
-    };
-    function wrtBigUInt64LE(buf, value, offset, min, max) {
-      checkIntBI(value, min, max, buf, offset, 7);
-      let lo = Number(value & BigInt(4294967295));
-      buf[offset++] = lo;
-      lo = lo >> 8;
-      buf[offset++] = lo;
-      lo = lo >> 8;
-      buf[offset++] = lo;
-      lo = lo >> 8;
-      buf[offset++] = lo;
-      let hi = Number(value >> BigInt(32) & BigInt(4294967295));
-      buf[offset++] = hi;
-      hi = hi >> 8;
-      buf[offset++] = hi;
-      hi = hi >> 8;
-      buf[offset++] = hi;
-      hi = hi >> 8;
-      buf[offset++] = hi;
-      return offset;
-    }
-    function wrtBigUInt64BE(buf, value, offset, min, max) {
-      checkIntBI(value, min, max, buf, offset, 7);
-      let lo = Number(value & BigInt(4294967295));
-      buf[offset + 7] = lo;
-      lo = lo >> 8;
-      buf[offset + 6] = lo;
-      lo = lo >> 8;
-      buf[offset + 5] = lo;
-      lo = lo >> 8;
-      buf[offset + 4] = lo;
-      let hi = Number(value >> BigInt(32) & BigInt(4294967295));
-      buf[offset + 3] = hi;
-      hi = hi >> 8;
-      buf[offset + 2] = hi;
-      hi = hi >> 8;
-      buf[offset + 1] = hi;
-      hi = hi >> 8;
-      buf[offset] = hi;
-      return offset + 8;
-    }
-    Buffer2.prototype.writeBigUInt64LE = defineBigIntMethod(function writeBigUInt64LE(value, offset = 0) {
-      return wrtBigUInt64LE(this, value, offset, BigInt(0), BigInt("0xffffffffffffffff"));
-    });
-    Buffer2.prototype.writeBigUInt64BE = defineBigIntMethod(function writeBigUInt64BE(value, offset = 0) {
-      return wrtBigUInt64BE(this, value, offset, BigInt(0), BigInt("0xffffffffffffffff"));
-    });
-    Buffer2.prototype.writeIntLE = function writeIntLE(value, offset, byteLength2, noAssert) {
-      value = +value;
-      offset = offset >>> 0;
-      if (!noAssert) {
-        const limit = Math.pow(2, 8 * byteLength2 - 1);
-        checkInt(this, value, offset, byteLength2, limit - 1, -limit);
-      }
-      let i = 0;
-      let mul = 1;
-      let sub = 0;
-      this[offset] = value & 255;
-      while (++i < byteLength2 && (mul *= 256)) {
-        if (value < 0 && sub === 0 && this[offset + i - 1] !== 0) {
-          sub = 1;
-        }
-        this[offset + i] = (value / mul >> 0) - sub & 255;
-      }
-      return offset + byteLength2;
-    };
-    Buffer2.prototype.writeIntBE = function writeIntBE(value, offset, byteLength2, noAssert) {
-      value = +value;
-      offset = offset >>> 0;
-      if (!noAssert) {
-        const limit = Math.pow(2, 8 * byteLength2 - 1);
-        checkInt(this, value, offset, byteLength2, limit - 1, -limit);
-      }
-      let i = byteLength2 - 1;
-      let mul = 1;
-      let sub = 0;
-      this[offset + i] = value & 255;
-      while (--i >= 0 && (mul *= 256)) {
-        if (value < 0 && sub === 0 && this[offset + i + 1] !== 0) {
-          sub = 1;
-        }
-        this[offset + i] = (value / mul >> 0) - sub & 255;
-      }
-      return offset + byteLength2;
-    };
-    Buffer2.prototype.writeInt8 = function writeInt8(value, offset, noAssert) {
-      value = +value;
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkInt(this, value, offset, 1, 127, -128);
-      if (value < 0)
-        value = 255 + value + 1;
-      this[offset] = value & 255;
-      return offset + 1;
-    };
-    Buffer2.prototype.writeInt16LE = function writeInt16LE(value, offset, noAssert) {
-      value = +value;
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkInt(this, value, offset, 2, 32767, -32768);
-      this[offset] = value & 255;
-      this[offset + 1] = value >>> 8;
-      return offset + 2;
-    };
-    Buffer2.prototype.writeInt16BE = function writeInt16BE(value, offset, noAssert) {
-      value = +value;
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkInt(this, value, offset, 2, 32767, -32768);
-      this[offset] = value >>> 8;
-      this[offset + 1] = value & 255;
-      return offset + 2;
-    };
-    Buffer2.prototype.writeInt32LE = function writeInt32LE(value, offset, noAssert) {
-      value = +value;
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkInt(this, value, offset, 4, 2147483647, -2147483648);
-      this[offset] = value & 255;
-      this[offset + 1] = value >>> 8;
-      this[offset + 2] = value >>> 16;
-      this[offset + 3] = value >>> 24;
-      return offset + 4;
-    };
-    Buffer2.prototype.writeInt32BE = function writeInt32BE(value, offset, noAssert) {
-      value = +value;
-      offset = offset >>> 0;
-      if (!noAssert)
-        checkInt(this, value, offset, 4, 2147483647, -2147483648);
-      if (value < 0)
-        value = 4294967295 + value + 1;
-      this[offset] = value >>> 24;
-      this[offset + 1] = value >>> 16;
-      this[offset + 2] = value >>> 8;
-      this[offset + 3] = value & 255;
-      return offset + 4;
-    };
-    Buffer2.prototype.writeBigInt64LE = defineBigIntMethod(function writeBigInt64LE(value, offset = 0) {
-      return wrtBigUInt64LE(this, value, offset, -BigInt("0x8000000000000000"), BigInt("0x7fffffffffffffff"));
-    });
-    Buffer2.prototype.writeBigInt64BE = defineBigIntMethod(function writeBigInt64BE(value, offset = 0) {
-      return wrtBigUInt64BE(this, value, offset, -BigInt("0x8000000000000000"), BigInt("0x7fffffffffffffff"));
-    });
-    function checkIEEE754(buf, value, offset, ext, max, min) {
-      if (offset + ext > buf.length)
-        throw new RangeError("Index out of range");
-      if (offset < 0)
-        throw new RangeError("Index out of range");
-    }
-    function writeFloat(buf, value, offset, littleEndian, noAssert) {
-      value = +value;
-      offset = offset >>> 0;
-      if (!noAssert) {
-        checkIEEE754(buf, value, offset, 4, 340282346638528860000000000000000000000, -340282346638528860000000000000000000000);
-      }
-      ieee754.write(buf, value, offset, littleEndian, 23, 4);
-      return offset + 4;
-    }
-    Buffer2.prototype.writeFloatLE = function writeFloatLE(value, offset, noAssert) {
-      return writeFloat(this, value, offset, true, noAssert);
-    };
-    Buffer2.prototype.writeFloatBE = function writeFloatBE(value, offset, noAssert) {
-      return writeFloat(this, value, offset, false, noAssert);
-    };
-    function writeDouble(buf, value, offset, littleEndian, noAssert) {
-      value = +value;
-      offset = offset >>> 0;
-      if (!noAssert) {
-        checkIEEE754(buf, value, offset, 8, 179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000, -179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000);
-      }
-      ieee754.write(buf, value, offset, littleEndian, 52, 8);
-      return offset + 8;
-    }
-    Buffer2.prototype.writeDoubleLE = function writeDoubleLE(value, offset, noAssert) {
-      return writeDouble(this, value, offset, true, noAssert);
-    };
-    Buffer2.prototype.writeDoubleBE = function writeDoubleBE(value, offset, noAssert) {
-      return writeDouble(this, value, offset, false, noAssert);
-    };
-    Buffer2.prototype.copy = function copy(target, targetStart, start, end) {
-      if (!Buffer2.isBuffer(target))
-        throw new TypeError("argument should be a Buffer");
-      if (!start)
-        start = 0;
-      if (!end && end !== 0)
-        end = this.length;
-      if (targetStart >= target.length)
-        targetStart = target.length;
-      if (!targetStart)
-        targetStart = 0;
-      if (end > 0 && end < start)
-        end = start;
-      if (end === start)
-        return 0;
-      if (target.length === 0 || this.length === 0)
-        return 0;
-      if (targetStart < 0) {
-        throw new RangeError("targetStart out of bounds");
-      }
-      if (start < 0 || start >= this.length)
-        throw new RangeError("Index out of range");
-      if (end < 0)
-        throw new RangeError("sourceEnd out of bounds");
-      if (end > this.length)
-        end = this.length;
-      if (target.length - targetStart < end - start) {
-        end = target.length - targetStart + start;
-      }
-      const len = end - start;
-      if (this === target && typeof Uint8Array.prototype.copyWithin === "function") {
-        this.copyWithin(targetStart, start, end);
-      } else {
-        Uint8Array.prototype.set.call(target, this.subarray(start, end), targetStart);
-      }
-      return len;
-    };
-    Buffer2.prototype.fill = function fill(val, start, end, encoding) {
-      if (typeof val === "string") {
-        if (typeof start === "string") {
-          encoding = start;
-          start = 0;
-          end = this.length;
-        } else if (typeof end === "string") {
-          encoding = end;
-          end = this.length;
-        }
-        if (encoding !== undefined && typeof encoding !== "string") {
-          throw new TypeError("encoding must be a string");
-        }
-        if (typeof encoding === "string" && !Buffer2.isEncoding(encoding)) {
-          throw new TypeError("Unknown encoding: " + encoding);
-        }
-        if (val.length === 1) {
-          const code = val.charCodeAt(0);
-          if (encoding === "utf8" && code < 128 || encoding === "latin1") {
-            val = code;
-          }
-        }
-      } else if (typeof val === "number") {
-        val = val & 255;
-      } else if (typeof val === "boolean") {
-        val = Number(val);
-      }
-      if (start < 0 || this.length < start || this.length < end) {
-        throw new RangeError("Out of range index");
-      }
-      if (end <= start) {
-        return this;
-      }
-      start = start >>> 0;
-      end = end === undefined ? this.length : end >>> 0;
-      if (!val)
-        val = 0;
-      let i;
-      if (typeof val === "number") {
-        for (i = start;i < end; ++i) {
-          this[i] = val;
-        }
-      } else {
-        const bytes = Buffer2.isBuffer(val) ? val : Buffer2.from(val, encoding);
-        const len = bytes.length;
-        if (len === 0) {
-          throw new TypeError('The value "' + val + '" is invalid for argument "value"');
-        }
-        for (i = 0;i < end - start; ++i) {
-          this[i + start] = bytes[i % len];
-        }
-      }
-      return this;
-    };
-    var errors = {};
-    function E(sym, getMessage, Base) {
-      errors[sym] = class NodeError extends Base {
-        constructor() {
-          super();
-          Object.defineProperty(this, "message", {
-            value: getMessage.apply(this, arguments),
-            writable: true,
-            configurable: true
-          });
-          this.name = `${this.name} [${sym}]`;
-          this.stack;
-          delete this.name;
-        }
-        get code() {
-          return sym;
-        }
-        set code(value) {
-          Object.defineProperty(this, "code", {
-            configurable: true,
-            enumerable: true,
-            value,
-            writable: true
-          });
-        }
-        toString() {
-          return `${this.name} [${sym}]: ${this.message}`;
-        }
-      };
-    }
-    E("ERR_BUFFER_OUT_OF_BOUNDS", function(name) {
-      if (name) {
-        return `${name} is outside of buffer bounds`;
-      }
-      return "Attempt to access memory outside buffer bounds";
-    }, RangeError);
-    E("ERR_INVALID_ARG_TYPE", function(name, actual) {
-      return `The "${name}" argument must be of type number. Received type ${typeof actual}`;
-    }, TypeError);
-    E("ERR_OUT_OF_RANGE", function(str, range, input) {
-      let msg = `The value of "${str}" is out of range.`;
-      let received = input;
-      if (Number.isInteger(input) && Math.abs(input) > 2 ** 32) {
-        received = addNumericalSeparator(String(input));
-      } else if (typeof input === "bigint") {
-        received = String(input);
-        if (input > BigInt(2) ** BigInt(32) || input < -(BigInt(2) ** BigInt(32))) {
-          received = addNumericalSeparator(received);
-        }
-        received += "n";
-      }
-      msg += ` It must be ${range}. Received ${received}`;
-      return msg;
-    }, RangeError);
-    function addNumericalSeparator(val) {
-      let res = "";
-      let i = val.length;
-      const start = val[0] === "-" ? 1 : 0;
-      for (;i >= start + 4; i -= 3) {
-        res = `_${val.slice(i - 3, i)}${res}`;
-      }
-      return `${val.slice(0, i)}${res}`;
-    }
-    function checkBounds(buf, offset, byteLength2) {
-      validateNumber(offset, "offset");
-      if (buf[offset] === undefined || buf[offset + byteLength2] === undefined) {
-        boundsError(offset, buf.length - (byteLength2 + 1));
-      }
-    }
-    function checkIntBI(value, min, max, buf, offset, byteLength2) {
-      if (value > max || value < min) {
-        const n = typeof min === "bigint" ? "n" : "";
-        let range;
-        if (byteLength2 > 3) {
-          if (min === 0 || min === BigInt(0)) {
-            range = `>= 0${n} and < 2${n} ** ${(byteLength2 + 1) * 8}${n}`;
-          } else {
-            range = `>= -(2${n} ** ${(byteLength2 + 1) * 8 - 1}${n}) and < 2 ** ` + `${(byteLength2 + 1) * 8 - 1}${n}`;
-          }
-        } else {
-          range = `>= ${min}${n} and <= ${max}${n}`;
-        }
-        throw new errors.ERR_OUT_OF_RANGE("value", range, value);
-      }
-      checkBounds(buf, offset, byteLength2);
-    }
-    function validateNumber(value, name) {
-      if (typeof value !== "number") {
-        throw new errors.ERR_INVALID_ARG_TYPE(name, "number", value);
-      }
-    }
-    function boundsError(value, length, type) {
-      if (Math.floor(value) !== value) {
-        validateNumber(value, type);
-        throw new errors.ERR_OUT_OF_RANGE(type || "offset", "an integer", value);
-      }
-      if (length < 0) {
-        throw new errors.ERR_BUFFER_OUT_OF_BOUNDS;
-      }
-      throw new errors.ERR_OUT_OF_RANGE(type || "offset", `>= ${type ? 1 : 0} and <= ${length}`, value);
-    }
-    var INVALID_BASE64_RE = /[^+/0-9A-Za-z-_]/g;
-    function base64clean(str) {
-      str = str.split("=")[0];
-      str = str.trim().replace(INVALID_BASE64_RE, "");
-      if (str.length < 2)
-        return "";
-      while (str.length % 4 !== 0) {
-        str = str + "=";
-      }
-      return str;
-    }
-    function utf8ToBytes(string, units) {
-      units = units || Infinity;
-      let codePoint;
-      const length = string.length;
-      let leadSurrogate = null;
-      const bytes = [];
-      for (let i = 0;i < length; ++i) {
-        codePoint = string.charCodeAt(i);
-        if (codePoint > 55295 && codePoint < 57344) {
-          if (!leadSurrogate) {
-            if (codePoint > 56319) {
-              if ((units -= 3) > -1)
-                bytes.push(239, 191, 189);
-              continue;
-            } else if (i + 1 === length) {
-              if ((units -= 3) > -1)
-                bytes.push(239, 191, 189);
-              continue;
-            }
-            leadSurrogate = codePoint;
-            continue;
-          }
-          if (codePoint < 56320) {
-            if ((units -= 3) > -1)
-              bytes.push(239, 191, 189);
-            leadSurrogate = codePoint;
-            continue;
-          }
-          codePoint = (leadSurrogate - 55296 << 10 | codePoint - 56320) + 65536;
-        } else if (leadSurrogate) {
-          if ((units -= 3) > -1)
-            bytes.push(239, 191, 189);
-        }
-        leadSurrogate = null;
-        if (codePoint < 128) {
-          if ((units -= 1) < 0)
-            break;
-          bytes.push(codePoint);
-        } else if (codePoint < 2048) {
-          if ((units -= 2) < 0)
-            break;
-          bytes.push(codePoint >> 6 | 192, codePoint & 63 | 128);
-        } else if (codePoint < 65536) {
-          if ((units -= 3) < 0)
-            break;
-          bytes.push(codePoint >> 12 | 224, codePoint >> 6 & 63 | 128, codePoint & 63 | 128);
-        } else if (codePoint < 1114112) {
-          if ((units -= 4) < 0)
-            break;
-          bytes.push(codePoint >> 18 | 240, codePoint >> 12 & 63 | 128, codePoint >> 6 & 63 | 128, codePoint & 63 | 128);
-        } else {
-          throw new Error("Invalid code point");
-        }
-      }
-      return bytes;
-    }
-    function asciiToBytes(str) {
-      const byteArray = [];
-      for (let i = 0;i < str.length; ++i) {
-        byteArray.push(str.charCodeAt(i) & 255);
-      }
-      return byteArray;
-    }
-    function utf16leToBytes(str, units) {
-      let c, hi, lo;
-      const byteArray = [];
-      for (let i = 0;i < str.length; ++i) {
-        if ((units -= 2) < 0)
-          break;
-        c = str.charCodeAt(i);
-        hi = c >> 8;
-        lo = c % 256;
-        byteArray.push(lo);
-        byteArray.push(hi);
-      }
-      return byteArray;
-    }
-    function base64ToBytes(str) {
-      return base64.toByteArray(base64clean(str));
-    }
-    function blitBuffer(src, dst, offset, length) {
-      let i;
-      for (i = 0;i < length; ++i) {
-        if (i + offset >= dst.length || i >= src.length)
-          break;
-        dst[i + offset] = src[i];
-      }
-      return i;
-    }
-    function isInstance(obj, type) {
-      return obj instanceof type || obj != null && obj.constructor != null && obj.constructor.name != null && obj.constructor.name === type.name;
-    }
-    function numberIsNaN(obj) {
-      return obj !== obj;
-    }
-    var hexSliceLookupTable = function() {
-      const alphabet = "0123456789abcdef";
-      const table = new Array(256);
-      for (let i = 0;i < 16; ++i) {
-        const i16 = i * 16;
-        for (let j = 0;j < 16; ++j) {
-          table[i16 + j] = alphabet[i] + alphabet[j];
-        }
-      }
-      return table;
-    }();
-    function defineBigIntMethod(fn) {
-      return typeof BigInt === "undefined" ? BufferBigIntNotDefined : fn;
-    }
-    function BufferBigIntNotDefined() {
-      throw new Error("BigInt not supported");
-    }
-  });
-
-  // vendor/js/node_modules/events/events.js
-  var require_events = __commonJS((exports, module) => {
-    var R = typeof Reflect === "object" ? Reflect : null;
-    var ReflectApply = R && typeof R.apply === "function" ? R.apply : function ReflectApply2(target, receiver, args) {
-      return Function.prototype.apply.call(target, receiver, args);
-    };
-    var ReflectOwnKeys;
-    if (R && typeof R.ownKeys === "function") {
-      ReflectOwnKeys = R.ownKeys;
-    } else if (Object.getOwnPropertySymbols) {
-      ReflectOwnKeys = function ReflectOwnKeys2(target) {
-        return Object.getOwnPropertyNames(target).concat(Object.getOwnPropertySymbols(target));
-      };
-    } else {
-      ReflectOwnKeys = function ReflectOwnKeys2(target) {
-        return Object.getOwnPropertyNames(target);
-      };
-    }
-    function ProcessEmitWarning(warning) {
-      if (console && console.warn)
-        console.warn(warning);
-    }
-    var NumberIsNaN = Number.isNaN || function NumberIsNaN2(value) {
-      return value !== value;
-    };
-    function EventEmitter() {
-      EventEmitter.init.call(this);
-    }
-    module.exports = EventEmitter;
-    module.exports.once = once;
-    EventEmitter.EventEmitter = EventEmitter;
-    EventEmitter.prototype._events = undefined;
-    EventEmitter.prototype._eventsCount = 0;
-    EventEmitter.prototype._maxListeners = undefined;
-    var defaultMaxListeners = 10;
-    function checkListener(listener) {
-      if (typeof listener !== "function") {
-        throw new TypeError('The "listener" argument must be of type Function. Received type ' + typeof listener);
-      }
-    }
-    Object.defineProperty(EventEmitter, "defaultMaxListeners", {
-      enumerable: true,
-      get: function() {
-        return defaultMaxListeners;
-      },
-      set: function(arg) {
-        if (typeof arg !== "number" || arg < 0 || NumberIsNaN(arg)) {
-          throw new RangeError('The value of "defaultMaxListeners" is out of range. It must be a non-negative number. Received ' + arg + ".");
-        }
-        defaultMaxListeners = arg;
-      }
-    });
-    EventEmitter.init = function() {
-      if (this._events === undefined || this._events === Object.getPrototypeOf(this)._events) {
-        this._events = Object.create(null);
-        this._eventsCount = 0;
-      }
-      this._maxListeners = this._maxListeners || undefined;
-    };
-    EventEmitter.prototype.setMaxListeners = function setMaxListeners(n) {
-      if (typeof n !== "number" || n < 0 || NumberIsNaN(n)) {
-        throw new RangeError('The value of "n" is out of range. It must be a non-negative number. Received ' + n + ".");
-      }
-      this._maxListeners = n;
-      return this;
-    };
-    function _getMaxListeners(that) {
-      if (that._maxListeners === undefined)
-        return EventEmitter.defaultMaxListeners;
-      return that._maxListeners;
-    }
-    EventEmitter.prototype.getMaxListeners = function getMaxListeners() {
-      return _getMaxListeners(this);
-    };
-    EventEmitter.prototype.emit = function emit(type) {
-      var args = [];
-      for (var i = 1;i < arguments.length; i++)
-        args.push(arguments[i]);
-      var doError = type === "error";
-      var events = this._events;
-      if (events !== undefined)
-        doError = doError && events.error === undefined;
-      else if (!doError)
-        return false;
-      if (doError) {
-        var er;
-        if (args.length > 0)
-          er = args[0];
-        if (er instanceof Error) {
-          throw er;
-        }
-        var err = new Error("Unhandled error." + (er ? " (" + er.message + ")" : ""));
-        err.context = er;
-        throw err;
-      }
-      var handler = events[type];
-      if (handler === undefined)
-        return false;
-      if (typeof handler === "function") {
-        ReflectApply(handler, this, args);
-      } else {
-        var len = handler.length;
-        var listeners = arrayClone(handler, len);
-        for (var i = 0;i < len; ++i)
-          ReflectApply(listeners[i], this, args);
-      }
-      return true;
-    };
-    function _addListener(target, type, listener, prepend) {
-      var m;
-      var events;
-      var existing;
-      checkListener(listener);
-      events = target._events;
-      if (events === undefined) {
-        events = target._events = Object.create(null);
-        target._eventsCount = 0;
-      } else {
-        if (events.newListener !== undefined) {
-          target.emit("newListener", type, listener.listener ? listener.listener : listener);
-          events = target._events;
-        }
-        existing = events[type];
-      }
-      if (existing === undefined) {
-        existing = events[type] = listener;
-        ++target._eventsCount;
-      } else {
-        if (typeof existing === "function") {
-          existing = events[type] = prepend ? [listener, existing] : [existing, listener];
-        } else if (prepend) {
-          existing.unshift(listener);
-        } else {
-          existing.push(listener);
-        }
-        m = _getMaxListeners(target);
-        if (m > 0 && existing.length > m && !existing.warned) {
-          existing.warned = true;
-          var w = new Error("Possible EventEmitter memory leak detected. " + existing.length + " " + String(type) + " listeners " + "added. Use emitter.setMaxListeners() to " + "increase limit");
-          w.name = "MaxListenersExceededWarning";
-          w.emitter = target;
-          w.type = type;
-          w.count = existing.length;
-          ProcessEmitWarning(w);
-        }
-      }
-      return target;
-    }
-    EventEmitter.prototype.addListener = function addListener(type, listener) {
-      return _addListener(this, type, listener, false);
-    };
-    EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-    EventEmitter.prototype.prependListener = function prependListener(type, listener) {
-      return _addListener(this, type, listener, true);
-    };
-    function onceWrapper() {
-      if (!this.fired) {
-        this.target.removeListener(this.type, this.wrapFn);
-        this.fired = true;
-        if (arguments.length === 0)
-          return this.listener.call(this.target);
-        return this.listener.apply(this.target, arguments);
-      }
-    }
-    function _onceWrap(target, type, listener) {
-      var state = { fired: false, wrapFn: undefined, target, type, listener };
-      var wrapped = onceWrapper.bind(state);
-      wrapped.listener = listener;
-      state.wrapFn = wrapped;
-      return wrapped;
-    }
-    EventEmitter.prototype.once = function once2(type, listener) {
-      checkListener(listener);
-      this.on(type, _onceWrap(this, type, listener));
-      return this;
-    };
-    EventEmitter.prototype.prependOnceListener = function prependOnceListener(type, listener) {
-      checkListener(listener);
-      this.prependListener(type, _onceWrap(this, type, listener));
-      return this;
-    };
-    EventEmitter.prototype.removeListener = function removeListener(type, listener) {
-      var list, events, position, i, originalListener;
-      checkListener(listener);
-      events = this._events;
-      if (events === undefined)
-        return this;
-      list = events[type];
-      if (list === undefined)
-        return this;
-      if (list === listener || list.listener === listener) {
-        if (--this._eventsCount === 0)
-          this._events = Object.create(null);
-        else {
-          delete events[type];
-          if (events.removeListener)
-            this.emit("removeListener", type, list.listener || listener);
-        }
-      } else if (typeof list !== "function") {
-        position = -1;
-        for (i = list.length - 1;i >= 0; i--) {
-          if (list[i] === listener || list[i].listener === listener) {
-            originalListener = list[i].listener;
-            position = i;
-            break;
-          }
-        }
-        if (position < 0)
-          return this;
-        if (position === 0)
-          list.shift();
-        else {
-          spliceOne(list, position);
-        }
-        if (list.length === 1)
-          events[type] = list[0];
-        if (events.removeListener !== undefined)
-          this.emit("removeListener", type, originalListener || listener);
-      }
-      return this;
-    };
-    EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
-    EventEmitter.prototype.removeAllListeners = function removeAllListeners(type) {
-      var listeners, events, i;
-      events = this._events;
-      if (events === undefined)
-        return this;
-      if (events.removeListener === undefined) {
-        if (arguments.length === 0) {
-          this._events = Object.create(null);
-          this._eventsCount = 0;
-        } else if (events[type] !== undefined) {
-          if (--this._eventsCount === 0)
-            this._events = Object.create(null);
-          else
-            delete events[type];
-        }
-        return this;
-      }
-      if (arguments.length === 0) {
-        var keys = Object.keys(events);
-        var key;
-        for (i = 0;i < keys.length; ++i) {
-          key = keys[i];
-          if (key === "removeListener")
-            continue;
-          this.removeAllListeners(key);
-        }
-        this.removeAllListeners("removeListener");
-        this._events = Object.create(null);
-        this._eventsCount = 0;
-        return this;
-      }
-      listeners = events[type];
-      if (typeof listeners === "function") {
-        this.removeListener(type, listeners);
-      } else if (listeners !== undefined) {
-        for (i = listeners.length - 1;i >= 0; i--) {
-          this.removeListener(type, listeners[i]);
-        }
-      }
-      return this;
-    };
-    function _listeners(target, type, unwrap) {
-      var events = target._events;
-      if (events === undefined)
-        return [];
-      var evlistener = events[type];
-      if (evlistener === undefined)
-        return [];
-      if (typeof evlistener === "function")
-        return unwrap ? [evlistener.listener || evlistener] : [evlistener];
-      return unwrap ? unwrapListeners(evlistener) : arrayClone(evlistener, evlistener.length);
-    }
-    EventEmitter.prototype.listeners = function listeners(type) {
-      return _listeners(this, type, true);
-    };
-    EventEmitter.prototype.rawListeners = function rawListeners(type) {
-      return _listeners(this, type, false);
-    };
-    EventEmitter.listenerCount = function(emitter, type) {
-      if (typeof emitter.listenerCount === "function") {
-        return emitter.listenerCount(type);
-      } else {
-        return listenerCount.call(emitter, type);
-      }
-    };
-    EventEmitter.prototype.listenerCount = listenerCount;
-    function listenerCount(type) {
-      var events = this._events;
-      if (events !== undefined) {
-        var evlistener = events[type];
-        if (typeof evlistener === "function") {
-          return 1;
-        } else if (evlistener !== undefined) {
-          return evlistener.length;
-        }
-      }
-      return 0;
-    }
-    EventEmitter.prototype.eventNames = function eventNames() {
-      return this._eventsCount > 0 ? ReflectOwnKeys(this._events) : [];
-    };
-    function arrayClone(arr, n) {
-      var copy = new Array(n);
-      for (var i = 0;i < n; ++i)
-        copy[i] = arr[i];
-      return copy;
-    }
-    function spliceOne(list, index) {
-      for (;index + 1 < list.length; index++)
-        list[index] = list[index + 1];
-      list.pop();
-    }
-    function unwrapListeners(arr) {
-      var ret = new Array(arr.length);
-      for (var i = 0;i < ret.length; ++i) {
-        ret[i] = arr[i].listener || arr[i];
-      }
-      return ret;
-    }
-    function once(emitter, name) {
-      return new Promise(function(resolve, reject) {
-        function errorListener(err) {
-          emitter.removeListener(name, resolver);
-          reject(err);
-        }
-        function resolver() {
-          if (typeof emitter.removeListener === "function") {
-            emitter.removeListener("error", errorListener);
-          }
-          resolve([].slice.call(arguments));
-        }
-        eventTargetAgnosticAddListener(emitter, name, resolver, { once: true });
-        if (name !== "error") {
-          addErrorHandlerIfEventEmitter(emitter, errorListener, { once: true });
-        }
-      });
-    }
-    function addErrorHandlerIfEventEmitter(emitter, handler, flags) {
-      if (typeof emitter.on === "function") {
-        eventTargetAgnosticAddListener(emitter, "error", handler, flags);
-      }
-    }
-    function eventTargetAgnosticAddListener(emitter, name, listener, flags) {
-      if (typeof emitter.on === "function") {
-        if (flags.once) {
-          emitter.once(name, listener);
-        } else {
-          emitter.on(name, listener);
-        }
-      } else if (typeof emitter.addEventListener === "function") {
-        emitter.addEventListener(name, function wrapListener(arg) {
-          if (flags.once) {
-            emitter.removeEventListener(name, wrapListener);
-          }
-          listener(arg);
-        });
-      } else {
-        throw new TypeError('The "emitter" argument must be of type EventEmitter. Received type ' + typeof emitter);
-      }
-    }
-  });
-
-  // js/platform/bootstrap.ts
-  var exports_bootstrap = {};
-
-  class TextEncoder2 {
-    encode(value = "") {
-      return Uint8Array.from(import_buffer.Buffer.from(String(value), "utf8"));
-    }
-    encodeInto(value, destination) {
-      let read = 0, written = 0;
-      for (const char of value) {
-        const bytes = this.encode(char);
-        if (written + bytes.length > destination.length)
-          break;
-        destination.set(bytes, written);
-        written += bytes.length;
-        read += char.length;
-      }
-      return { read, written };
-    }
-  }
-
-  class TextDecoder2 {
-    constructor(label = "utf-8", options = {}) {
-      if (!["utf-8", "utf8"].includes(label.toLowerCase()) || options.fatal)
-        throw new Error("Only nonfatal UTF-8 decoding is supported");
-    }
-    decode(value = new Uint8Array, options = {}) {
-      if (options.stream)
-        throw new Error("Streaming decoding is not supported");
-      return import_buffer.Buffer.from(value.buffer ?? value, value.byteOffset ?? 0, value.byteLength).toString("utf8");
-    }
-  }
-
-  class AbortController2 {
-    signal = { aborted: false, reason: undefined, throwIfAborted() {
-      if (this.aborted)
-        throw this.reason;
-    } };
-    abort(reason = new Error("Operation aborted")) {
-      this.signal.aborted = true;
-      this.signal.reason = reason;
-    }
-  }
-  var import_buffer, import_events, process2, nextTimer = 1, timers;
-  var init_bootstrap = __esm(() => {
-    import_buffer = __toESM(require_buffer(), 1);
-    import_events = __toESM(require_events(), 1);
-    Object.assign(globalThis, { Buffer: import_buffer.Buffer });
-    process2 = Object.assign(new import_events.EventEmitter, { env: __host.env, arch: __host.arch, platform: __host.platform, versions: { quickjs: "2026-06-04" }, cwd: () => ".", nextTick: (fn, ...args) => Promise.resolve().then(() => fn(...args)), hrtime: Object.assign(() => {
-      const n = __host.now();
-      return [Math.floor(n / 1000), Math.floor(n % 1000 * 1e6)];
-    }, { bigint: () => BigInt(Math.floor(__host.now() * 1e6)) }) });
-    timers = new Map;
-    Object.assign(globalThis, {
-      TextEncoder: TextEncoder2,
-      TextDecoder: TextDecoder2,
-      AbortController: AbortController2,
-      process: process2,
-      performance: { now: __host.now },
-      console: Object.fromEntries(["log", "info", "warn", "error", "debug"].map((name) => [name, (...args) => __host.write(args.map(String).join(" ") + `
-`)])),
-      queueMicrotask: (fn) => Promise.resolve().then(() => fn()),
-      setTimeout: (fn, delay = 0, ...args) => {
-        const id = nextTimer++;
-        timers.set(id, { due: __host.now() + Math.max(0, Number(delay) || 0), fn, args });
-        return id;
-      },
-      clearTimeout: (id) => timers.delete(id),
-      setInterval: (fn, delay = 0, ...args) => {
-        const id = nextTimer++;
-        const interval = Math.max(1, Number(delay) || 0);
-        timers.set(id, { due: __host.now() + interval, fn, args, interval });
-        return id;
-      },
-      clearInterval: (id) => timers.delete(id)
-    });
-    Object.assign(globalThis, { __timers: {
-      tick() {
-        const now = __host.now();
-        let count = 0;
-        for (const [id, t] of [...timers])
-          if (t.due <= now && timers.delete(id)) {
-            if (t.interval)
-              timers.set(id, { ...t, due: now + t.interval });
-            t.fn(...t.args);
-            if (++count === 128)
-              break;
-          }
-      },
-      delay() {
-        if (!timers.size)
-          return -1;
-        return Math.max(0, Math.ceil(Math.min(...[...timers.values()].map((t) => t.due)) - __host.now()));
-      },
-      clear() {
-        timers.clear();
-      }
-    } });
   });
 
   // js/platform/ffi.ts
@@ -37877,6 +37877,9 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     pending = new ByteQueue(INITIAL_PENDING_CAPACITY);
     events = [];
     timeoutMs;
+    maxPasteBytes;
+    onPasteRejected;
+    pasteOverflow = false;
     maxPendingBytes;
     armTimeouts;
     onTimeoutFlush;
@@ -37897,6 +37900,8 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     paste = null;
     constructor(options = {}) {
       this.timeoutMs = normalizePositiveOption(options.timeoutMs, DEFAULT_TIMEOUT_MS);
+      this.maxPasteBytes = normalizePositiveOption(options.maxPasteBytes, 1024 * 1024);
+      this.onPasteRejected = options.onPasteRejected;
       this.maxPendingBytes = normalizePositiveOption(options.maxPendingBytes, DEFAULT_MAX_PENDING_BYTES);
       this.armTimeouts = options.armTimeouts ?? true;
       this.onTimeoutFlush = options.onTimeoutFlush ?? null;
@@ -37984,7 +37989,6 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     push(data) {
       this.ensureAlive();
       if (data.length === 0) {
-        this.emitKeyOrResponse("unknown", "");
         return;
       }
       let remainder = data;
@@ -38349,6 +38353,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
               if (bytesEqual(rawBytes, BRACKETED_PASTE_START)) {
                 this.state = { tag: "ground" };
                 this.consumePrefix(end);
+                this.pasteOverflow = false;
                 this.paste = createPasteCollector();
                 continue;
               }
@@ -38940,10 +38945,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       const endIndex = indexOfBytes(combined, BRACKETED_PASTE_END);
       if (endIndex !== -1) {
         this.pushPasteBytes(combined.subarray(0, endIndex));
-        this.events.push({
-          type: "paste",
-          bytes: joinPasteBytes(paste.parts, paste.totalLength)
-        });
+        if (this.pasteOverflow)
+          this.onPasteRejected?.();
+        else
+          this.events.push({
+            type: "paste",
+            bytes: joinPasteBytes(paste.parts, paste.totalLength)
+          });
         this.paste = null;
         return combined.subarray(endIndex + BRACKETED_PASTE_END.length);
       }
@@ -38957,6 +38965,14 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     }
     pushPasteBytes(bytes) {
       if (bytes.length === 0) {
+        return;
+      }
+      if (this.pasteOverflow)
+        return;
+      if (bytes.length > this.maxPasteBytes - this.paste.totalLength) {
+        this.pasteOverflow = true;
+        this.paste.parts = [];
+        this.paste.totalLength = 0;
         return;
       }
       this.paste.parts.push(Uint8Array.from(bytes));
@@ -39795,6 +39811,181 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       });
   });
 
+  // vendor/opentui/packages/core/src/lib/KeyHandler.ts
+  class KeyEvent {
+    name;
+    ctrl;
+    meta;
+    shift;
+    option;
+    sequence;
+    number;
+    raw;
+    eventType;
+    source;
+    code;
+    super;
+    hyper;
+    capsLock;
+    numLock;
+    baseCode;
+    repeated;
+    _defaultPrevented = false;
+    _propagationStopped = false;
+    constructor(key) {
+      this.name = key.name;
+      this.ctrl = key.ctrl;
+      this.meta = key.meta;
+      this.shift = key.shift;
+      this.option = key.option;
+      this.sequence = key.sequence;
+      this.number = key.number;
+      this.raw = key.raw;
+      this.eventType = key.eventType;
+      this.source = key.source;
+      this.code = key.code;
+      this.super = key.super;
+      this.hyper = key.hyper;
+      this.capsLock = key.capsLock;
+      this.numLock = key.numLock;
+      this.baseCode = key.baseCode;
+      this.repeated = key.repeated;
+    }
+    get defaultPrevented() {
+      return this._defaultPrevented;
+    }
+    get propagationStopped() {
+      return this._propagationStopped;
+    }
+    preventDefault() {
+      this._defaultPrevented = true;
+    }
+    stopPropagation() {
+      this._propagationStopped = true;
+    }
+  }
+
+  class PasteEvent {
+    type = "paste";
+    bytes;
+    metadata;
+    _defaultPrevented = false;
+    _propagationStopped = false;
+    constructor(bytes, metadata) {
+      this.bytes = bytes;
+      this.metadata = metadata;
+    }
+    get defaultPrevented() {
+      return this._defaultPrevented;
+    }
+    get propagationStopped() {
+      return this._propagationStopped;
+    }
+    preventDefault() {
+      this._defaultPrevented = true;
+    }
+    stopPropagation() {
+      this._propagationStopped = true;
+    }
+  }
+  var import_events7, KeyHandler, InternalKeyHandler;
+  var init_KeyHandler = __esm(() => {
+    import_events7 = __toESM(require_events(), 1);
+    KeyHandler = class KeyHandler extends import_events7.EventEmitter {
+      processParsedKey(parsedKey) {
+        try {
+          switch (parsedKey.eventType) {
+            case "press":
+              this.emit("keypress", new KeyEvent(parsedKey));
+              break;
+            case "release":
+              this.emit("keyrelease", new KeyEvent(parsedKey));
+              break;
+            default:
+              this.emit("keypress", new KeyEvent(parsedKey));
+              break;
+          }
+        } catch (error) {
+          console.error(`[KeyHandler] Error processing parsed key:`, error);
+          return true;
+        }
+        return true;
+      }
+      processPaste(bytes, metadata) {
+        try {
+          this.emit("paste", new PasteEvent(bytes, metadata));
+        } catch (error) {
+          console.error(`[KeyHandler] Error processing paste:`, error);
+        }
+      }
+    };
+    InternalKeyHandler = class InternalKeyHandler extends KeyHandler {
+      renderableHandlers = new Map;
+      emit(event, ...args) {
+        return this.emitWithPriority(event, ...args);
+      }
+      emitWithPriority(event, ...args) {
+        let hasGlobalListeners = false;
+        const globalListeners = this.listeners(event);
+        if (globalListeners.length > 0) {
+          hasGlobalListeners = true;
+          for (const listener of globalListeners) {
+            try {
+              listener(...args);
+            } catch (error) {
+              console.error(`[KeyHandler] Error in global ${event} handler:`, error);
+            }
+            if (event === "keypress" || event === "keyrelease" || event === "paste") {
+              const keyEvent = args[0];
+              if (keyEvent.propagationStopped) {
+                return hasGlobalListeners;
+              }
+            }
+          }
+        }
+        const renderableSet = this.renderableHandlers.get(event);
+        const renderableHandlers = renderableSet && renderableSet.size > 0 ? [...renderableSet] : [];
+        let hasRenderableListeners = false;
+        if (renderableSet && renderableSet.size > 0) {
+          hasRenderableListeners = true;
+          if (event === "keypress" || event === "keyrelease" || event === "paste") {
+            const keyEvent = args[0];
+            if (keyEvent.defaultPrevented)
+              return hasGlobalListeners || hasRenderableListeners;
+            if (keyEvent.propagationStopped)
+              return hasGlobalListeners || hasRenderableListeners;
+          }
+          for (const handler of renderableHandlers) {
+            try {
+              handler(...args);
+            } catch (error) {
+              console.error(`[KeyHandler] Error in renderable ${event} handler:`, error);
+            }
+            if (event === "keypress" || event === "keyrelease" || event === "paste") {
+              const keyEvent = args[0];
+              if (keyEvent.propagationStopped) {
+                return hasGlobalListeners || hasRenderableListeners;
+              }
+            }
+          }
+        }
+        return hasGlobalListeners || hasRenderableListeners;
+      }
+      onInternal(event, handler) {
+        if (!this.renderableHandlers.has(event)) {
+          this.renderableHandlers.set(event, new Set);
+        }
+        this.renderableHandlers.get(event).add(handler);
+      }
+      offInternal(event, handler) {
+        const handlers = this.renderableHandlers.get(event);
+        if (handlers) {
+          handlers.delete(handler);
+        }
+      }
+    };
+  });
+
   // js/platform/demo.tsx
   function copyTerminalText(text) {
     try {
@@ -39808,16 +39999,28 @@ Please report this to https://github.com/markedjs/marked.`, e) {
   }
   function drainInput3() {
     parser3.drain((event) => {
+      if (!__host.canDispatch())
+        return;
       if (event.type === "key") {
         if (keyInterceptor?.(event.key))
           return;
+        const key = new KeyEvent(event.key);
+        if (appOptions.onKey?.(key) || key.defaultPrevented)
+          return;
+        if (!demoShortcuts) {
+          keys3.emit("keypress", key);
+          return;
+        }
         if (event.key.ctrl && event.key.name === "c" || event.key.name.toLowerCase() === "q") {
           __host.quit();
           return;
         }
         keys3.emit("key", event.key.name.toLowerCase());
       } else if (event.type === "paste") {
-        keys3.emit("paste", event);
+        if (appOptions.onPaste)
+          appOptions.onPaste(new TextDecoder().decode(event.bytes));
+        else
+          keys3.emit("paste", demoShortcuts ? event : new PasteEvent(event.bytes, event.metadata));
       } else if (event.type === "mouse") {
         mouse2.dispatch(event.event);
       } else if (event.type === "response" && native3) {
@@ -39849,10 +40052,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         try {
           context3.clearSelection();
           mouse2.reset();
-          if (native3) {
-            lib4.disableMouse(native3);
-            lib4.destroyRenderer(native3);
-          }
+          native3 = null;
         } finally {
           parser3.destroy();
           lib4?.dispose();
@@ -39862,6 +40062,26 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     }
   }
   function mountDemo(App3, options = {}) {
+    demoShortcuts = true;
+    return mountApp(App3, options);
+  }
+  function mountApp(App3, options = {}) {
+    if (container3 || stopped3)
+      throw new Error("Only one application mount per runtime is supported");
+    appOptions = options;
+    if (options.exportState)
+      Object.assign(globalThis, { __exportState: () => {
+        const text = JSON.stringify(options.exportState());
+        if (text === undefined)
+          throw new Error("exportState must return JSON-serializable data");
+        return text;
+      } });
+    if (options.onReloadError)
+      Object.assign(globalThis, { __reloadNotice: options.onReloadError });
+    if (options.onMessage)
+      Object.assign(globalThis, { __message: options.onMessage });
+    if (options.onDisconnect)
+      Object.assign(globalThis, { __endpointClosed: options.onDisconnect });
     function Mounted() {
       import_react5.useEffect(() => {
         effectMounted3 = true;
@@ -39872,30 +40092,21 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       return /* @__PURE__ */ jsx_runtime3.jsx(App3, {});
     }
     lib4 = resolveRenderLib();
-    native3 = lib4.createRenderer(context3.width, context3.height, { bufferedOutput: __host.headless ? "memory" : "stdout", remote: false });
-    if (!native3)
-      throw new Error("Cannot create native terminal renderer");
-    for (const [key, value] of Object.entries(__host.env)) {
-      if (!lib4.setTerminalEnvVar(native3, key, value))
-        throw new Error(`Cannot forward terminal environment: ${key}`);
-    }
-    lib4.setUseThread(native3, false);
+    native3 = __host.borrowRenderer();
     lib4.setBackgroundColor(native3, RGBA.fromHex("#101820"));
     context3.capabilities = lib4.getTerminalCapabilities(native3);
-    if (!__host.headless)
-      lib4.setupTerminal(native3, true);
-    if (!__host.headless)
-      lib4.enableMouse(native3, true);
     root3 = new RootRenderable(context3);
     container3 = reconciler3.createContainer(root3, 1, null, false, null, "", report3, options.onCaughtError ?? report3, report3, () => {});
     reconciler3.updateContainerSync(/* @__PURE__ */ jsx_runtime3.jsx(Mounted, {}), container3, null, null);
     reconciler3.flushSyncWork();
     reconciler3.flushPassiveEffects();
+    return { quit: () => __host.quit(), snapshot: () => new TextDecoder().decode(lib4.getCurrentBuffer(native3).getRealCharBytes(true)) };
   }
-  var import_react5, import_react_reconciler4, import_events7, jsx_runtime3, dirty3 = true, stopped3 = false, liveCount = 0, liveTimer, container3, native3, root3, lib4, keys3, keyInterceptor = null, graphicsState, parser3, selection = null, selectionOwner = null, lifecycle3, context3, reconciler3, report3 = (error) => {
+  var import_react5, import_react_reconciler4, import_events8, jsx_runtime3, dirty3 = true, stopped3 = false, liveCount = 0, liveTimer, container3, native3, root3, lib4, keys3, keyInterceptor = null, graphicsState, appOptions, demoShortcuts = false, parser3, selection = null, selectionOwner = null, lifecycle3, context3, reconciler3, report3 = (error) => {
     throw error;
   }, effectMounted3 = false, mouse2;
   var init_demo = __esm(() => {
+    init_KeyHandler();
     init_selection();
     init_host_config();
     init_Renderable();
@@ -39904,13 +40115,14 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     init_stdin_parser();
     import_react5 = __toESM(require_react(), 1);
     import_react_reconciler4 = __toESM(require_react_reconciler(), 1);
-    import_events7 = __toESM(require_events(), 1);
+    import_events8 = __toESM(require_events(), 1);
     jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
-    keys3 = new import_events7.EventEmitter;
+    keys3 = new import_events8.EventEmitter;
     graphicsState = { confirmed: false };
-    parser3 = new StdinParser({ onTimeoutFlush: () => drainInput3() });
+    appOptions = {};
+    parser3 = new StdinParser({ onTimeoutFlush: () => drainInput3(), onPasteRejected: () => appOptions.onPasteRejected?.() });
     lifecycle3 = new Set;
-    context3 = Object.assign(new import_events7.EventEmitter, {
+    context3 = Object.assign(new import_events8.EventEmitter, {
       width: __host.width,
       height: __host.height,
       frameId: 0,
@@ -40034,7 +40246,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         const buffer = lib4.getNextBuffer(native3);
         buffer.clear(RGBA.fromHex("#101820"));
         root3.render(buffer, 16);
-        lib4.render(native3, false);
+        __host.presentFrame();
       },
       __inspect() {
         return JSON.stringify({ effectMounted: effectMounted3, keys: keys3.listenerCount("key"), frame: context3.frameId });
@@ -40043,6 +40255,173 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         return new TextDecoder().decode(lib4.getCurrentBuffer(native3).getRealCharBytes(true));
       }
     });
+  });
+
+  // js/app.ts
+  function getReloadInfo() {
+    return { enabled: typeof __host.requestReload === "function", generation: __host.generation ?? 1, notice: __host.reloadNotice ?? "" };
+  }
+  function getReloadState(fallback) {
+    return __host.reloadState === undefined || __host.reloadState === "null" ? fallback : JSON.parse(__host.reloadState);
+  }
+  function requestReload(source) {
+    if (!__host.requestReload)
+      throw new Error("Reload is disabled by the native host");
+    __host.requestReload(source);
+  }
+  var init_app = __esm(() => {
+    init_demo();
+  });
+
+  // js/reload.tsx
+  var exports_reload = {};
+  function App3() {
+    const [count, setCount] = import_react6.useState(saved.count), [scratch, setScratch] = import_react6.useState(0);
+    const [notice, setNotice] = import_react6.useState(getReloadInfo().notice || "Ready. Change both counters, then press R.");
+    const [events, setEvents] = import_react6.useState(0);
+    import_react6.useEffect(() => {
+      const key = (name) => {
+        if (name === "space") {
+          saved.count++;
+          setCount(saved.count);
+        }
+        if (name === "u")
+          setScratch((n) => n + 1);
+        if (name === "r")
+          requestReload();
+        if (name === "b")
+          requestReload("throw new Error('Deliberately broken replacement bundle');");
+      };
+      keys3.on("key", key);
+      keys3.on("reload-notice", setNotice);
+      host.__message = () => setEvents((n) => n + 1);
+      return () => {
+        keys3.off("key", key);
+        keys3.off("reload-notice", setNotice);
+        delete host.__message;
+      };
+    }, []);
+    const accent = __host.generation % 2 ? "#85ddca" : "#d8b5ff";
+    return /* @__PURE__ */ jsx_runtime4.jsxs("box", {
+      width: "100%",
+      height: "100%",
+      border: true,
+      borderStyle: "rounded",
+      borderColor: accent,
+      title: " 06b / Fresh runtime ",
+      padding: 1,
+      gap: 1,
+      children: [
+        /* @__PURE__ */ jsx_runtime4.jsxs("text", {
+          fg: accent,
+          children: [
+            "Whole UI replacement · generation ",
+            __host.generation
+          ]
+        }),
+        /* @__PURE__ */ jsx_runtime4.jsxs("text", {
+          children: [
+            "Saved counter: ",
+            count,
+            "     Unsaved counter: ",
+            scratch
+          ]
+        }),
+        /* @__PURE__ */ jsx_runtime4.jsx("text", {
+          fg: "#c4ced4",
+          children: "Space changes saved · U changes unsaved · R replaces the runtime"
+        }),
+        /* @__PURE__ */ jsx_runtime4.jsx("text", {
+          fg: "#c4ced4",
+          children: "B tries a broken bundle · Q exits"
+        }),
+        /* @__PURE__ */ jsx_runtime4.jsxs("box", {
+          border: true,
+          borderColor: accent,
+          padding: 1,
+          flexGrow: 1,
+          gap: 1,
+          children: [
+            /* @__PURE__ */ jsx_runtime4.jsx("text", {
+              children: "06a keeps the runtime and loads component scripts into it."
+            }),
+            /* @__PURE__ */ jsx_runtime4.jsx("text", {
+              children: "06b destroys QuickJS and React, then builds a fresh UI."
+            }),
+            /* @__PURE__ */ jsx_runtime4.jsx("text", {
+              children: "Only the saved counter crosses as JSON. Module globals and unsaved state reset."
+            }),
+            /* @__PURE__ */ jsx_runtime4.jsx("text", {
+              children: "The native renderer and worker remain alive. The last frame stays on screen."
+            }),
+            /* @__PURE__ */ jsx_runtime4.jsxs("text", {
+              children: [
+                "Native events received by this generation: ",
+                events
+              ]
+            })
+          ]
+        }),
+        /* @__PURE__ */ jsx_runtime4.jsx("text", {
+          fg: accent,
+          children: notice
+        }),
+        /* @__PURE__ */ jsx_runtime4.jsx("text", {
+          fg: "#79909c",
+          children: "Experimental trusted reload · bundled source reused on R · no file watcher in 06b yet"
+        })
+      ]
+    });
+  }
+  var import_react6, jsx_runtime4, host, saved;
+  var init_reload = __esm(() => {
+    init_demo();
+    init_app();
+    import_react6 = __toESM(require_react(), 1);
+    jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
+    host = globalThis;
+    if (host.__reloadCanary !== undefined)
+      throw Error("Previous runtime globals survived");
+    host.__reloadCanary = __host.generation;
+    saved = getReloadState({ count: 0, round: 0 });
+    if (!Number.isInteger(saved.count) || !Number.isInteger(saved.round))
+      throw Error("Invalid demo snapshot");
+    Object.assign(globalThis, {
+      __reloadNotice: (notice) => keys3.emit("reload-notice", notice)
+    });
+    mountDemo(App3, { exportState: () => saved });
+    if (__host.headless) {
+      setTimeout(() => {
+        if (!host.__snapshot().includes("Unsaved counter: 0"))
+          throw Error("Unsaved state survived replacement");
+        keys3.emit("key", "u");
+      }, 40);
+      setTimeout(() => {
+        if (saved.count !== saved.round * 7)
+          throw Error("Reload lost snapshot");
+        if (saved.round === 3 && !__host.reloadNotice.includes("Replacement failed"))
+          throw Error("Broken bundle was not recovered");
+        if (saved.round === 6 && !__host.reloadNotice.includes("Replacement failed"))
+          throw Error("Timed-out bundle was not recovered");
+        const text = host.__snapshot();
+        if (!text.includes("Unsaved counter: 1") || !text.includes("06b"))
+          throw Error("Fresh UI did not render");
+        if (saved.round === 8) {
+          __host.quit();
+          return;
+        }
+        saved.round++;
+        saved.count += 7;
+        if (saved.round === 3)
+          requestReload("const = ;");
+        else if (saved.round === 6)
+          requestReload("while(true){}");
+        else
+          requestReload();
+        if (__host.tryPostMessage("late") !== "closed")
+          throw Error("Send crossed reload barrier");
+      }, 100);
+    }
   });
 
   // js/live.tsx
@@ -40061,7 +40440,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     try {
       const execute = new Function("React", "h", "api", source + `
 //# sourceURL=` + file + ".js");
-      const result = execute(import_react6.default, import_react6.default.createElement, api);
+      const result = execute(import_react7.default, import_react7.default.createElement, api);
       if (result && typeof result.then === "function")
         throw new Error("Top-level loading must be synchronous; use effects for async work");
       revision++;
@@ -40082,10 +40461,10 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       return false;
     }
   }
-  function App3() {
-    const [count, setCount] = import_react6.useState(0), [items, setItems] = import_react6.useState(extensions), [status, setStatus] = import_react6.useState("Load a script to extend this page.");
-    const [selected, setSelected] = import_react6.useState("counter"), [watch, setWatch] = import_react6.useState(false);
-    const selection2 = import_react6.useRef({ file: "counter", watch: false });
+  function App4() {
+    const [count, setCount] = import_react7.useState(0), [items, setItems] = import_react7.useState(extensions), [status, setStatus] = import_react7.useState("Same runtime: load scripts to add or replace components.");
+    const [selected, setSelected] = import_react7.useState("counter"), [watch, setWatch] = import_react7.useState(false);
+    const selection2 = import_react7.useRef({ file: "counter", watch: false });
     const request = (file = selection2.current.file, watching = selection2.current.watch) => {
       selection2.current = { file, watch: watching };
       setSelected(file);
@@ -40103,7 +40482,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       changed();
       setStatus("Components cleared. Press 1 to load the counter, then 2 to add the clock.");
     };
-    import_react6.useEffect(() => {
+    import_react7.useEffect(() => {
       const update = () => setItems([...extensions]);
       keys3.on("live-change", update);
       keys3.on("live-status", setStatus);
@@ -40112,7 +40491,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         keys3.off("live-status", setStatus);
       };
     }, []);
-    import_react6.useEffect(() => {
+    import_react7.useEffect(() => {
       const key = (name) => {
         if (name === "space")
           setCount((value) => value + 1);
@@ -40132,43 +40511,43 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         keys3.off("key", key);
       };
     }, []);
-    const button = (label, fn) => /* @__PURE__ */ jsx_runtime4.jsx("box", {
+    const button = (label, fn) => /* @__PURE__ */ jsx_runtime5.jsx("box", {
       paddingX: 1,
       backgroundColor: "#294650",
       onMouseDown: fn,
-      children: /* @__PURE__ */ jsx_runtime4.jsx("text", {
+      children: /* @__PURE__ */ jsx_runtime5.jsx("text", {
         fg: "#85ddca",
         children: label
       })
     });
-    return /* @__PURE__ */ jsx_runtime4.jsx("box", {
+    return /* @__PURE__ */ jsx_runtime5.jsx("box", {
       width: "100%",
       height: "100%",
       padding: 1,
       backgroundColor: "#101820",
-      children: /* @__PURE__ */ jsx_runtime4.jsxs("box", {
+      children: /* @__PURE__ */ jsx_runtime5.jsxs("box", {
         width: "100%",
         height: "100%",
         border: true,
         borderStyle: "rounded",
         borderColor: "#85ddca",
-        title: " 06 / Live JavaScript ",
+        title: " 06a / Live components ",
         padding: 1,
         gap: 1,
         children: [
-          /* @__PURE__ */ jsx_runtime4.jsx("text", {
+          /* @__PURE__ */ jsx_runtime5.jsx("text", {
             height: 1,
             flexShrink: 0,
             fg: "#eee9dc",
             children: "One running page. Load more code."
           }),
-          /* @__PURE__ */ jsx_runtime4.jsxs("box", {
+          /* @__PURE__ */ jsx_runtime5.jsxs("box", {
             height: 1,
             flexShrink: 0,
             flexDirection: "row",
             gap: 2,
             children: [
-              /* @__PURE__ */ jsx_runtime4.jsxs("text", {
+              /* @__PURE__ */ jsx_runtime5.jsxs("text", {
                 fg: "#edce86",
                 children: [
                   "Host count: ",
@@ -40178,7 +40557,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
               button("Space / click +1", () => setCount((value) => value + 1))
             ]
           }),
-          /* @__PURE__ */ jsx_runtime4.jsxs("box", {
+          /* @__PURE__ */ jsx_runtime5.jsxs("box", {
             height: 1,
             flexShrink: 0,
             flexDirection: "row",
@@ -40190,7 +40569,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
               button("C Clear", clear)
             ]
           }),
-          /* @__PURE__ */ jsx_runtime4.jsxs("text", {
+          /* @__PURE__ */ jsx_runtime5.jsxs("text", {
             height: 1,
             flexShrink: 0,
             fg: "#96aeb8",
@@ -40202,47 +40581,47 @@ Please report this to https://github.com/markedjs/marked.`, e) {
               " · Q exit"
             ]
           }),
-          /* @__PURE__ */ jsx_runtime4.jsx("scrollbox", {
+          /* @__PURE__ */ jsx_runtime5.jsx("scrollbox", {
             flexGrow: 1,
             minHeight: 0,
-            children: /* @__PURE__ */ jsx_runtime4.jsx("box", {
+            children: /* @__PURE__ */ jsx_runtime5.jsx("box", {
               gap: 1,
               width: "100%",
-              children: items.length === 0 ? /* @__PURE__ */ jsx_runtime4.jsx("text", {
+              children: items.length === 0 ? /* @__PURE__ */ jsx_runtime5.jsx("text", {
                 fg: "#667f8b",
                 children: "No components loaded. Press 1 for the counter, then 2 to add the clock."
-              }) : items.map((item) => /* @__PURE__ */ jsx_runtime4.jsx("box", {
+              }) : items.map((item) => /* @__PURE__ */ jsx_runtime5.jsx("box", {
                 border: true,
                 borderStyle: "rounded",
                 borderColor: "#3c626d",
                 paddingX: 1,
                 width: "100%",
                 title: " " + item.id + " / " + item.owner + ".js ",
-                children: /* @__PURE__ */ jsx_runtime4.jsxs("box", {
+                children: /* @__PURE__ */ jsx_runtime5.jsxs("box", {
                   flexDirection: "column",
                   paddingY: 1,
                   gap: 1,
                   width: "100%",
                   children: [
-                    /* @__PURE__ */ jsx_runtime4.jsx("text", {
+                    /* @__PURE__ */ jsx_runtime5.jsx("text", {
                       fg: "#85ddca",
                       children: item.title
                     }),
-                    /* @__PURE__ */ jsx_runtime4.jsx(ExtensionBoundary, {
-                      children: /* @__PURE__ */ jsx_runtime4.jsx(item.render, {})
+                    /* @__PURE__ */ jsx_runtime5.jsx(ExtensionBoundary, {
+                      children: /* @__PURE__ */ jsx_runtime5.jsx(item.render, {})
                     }, item.revision)
                   ]
                 })
               }, item.id))
             })
           }),
-          /* @__PURE__ */ jsx_runtime4.jsx("text", {
+          /* @__PURE__ */ jsx_runtime5.jsx("text", {
             height: 2,
             flexShrink: 0,
             fg: status.includes("failed") ? "#ee9b86" : "#85ddca",
             children: status
           }),
-          /* @__PURE__ */ jsx_runtime4.jsx("text", {
+          /* @__PURE__ */ jsx_runtime5.jsx("text", {
             height: 2,
             flexShrink: 0,
             fg: "#667f8b",
@@ -40252,11 +40631,11 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       })
     });
   }
-  var import_react6, jsx_runtime4, extensions, revision = 0, epoch = 0, changed = () => keys3.emit("live-change"), ExtensionBoundary;
+  var import_react7, jsx_runtime5, extensions, revision = 0, epoch = 0, changed = () => keys3.emit("live-change"), ExtensionBoundary;
   var init_live = __esm(() => {
     init_demo();
-    import_react6 = __toESM(require_react(), 1);
-    jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
+    import_react7 = __toESM(require_react(), 1);
+    jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
     extensions = [];
     Object.assign(globalThis, { __message(message) {
       const event = JSON.parse(message);
@@ -40271,13 +40650,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         return;
       evaluate(new TextDecoder().decode(bytes), event.file);
     } });
-    ExtensionBoundary = class ExtensionBoundary extends import_react6.default.Component {
+    ExtensionBoundary = class ExtensionBoundary extends import_react7.default.Component {
       state = { error: null };
       static getDerivedStateFromError(error) {
         return { error: String(error) };
       }
       render() {
-        return this.state.error ? /* @__PURE__ */ jsx_runtime4.jsxs("text", {
+        return this.state.error ? /* @__PURE__ */ jsx_runtime5.jsxs("text", {
           fg: "#ee9b86",
           children: [
             "Component failed: ",
@@ -40286,26 +40665,26 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         }) : this.props.children;
       }
     };
-    mountDemo(App3, { onCaughtError(error) {
+    mountDemo(App4, { onCaughtError(error) {
       keys3.emit("live-status", "Component failed: " + String(error));
     } });
     if (__host.headless)
       Object.assign(globalThis, { async __selfTest() {
-        const host = globalThis;
-        host.__resize(110, 40);
+        const host2 = globalThis;
+        host2.__resize(110, 40);
         const wait = () => new Promise((resolve) => setTimeout(resolve, 25));
         const until = async (text) => {
           const end = Date.now() + 3000;
-          while (!host.__snapshot().includes(text) && Date.now() < end)
+          while (!host2.__snapshot().includes(text) && Date.now() < end)
             await wait();
-          if (!host.__snapshot().includes(text))
+          if (!host2.__snapshot().includes(text))
             throw new Error("Missing live state: " + text + `
-` + host.__snapshot());
+` + host2.__snapshot());
         };
-        host.__input(new TextEncoder().encode(" ").buffer);
-        host.__input(new TextEncoder().encode("1").buffer);
+        host2.__input(new TextEncoder().encode(" ").buffer);
+        host2.__input(new TextEncoder().encode("1").buffer);
         await until("A counter loaded from JavaScript");
-        host.__input(new TextEncoder().encode("2").buffer);
+        host2.__input(new TextEncoder().encode("2").buffer);
         await until("A clock added by a second script");
         await until("Host count: 1");
         evaluate('api.register("counter",{title:"Replacement counter",render:()=>h("text",{},"new code")});', "counter");
@@ -40315,12 +40694,12 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         evaluate('api.register("counter",{title:"Effect test",render:()=>{React.useEffect(()=>{globalThis.__liveEffectMounted=true;return()=>{globalThis.__liveEffectCleaned=true}},[]);return h("text",{},"effect mounted")}});', "counter");
         await until("effect mounted");
         await wait();
-        if (!host.__liveEffectMounted)
+        if (!host2.__liveEffectMounted)
           throw new Error("Extension effect did not mount");
         evaluate('api.register("counter",{title:"Replacement counter",render:()=>h("text",{},"new code")});', "counter");
         await until("Replacement counter");
         await wait();
-        if (!host.__liveEffectCleaned)
+        if (!host2.__liveEffectCleaned)
           throw new Error("Replaced extension effect was not cleaned up");
         if (extensions.map((item) => item.id).join(",") !== "counter,clock")
           throw new Error("Reload moved components");
@@ -40337,16 +40716,16 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         await until("A clock added by a second script");
         evaluate('api.register("counter",{title:"Recovered",render:()=>h("text",{},"working again")});', "counter");
         await until("working again");
-        host.__input(new TextEncoder().encode("wc").buffer);
+        host2.__input(new TextEncoder().encode("wc").buffer);
         await until("Components cleared.");
         await wait();
-        if (extensions.length || host.__snapshot().includes("working again"))
+        if (extensions.length || host2.__snapshot().includes("working again"))
           throw new Error("Clear left components mounted");
         await until("Host count: 1");
         await until("watch: off");
-        host.__input(new TextEncoder().encode("1").buffer);
+        host2.__input(new TextEncoder().encode("1").buffer);
         await until("A counter loaded from JavaScript");
-        host.__input(new TextEncoder().encode("2").buffer);
+        host2.__input(new TextEncoder().encode("2").buffer);
         await until("A clock added by a second script");
       } });
   });
@@ -40618,10 +40997,10 @@ Please report this to https://github.com/markedjs/marked.`, e) {
 
   // js/lab-presets.tsx
   function PresetsPanel({ capture, restore, close }) {
-    const [slots, setSlots] = import_react7.useState(Array.from({ length: 128 }, (_2, i) => ({ slot: i + 1, description: "" })));
-    const scroll = import_react7.useRef(null);
-    const [slot, setSlot] = import_react7.useState(1), [description, setDescription] = import_react7.useState("");
-    const [editing, setEditing] = import_react7.useState(false), [busy, setBusy] = import_react7.useState(false), [notice, setNotice] = import_react7.useState("");
+    const [slots, setSlots] = import_react8.useState(Array.from({ length: 128 }, (_2, i) => ({ slot: i + 1, description: "" })));
+    const scroll = import_react8.useRef(null);
+    const [slot, setSlot] = import_react8.useState(1), [description, setDescription] = import_react8.useState("");
+    const [editing, setEditing] = import_react8.useState(false), [busy, setBusy] = import_react8.useState(false), [notice, setNotice] = import_react8.useState("");
     const request = (message) => {
       if (busy)
         return;
@@ -40654,7 +41033,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       setEditing(false);
     };
     const load = () => request({ preset: "load", slot });
-    import_react7.useEffect(() => {
+    import_react8.useEffect(() => {
       let listed = false;
       const list = (start = 1) => {
         if (__host.postMessage(JSON.stringify({ preset: "list", start }))) {
@@ -40706,7 +41085,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         keys3.off("presets", reply);
       };
     }, []);
-    import_react7.useEffect(() => {
+    import_react8.useEffect(() => {
       interceptKeys((key) => {
         const name = key.name.toLowerCase();
         if (key.ctrl && name === "c")
@@ -40772,7 +41151,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       });
       return () => interceptKeys(null);
     }, [slot, description, editing, busy, slots]);
-    const button = (label, action) => /* @__PURE__ */ jsx_runtime5.jsx("box", {
+    const button = (label, action) => /* @__PURE__ */ jsx_runtime6.jsx("box", {
       height: 1,
       flexShrink: 0,
       paddingX: 1,
@@ -40781,12 +41160,12 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         if (!busy)
           action();
       },
-      children: /* @__PURE__ */ jsx_runtime5.jsx("text", {
+      children: /* @__PURE__ */ jsx_runtime6.jsx("text", {
         fg: "#85ddca",
         children: label
       })
     });
-    return /* @__PURE__ */ jsx_runtime5.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime6.jsxs("box", {
       position: "absolute",
       left: 1,
       top: 1,
@@ -40801,22 +41180,22 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       padding: 1,
       title: " Presets ",
       children: [
-        /* @__PURE__ */ jsx_runtime5.jsx("text", {
+        /* @__PURE__ */ jsx_runtime6.jsx("text", {
           height: 1,
           flexShrink: 0,
           fg: "#eee9dc",
           children: "128 local slots · ↑↓ PgUp/PgDn Home/End · Tab name"
         }),
-        /* @__PURE__ */ jsx_runtime5.jsx("scrollbox", {
+        /* @__PURE__ */ jsx_runtime6.jsx("scrollbox", {
           ref: scroll,
           flexGrow: 1,
           minHeight: 0,
-          children: slots.map((entry) => /* @__PURE__ */ jsx_runtime5.jsx("box", {
+          children: slots.map((entry) => /* @__PURE__ */ jsx_runtime6.jsx("box", {
             height: 1,
             flexShrink: 0,
             backgroundColor: slot === entry.slot ? "#294650" : "#14232c",
             onMouseDown: () => choose(entry.slot),
-            children: /* @__PURE__ */ jsx_runtime5.jsxs("text", {
+            children: /* @__PURE__ */ jsx_runtime6.jsxs("text", {
               fg: slot === entry.slot ? "#85ddca" : "#96aeb8",
               children: [
                 entry.slot,
@@ -40826,11 +41205,11 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             })
           }, entry.slot))
         }),
-        /* @__PURE__ */ jsx_runtime5.jsx("box", {
+        /* @__PURE__ */ jsx_runtime6.jsx("box", {
           height: 2,
           flexShrink: 0,
           onMouseDown: () => setEditing(true),
-          children: /* @__PURE__ */ jsx_runtime5.jsxs("text", {
+          children: /* @__PURE__ */ jsx_runtime6.jsxs("text", {
             fg: editing ? "#eee9dc" : "#96aeb8",
             children: [
               description ? "Custom:" : "Auto:",
@@ -40840,7 +41219,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             ]
           })
         }),
-        /* @__PURE__ */ jsx_runtime5.jsxs("box", {
+        /* @__PURE__ */ jsx_runtime6.jsxs("box", {
           height: 1,
           flexShrink: 0,
           flexDirection: "row",
@@ -40855,7 +41234,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             button("Esc · Close", close)
           ]
         }),
-        /* @__PURE__ */ jsx_runtime5.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime6.jsxs("text", {
           height: 1,
           flexShrink: 0,
           fg: "#85ddca",
@@ -40864,7 +41243,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             editing ? " · Enter saves" : ""
           ]
         }),
-        /* @__PURE__ */ jsx_runtime5.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime6.jsxs("text", {
           height: 1,
           flexShrink: 0,
           fg: "#667f8b",
@@ -40877,11 +41256,11 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       ]
     });
   }
-  var import_react7, jsx_runtime5;
+  var import_react8, jsx_runtime6;
   var init_lab_presets = __esm(() => {
     init_demo();
-    import_react7 = __toESM(require_react(), 1);
-    jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
+    import_react8 = __toESM(require_react(), 1);
+    jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
   });
 
   // js/lab.tsx
@@ -40894,11 +41273,11 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       }
   }
   function SettingsCode({ code }) {
-    const [status, setStatus] = import_react8.useState("copy");
-    const [hover, setHover] = import_react8.useState(false);
-    const timer = import_react8.useRef(null);
-    import_react8.useEffect(() => () => clearTimeout(timer.current), []);
-    return /* @__PURE__ */ jsx_runtime6.jsxs("box", {
+    const [status, setStatus] = import_react9.useState("copy");
+    const [hover, setHover] = import_react9.useState(false);
+    const timer = import_react9.useRef(null);
+    import_react9.useEffect(() => () => clearTimeout(timer.current), []);
+    return /* @__PURE__ */ jsx_runtime7.jsxs("box", {
       id: "lab-settings-code",
       flexGrow: 1,
       flexBasis: 24,
@@ -40912,12 +41291,12 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       backgroundColor: "#101820",
       paddingX: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime6.jsx("text", {
+        /* @__PURE__ */ jsx_runtime7.jsx("text", {
           fg: "#718b99",
           wrapMode: "char",
           children: code
         }),
-        /* @__PURE__ */ jsx_runtime6.jsx("box", {
+        /* @__PURE__ */ jsx_runtime7.jsx("box", {
           id: "lab-copy-code",
           position: "absolute",
           right: 1,
@@ -40935,7 +41314,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             clearTimeout(timer.current);
             timer.current = setTimeout(() => setStatus("copy"), 1500);
           },
-          children: /* @__PURE__ */ jsx_runtime6.jsxs("text", {
+          children: /* @__PURE__ */ jsx_runtime7.jsxs("text", {
             fg: "#85ddca",
             children: [
               "[",
@@ -40947,33 +41326,33 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       ]
     });
   }
-  function App4() {
-    const scene = import_react8.useRef({ shape: 3, angle: 0, tilt: 0.7, zoom: 0.82, wire: false, palette: 0, playing: true, fps: 10, rotation_speed: 1, epoch: 0, charset: 0, cols: 60, rows: 20, tone: 0, wash_strength: 0.3, dark_ink: 0.15, brightness: 0, contrast: 1, dot_scale: 4, fractal_zoom: 1, center_x: -0.65, center_y: 0 });
-    const playing = import_react8.useRef(true), drag = import_react8.useRef(null);
-    const [presetsOpen, setPresetsOpen] = import_react8.useState(false);
-    const currentFrame = import_react8.useRef(null);
-    const [frame, setFrame] = import_react8.useState(null);
+  function App5() {
+    const scene = import_react9.useRef({ shape: 3, angle: 0, tilt: 0.7, zoom: 0.82, wire: false, palette: 0, playing: true, fps: 10, rotation_speed: 1, epoch: 0, charset: 0, cols: 60, rows: 20, tone: 0, wash_strength: 0.3, dark_ink: 0.15, brightness: 0, contrast: 1, dot_scale: 4, fractal_zoom: 1, center_x: -0.65, center_y: 0 });
+    const playing = import_react9.useRef(true), drag = import_react9.useRef(null);
+    const [presetsOpen, setPresetsOpen] = import_react9.useState(false);
+    const currentFrame = import_react9.useRef(null);
+    const [frame, setFrame] = import_react9.useState(null);
     currentFrame.current = frame;
-    const [fps, setFps] = import_react8.useState(0);
-    const outputRef = import_react8.useRef(0), glyphRef = import_react8.useRef(1);
-    const [output, setOutput] = import_react8.useState(0);
-    const [kitty, setKitty] = import_react8.useState(graphicsState.confirmed);
-    const [, refresh] = import_react8.useState(0);
+    const [fps, setFps] = import_react9.useState(0);
+    const outputRef = import_react9.useRef(0), glyphRef = import_react9.useRef(1);
+    const [output, setOutput] = import_react9.useState(0);
+    const [kitty, setKitty] = import_react9.useState(graphicsState.confirmed);
+    const [, refresh] = import_react9.useState(0);
     const draw = () => {
       scene.current.playing = playing.current && !drag.current;
       if (!__host.postMessage(JSON.stringify(scene.current)))
         throw new Error("Native renderer rejected scene");
       refresh((n) => n + 1);
     };
-    import_react8.useEffect(() => {
+    import_react9.useEffect(() => {
       releaseBefore(ownedImages, frame?.serial ?? 0);
     }, [frame?.image]);
-    import_react8.useEffect(() => () => {
+    import_react9.useEffect(() => () => {
       for (const image of ownedImages.keys())
         image.dispose();
       ownedImages.clear();
     }, []);
-    import_react8.useEffect(() => {
+    import_react9.useEffect(() => {
       const timer = setInterval(() => {
         const canvas = [...Renderable.renderablesByNumber.values()].find((node) => node.id === "lab-canvas");
         if (canvas) {
@@ -40992,7 +41371,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       }, 500);
       return () => clearInterval(timer);
     }, []);
-    import_react8.useEffect(() => {
+    import_react9.useEffect(() => {
       const key = (name) => {
         if (name === "f") {
           setPresetsOpen(true);
@@ -41091,11 +41470,11 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       };
     }, []);
     const capture = () => {
-      const saved = { ...scene.current, angle: currentFrame.current?.angle ?? scene.current.angle, playing: playing.current };
+      const saved2 = { ...scene.current, angle: currentFrame.current?.angle ?? scene.current.angle, playing: playing.current };
       return {
         version: 1,
-        description: presetName(saved, names[saved.shape], tones[saved.tone], outputRef.current === 3 ? glyphNames[glyphRef.current] : ["Pixels", "Half blocks", "Braille"][outputRef.current], outputRef.current, glyphRef.current),
-        scene: saved,
+        description: presetName(saved2, names[saved2.shape], tones[saved2.tone], outputRef.current === 3 ? glyphNames[glyphRef.current] : ["Pixels", "Half blocks", "Braille"][outputRef.current], outputRef.current, glyphRef.current),
+        scene: saved2,
         output: outputRef.current,
         glyph: glyphRef.current
       };
@@ -41112,13 +41491,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       setPresetsOpen(false);
       draw();
     };
-    return /* @__PURE__ */ jsx_runtime6.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime7.jsxs("box", {
       width: "100%",
       height: "100%",
       padding: 1,
       backgroundColor: "#101820",
       children: [
-        /* @__PURE__ */ jsx_runtime6.jsxs("box", {
+        /* @__PURE__ */ jsx_runtime7.jsxs("box", {
           border: true,
           borderStyle: "rounded",
           borderColor: "#63c7b2",
@@ -41128,29 +41507,29 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           height: "100%",
           gap: 1,
           children: [
-            /* @__PURE__ */ jsx_runtime6.jsx("text", {
+            /* @__PURE__ */ jsx_runtime7.jsx("text", {
               height: 1,
               flexShrink: 0,
               fg: "#f6f0dd",
-              children: /* @__PURE__ */ jsx_runtime6.jsx("b", {
+              children: /* @__PURE__ */ jsx_runtime7.jsx("b", {
                 children: "Light, geometry, and terminal pixels"
               })
             }),
-            /* @__PURE__ */ jsx_runtime6.jsxs("box", {
+            /* @__PURE__ */ jsx_runtime7.jsxs("box", {
               flexDirection: "row",
               flexWrap: "wrap",
               alignItems: "flex-start",
               flexShrink: 0,
               gap: 1,
               children: [
-                /* @__PURE__ */ jsx_runtime6.jsx("box", {
+                /* @__PURE__ */ jsx_runtime7.jsx("box", {
                   id: "lab-shape-buttons",
                   flexDirection: "row",
                   flexWrap: "wrap",
                   maxWidth: "100%",
                   flexShrink: 0,
                   gap: 1,
-                  children: names.map((name, i) => /* @__PURE__ */ jsx_runtime6.jsx("box", {
+                  children: names.map((name, i) => /* @__PURE__ */ jsx_runtime7.jsx("box", {
                     paddingX: 1,
                     height: 1,
                     flexShrink: 0,
@@ -41159,7 +41538,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                       scene.current.shape = i;
                       draw();
                     },
-                    children: /* @__PURE__ */ jsx_runtime6.jsxs("text", {
+                    children: /* @__PURE__ */ jsx_runtime7.jsxs("text", {
                       fg: "#63c7b2",
                       children: [
                         i + 1,
@@ -41169,12 +41548,12 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                     })
                   }, name))
                 }),
-                /* @__PURE__ */ jsx_runtime6.jsx(SettingsCode, {
+                /* @__PURE__ */ jsx_runtime7.jsx(SettingsCode, {
                   code: encodeSettings({ ...scene.current, angle: frame?.angle ?? scene.current.angle, playing: playing.current }, outputRef.current, glyphRef.current)
                 })
               ]
             }),
-            /* @__PURE__ */ jsx_runtime6.jsx("box", {
+            /* @__PURE__ */ jsx_runtime7.jsx("box", {
               id: "lab-canvas",
               flexGrow: 1,
               minHeight: 0,
@@ -41212,7 +41591,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                   scene.current.zoom = Math.max(0.3, Math.min(8, scene.current.zoom + (e.scroll.direction === "up" ? 0.07 : -0.07)));
                 draw();
               },
-              children: frame ? output === 0 ? /* @__PURE__ */ jsx_runtime6.jsx("image", {
+              children: frame ? output === 0 ? /* @__PURE__ */ jsx_runtime7.jsx("image", {
                 source: frame.image,
                 width: "100%",
                 height: "100%",
@@ -41220,12 +41599,12 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                 onError: (error) => {
                   throw error;
                 }
-              }) : import_react8.default.createElement("labCells", { pixels: frame.pixels, mode: output === 1 ? "half" : output === 2 ? "braille" : "glyphs", glyphs: frame.glyphs, glyphColors: frame.glyphColors, tone: frame.tone, glyphCols: frame.cols, glyphRows: frame.rows, width: "100%", height: "100%" }) : /* @__PURE__ */ jsx_runtime6.jsx("text", {
+              }) : import_react9.default.createElement("labCells", { pixels: frame.pixels, mode: output === 1 ? "half" : output === 2 ? "braille" : "glyphs", glyphs: frame.glyphs, glyphColors: frame.glyphColors, tone: frame.tone, glyphCols: frame.cols, glyphRows: frame.rows, width: "100%", height: "100%" }) : /* @__PURE__ */ jsx_runtime7.jsx("text", {
                 fg: "#718b99",
                 children: "Waiting for native frame…"
               })
             }),
-            /* @__PURE__ */ jsx_runtime6.jsxs("text", {
+            /* @__PURE__ */ jsx_runtime7.jsxs("text", {
               height: 1,
               flexShrink: 0,
               fg: "#c2ced5",
@@ -41245,13 +41624,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                 frame?.dropped ?? 0
               ]
             }),
-            /* @__PURE__ */ jsx_runtime6.jsx("text", {
+            /* @__PURE__ */ jsx_runtime7.jsx("text", {
               height: 1,
               flexShrink: 0,
               fg: "#718b99",
               children: "Drag rotate/pan · scroll zoom · W wire · C palette · P pause · R reset · T fractal target · F presets · Q exit"
             }),
-            /* @__PURE__ */ jsx_runtime6.jsxs("text", {
+            /* @__PURE__ */ jsx_runtime7.jsxs("text", {
               height: 1,
               flexShrink: 0,
               fg: "#c2ced5",
@@ -41269,7 +41648,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                 "×"
               ]
             }),
-            /* @__PURE__ */ jsx_runtime6.jsxs("text", {
+            /* @__PURE__ */ jsx_runtime7.jsxs("text", {
               height: 1,
               flexShrink: 0,
               fg: "#526b78",
@@ -41290,7 +41669,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             })
           ]
         }),
-        presetsOpen && /* @__PURE__ */ jsx_runtime6.jsx(PresetsPanel, {
+        presetsOpen && /* @__PURE__ */ jsx_runtime7.jsx(PresetsPanel, {
           capture,
           restore,
           close: () => setPresetsOpen(false)
@@ -41298,7 +41677,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       ]
     });
   }
-  var import_react8, jsx_runtime6, WIDTH = 240, HEIGHT = 160, ownedImages, frameListeners, framesReceived = 0, deliveries, names, glyphNames, tones;
+  var import_react9, jsx_runtime7, WIDTH = 240, HEIGHT = 160, ownedImages, frameListeners, framesReceived = 0, deliveries, names, glyphNames, tones;
   var init_lab = __esm(() => {
     init_lab_cells();
     init_lab_settings_code();
@@ -41306,8 +41685,8 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     init_Renderable();
     init_image();
     init_demo();
-    import_react8 = __toESM(require_react(), 1);
-    jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
+    import_react9 = __toESM(require_react(), 1);
+    jsx_runtime7 = __toESM(require_jsx_runtime(), 1);
     ownedImages = new Map;
     frameListeners = new Set;
     deliveries = [];
@@ -41338,7 +41717,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     names = ["Torus", "Orb", "Sheet", "4D hypercube", "Mandelbrot"];
     glyphNames = ["", "ASCII", "Shades", "Quadrants", "Braille + punctuation", "ASCII + braille", "Box drawing", "Blocks", "Pure braille"];
     tones = ["Color", "Grayscale", "Screen Bayer", "Surface fractal", "Surface fractal color", "Surface fractal wash", "Surface two-shade"];
-    mountDemo(App4);
+    mountDemo(App5);
     if (__host.headless)
       Object.assign(globalThis, { async __selfTest() {
         testSettingsCode();
@@ -41368,25 +41747,25 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         releaseBefore(mock, 3);
         if (released.join(",") !== "1,2" || mock.size !== 1)
           throw new Error("Superseded frames must be released");
-        const host = globalThis;
+        const host2 = globalThis;
         const wait = () => new Promise((resolve) => setTimeout(resolve, 30));
         for (const key of ["p", "2", "3", "1", "w", "c", "\x1B[D"]) {
-          host.__input(new TextEncoder().encode(key).buffer);
+          host2.__input(new TextEncoder().encode(key).buffer);
           await wait();
         }
-        host.__input(new TextEncoder().encode("[[").buffer);
+        host2.__input(new TextEncoder().encode("[[").buffer);
         await wait();
-        if (!host.__snapshot().includes("rotation 0.25×"))
+        if (!host2.__snapshot().includes("rotation 0.25×"))
           throw new Error("Rotation speed control failed");
-        host.__input(new TextEncoder().encode("]]").buffer);
+        host2.__input(new TextEncoder().encode("]]").buffer);
         await wait();
         for (const [input, label] of [["[".repeat(17), "rotation 0×"], ["[", "rotation -1/65536×"], ["[", "rotation -1/32768×"], ["]", "rotation -1/65536×"], ["]", "rotation 0×"], ["]".repeat(17), "rotation 1×"]]) {
-          host.__input(new TextEncoder().encode(input).buffer);
+          host2.__input(new TextEncoder().encode(input).buffer);
           await wait();
-          if (!host.__snapshot().includes(label))
+          if (!host2.__snapshot().includes(label))
             throw new Error("Signed rotation control failed: " + label);
         }
-        const snapshot = host.__snapshot();
+        const snapshot = host2.__snapshot();
         if (!snapshot.includes("wireframe") || !snapshot.includes("paused"))
           throw new Error("Lab controls failed: " + snapshot);
         const deadline = Date.now() + 3000;
@@ -41395,32 +41774,32 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         if (framesReceived < 2)
           throw new Error("Native worker must deliver frames through messages");
         const canvas = [...Renderable.renderablesByNumber.values()].find((node) => node.id === "lab-canvas");
-        host.__input(new TextEncoder().encode("p").buffer);
+        host2.__input(new TextEncoder().encode("p").buffer);
         const before = framesReceived;
         for (let i = 0;i < 60; i++) {
           const wheel = `\x1B[<${i % 2 ? 65 : 64};${canvas.x + 3};${canvas.y + 3}M`;
-          host.__input(new TextEncoder().encode(wheel).buffer);
+          host2.__input(new TextEncoder().encode(wheel).buffer);
           await new Promise((resolve) => setTimeout(resolve, 4));
         }
         await wait();
         if (framesReceived <= before)
           throw new Error("Zoom must keep receiving native frames");
         for (const [key, label] of [["=", "target 15"], ["-", "target 10"], ["4", "4D hypercube"], ["5", "Mandelbrot"], ["t", "250.0× zoom"], ["d", "Grayscale"], ["d", "Screen Bayer"], ["d", "Surface fractal"], ["d", "Surface fractal color", "Surface fractal wash", "Surface two-shade"], ["m", "Half blocks"], ["m", "Braille"], ["m", "G charset"], ["g", "Shades"], ["g", "Quadrants"], ["g", "Braille + punctuation"], ["g", "ASCII + braille"], ["g", "Box drawing"], ["g", "Blocks"], ["g", "Pure braille"], ["m", "Block fallback"]]) {
-          host.__input(new TextEncoder().encode(key).buffer);
+          host2.__input(new TextEncoder().encode(key).buffer);
           await wait();
-          if (!host.__snapshot().includes(label))
+          if (!host2.__snapshot().includes(label))
             throw new Error("Missing lab control state: " + label);
-          if (label === "Half blocks" && !host.__snapshot().includes("▀"))
+          if (label === "Half blocks" && !host2.__snapshot().includes("▀"))
             throw new Error("Half-block canvas must draw cells");
-          if (label === "Braille" && !/[\u2801-\u28ff]/.test(host.__snapshot()))
+          if (label === "Braille" && !/[\u2801-\u28ff]/.test(host2.__snapshot()))
             throw new Error("Braille canvas must draw dots");
         }
-        host.__input(new TextEncoder().encode("g").buffer);
+        host2.__input(new TextEncoder().encode("g").buffer);
         await new Promise((resolve) => setTimeout(resolve, 250));
         const glyphNode = [...Renderable.renderablesByNumber.values()].find((node) => node.glyphCols > 0);
         if (!glyphNode || !glyphNode.glyphs.trim())
           throw new Error("Native glyph rows must reach the canvas");
-        host.__input(new TextEncoder().encode("d").buffer);
+        host2.__input(new TextEncoder().encode("d").buffer);
         await new Promise((resolve) => setTimeout(resolve, 250));
         let colored = false;
         glyphNode.renderSelf({ drawText(_text, _x, _y, fg2, bg) {
@@ -41442,44 +41821,44 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         if (!colored)
           throw new Error("Braille drawing must submit source colors to OpenTUI");
         glyphNode.mode = "glyphs";
-        host.__resize(60, 18);
+        host2.__resize(60, 18);
         await new Promise((resolve) => setTimeout(resolve, 700));
         if (glyphNode.glyphCols > glyphNode.width || glyphNode.glyphRows > glyphNode.height)
           throw new Error("Native glyph dimensions must follow resize");
-        host.__resize(80, 24);
+        host2.__resize(80, 24);
         const press = async (text) => {
-          host.__input(new TextEncoder().encode(text).buffer);
+          host2.__input(new TextEncoder().encode(text).buffer);
           await new Promise((resolve) => setTimeout(resolve, 180));
         };
         await press("4");
         const codeBox = [...Renderable.renderablesByNumber.values()].find((node) => node.id === "lab-settings-code");
         const copyButton = [...Renderable.renderablesByNumber.values()].find((node) => node.id === "lab-copy-code");
-        if (!host.__snapshot().includes("QT1") || !host.__snapshot().includes("[copy]") || copyButton.y !== codeBox.y)
+        if (!host2.__snapshot().includes("QT1") || !host2.__snapshot().includes("[copy]") || copyButton.y !== codeBox.y)
           throw new Error("Settings code and border copy button must be visible");
         await press(`\x1B[<0;${copyButton.x + 1};${copyButton.y + 1}M\x1B[<0;${copyButton.x + 1};${copyButton.y + 1}m`);
-        if (!host.__snapshot().includes("[sent]"))
+        if (!host2.__snapshot().includes("[sent]"))
           throw new Error("Copy click must reach the native clipboard operation");
         await press("f");
-        for (let i = 0;i < 100 && !host.__snapshot().includes("Choose a slot"); i++)
+        for (let i = 0;i < 100 && !host2.__snapshot().includes("Choose a slot"); i++)
           await new Promise((resolve) => setTimeout(resolve, 30));
-        if (!host.__snapshot().includes("Auto:"))
+        if (!host2.__snapshot().includes("Auto:"))
           throw new Error("Preset must preview automatic name");
         await press("\x1B[F");
-        if (!host.__snapshot().includes("128."))
+        if (!host2.__snapshot().includes("128."))
           throw new Error("Preset picker must scroll to last slot");
         await press("\x1B[H");
         await press("\t");
         await press("quiet cube");
-        if (!host.__snapshot().includes("quiet cube"))
+        if (!host2.__snapshot().includes("quiet cube"))
           throw new Error("Preset descriptions must accept q and spaces without triggering shortcuts");
         await press("\r");
         await press("\x1B");
         await press("5");
         await press("f");
-        for (let i = 0;i < 100 && !host.__snapshot().includes("Choose a slot"); i++)
+        for (let i = 0;i < 100 && !host2.__snapshot().includes("Choose a slot"); i++)
           await new Promise((resolve) => setTimeout(resolve, 30));
         await press("\r");
-        if (!host.__snapshot().includes("4D hypercube") || host.__snapshot().includes("128 local slots"))
+        if (!host2.__snapshot().includes("4D hypercube") || host2.__snapshot().includes("128 local slots"))
           throw new Error("Loading must restore the saved scene and close the panel");
         if (__host.takeBuffer(0) !== null)
           throw new Error("Unknown frame IDs must not expose pixels");
@@ -41492,22 +41871,22 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     return "#" + color.map((channel, i) => Math.round(background[i] + (channel - background[i]) * amount).toString(16).padStart(2, "0")).join("");
   }
   function Activity({ pulse }) {
-    const [size, setSize] = import_react9.useState({ width: 24, height: 8 });
-    const [time, setTime] = import_react9.useState(0);
-    const [blink, setBlink] = import_react9.useState(null);
-    import_react9.useEffect(() => {
+    const [size, setSize] = import_react10.useState({ width: 24, height: 8 });
+    const [time, setTime] = import_react10.useState(0);
+    const [blink, setBlink] = import_react10.useState(null);
+    import_react10.useEffect(() => {
       const started = Date.now();
       const timer = setInterval(() => setTime((Date.now() - started) / 1000), 50);
       return () => clearInterval(timer);
     }, []);
     const columns = Math.max(1, Math.floor((size.width - 4) / 3));
     const rows = Math.max(1, Math.min(12, size.height - 4));
-    import_react9.useEffect(() => {
-      const host = globalThis.__host;
-      if (!host.postMessage(`grid:${columns}:${rows}`))
+    import_react10.useEffect(() => {
+      const host2 = globalThis.__host;
+      if (!host2.postMessage(`grid:${columns}:${rows}`))
         throw new Error("Native grid configuration rejected");
     }, [columns, rows]);
-    import_react9.useEffect(() => {
+    import_react10.useEffect(() => {
       if (!pulse || pulse.columns !== columns || pulse.rows !== rows)
         return;
       setBlink({ cells: pulse.cells, columns, rows, started: Date.now() });
@@ -41517,7 +41896,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     const fade = Math.pow(Math.sin(Math.PI * (cycle % 1)), 1.4);
     const signal = 512 + 240 * Math.sin(time * 0.63) + 71 * Math.sin(time * 1.71);
     const coherence = 0.5 + 0.35 * Math.sin(time * 0.37 + 1.4);
-    return /* @__PURE__ */ jsx_runtime7.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime8.jsxs("box", {
       id: "message-activity",
       flexGrow: 1,
       minHeight: 0,
@@ -41530,7 +41909,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         setSize({ width: this.width, height: this.height });
       },
       children: [
-        Array.from({ length: rows }, (_2, y2) => /* @__PURE__ */ jsx_runtime7.jsx("box", {
+        Array.from({ length: rows }, (_2, y2) => /* @__PURE__ */ jsx_runtime8.jsx("box", {
           height: 1,
           flexShrink: 0,
           flexDirection: "row",
@@ -41541,7 +41920,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             const brightness = 0.12 + 0.88 * Math.pow(wave * 0.8 + shimmer * 0.2, 2);
             const selected = blink && blink.columns === columns && blink.rows === rows && blink.cells.includes(y2 * columns + x2) && blinkAge < 800;
             const color = selected ? Math.floor(blinkAge / 200) % 2 === 0 ? "#f5f4df" : "#101820" : tint(palette[(x2 + 2 * y2) % palette.length], brightness);
-            return /* @__PURE__ */ jsx_runtime7.jsx("box", {
+            return /* @__PURE__ */ jsx_runtime8.jsx("box", {
               id: `activity-cell-${x2}-${y2}`,
               width: 2,
               height: 1,
@@ -41550,13 +41929,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             }, x2);
           })
         }, y2)),
-        /* @__PURE__ */ jsx_runtime7.jsx("text", {
+        /* @__PURE__ */ jsx_runtime8.jsx("text", {
           height: 1,
           flexShrink: 0,
           fg: tint([164, 205, 213], fade),
           children: verbs[Math.floor(cycle) % verbs.length]
         }),
-        /* @__PURE__ */ jsx_runtime7.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime8.jsxs("text", {
           height: 1,
           flexShrink: 0,
           fg: tint([120, 157, 177], 0.55 + 0.3 * Math.sin(time * 0.9) ** 2),
@@ -41569,10 +41948,10 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       ]
     });
   }
-  var import_react9, jsx_runtime7, palette, verbs;
+  var import_react10, jsx_runtime8, palette, verbs;
   var init_activity = __esm(() => {
-    import_react9 = __toESM(require_react(), 1);
-    jsx_runtime7 = __toESM(require_jsx_runtime(), 1);
+    import_react10 = __toESM(require_react(), 1);
+    jsx_runtime8 = __toESM(require_jsx_runtime(), 1);
     palette = [[99, 199, 178], [133, 156, 225], [181, 136, 207], [224, 168, 101], [94, 183, 205]];
     verbs = ["thinking...", "connecting...", "considering...", "imagining...", "remembering...", "reconsidering..."];
   });
@@ -41580,10 +41959,10 @@ Please report this to https://github.com/markedjs/marked.`, e) {
   // js/messages.tsx
   var exports_messages = {};
   function ProgressBar({ progress, style }) {
-    const [width, setWidth] = import_react10.useState(0);
+    const [width, setWidth] = import_react11.useState(0);
     const filled = Math.round(width * progress / 100);
     const color = progress === 100 ? "#63c7b2" : "#438b80";
-    return /* @__PURE__ */ jsx_runtime8.jsx("box", {
+    return /* @__PURE__ */ jsx_runtime9.jsx("box", {
       flexGrow: 1,
       flexBasis: 0,
       minWidth: 0,
@@ -41593,17 +41972,17 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       onSizeChange: function() {
         setWidth(Math.max(0, Math.floor(this.width)));
       },
-      children: style === 0 ? /* @__PURE__ */ jsx_runtime8.jsx("box", {
+      children: style === 0 ? /* @__PURE__ */ jsx_runtime9.jsx("box", {
         width: `${progress}%`,
         height: 1,
         backgroundColor: color
-      }) : /* @__PURE__ */ jsx_runtime8.jsxs("text", {
+      }) : /* @__PURE__ */ jsx_runtime9.jsxs("text", {
         width: "100%",
         height: 1,
         fg: color,
         children: [
           (style === 1 ? "▰" : "━").repeat(filled),
-          /* @__PURE__ */ jsx_runtime8.jsx("span", {
+          /* @__PURE__ */ jsx_runtime9.jsx("span", {
             fg: "#36535f",
             children: (style === 1 ? "·" : "─").repeat(Math.max(0, width - filled))
           })
@@ -41612,8 +41991,8 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     });
   }
   function useBorderScroll() {
-    const node = import_react10.useRef(null);
-    const attach = import_react10.useCallback((scroll) => {
+    const node = import_react11.useRef(null);
+    const attach = import_react11.useCallback((scroll) => {
       node.current = scroll;
       if (scroll) {
         scroll.verticalScrollBar.visible = false;
@@ -41623,11 +42002,11 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     return { node, attach };
   }
   function BorderThumb({ scroll, id }) {
-    const [position, setPosition] = import_react10.useState({ top: 0, visible: false });
-    const [hover, setHover] = import_react10.useState(false);
-    const [active, setActive] = import_react10.useState(false);
-    const drag = import_react10.useRef(null);
-    import_react10.useEffect(() => {
+    const [position, setPosition] = import_react11.useState({ top: 0, visible: false });
+    const [hover, setHover] = import_react11.useState(false);
+    const [active, setActive] = import_react11.useState(false);
+    const drag = import_react11.useRef(null);
+    import_react11.useEffect(() => {
       const timer = setInterval(() => {
         const node = scroll.node.current;
         if (!node)
@@ -41639,7 +42018,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       }, 16);
       return () => clearInterval(timer);
     }, [scroll.node]);
-    return /* @__PURE__ */ jsx_runtime8.jsx("text", {
+    return /* @__PURE__ */ jsx_runtime9.jsx("text", {
       id,
       position: "absolute",
       right: -1,
@@ -41677,16 +42056,16 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       children: "┃"
     });
   }
-  function App5() {
+  function App6() {
     const requestEdges = useBorderScroll();
     const replyEdges = useBorderScroll();
-    const splitRow = import_react10.useRef(null);
-    const dragging = import_react10.useRef(false);
-    const grabOffset = import_react10.useRef(0);
-    const [rowWidth, setRowWidth] = import_react10.useState(0);
-    const [split, setSplit] = import_react10.useState(0.65);
-    const [dividerHover, setDividerHover] = import_react10.useState(false);
-    const [dividerActive, setDividerActive] = import_react10.useState(false);
+    const splitRow = import_react11.useRef(null);
+    const dragging = import_react11.useRef(false);
+    const grabOffset = import_react11.useRef(0);
+    const [rowWidth, setRowWidth] = import_react11.useState(0);
+    const [split, setSplit] = import_react11.useState(0.65);
+    const [dividerHover, setDividerHover] = import_react11.useState(false);
+    const [dividerActive, setDividerActive] = import_react11.useState(false);
     function resizeSplit(x2) {
       const row = splitRow.current;
       if (!row)
@@ -41696,13 +42075,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       const minRight = Math.min(20, available * 0.3);
       setSplit(Math.max(minLeft, Math.min(available - minRight, x2 - row.x - grabOffset.current)) / available);
     }
-    const rightColumn = import_react10.useRef(null);
-    const verticalDrag = import_react10.useRef(false);
-    const verticalGrab = import_react10.useRef(0);
-    const [rightHeight, setRightHeight] = import_react10.useState(0);
-    const [verticalSplit, setVerticalSplit] = import_react10.useState(0.5);
-    const [horizontalHover, setHorizontalHover] = import_react10.useState(false);
-    const [horizontalActive, setHorizontalActive] = import_react10.useState(false);
+    const rightColumn = import_react11.useRef(null);
+    const verticalDrag = import_react11.useRef(false);
+    const verticalGrab = import_react11.useRef(0);
+    const [rightHeight, setRightHeight] = import_react11.useState(0);
+    const [verticalSplit, setVerticalSplit] = import_react11.useState(0.5);
+    const [horizontalHover, setHorizontalHover] = import_react11.useState(false);
+    const [horizontalActive, setHorizontalActive] = import_react11.useState(false);
     function resizeVertical(y2) {
       const column = rightColumn.current;
       if (!column)
@@ -41712,15 +42091,15 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       setVerticalSplit(Math.max(minTop, Math.min(available - minBottom, y2 - column.y - verticalGrab.current)) / available);
     }
     const topHeight = rightHeight ? Math.max(Math.min(3, (rightHeight - 1) * 0.4), Math.min(rightHeight - 1 - Math.min(5, (rightHeight - 1) * 0.4), Math.round((rightHeight - 1) * verticalSplit))) : "50%";
-    const [pulse, setPulse] = import_react10.useState(null);
-    const [barStyle, setBarStyle] = import_react10.useState(0);
-    const [jobs, setJobs] = import_react10.useState([]);
-    const [tick, setTick] = import_react10.useState(0);
-    const [paused, setPaused] = import_react10.useState(false);
-    const [clicks, setClicks] = import_react10.useState(0);
-    const [counts, setCounts] = import_react10.useState([0, 0]);
-    const [events, setEvents] = import_react10.useState([]);
-    const finished = import_react10.useRef(new Set);
+    const [pulse, setPulse] = import_react11.useState(null);
+    const [barStyle, setBarStyle] = import_react11.useState(0);
+    const [jobs, setJobs] = import_react11.useState([]);
+    const [tick, setTick] = import_react11.useState(0);
+    const [paused, setPaused] = import_react11.useState(false);
+    const [clicks, setClicks] = import_react11.useState(0);
+    const [counts, setCounts] = import_react11.useState([0, 0]);
+    const [events, setEvents] = import_react11.useState([]);
+    const finished = import_react11.useRef(new Set);
     function clearFinished() {
       const ids = new Set(finished.current);
       finished.current.clear();
@@ -41753,7 +42132,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         rejected += 10;
       setCounts([sent, rejected]);
     }
-    import_react10.useEffect(() => {
+    import_react11.useEffect(() => {
       const listener = (event) => {
         if (event.type === "blink") {
           setPulse(event);
@@ -41790,7 +42169,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         keys3.off("key", key);
       };
     }, []);
-    import_react10.useEffect(() => {
+    import_react11.useEffect(() => {
       if (paused)
         return;
       const timer = setInterval(() => {
@@ -41799,12 +42178,12 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       }, 100);
       return () => clearInterval(timer);
     }, [paused]);
-    return /* @__PURE__ */ jsx_runtime8.jsx("box", {
+    return /* @__PURE__ */ jsx_runtime9.jsx("box", {
       width: "100%",
       height: "100%",
       padding: 1,
       backgroundColor: "#101820",
-      children: /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+      children: /* @__PURE__ */ jsx_runtime9.jsxs("box", {
         border: true,
         borderStyle: "rounded",
         borderColor: "#63c7b2",
@@ -41814,72 +42193,72 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         height: "100%",
         gap: 1,
         children: [
-          /* @__PURE__ */ jsx_runtime8.jsx("text", {
+          /* @__PURE__ */ jsx_runtime9.jsx("text", {
             height: 1,
             flexShrink: 0,
             fg: "#f6f0dd",
-            children: /* @__PURE__ */ jsx_runtime8.jsx("b", {
+            children: /* @__PURE__ */ jsx_runtime9.jsx("b", {
               children: "React → command queue → Zig worker → event queue → React"
             })
           }),
-          /* @__PURE__ */ jsx_runtime8.jsx("text", {
+          /* @__PURE__ */ jsx_runtime9.jsx("text", {
             height: 1,
             flexShrink: 0,
             fg: "#718b99",
             children: "One worker thread · 256 queued commands · 16 queued replies · copied strings"
           }),
-          /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+          /* @__PURE__ */ jsx_runtime9.jsxs("box", {
             flexDirection: "row",
             height: 1,
             flexShrink: 0,
             gap: 1,
             children: [
-              /* @__PURE__ */ jsx_runtime8.jsx("box", {
+              /* @__PURE__ */ jsx_runtime9.jsx("box", {
                 flexShrink: 0,
                 backgroundColor: "#294650",
                 paddingX: 1,
                 onMouseDown: () => submit(),
-                children: /* @__PURE__ */ jsx_runtime8.jsx("text", {
+                children: /* @__PURE__ */ jsx_runtime9.jsx("text", {
                   fg: "#63c7b2",
                   children: "S Job"
                 })
               }),
-              /* @__PURE__ */ jsx_runtime8.jsx("box", {
+              /* @__PURE__ */ jsx_runtime9.jsx("box", {
                 flexShrink: 0,
                 backgroundColor: "#294650",
                 paddingX: 1,
                 onMouseDown: () => submit(12),
-                children: /* @__PURE__ */ jsx_runtime8.jsx("text", {
+                children: /* @__PURE__ */ jsx_runtime9.jsx("text", {
                   fg: "#63c7b2",
                   children: "B Burst"
                 })
               }),
-              /* @__PURE__ */ jsx_runtime8.jsx("box", {
+              /* @__PURE__ */ jsx_runtime9.jsx("box", {
                 flexShrink: 0,
                 backgroundColor: "#294650",
                 paddingX: 1,
                 onMouseDown: () => spread(),
-                children: /* @__PURE__ */ jsx_runtime8.jsx("text", {
+                children: /* @__PURE__ */ jsx_runtime9.jsx("text", {
                   fg: "#63c7b2",
                   children: "F Spread"
                 })
               }),
-              /* @__PURE__ */ jsx_runtime8.jsx("box", {
+              /* @__PURE__ */ jsx_runtime9.jsx("box", {
                 flexShrink: 0,
                 backgroundColor: "#294650",
                 paddingX: 1,
                 onMouseDown: () => spread("random"),
-                children: /* @__PURE__ */ jsx_runtime8.jsx("text", {
+                children: /* @__PURE__ */ jsx_runtime9.jsx("text", {
                   fg: "#63c7b2",
                   children: "R Random"
                 })
               }),
-              /* @__PURE__ */ jsx_runtime8.jsx("box", {
+              /* @__PURE__ */ jsx_runtime9.jsx("box", {
                 flexShrink: 0,
                 backgroundColor: "#293340",
                 paddingX: 1,
                 onMouseDown: () => setClicks((n) => n + 1),
-                children: /* @__PURE__ */ jsx_runtime8.jsxs("text", {
+                children: /* @__PURE__ */ jsx_runtime9.jsxs("text", {
                   fg: "#e9af70",
                   children: [
                     "Space UI counter ",
@@ -41889,7 +42268,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
               })
             ]
           }),
-          /* @__PURE__ */ jsx_runtime8.jsxs("text", {
+          /* @__PURE__ */ jsx_runtime9.jsxs("text", {
             height: 1,
             flexShrink: 0,
             fg: "#c2ced5",
@@ -41904,7 +42283,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
               " · Q exit"
             ]
           }),
-          /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+          /* @__PURE__ */ jsx_runtime9.jsxs("box", {
             id: "message-split",
             ref: splitRow,
             onSizeChange: function() {
@@ -41916,7 +42295,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             minHeight: 0,
             overflow: "hidden",
             children: [
-              /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+              /* @__PURE__ */ jsx_runtime9.jsxs("box", {
                 id: "message-request-panel",
                 width: rowWidth ? Math.max(30, Math.min(rowWidth - 21, Math.round((rowWidth - 1) * split))) : "65%",
                 flexShrink: 0,
@@ -41925,7 +42304,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                 title: ` Requests (${jobs.length}) `,
                 paddingX: 1,
                 children: [
-                  /* @__PURE__ */ jsx_runtime8.jsx("scrollbox", {
+                  /* @__PURE__ */ jsx_runtime9.jsx("scrollbox", {
                     id: "message-requests",
                     ref: requestEdges.attach,
                     width: "100%",
@@ -41935,17 +42314,17 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                     stickyScroll: true,
                     stickyStart: "bottom",
                     contentOptions: { gap: 0 },
-                    children: jobs.length === 0 ? /* @__PURE__ */ jsx_runtime8.jsx("text", {
+                    children: jobs.length === 0 ? /* @__PURE__ */ jsx_runtime9.jsx("text", {
                       fg: "#718b99",
                       children: "Send a job to start. Try a burst while it works."
-                    }) : jobs.map((job) => /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+                    }) : jobs.map((job) => /* @__PURE__ */ jsx_runtime9.jsxs("box", {
                       flexDirection: "row",
                       width: "100%",
                       height: 1,
                       flexShrink: 0,
                       gap: 1,
                       children: [
-                        /* @__PURE__ */ jsx_runtime8.jsxs("text", {
+                        /* @__PURE__ */ jsx_runtime9.jsxs("text", {
                           width: 15,
                           flexShrink: 0,
                           fg: job.status === "done" ? "#63c7b2" : "#c2ced5",
@@ -41956,11 +42335,11 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                             job.status
                           ]
                         }),
-                        /* @__PURE__ */ jsx_runtime8.jsx(ProgressBar, {
+                        /* @__PURE__ */ jsx_runtime9.jsx(ProgressBar, {
                           progress: job.progress,
                           style: barStyle
                         }),
-                        /* @__PURE__ */ jsx_runtime8.jsx("text", {
+                        /* @__PURE__ */ jsx_runtime9.jsx("text", {
                           id: `message-percent-${job.id}`,
                           width: 4,
                           flexShrink: 0,
@@ -41970,13 +42349,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                       ]
                     }, job.id))
                   }),
-                  /* @__PURE__ */ jsx_runtime8.jsx(BorderThumb, {
+                  /* @__PURE__ */ jsx_runtime9.jsx(BorderThumb, {
                     id: "request-scroll-thumb",
                     scroll: requestEdges
                   })
                 ]
               }),
-              /* @__PURE__ */ jsx_runtime8.jsx("box", {
+              /* @__PURE__ */ jsx_runtime9.jsx("box", {
                 id: "message-divider",
                 width: 1,
                 flexShrink: 0,
@@ -42007,13 +42386,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                   setDividerActive(false);
                   event.stopPropagation();
                 },
-                children: /* @__PURE__ */ jsx_runtime8.jsx("box", {
+                children: /* @__PURE__ */ jsx_runtime9.jsx("box", {
                   width: 1,
                   height: "100%",
                   backgroundColor: dividerActive ? "#36535f" : dividerHover ? "#243740" : "#101820"
                 })
               }),
-              /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+              /* @__PURE__ */ jsx_runtime9.jsxs("box", {
                 id: "message-right-column",
                 ref: rightColumn,
                 flexGrow: 1,
@@ -42024,7 +42403,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                   setRightHeight(this.height);
                 },
                 children: [
-                  /* @__PURE__ */ jsx_runtime8.jsxs("box", {
+                  /* @__PURE__ */ jsx_runtime9.jsxs("box", {
                     id: "message-reply-panel",
                     height: topHeight,
                     flexShrink: 0,
@@ -42033,7 +42412,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                     title: ` Native replies (${events.length}) `,
                     paddingX: 1,
                     children: [
-                      /* @__PURE__ */ jsx_runtime8.jsx("scrollbox", {
+                      /* @__PURE__ */ jsx_runtime9.jsx("scrollbox", {
                         id: "message-replies",
                         ref: replyEdges.attach,
                         width: "100%",
@@ -42043,20 +42422,20 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                         stickyScroll: true,
                         stickyStart: "bottom",
                         contentOptions: { gap: 0 },
-                        children: events.map((event, i) => /* @__PURE__ */ jsx_runtime8.jsx("text", {
+                        children: events.map((event, i) => /* @__PURE__ */ jsx_runtime9.jsx("text", {
                           height: 1,
                           flexShrink: 0,
                           fg: "#a59de0",
                           children: event.type === "blink" ? `← blink #${event.sequence}: ${event.cells.length} cells` : `← #${event.id}  ${event.type}  ${event.progress}%`
                         }, i))
                       }),
-                      /* @__PURE__ */ jsx_runtime8.jsx(BorderThumb, {
+                      /* @__PURE__ */ jsx_runtime9.jsx(BorderThumb, {
                         id: "reply-scroll-thumb",
                         scroll: replyEdges
                       })
                     ]
                   }),
-                  /* @__PURE__ */ jsx_runtime8.jsx("box", {
+                  /* @__PURE__ */ jsx_runtime9.jsx("box", {
                     id: "message-horizontal-divider",
                     width: "100%",
                     height: 1,
@@ -42086,14 +42465,14 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                       event.stopPropagation();
                     }
                   }),
-                  /* @__PURE__ */ jsx_runtime8.jsx(Activity, {
+                  /* @__PURE__ */ jsx_runtime9.jsx(Activity, {
                     pulse
                   })
                 ]
               })
             ]
           }),
-          /* @__PURE__ */ jsx_runtime8.jsxs("text", {
+          /* @__PURE__ */ jsx_runtime9.jsxs("text", {
             height: 1,
             flexShrink: 0,
             fg: "#718b99",
@@ -42107,13 +42486,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       })
     });
   }
-  var import_react10, jsx_runtime8, listeners, nativeBlinks, received, acceptedIds, nextId = 1, sent = 0, rejected = 0, uiTicks = 0, barStyles;
+  var import_react11, jsx_runtime9, listeners, nativeBlinks, received, acceptedIds, nextId = 1, sent = 0, rejected = 0, uiTicks = 0, barStyles;
   var init_messages = __esm(() => {
     init_activity();
     init_Renderable();
     init_demo();
-    import_react10 = __toESM(require_react(), 1);
-    jsx_runtime8 = __toESM(require_jsx_runtime(), 1);
+    import_react11 = __toESM(require_react(), 1);
+    jsx_runtime9 = __toESM(require_jsx_runtime(), 1);
     listeners = new Set;
     nativeBlinks = [];
     received = [];
@@ -42130,16 +42509,16 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         listener(event);
     } });
     barStyles = ["solid", "segmented", "thin"];
-    mountDemo(App5);
+    mountDemo(App6);
     if (__host.headless)
       Object.assign(globalThis, {
         async __selfTest() {
-          const host = globalThis;
+          const host2 = globalThis;
           const expect = (condition, message) => {
             if (!condition)
               throw new Error(message);
           };
-          const feed = (text) => host.__input(new TextEncoder().encode(text).buffer);
+          const feed = (text) => host2.__input(new TextEncoder().encode(text).buffer);
           const idleDeadline = Date.now() + 5500;
           while (nativeBlinks.length === 0 && Date.now() < idleDeadline)
             await new Promise((resolve) => setTimeout(resolve, 10));
@@ -42181,7 +42560,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           expect(received.filter((e) => e.id === first).map((e) => e.progress).join(",") === "0,20,40,60,80,100", "progress must preserve FIFO order");
           expect(uiTicks > 1, "JS timers must run while worker is busy");
           await new Promise((resolve) => setTimeout(resolve, 20));
-          expect(host.__snapshot().includes("UI counter 1"), `React input must update during native work: ${host.__snapshot()}`);
+          expect(host2.__snapshot().includes("UI counter 1"), `React input must update during native work: ${host2.__snapshot()}`);
           const spreadFirst = nextId;
           const started = Date.now();
           feed("f");
@@ -42210,7 +42589,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           for (const style of ["segmented", "thin", "solid"]) {
             feed("v");
             await new Promise((resolve) => setTimeout(resolve, 20));
-            expect(host.__snapshot().includes(`bar style ${style}`), "style key should cycle rendered bars");
+            expect(host2.__snapshot().includes(`bar style ${style}`), "style key should cycle rendered bars");
           }
           const find = (id) => [...Renderable.renderablesByNumber.values()].find((node) => node.id === id);
           const divider = find("message-divider"), left = find("message-request-panel"), right = find("message-reply-panel");
@@ -42220,13 +42599,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             const x2 = divider.x + offset;
             feed(`\x1B[<0;${x2 + 1};${divider.y + 2}M`);
             feed(`\x1B[<32;${x2 + 1};${divider.y + 2}M`);
-            host.__frame();
+            host2.__frame();
             expect(divider.x === startX, "stationary drag must not jump at any grab point");
             feed(`\x1B[<32;${x2 + 2};${divider.y + 2}M`);
-            host.__frame();
+            host2.__frame();
             expect(divider.x === startX + 1, "divider must track a one-column drag exactly");
             feed(`\x1B[<32;${x2 + 1};${divider.y + 2}M`);
-            host.__frame();
+            host2.__frame();
             expect(divider.x === startX, "reverse drag must return exactly without drift");
             feed(`\x1B[<0;${x2 + 1};${divider.y + 2}m`);
           }
@@ -42241,8 +42620,8 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           await new Promise((resolve) => setTimeout(resolve, 50));
           const percent = find("message-percent-1");
           expect(percent.x + percent.width <= requestScroll.viewport.x + requestScroll.viewport.width, `percentage outside resized viewport: ${percent.x}+${percent.width}, viewport ${requestScroll.viewport.x}+${requestScroll.viewport.width}`);
-          expect(host.__snapshot().split(`
-`).some((line) => line.includes("100%")), `completed percentages should remain visible after narrowing: ${host.__snapshot()}`);
+          expect(host2.__snapshot().split(`
+`).some((line) => line.includes("100%")), `completed percentages should remain visible after narrowing: ${host2.__snapshot()}`);
           for (let style = 0;style < 3; style++) {
             const divider2 = find("message-divider"), row = find("message-split");
             feed(`\x1B[<0;${divider2.x + 1};${divider2.y + 2}M`);
@@ -42264,10 +42643,10 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           const horizontalY = horizontal.y;
           feed(`\x1B[<0;${horizontal.x + 2};${horizontal.y + 1}M`);
           feed(`\x1B[<32;${horizontal.x + 2};${horizontalY + 1}M`);
-          host.__frame();
+          host2.__frame();
           expect(horizontal.y === horizontalY, "horizontal divider must not jump on grab");
           feed(`\x1B[<32;${horizontal.x + 2};${horizontalY}M`);
-          host.__frame();
+          host2.__frame();
           expect(horizontal.y === horizontalY - 1, "horizontal divider must track one row");
           feed(`\x1B[<0;${horizontal.x + 2};${horizontalY}m`);
           expect(activity.height > 0, "activity pane must retain visible space");
@@ -42297,191 +42676,16 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             scroll.scrollTo(0);
           }
           await new Promise((resolve) => setTimeout(resolve, 30));
-          expect(host.__snapshot().includes("← #1"), "oldest reply must remain accessible");
+          expect(host2.__snapshot().includes("← #1"), "oldest reply must remain accessible");
           feed("sc");
           await new Promise((resolve) => setTimeout(resolve, 20));
-          expect(host.__snapshot().includes("Requests (1)"), "clear finished must preserve new work");
-          expect(!host.__snapshot().includes("← #1 "), "clear finished must remove replies for completed jobs");
+          expect(host2.__snapshot().includes("Requests (1)"), "clear finished must preserve new work");
+          expect(!host2.__snapshot().includes("← #1 "), "clear finished must remove replies for completed jobs");
           const beforeBursts = sent;
           feed("bb");
           expect(sent === beforeBursts + 24 && rejected === 0, "two bursts must queue completely while a job is running");
         }
       });
-  });
-
-  // vendor/opentui/packages/core/src/lib/KeyHandler.ts
-  class KeyEvent {
-    name;
-    ctrl;
-    meta;
-    shift;
-    option;
-    sequence;
-    number;
-    raw;
-    eventType;
-    source;
-    code;
-    super;
-    hyper;
-    capsLock;
-    numLock;
-    baseCode;
-    repeated;
-    _defaultPrevented = false;
-    _propagationStopped = false;
-    constructor(key) {
-      this.name = key.name;
-      this.ctrl = key.ctrl;
-      this.meta = key.meta;
-      this.shift = key.shift;
-      this.option = key.option;
-      this.sequence = key.sequence;
-      this.number = key.number;
-      this.raw = key.raw;
-      this.eventType = key.eventType;
-      this.source = key.source;
-      this.code = key.code;
-      this.super = key.super;
-      this.hyper = key.hyper;
-      this.capsLock = key.capsLock;
-      this.numLock = key.numLock;
-      this.baseCode = key.baseCode;
-      this.repeated = key.repeated;
-    }
-    get defaultPrevented() {
-      return this._defaultPrevented;
-    }
-    get propagationStopped() {
-      return this._propagationStopped;
-    }
-    preventDefault() {
-      this._defaultPrevented = true;
-    }
-    stopPropagation() {
-      this._propagationStopped = true;
-    }
-  }
-
-  class PasteEvent {
-    type = "paste";
-    bytes;
-    metadata;
-    _defaultPrevented = false;
-    _propagationStopped = false;
-    constructor(bytes, metadata) {
-      this.bytes = bytes;
-      this.metadata = metadata;
-    }
-    get defaultPrevented() {
-      return this._defaultPrevented;
-    }
-    get propagationStopped() {
-      return this._propagationStopped;
-    }
-    preventDefault() {
-      this._defaultPrevented = true;
-    }
-    stopPropagation() {
-      this._propagationStopped = true;
-    }
-  }
-  var import_events8, KeyHandler, InternalKeyHandler;
-  var init_KeyHandler = __esm(() => {
-    import_events8 = __toESM(require_events(), 1);
-    KeyHandler = class KeyHandler extends import_events8.EventEmitter {
-      processParsedKey(parsedKey) {
-        try {
-          switch (parsedKey.eventType) {
-            case "press":
-              this.emit("keypress", new KeyEvent(parsedKey));
-              break;
-            case "release":
-              this.emit("keyrelease", new KeyEvent(parsedKey));
-              break;
-            default:
-              this.emit("keypress", new KeyEvent(parsedKey));
-              break;
-          }
-        } catch (error) {
-          console.error(`[KeyHandler] Error processing parsed key:`, error);
-          return true;
-        }
-        return true;
-      }
-      processPaste(bytes, metadata) {
-        try {
-          this.emit("paste", new PasteEvent(bytes, metadata));
-        } catch (error) {
-          console.error(`[KeyHandler] Error processing paste:`, error);
-        }
-      }
-    };
-    InternalKeyHandler = class InternalKeyHandler extends KeyHandler {
-      renderableHandlers = new Map;
-      emit(event, ...args) {
-        return this.emitWithPriority(event, ...args);
-      }
-      emitWithPriority(event, ...args) {
-        let hasGlobalListeners = false;
-        const globalListeners = this.listeners(event);
-        if (globalListeners.length > 0) {
-          hasGlobalListeners = true;
-          for (const listener of globalListeners) {
-            try {
-              listener(...args);
-            } catch (error) {
-              console.error(`[KeyHandler] Error in global ${event} handler:`, error);
-            }
-            if (event === "keypress" || event === "keyrelease" || event === "paste") {
-              const keyEvent = args[0];
-              if (keyEvent.propagationStopped) {
-                return hasGlobalListeners;
-              }
-            }
-          }
-        }
-        const renderableSet = this.renderableHandlers.get(event);
-        const renderableHandlers = renderableSet && renderableSet.size > 0 ? [...renderableSet] : [];
-        let hasRenderableListeners = false;
-        if (renderableSet && renderableSet.size > 0) {
-          hasRenderableListeners = true;
-          if (event === "keypress" || event === "keyrelease" || event === "paste") {
-            const keyEvent = args[0];
-            if (keyEvent.defaultPrevented)
-              return hasGlobalListeners || hasRenderableListeners;
-            if (keyEvent.propagationStopped)
-              return hasGlobalListeners || hasRenderableListeners;
-          }
-          for (const handler of renderableHandlers) {
-            try {
-              handler(...args);
-            } catch (error) {
-              console.error(`[KeyHandler] Error in renderable ${event} handler:`, error);
-            }
-            if (event === "keypress" || event === "keyrelease" || event === "paste") {
-              const keyEvent = args[0];
-              if (keyEvent.propagationStopped) {
-                return hasGlobalListeners || hasRenderableListeners;
-              }
-            }
-          }
-        }
-        return hasGlobalListeners || hasRenderableListeners;
-      }
-      onInternal(event, handler) {
-        if (!this.renderableHandlers.has(event)) {
-          this.renderableHandlers.set(event, new Set);
-        }
-        this.renderableHandlers.get(event).add(handler);
-      }
-      offInternal(event, handler) {
-        const handlers = this.renderableHandlers.get(event);
-        if (handlers) {
-          handlers.delete(handler);
-        }
-      }
-    };
   });
 
   // js/editor-app.tsx
@@ -42507,14 +42711,14 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     });
   }
   function Editor({ keys: keys4 }) {
-    const editor = import_react11.useRef(null), pathInput = import_react11.useRef(null), recentScroll = import_react11.useRef(null);
-    const [path2, setPath] = import_react11.useState(""), [text, setText] = import_react11.useState(""), [saved, setSaved] = import_react11.useState("");
-    const [busy, setBusy] = import_react11.useState(false), [status, setStatus] = import_react11.useState("New document");
-    const [confirm, setConfirm] = import_react11.useState(null);
-    const [menu, setMenu] = import_react11.useState(false), [item, setItem] = import_react11.useState(0), [submenu, setSubmenu] = import_react11.useState(false), [recentIndex, setRecentIndex] = import_react11.useState(0);
-    const [recents, setRecents] = import_react11.useState([]);
-    const [dialog, setDialog] = import_react11.useState(null), [filename, setFilename] = import_react11.useState("");
-    const dirty4 = text !== saved;
+    const editor = import_react12.useRef(null), pathInput = import_react12.useRef(null), recentScroll = import_react12.useRef(null);
+    const [path2, setPath] = import_react12.useState(""), [text, setText] = import_react12.useState(""), [saved2, setSaved] = import_react12.useState("");
+    const [busy, setBusy] = import_react12.useState(false), [status, setStatus] = import_react12.useState("New document");
+    const [confirm, setConfirm] = import_react12.useState(null);
+    const [menu, setMenu] = import_react12.useState(false), [item, setItem] = import_react12.useState(0), [submenu, setSubmenu] = import_react12.useState(false), [recentIndex, setRecentIndex] = import_react12.useState(0);
+    const [recents, setRecents] = import_react12.useState([]);
+    const [dialog, setDialog] = import_react12.useState(null), [filename, setFilename] = import_react12.useState("");
+    const dirty4 = text !== saved2;
     const remember = (name) => setRecents((previous) => [name, ...previous.filter((value) => value !== name)].slice(0, 16));
     const closeMenu = () => {
       setMenu(false);
@@ -42624,14 +42828,14 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       else
         save(filename);
     };
-    import_react11.useEffect(() => {
+    import_react12.useEffect(() => {
       request({ op: "info" }).then((reply) => {
         setPath(reply.path);
         if (reply.path && !__host.headless)
           doLoad(reply.path);
       }).catch((error) => setStatus(error.message));
     }, []);
-    import_react11.useEffect(() => {
+    import_react12.useEffect(() => {
       if (menu || confirm || busy) {
         editor.current?.blur();
         pathInput.current?.blur();
@@ -42641,7 +42845,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       } else
         editor.current?.focus();
     }, [menu, dialog, confirm, busy]);
-    import_react11.useEffect(() => {
+    import_react12.useEffect(() => {
       const node = recentScroll.current;
       if (node) {
         if (recentIndex < node.scrollTop)
@@ -42650,7 +42854,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           node.scrollTo(recentIndex - node.viewport.height + 1);
       }
     }, [recentIndex, submenu]);
-    import_react11.useEffect(() => {
+    import_react12.useEffect(() => {
       const key = (event) => {
         const name = event.name;
         const stop = () => {
@@ -42743,21 +42947,21 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       };
       keys4.on("keypress", key);
       return () => keys4.off("keypress", key);
-    }, [path2, text, saved, busy, confirm, dialog, filename, menu, item, submenu, recents, recentIndex]);
+    }, [path2, text, saved2, busy, confirm, dialog, filename, menu, item, submenu, recents, recentIndex]);
     const labels = ["Open…        Ctrl+O", "Save         Ctrl+S", "Save as…", "Recent files      ›", "Quit         Ctrl+Q"];
-    return /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
       width: "100%",
       height: "100%",
       padding: 1,
       backgroundColor: "#101820",
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+        /* @__PURE__ */ jsx_runtime10.jsxs("box", {
           height: 1,
           flexDirection: "row",
           gap: 2,
           children: [
-            /* @__PURE__ */ jsx_runtime9.jsx("box", {
+            /* @__PURE__ */ jsx_runtime10.jsx("box", {
               id: "editor-file-menu",
               paddingX: 1,
               backgroundColor: menu ? "#294650" : "#20353f",
@@ -42768,12 +42972,12 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                   setItem(0);
                 }
               },
-              children: /* @__PURE__ */ jsx_runtime9.jsx("text", {
+              children: /* @__PURE__ */ jsx_runtime10.jsx("text", {
                 fg: "#85ddca",
                 children: "File"
               })
             }),
-            /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+            /* @__PURE__ */ jsx_runtime10.jsxs("text", {
               fg: "#96aeb8",
               children: [
                 path2 || "Untitled",
@@ -42783,14 +42987,14 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             })
           ]
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx("box", {
+        /* @__PURE__ */ jsx_runtime10.jsx("box", {
           border: true,
           borderStyle: "rounded",
           borderColor: "#36545e",
           flexGrow: 1,
           minHeight: 0,
           title: " Text ",
-          children: /* @__PURE__ */ jsx_runtime9.jsx("textarea", {
+          children: /* @__PURE__ */ jsx_runtime10.jsx("textarea", {
             id: "editor-text",
             ref: editor,
             flexGrow: 1,
@@ -42803,7 +43007,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             onContentChange: () => setText(editor.current?.plainText ?? "")
           })
         }),
-        /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime10.jsxs("text", {
           height: 1,
           fg: "#85ddca",
           children: [
@@ -42818,12 +43022,12 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             " bytes"
           ]
         }),
-        /* @__PURE__ */ jsx_runtime9.jsx("text", {
+        /* @__PURE__ */ jsx_runtime10.jsx("text", {
           height: 1,
           fg: "#718b99",
           children: "Alt+F File · Ctrl+O open · Ctrl+S save · Ctrl+Q quit"
         }),
-        (menu || dialog || confirm) && /* @__PURE__ */ jsx_runtime9.jsx("box", {
+        (menu || dialog || confirm) && /* @__PURE__ */ jsx_runtime10.jsx("box", {
           position: "absolute",
           left: 0,
           top: 2,
@@ -42834,7 +43038,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
               closeMenu();
           }
         }),
-        menu && /* @__PURE__ */ jsx_runtime9.jsx("box", {
+        menu && /* @__PURE__ */ jsx_runtime10.jsx("box", {
           id: "editor-menu",
           position: "absolute",
           left: 1,
@@ -42844,7 +43048,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           border: true,
           backgroundColor: "#20353f",
           borderColor: "#36545e",
-          children: labels.map((label, index) => /* @__PURE__ */ jsx_runtime9.jsx("box", {
+          children: labels.map((label, index) => /* @__PURE__ */ jsx_runtime10.jsx("box", {
             height: 1,
             paddingX: 1,
             backgroundColor: item === index ? "#294650" : "#20353f",
@@ -42857,13 +43061,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
               setItem(index);
               activate(index);
             },
-            children: /* @__PURE__ */ jsx_runtime9.jsx("text", {
+            children: /* @__PURE__ */ jsx_runtime10.jsx("text", {
               fg: "#eee9dc",
               children: label
             })
           }, label))
         }),
-        menu && submenu && /* @__PURE__ */ jsx_runtime9.jsx("box", {
+        menu && submenu && /* @__PURE__ */ jsx_runtime10.jsx("box", {
           id: "editor-recents",
           position: "absolute",
           left: 29,
@@ -42874,18 +43078,18 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           border: true,
           backgroundColor: "#20353f",
           borderColor: "#36545e",
-          children: /* @__PURE__ */ jsx_runtime9.jsx("scrollbox", {
+          children: /* @__PURE__ */ jsx_runtime10.jsx("scrollbox", {
             ref: recentScroll,
             flexGrow: 1,
             minHeight: 0,
-            children: recents.length ? recents.map((name, index) => /* @__PURE__ */ jsx_runtime9.jsx("box", {
+            children: recents.length ? recents.map((name, index) => /* @__PURE__ */ jsx_runtime10.jsx("box", {
               height: 1,
               flexShrink: 0,
               paddingX: 1,
               backgroundColor: recentIndex === index ? "#294650" : "#20353f",
               onMouseOver: () => setRecentIndex(index),
               onMouseDown: () => load(name),
-              children: /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+              children: /* @__PURE__ */ jsx_runtime10.jsxs("text", {
                 wrapMode: "none",
                 fg: "#eee9dc",
                 children: [
@@ -42894,13 +43098,13 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                   name
                 ]
               })
-            }, name)) : /* @__PURE__ */ jsx_runtime9.jsx("text", {
+            }, name)) : /* @__PURE__ */ jsx_runtime10.jsx("text", {
               fg: "#718b99",
               children: "No recent files"
             })
           })
         }),
-        dialog && /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+        dialog && /* @__PURE__ */ jsx_runtime10.jsxs("box", {
           position: "absolute",
           left: 2,
           top: 3,
@@ -42912,7 +43116,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           paddingX: 1,
           title: dialog === "open" ? " Open file " : " Save as ",
           children: [
-            /* @__PURE__ */ jsx_runtime9.jsx("input", {
+            /* @__PURE__ */ jsx_runtime10.jsx("input", {
               id: "editor-path",
               ref: pathInput,
               width: "100%",
@@ -42924,12 +43128,12 @@ Please report this to https://github.com/markedjs/marked.`, e) {
               focusedBackgroundColor: "#294650",
               textColor: "#eee9dc"
             }),
-            /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+            /* @__PURE__ */ jsx_runtime10.jsxs("box", {
               height: 1,
               flexDirection: "row",
               gap: 2,
               children: [
-                /* @__PURE__ */ jsx_runtime9.jsxs("text", {
+                /* @__PURE__ */ jsx_runtime10.jsxs("text", {
                   fg: "#85ddca",
                   onMouseDown: submit,
                   children: [
@@ -42938,7 +43142,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                     "]"
                   ]
                 }),
-                /* @__PURE__ */ jsx_runtime9.jsx("text", {
+                /* @__PURE__ */ jsx_runtime10.jsx("text", {
                   fg: "#85ddca",
                   onMouseDown: () => setDialog(null),
                   children: "[Esc: cancel]"
@@ -42947,7 +43151,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             })
           ]
         }),
-        confirm && /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+        confirm && /* @__PURE__ */ jsx_runtime10.jsxs("box", {
           position: "absolute",
           left: 2,
           top: 3,
@@ -42958,16 +43162,16 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           borderColor: "#85ddca",
           paddingX: 1,
           children: [
-            /* @__PURE__ */ jsx_runtime9.jsx("text", {
+            /* @__PURE__ */ jsx_runtime10.jsx("text", {
               fg: "#eee9dc",
               children: confirm.label
             }),
-            /* @__PURE__ */ jsx_runtime9.jsxs("box", {
+            /* @__PURE__ */ jsx_runtime10.jsxs("box", {
               flexDirection: "row",
               gap: 2,
               height: 1,
               children: [
-                /* @__PURE__ */ jsx_runtime9.jsx("text", {
+                /* @__PURE__ */ jsx_runtime10.jsx("text", {
                   fg: "#85ddca",
                   onMouseDown: () => {
                     if (!busy)
@@ -42975,7 +43179,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                   },
                   children: "[Enter: confirm]"
                 }),
-                /* @__PURE__ */ jsx_runtime9.jsx("text", {
+                /* @__PURE__ */ jsx_runtime10.jsx("text", {
                   fg: "#85ddca",
                   onMouseDown: () => setConfirm(null),
                   children: "[Esc: cancel]"
@@ -42988,7 +43192,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     });
   }
   async function testEditor(frame, feed) {
-    const host = globalThis;
+    const host2 = globalThis;
     const pause = async () => {
       await new Promise((resolve) => setTimeout(resolve, 80));
       frame();
@@ -43006,43 +43210,43 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     if (node.plainText !== `Hello café
 Second line`)
       throw new Error("Down on the last line must move to its end before Return");
-    if (!host.__snapshot().includes("Modified"))
+    if (!host2.__snapshot().includes("Modified"))
       throw new Error("Editor must track changes");
     feed("\x13");
-    for (let i = 0;i < 100 && !host.__snapshot().includes("Saved"); i++)
+    for (let i = 0;i < 100 && !host2.__snapshot().includes("Saved"); i++)
       await pause();
-    if (!host.__snapshot().includes("Saved"))
+    if (!host2.__snapshot().includes("Saved"))
       throw new Error("Editor save failed");
     feed(" extra");
     await pause();
     feed("\x11");
     await pause();
-    if (!host.__snapshot().includes("Quit and discard"))
+    if (!host2.__snapshot().includes("Quit and discard"))
       throw new Error("Quit must protect unsaved changes");
     feed("\x1B");
     await pause();
     feed("\x13");
-    for (let i = 0;i < 100 && !host.__snapshot().includes("Replace the existing"); i++)
+    for (let i = 0;i < 100 && !host2.__snapshot().includes("Replace the existing"); i++)
       await pause();
-    if (!host.__snapshot().includes("Replace the existing"))
+    if (!host2.__snapshot().includes("Replace the existing"))
       throw new Error("Overwrite must ask before replacing a file");
     feed("\x1B");
     await pause();
     feed("\x0F");
     await pause();
-    if (!host.__snapshot().includes("Open file"))
+    if (!host2.__snapshot().includes("Open file"))
       throw new Error("Ctrl+O must open the path dialog");
     feed("\r");
     await pause();
-    if (!host.__snapshot().includes("Discard unsaved"))
+    if (!host2.__snapshot().includes("Discard unsaved"))
       throw new Error("Load must protect unsaved changes");
     feed("\r");
     await pause();
-    if (!host.__snapshot().includes("Loaded") || host.__snapshot().includes("extra"))
+    if (!host2.__snapshot().includes("Loaded") || host2.__snapshot().includes("extra"))
       throw new Error("Editor load round trip failed");
     feed("\x1Bf");
     await pause();
-    if (!host.__snapshot().includes("Recent files"))
+    if (!host2.__snapshot().includes("Recent files"))
       throw new Error("Alt+F must open File menu");
     for (const arrow of ["\x1B[B", "\x1B[B", "\x1B[B", "\x1B[C"]) {
       feed(arrow);
@@ -43058,14 +43262,14 @@ Second line`)
       feed(arrow);
       await pause();
     }
-    if (!host.__snapshot().includes("Loaded") || host.__snapshot().includes("Recent files"))
+    if (!host2.__snapshot().includes("Loaded") || host2.__snapshot().includes("Recent files"))
       throw new Error("Recent selection must load and close menus");
   }
-  var import_react11, jsx_runtime9, pending = null;
+  var import_react12, jsx_runtime10, pending = null;
   var init_editor_app = __esm(() => {
     init_Renderable();
-    import_react11 = __toESM(require_react(), 1);
-    jsx_runtime9 = __toESM(require_jsx_runtime(), 1);
+    import_react12 = __toESM(require_react(), 1);
+    jsx_runtime10 = __toESM(require_jsx_runtime(), 1);
   });
 
   // js/gallery-app.tsx
@@ -43076,97 +43280,97 @@ Second line`)
     return syntax ??= SyntaxStyle.fromStyles({ default: { fg: ink }, "markup.heading": { fg: accent, bold: true }, "markup.strong": { bold: true }, "markup.italic": { italic: true }, "markup.link": { fg: "#9cbde8", underline: true }, "markup.raw": { fg: "#e9af70" } });
   }
   function Hint({ children }) {
-    return /* @__PURE__ */ jsx_runtime10.jsx("text", {
+    return /* @__PURE__ */ jsx_runtime11.jsx("text", {
       fg: muted,
       children
     });
   }
   function TextDemo() {
-    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime11.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime10.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime11.jsxs("text", {
           fg: ink,
           children: [
             "Plain text, ",
-            /* @__PURE__ */ jsx_runtime10.jsx("b", {
+            /* @__PURE__ */ jsx_runtime11.jsx("b", {
               children: "bold"
             }),
             ", ",
-            /* @__PURE__ */ jsx_runtime10.jsx("i", {
+            /* @__PURE__ */ jsx_runtime11.jsx("i", {
               children: "italic"
             }),
             ", ",
-            /* @__PURE__ */ jsx_runtime10.jsx("u", {
+            /* @__PURE__ */ jsx_runtime11.jsx("u", {
               children: "underline"
             }),
             ".",
-            /* @__PURE__ */ jsx_runtime10.jsx("br", {}),
+            /* @__PURE__ */ jsx_runtime11.jsx("br", {}),
             "A line break and ",
-            /* @__PURE__ */ jsx_runtime10.jsx("span", {
+            /* @__PURE__ */ jsx_runtime11.jsx("span", {
               fg: accent,
               children: "a colored span"
             }),
             "."
           ]
         }),
-        /* @__PURE__ */ jsx_runtime10.jsx("text", {
-          children: /* @__PURE__ */ jsx_runtime10.jsx("a", {
+        /* @__PURE__ */ jsx_runtime11.jsx("text", {
+          children: /* @__PURE__ */ jsx_runtime11.jsx("a", {
             href: "https://opentui.com",
             children: "OpenTUI hyperlink"
           })
         }),
-        /* @__PURE__ */ jsx_runtime10.jsx("text", {
+        /* @__PURE__ */ jsx_runtime11.jsx("text", {
           fg: ink,
           children: "Unicode: café · é · 日本語 · \uD83D\uDC69‍\uD83D\uDCBB"
         }),
-        /* @__PURE__ */ jsx_runtime10.jsxs("box", {
+        /* @__PURE__ */ jsx_runtime11.jsxs("box", {
           flexDirection: "row",
           gap: 1,
           height: 5,
           children: [
-            /* @__PURE__ */ jsx_runtime10.jsx("box", {
+            /* @__PURE__ */ jsx_runtime11.jsx("box", {
               border: true,
               borderStyle: "rounded",
               borderColor: accent,
               flexGrow: 1,
               padding: 1,
-              children: /* @__PURE__ */ jsx_runtime10.jsx("text", {
+              children: /* @__PURE__ */ jsx_runtime11.jsx("text", {
                 fg: accent,
                 children: "Flex: 1"
               })
             }),
-            /* @__PURE__ */ jsx_runtime10.jsx("box", {
+            /* @__PURE__ */ jsx_runtime11.jsx("box", {
               border: true,
               borderStyle: "double",
               borderColor: "#e9af70",
               flexGrow: 2,
               padding: 1,
-              children: /* @__PURE__ */ jsx_runtime10.jsx("text", {
+              children: /* @__PURE__ */ jsx_runtime11.jsx("text", {
                 fg: "#e9af70",
                 children: "Flex: 2"
               })
             })
           ]
         }),
-        /* @__PURE__ */ jsx_runtime10.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime11.jsx(Hint, {
           children: "Boxes provide borders, padding, alignment, clipping, and flex layout."
         })
       ]
     });
   }
   function InputDemo() {
-    const [value, setValue] = import_react12.useState("");
-    const [submitted, setSubmitted] = import_react12.useState("nothing yet");
-    const [length, setLength] = import_react12.useState(0);
-    const editor = import_react12.useRef(null);
-    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
+    const [value, setValue] = import_react13.useState("");
+    const [submitted, setSubmitted] = import_react13.useState("nothing yet");
+    const [length, setLength] = import_react13.useState(0);
+    const editor = import_react13.useRef(null);
+    return /* @__PURE__ */ jsx_runtime11.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime10.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime11.jsx(Hint, {
           children: "Click a field or press Tab. Type, paste, select with Shift+arrows."
         }),
-        /* @__PURE__ */ jsx_runtime10.jsx("input", {
+        /* @__PURE__ */ jsx_runtime11.jsx("input", {
           id: "gallery-input",
           height: 1,
           width: "100%",
@@ -43177,21 +43381,21 @@ Second line`)
           onInput: setValue,
           onSubmit: () => setSubmitted(value)
         }),
-        /* @__PURE__ */ jsx_runtime10.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime11.jsxs("text", {
           fg: accent,
           children: [
             "Name: ",
             value || "(empty)"
           ]
         }),
-        /* @__PURE__ */ jsx_runtime10.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime11.jsxs("text", {
           fg: muted,
           children: [
             "Submitted: ",
             submitted
           ]
         }),
-        /* @__PURE__ */ jsx_runtime10.jsx("textarea", {
+        /* @__PURE__ */ jsx_runtime11.jsx("textarea", {
           id: "gallery-textarea",
           ref: editor,
           height: 6,
@@ -43202,7 +43406,7 @@ Second line`)
           textColor: ink,
           onContentChange: () => setLength(editor.current?.plainText.length ?? 0)
         }),
-        /* @__PURE__ */ jsx_runtime10.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime11.jsxs("text", {
           fg: muted,
           children: [
             "Notes: ",
@@ -43214,16 +43418,16 @@ Second line`)
     });
   }
   function SelectDemo() {
-    const [choice, setChoice] = import_react12.useState("none");
-    const [tab, setTab] = import_react12.useState("Habitat");
+    const [choice, setChoice] = import_react13.useState("none");
+    const [tab, setTab] = import_react13.useState("Habitat");
     const options = [{ name: "Ember", description: "A curious forest dragon" }, { name: "Nimbus", description: "A sleepy cloud dragon" }, { name: "Moss", description: "A tiny garden dragon" }];
-    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime11.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime10.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime11.jsx(Hint, {
           children: "Tab focuses each widget. Arrow keys move; Enter chooses."
         }),
-        /* @__PURE__ */ jsx_runtime10.jsx("select", {
+        /* @__PURE__ */ jsx_runtime11.jsx("select", {
           id: "gallery-select",
           height: 7,
           width: "100%",
@@ -43233,14 +43437,14 @@ Second line`)
           textColor: ink,
           onSelect: (_i, o) => setChoice(o.name)
         }),
-        /* @__PURE__ */ jsx_runtime10.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime11.jsxs("text", {
           fg: accent,
           children: [
             "Chosen: ",
             choice
           ]
         }),
-        /* @__PURE__ */ jsx_runtime10.jsx("tab-select", {
+        /* @__PURE__ */ jsx_runtime11.jsx("tab-select", {
           id: "gallery-tabs",
           height: 3,
           width: "100%",
@@ -43248,7 +43452,7 @@ Second line`)
           options: [{ name: "Habitat", description: "Forest" }, { name: "Food", description: "Berries" }, { name: "Skills", description: "Flying" }],
           onChange: (_i, o) => setTab(o.name)
         }),
-        /* @__PURE__ */ jsx_runtime10.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime11.jsxs("text", {
           fg: accent,
           children: [
             "Active tab: ",
@@ -43259,14 +43463,14 @@ Second line`)
     });
   }
   function ScrollDemo() {
-    const [value, setValue] = import_react12.useState(25);
-    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
+    const [value, setValue] = import_react13.useState(25);
+    return /* @__PURE__ */ jsx_runtime11.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime10.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime11.jsx(Hint, {
           children: "Scroll with two fingers, drag the scrollbar, or focus and use arrows."
         }),
-        /* @__PURE__ */ jsx_runtime10.jsx("scrollbox", {
+        /* @__PURE__ */ jsx_runtime11.jsx("scrollbox", {
           id: "gallery-scroll",
           onMouseScroll: (e) => e.stopPropagation(),
           height: 9,
@@ -43275,7 +43479,7 @@ Second line`)
           borderColor: accent,
           scrollY: true,
           contentOptions: { gap: 0 },
-          children: Array.from({ length: 40 }, (_2, i) => /* @__PURE__ */ jsx_runtime10.jsxs("text", {
+          children: Array.from({ length: 40 }, (_2, i) => /* @__PURE__ */ jsx_runtime11.jsxs("text", {
             fg: i % 2 ? ink : accent,
             children: [
               "Field record ",
@@ -43284,7 +43488,7 @@ Second line`)
             ]
           }, i))
         }),
-        /* @__PURE__ */ jsx_runtime10.jsxs("text", {
+        /* @__PURE__ */ jsx_runtime11.jsxs("text", {
           fg: ink,
           children: [
             "Flight altitude: ",
@@ -43292,7 +43496,7 @@ Second line`)
             " m"
           ]
         }),
-        /* @__PURE__ */ jsx_runtime10.jsx("slider", {
+        /* @__PURE__ */ jsx_runtime11.jsx("slider", {
           id: "gallery-slider",
           orientation: "horizontal",
           height: 1,
@@ -43303,50 +43507,50 @@ Second line`)
           onChange: setValue,
           foregroundColor: accent
         }),
-        /* @__PURE__ */ jsx_runtime10.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime11.jsx(Hint, {
           children: "The scrollbox above contains native ScrollBar and Slider widgets."
         })
       ]
     });
   }
   function FontDemo() {
-    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime11.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime10.jsx("ascii-font", {
+        /* @__PURE__ */ jsx_runtime11.jsx("ascii-font", {
           text: "DRAGON",
           font: "tiny",
           color: accent
         }),
-        /* @__PURE__ */ jsx_runtime10.jsx("ascii-font", {
+        /* @__PURE__ */ jsx_runtime11.jsx("ascii-font", {
           text: "ZIG",
           font: "block",
           color: "#e9af70"
         }),
-        /* @__PURE__ */ jsx_runtime10.jsx("ascii-font", {
+        /* @__PURE__ */ jsx_runtime11.jsx("ascii-font", {
           text: "JS",
           font: "shade",
           color: "#a59de0"
         }),
-        /* @__PURE__ */ jsx_runtime10.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime11.jsx(Hint, {
           children: "ASCII fonts render into an OpenTUI framebuffer."
         })
       ]
     });
   }
   function CodeDemo() {
-    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime11.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime10.jsx(Hint, {
+        /* @__PURE__ */ jsx_runtime11.jsx(Hint, {
           children: "Code with a line-number gutter. Plain text; syntax parsing is not enabled."
         }),
-        /* @__PURE__ */ jsx_runtime10.jsx("line-number", {
+        /* @__PURE__ */ jsx_runtime11.jsx("line-number", {
           id: "gallery-lines",
           height: 10,
           width: "100%",
           fg: muted,
-          children: /* @__PURE__ */ jsx_runtime10.jsx("code", {
+          children: /* @__PURE__ */ jsx_runtime11.jsx("code", {
             id: "gallery-code",
             content: code,
             syntaxStyle: style(),
@@ -43359,15 +43563,15 @@ Second line`)
     });
   }
   function DiffDemo() {
-    const [split, setSplit] = import_react12.useState(false);
-    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
+    const [split, setSplit] = import_react13.useState(false);
+    return /* @__PURE__ */ jsx_runtime11.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime10.jsx("box", {
+        /* @__PURE__ */ jsx_runtime11.jsx("box", {
           id: "gallery-diff-toggle",
           height: 1,
           onMouseDown: () => setSplit((v2) => !v2),
-          children: /* @__PURE__ */ jsx_runtime10.jsxs("text", {
+          children: /* @__PURE__ */ jsx_runtime11.jsxs("text", {
             fg: accent,
             children: [
               "[ Click to switch: ",
@@ -43376,7 +43580,7 @@ Second line`)
             ]
           })
         }),
-        /* @__PURE__ */ jsx_runtime10.jsx("diff", {
+        /* @__PURE__ */ jsx_runtime11.jsx("diff", {
           id: "gallery-diff",
           diff: patch,
           syntaxStyle: style(),
@@ -43388,10 +43592,10 @@ Second line`)
     });
   }
   function MarkdownDemo() {
-    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
+    return /* @__PURE__ */ jsx_runtime11.jsxs("box", {
       gap: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime10.jsx("markdown", {
+        /* @__PURE__ */ jsx_runtime11.jsx("markdown", {
           id: "gallery-markdown",
           width: "100%",
           syntaxStyle: style(),
@@ -43405,7 +43609,7 @@ Second line`)
 > Approach with snacks.
 `
         }),
-        /* @__PURE__ */ jsx_runtime10.jsx("table", {
+        /* @__PURE__ */ jsx_runtime11.jsx("table", {
           id: "gallery-table",
           width: "100%",
           border: true,
@@ -43418,40 +43622,40 @@ Second line`)
   }
   function Gallery({ page, changePage }) {
     const Demo = demos[page];
-    const [hovered, setHovered] = import_react12.useState(null);
-    return /* @__PURE__ */ jsx_runtime10.jsxs("box", {
+    const [hovered, setHovered] = import_react13.useState(null);
+    return /* @__PURE__ */ jsx_runtime11.jsxs("box", {
       width: "100%",
       height: "100%",
       backgroundColor: "#101820",
       padding: 1,
       children: [
-        /* @__PURE__ */ jsx_runtime10.jsx("box", {
+        /* @__PURE__ */ jsx_runtime11.jsx("box", {
           flexDirection: "row",
           width: "100%",
           height: 2,
-          children: /* @__PURE__ */ jsx_runtime10.jsx("text", {
+          children: /* @__PURE__ */ jsx_runtime11.jsx("text", {
             fg: accent,
-            children: /* @__PURE__ */ jsx_runtime10.jsx("b", {
+            children: /* @__PURE__ */ jsx_runtime11.jsx("b", {
               children: "QuickTUI / Widget gallery"
             })
           })
         }),
-        /* @__PURE__ */ jsx_runtime10.jsxs("box", {
+        /* @__PURE__ */ jsx_runtime11.jsxs("box", {
           flexDirection: "row",
           flexGrow: 1,
           gap: 1,
           children: [
-            /* @__PURE__ */ jsx_runtime10.jsx("box", {
+            /* @__PURE__ */ jsx_runtime11.jsx("box", {
               width: 26,
               border: true,
               borderStyle: "rounded",
               borderColor: "#36535f",
               paddingX: 1,
-              children: /* @__PURE__ */ jsx_runtime10.jsx("scrollbox", {
+              children: /* @__PURE__ */ jsx_runtime11.jsx("scrollbox", {
                 flexGrow: 1,
                 width: "100%",
                 verticalScrollbarOptions: { width: 1, showArrows: true, trackOptions: { backgroundColor: "#101820", foregroundColor: "#101820" }, arrowOptions: { foregroundColor: "#526b78", backgroundColor: "#101820", arrowChars: { up: "↑", down: "↓" } } },
-                children: pages.map((name, i) => /* @__PURE__ */ jsx_runtime10.jsx("box", {
+                children: pages.map((name, i) => /* @__PURE__ */ jsx_runtime11.jsx("box", {
                   id: `gallery-nav-${i}`,
                   height: 1,
                   marginBottom: i === pages.length - 1 ? 0 : 1,
@@ -43461,7 +43665,7 @@ Second line`)
                   onMouseOver: () => setHovered(i),
                   onMouseOut: () => setHovered((value) => value === i ? null : value),
                   onMouseDown: () => changePage(i),
-                  children: /* @__PURE__ */ jsx_runtime10.jsxs("text", {
+                  children: /* @__PURE__ */ jsx_runtime11.jsxs("text", {
                     fg: page === i ? accent : muted,
                     children: [
                       i + 1,
@@ -43472,7 +43676,7 @@ Second line`)
                 }, name))
               })
             }),
-            /* @__PURE__ */ jsx_runtime10.jsx("box", {
+            /* @__PURE__ */ jsx_runtime11.jsx("box", {
               border: true,
               borderStyle: "rounded",
               borderColor: accent,
@@ -43480,23 +43684,23 @@ Second line`)
               padding: 1,
               flexGrow: 1,
               minWidth: 0,
-              children: /* @__PURE__ */ jsx_runtime10.jsx("scrollbox", {
+              children: /* @__PURE__ */ jsx_runtime11.jsx("scrollbox", {
                 flexGrow: 1,
                 width: "100%",
                 contentOptions: { paddingRight: 1 },
-                children: /* @__PURE__ */ jsx_runtime10.jsx(Demo, {})
+                children: /* @__PURE__ */ jsx_runtime11.jsx(Demo, {})
               }, page)
             })
           ]
         }),
-        /* @__PURE__ */ jsx_runtime10.jsx("text", {
+        /* @__PURE__ */ jsx_runtime11.jsx("text", {
           fg: muted,
           children: "Click page · F1/F2 previous/next · Tab focus · Esc exit"
         })
       ]
     });
   }
-  var import_react12, jsx_runtime10, pages, ink = "#d5e2e8", muted = "#8299a6", accent = "#63c7b2", code = `const dragon = { name: "Ember", wings: 2 };
+  var import_react13, jsx_runtime11, pages, ink = "#d5e2e8", muted = "#8299a6", accent = "#63c7b2", code = `const dragon = { name: "Ember", wings: 2 };
 
 function fly(height) {
   return \`\${dragon.name} flies \${height}m\`;
@@ -43514,8 +43718,8 @@ console.log(fly(12));`, patch = `--- a/dragon.js
 `, syntax, demos;
   var init_gallery_app = __esm(() => {
     init_syntax_style();
-    import_react12 = __toESM(require_react(), 1);
-    jsx_runtime10 = __toESM(require_jsx_runtime(), 1);
+    import_react13 = __toESM(require_react(), 1);
+    jsx_runtime11 = __toESM(require_jsx_runtime(), 1);
     pages = ["Text & layout", "Input & textarea", "Select & tabs", "Scroll & sliders", "ASCII fonts", "Code & lines", "Diff", "Markdown & tables"];
     demos = [TextDemo, InputDemo, SelectDemo, ScrollDemo, FontDemo, CodeDemo, DiffDemo, MarkdownDemo];
   });
@@ -43563,10 +43767,10 @@ console.log(fly(12));`, patch = `--- a/dragon.js
     const current = items.indexOf(context4.currentFocusedRenderable);
     items[(current + (reverse ? -1 : 1) + items.length) % items.length]?.focus();
   }
-  function App6() {
-    const [selected, setSelected] = import_react13.useState(0);
+  function App7() {
+    const [selected, setSelected] = import_react14.useState(0);
     setPageState = setSelected;
-    import_react13.useEffect(() => {
+    import_react14.useEffect(() => {
       effectMounted4 = true;
       if (isEditor)
         return () => {
@@ -43595,9 +43799,9 @@ console.log(fly(12));`, patch = `--- a/dragon.js
         keys4.off("keypress", key);
       };
     }, []);
-    return isEditor ? /* @__PURE__ */ jsx_runtime11.jsx(Editor, {
+    return isEditor ? /* @__PURE__ */ jsx_runtime12.jsx(Editor, {
       keys: keys4
-    }) : /* @__PURE__ */ jsx_runtime11.jsx(Gallery, {
+    }) : /* @__PURE__ */ jsx_runtime12.jsx(Gallery, {
       page: selected,
       changePage
     });
@@ -43632,7 +43836,7 @@ console.log(fly(12));`, patch = `--- a/dragon.js
       }
     }
   }
-  var import_react13, import_react_reconciler5, import_events9, jsx_runtime11, isEditor, dirty4 = true, stopped4 = false, container4, native4, root4, lib5, keys4, selection2 = null, selectionOwner2 = null, liveCount2 = 0, liveTimer2, parser4, lifecycle4, context4, reconciler4, report4 = (error) => {
+  var import_react14, import_react_reconciler5, import_events9, jsx_runtime12, isEditor, dirty4 = true, stopped4 = false, container4, native4, root4, lib5, keys4, selection2 = null, selectionOwner2 = null, liveCount2 = 0, liveTimer2, parser4, lifecycle4, context4, reconciler4, report4 = (error) => {
     console.error(String(error), error?.stack ?? "");
     throw error;
   }, effectMounted4 = false, hit = (x2, y2) => x2 < 0 || y2 < 0 ? undefined : Renderable.renderablesByNumber.get(lib5.checkHit(native4, x2, y2)), mouse3, page = 0, setPageState;
@@ -43646,10 +43850,10 @@ console.log(fly(12));`, patch = `--- a/dragon.js
     init_selection();
     init_editor_app();
     init_gallery_app();
-    import_react13 = __toESM(require_react(), 1);
+    import_react14 = __toESM(require_react(), 1);
     import_react_reconciler5 = __toESM(require_react_reconciler(), 1);
     import_events9 = __toESM(require_events(), 1);
-    jsx_runtime11 = __toESM(require_jsx_runtime(), 1);
+    jsx_runtime12 = __toESM(require_jsx_runtime(), 1);
     isEditor = __host.example === "editor";
     if (isEditor)
       Object.assign(globalThis, { __message: receiveEditorMessage });
@@ -43804,31 +44008,31 @@ console.log(fly(12));`, patch = `--- a/dragon.js
       lib5.enableMouse(native4, true);
     root4 = new RootRenderable(context4);
     container4 = reconciler4.createContainer(root4, 1, null, false, null, "", report4, report4, report4, () => {});
-    reconciler4.updateContainerSync(/* @__PURE__ */ jsx_runtime11.jsx(App6, {}), container4, null, null);
+    reconciler4.updateContainerSync(/* @__PURE__ */ jsx_runtime12.jsx(App7, {}), container4, null, null);
     reconciler4.flushSyncWork();
     reconciler4.flushPassiveEffects();
     if (__host.headless)
       Object.assign(globalThis, {
         async __selfTest() {
-          const host = globalThis;
+          const host2 = globalThis;
           const frame = () => {
             reconciler4.flushSyncWork();
             reconciler4.flushPassiveEffects();
-            host.__frame();
+            host2.__frame();
           };
           const sync = (fn) => {
             reconciler4.flushSyncFromReconciler(fn);
             frame();
           };
           if (isEditor) {
-            await testEditor(frame, (text) => sync(() => host.__input(new TextEncoder().encode(text).buffer)));
+            await testEditor(frame, (text) => sync(() => host2.__input(new TextEncoder().encode(text).buffer)));
             return;
           }
           const expect = (text) => {
-            if (!host.__snapshot().includes(text))
-              throw new Error(`Gallery snapshot missing ${text}: ${host.__snapshot()}`);
+            if (!host2.__snapshot().includes(text))
+              throw new Error(`Gallery snapshot missing ${text}: ${host2.__snapshot()}`);
           };
-          const feed = (text) => sync(() => host.__input(new TextEncoder().encode(text).buffer));
+          const feed = (text) => sync(() => host2.__input(new TextEncoder().encode(text).buffer));
           const node = (id) => {
             const n = [...Renderable.renderablesByNumber.values()].find((n2) => n2.id === id);
             if (!n)
@@ -43839,7 +44043,7 @@ console.log(fly(12));`, patch = `--- a/dragon.js
             sync(() => changePage(p));
             frame();
           };
-          sync(() => host.__resize(96, 34));
+          sync(() => host2.__resize(96, 34));
           frame();
           expect("Unicode:");
           for (let i = 0;i < pages.length; i++) {
@@ -43897,9 +44101,9 @@ Two`))
           }
           expect("Dragon field guide");
           expect("Nimbus");
-          if (host.__snapshot().includes("**Ember**") || host.__snapshot().includes("# Dragon"))
+          if (host2.__snapshot().includes("**Ember**") || host2.__snapshot().includes("# Dragon"))
             throw new Error("Markdown markers were not concealed");
-          sync(() => host.__resize(72, 28));
+          sync(() => host2.__resize(72, 28));
           for (let i = 0;i < pages.length; i++)
             visit(i);
           visit(0);
@@ -43910,32 +44114,43 @@ Two`))
 
   // js/examples.ts
   var exports_examples = {};
-  if (typeof __host === "undefined") {
-    init_smoke();
-  } else {
-    init_bootstrap();
-    switch (__host.example) {
-      case "counter":
-        init_counter();
-        break;
-      case "mouse":
-        init_mouse();
-        break;
-      case "live":
-        init_live();
-        break;
-      case "lab":
-        init_lab();
-        break;
-      case "messages":
-        init_messages();
-        break;
-      case "editor":
-      case "gallery":
-        init_gallery();
-        break;
-      default:
-        throw new Error(`Unknown example: ${__host.example}`);
+  var init_examples = __esm(() => {
+    if (typeof __host === "undefined") {
+      init_smoke();
+    } else {
+      init_bootstrap();
+      switch (__host.example) {
+        case "counter":
+          init_counter();
+          break;
+        case "mouse":
+          init_mouse();
+          break;
+        case "reload":
+          init_reload();
+          break;
+        case "live":
+          init_live();
+          break;
+        case "lab":
+          init_lab();
+          break;
+        case "messages":
+          init_messages();
+          break;
+        case "editor":
+        case "gallery":
+          init_gallery();
+          break;
+        default:
+          throw new Error(`Unknown example: ${__host.example}`);
+      }
     }
-  }
+  });
+
+  // quicktui-entry:entry
+  var exports_entry = {};
+  if (typeof __host !== "undefined")
+    init_bootstrap();
+  init_examples();
 })();

@@ -44,7 +44,7 @@ class ExtensionBoundary extends React.Component<{children:React.ReactNode},{erro
   render(){return this.state.error?<text fg="#ee9b86">Component failed: {this.state.error}</text>:this.props.children}
 }
 function App(){
-  const [count,setCount]=useState(0),[items,setItems]=useState(extensions),[status,setStatus]=useState("Load a script to extend this page.");
+  const [count,setCount]=useState(0),[items,setItems]=useState(extensions),[status,setStatus]=useState("Same runtime: load scripts to add or replace components.");
   const [selected,setSelected]=useState("counter"),[watch,setWatch]=useState(false);
   const selection=useRef({file:"counter",watch:false});
   const request=(file=selection.current.file,watching=selection.current.watch)=>{
@@ -78,7 +78,7 @@ function App(){
   },[]);
   const button=(label:string,fn:()=>void)=><box paddingX={1} backgroundColor="#294650" onMouseDown={fn}><text fg="#85ddca">{label}</text></box>;
   return <box width="100%" height="100%" padding={1} backgroundColor="#101820">
-    <box width="100%" height="100%" border borderStyle="rounded" borderColor="#85ddca" title=" 06 / Live JavaScript " padding={1} gap={1}>
+    <box width="100%" height="100%" border borderStyle="rounded" borderColor="#85ddca" title=" 06a / Live components " padding={1} gap={1}>
       <text height={1} flexShrink={0} fg="#eee9dc">One running page. Load more code.</text>
       <box height={1} flexShrink={0} flexDirection="row" gap={2}>
         <text fg="#edce86">Host count: {count}</text>

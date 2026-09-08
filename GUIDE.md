@@ -321,7 +321,7 @@ and control checks using the real QuickJS and native-image bridge.
 
 ## Live JavaScript
 
-Run `zig build run -- --live` for example 06. This starts one React page in one
+Run `zig build run -- --live` for example 06a. This starts one React page in one
 QuickJS context, with no external components initially loaded.
 
 - **Space** increments the host counter.
@@ -626,3 +626,41 @@ filename on its own line. **Ctrl+O** opens a `.tpaint` path dialog, including pa
 **Ctrl+S** saves. Opening another picture prompts before discarding unsaved changes.
 A failed open leaves the current painting intact. PNG/JPEG preparation remains an
 AI-guided workflow, separate from opening a termpaint document.
+
+
+## 06a and 06b: two ways to update a UI
+
+| Demo | Command | What gets replaced | What stays alive |
+| --- | --- | --- | --- |
+| 06a: Live components | `quicktui --live` | Selected components loaded from disk | QuickJS runtime, page, host |
+| 06b: Fresh runtime | `quicktui --reload` | Entire QuickJS runtime and React tree | Native renderer, terminal session, worker |
+
+In 06a, press **1** and **2** to load counter/clock scripts, or clear the
+components and add them again. Its existing file watcher remains available.
+
+In 06b, **Space** increments a saved counter and **U** increments an unsaved
+counter. **R** replaces the runtime. The saved counter is restored from JSON;
+the unsaved counter resets. The generation number and accent color change.
+**B** tries a deliberately broken bundle and demonstrates reconstruction from
+the previous bundle and snapshot. **Q** exits normally.
+
+06b currently reuses the embedded application bundle on R. It has no disk watcher.
+It exercises the experimental `runReloadable` host rather than component evaluation
+inside the old runtime. Preparation renders into the native next-frame buffer;
+the previous complete frame remains displayed until the host presents the new one.
+Backend replies stay in the endpoint queue during replacement.
+
+This is a trusted developer prototype, not completion of the full reload spec.
+There is no process isolation or restriction on direct native bridge calls.
+Snapshots are strings capped at 1 MiB, replacement bundles at 16 MiB, and candidate
+preparation has a two-second JS deadline. JS cleanup has a 500 ms deadline.
+These limits do not preempt a blocking native call. The demo exports JSON after
+regular dispatch stops. It does not migrate parser state, image capability state,
+or pending application requests. Input remaining in the triggering batch is discarded.
+Applications needing paste continuity or richer recovery should wait for those
+parts of the lifecycle contract before adopting this experimental entry point.
+
+`zig build test` includes repeated fresh-runtime snapshot tests and recovery from
+syntax errors and an infinite JS loop. `zig build test-reload` checks real PTY
+output for alternate-screen transitions, full-screen clears, and mouse shutdown
+during reload, plus terminal restoration on exit. `zig build test-live` covers 06a.

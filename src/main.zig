@@ -4,6 +4,13 @@ const examples = @embedFile("examples.js");
 
 pub fn main(init: std.process.Init) !void {
     const args = try init.minimal.args.toSlice(init.arena.allocator());
+    if (args.len == 2 and (std.mem.eql(u8, args[1], "--reload") or std.mem.eql(u8, args[1], "--reload-self-test"))) {
+        var worker: @import("examples/message_worker.zig").Worker = .{};
+        try worker.start();
+        defer worker.stop();
+        const endpoint = worker.endpoint();
+        return runtime.runReloadable(examples, "reload", std.mem.eql(u8, args[1], "--reload-self-test"), &endpoint);
+    }
     if (args.len == 2 and std.mem.eql(u8, args[1], "--smoke")) {
         return runtime.evaluate(examples);
     }
@@ -60,7 +67,7 @@ pub fn main(init: std.process.Init) !void {
     }
     const headless = args.len == 2 and std.mem.eql(u8, args[1], "--self-test");
     if (args.len > 1 and !headless) {
-        std.debug.print("Usage: quicktui [--editor [file] | --live [directory] | --lab | --messages | --gallery | --mouse | --self-test | --smoke]\n", .{});
+        std.debug.print("Usage: quicktui [--reload | --editor [file] | --live [directory] | --lab | --messages | --gallery | --mouse | --self-test | --smoke]\n", .{});
         return error.InvalidArguments;
     }
     try runtime.runCounter(examples, headless);
