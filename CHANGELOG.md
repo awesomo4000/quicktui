@@ -1,6 +1,14 @@
 # Changelog
 
+## Unreleased - 09/09/2026
+
+- Add public `useKeyboardEvents` with runtime component enable/release filtering, reset notifications, automatic unsubscription, and explicit event consumption. The game uses the hook.
+
+- Add opt-in keyboard enhancement flags, normalized key metadata, release routing, held-key/reset helpers, and game/keyboard diagnostics with deterministic and injected PTY tests. Direct Ghostty letter events were verified; the tested Herdr 0.8.2 path still drops printable releases.
+
 ## Unreleased - 09/08/2026
+
+- Defer reload until queued input and partial paste/key sequences finish; extend 06b with retained draft, caret, selection, and scroll, plus fragmented-paste and input-readiness regression tests.
 
 - Expose opt-in reload through `runApp`, public JS snapshot/reload helpers, and an independently built textarea consumer with draft-restoration tests.
 

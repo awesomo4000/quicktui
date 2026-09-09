@@ -638,13 +638,13 @@ AI-guided workflow, separate from opening a termpaint document.
 In 06a, press **1** and **2** to load counter/clock scripts, or clear the
 components and add them again. Its existing file watcher remains available.
 
-In 06b, **Space** increments a saved counter and **U** increments an unsaved
-counter. **R** replaces the runtime. The saved counter is restored from JSON;
+In 06b, type or paste into the draft editor. **Ctrl+G** increments a saved counter
+and **Ctrl+U** increments an unsaved counter. **Ctrl+R** replaces the runtime. The saved counter is restored from JSON;
 the unsaved counter resets. The generation number and accent color change.
-**B** tries a deliberately broken bundle and demonstrates reconstruction from
-the previous bundle and snapshot. **Q** exits normally.
+**Ctrl+B** tries a deliberately broken bundle and demonstrates reconstruction from
+the previous bundle and snapshot. **Ctrl+C** exits normally.
 
-06b currently reuses the embedded application bundle on R. It has no disk watcher.
+06b currently reuses the embedded application bundle on Ctrl+R. It has no disk watcher.
 It exercises the experimental `runReloadable` host rather than component evaluation
 inside the old runtime. Preparation renders into the native next-frame buffer;
 the previous complete frame remains displayed until the host presents the new one.
@@ -655,8 +655,12 @@ There is no process isolation or restriction on direct native bridge calls.
 Snapshots are strings capped at 1 MiB, replacement bundles at 16 MiB, and candidate
 preparation has a two-second JS deadline. JS cleanup has a 500 ms deadline.
 These limits do not preempt a blocking native call. The demo exports JSON after
-regular dispatch stops. It does not migrate parser state, image capability state,
-or pending application requests. Input remaining in the triggering batch is discarded.
+regular dispatch stops. It does not migrate image capability state or pending application requests.
+Reload waits until queued input is delivered and partial key/paste sequences finish.
+The old parser stays alive while waiting, including during overflow discard through
+the paste terminator. Draft text, native caret/selection offsets, and scroll offsets
+are explicitly exported by the example. An unterminated paste can delay reload;
+native process signals remain available to exit.
 Applications needing paste continuity or richer recovery should wait for those
 parts of the lifecycle contract before adopting this experimental entry point.
 
@@ -664,3 +668,31 @@ parts of the lifecycle contract before adopting this experimental entry point.
 syntax errors and an infinite JS loop. `zig build test-reload` checks real PTY
 output for alternate-screen transitions, full-screen clears, and mouse shutdown
 during reload, plus terminal restoration on exit. `zig build test-live` covers 06a.
+
+
+## 08 / Tiny crossing and 09 / Keyboard laboratory
+
+`quicktui --game` starts a small platformer. Move with A/D, jump with W,
+with Left/Right arrows and Up/Space as alternatives. Reach the flag beyond the
+walls, gaps, and spike. Hold jump for the full leap from the first platform across
+the pit. Releasing jump
+early makes a shorter hop when release events are available. R restarts and
+Ctrl+C exits. Use a terminal at least 72 columns by 32 rows for the full view.
+
+`quicktui --keyboard` shows the events behind those controls: press/repeat/release,
+identity, modifiers, associated text, held keys, reset reasons, and rolling local
+dispatch timing. Both request the realtime keyboard preset. Until an actual
+release is observed, the game explicitly uses tap-to-step controls. No release
+is synthesized from a timeout.
+
+On the tested Herdr 0.8.2 path, use arrows and Up/Space: letters arrived as legacy
+text without releases. Direct Ghostty 1.3.1 delivered A/D/W releases. This is a
+recorded compatibility limitation, not a blanket statement about all Herdr versions.
+
+Both demos use the public `useKeyboardEvents` component hook. App-level realtime
+mode requests the terminal protocol; each hook can enable/disable itself or opt
+into releases while running. Ordinary widgets retain press/repeat handling.
+
+These are local JS simulations driven by native terminal input. They do not wait
+for a worker or network round trip. See [the keyboard API](docs/application-api.md)
+and [compatibility record](docs/keyboard-compatibility.md) for limitations and tests.

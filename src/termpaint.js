@@ -29875,6 +29875,112 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     };
   });
 
+  // js/keyboard.ts
+  function keyboardFlags(options = {}) {
+    const defaults = options.mode === "realtime" ? 31 : 5;
+    return ["disambiguate", "events", "alternateKeys", "allKeysAsEscapes", "reportText"].reduce((flags, name, i) => {
+      const value = options[name];
+      return value === undefined ? flags : value ? flags | 1 << i : flags & ~(1 << i);
+    }, defaults);
+  }
+
+  class HeldKeys {
+    onReset;
+    maxEdges;
+    down = new Map;
+    edges = [];
+    constructor(onReset, maxEdges = 256) {
+      this.onReset = onReset;
+      this.maxEdges = maxEdges;
+    }
+    has(name) {
+      return [...this.down.values()].includes(name);
+    }
+    get held() {
+      return new Set(this.down.keys());
+    }
+    update(event) {
+      if (!event.trackable)
+        return;
+      if (event.kind === "release") {
+        const name = this.down.get(event.identity);
+        if (name === undefined)
+          return;
+        this.down.delete(event.identity);
+        this.push({ identity: event.identity, name, kind: "release" });
+      } else if (event.kind === "press" && !this.down.has(event.identity)) {
+        if (this.down.size >= this.maxEdges) {
+          this.reset("overflow");
+          return;
+        }
+        this.down.set(event.identity, event.name);
+        this.push({ identity: event.identity, name: event.name, kind: "press" });
+      }
+    }
+    push(edge) {
+      if (this.edges.length >= this.maxEdges) {
+        this.reset("overflow");
+        return;
+      }
+      this.edges.push(edge);
+    }
+    drainEdges() {
+      const result = this.edges;
+      this.edges = [];
+      return result;
+    }
+    reset(reason = "manual") {
+      this.down.clear();
+      this.edges = [];
+      this.onReset?.({ reason });
+    }
+  }
+  function resetKeyboardSubscriptions(event) {
+    for (const subscription of [...subscriptions])
+      if (subscriptions.has(subscription))
+        subscription.reset?.(event);
+  }
+  function dispatchAppKey(event, onKey, emit) {
+    if (onKey?.(event) || event.defaultPrevented || event.propagationStopped)
+      return;
+    for (const subscription of [...subscriptions]) {
+      if (!subscriptions.has(subscription))
+        continue;
+      if (subscription.key(event) || event.defaultPrevented || event.propagationStopped)
+        return;
+    }
+    emit(event.kind === "release" ? "keyrelease" : "keypress", event);
+  }
+  var AppKeyEvent, subscriptions;
+  var init_keyboard = __esm(() => {
+    init_KeyHandler();
+    AppKeyEvent = class AppKeyEvent extends KeyEvent {
+      receivedAt;
+      sequenceNumber;
+      dispatchedAt;
+      kind;
+      identity;
+      text;
+      associatedText;
+      legacy;
+      trackable;
+      constructor(key, receivedAt, sequenceNumber, dispatchedAt) {
+        super(key);
+        this.receivedAt = receivedAt;
+        this.sequenceNumber = sequenceNumber;
+        this.dispatchedAt = dispatchedAt;
+        this.kind = key.eventType === "release" ? "release" : key.repeated ? "repeat" : "press";
+        const code = key.raw.match(/^\x1b\[(\d+)/)?.[1];
+        this.identity = key.source === "kitty" ? `kitty:${key.code ?? (key.raw.endsWith("u") ? code : undefined) ?? key.name}` : `legacy:${key.name.toLowerCase()}`;
+        this.legacy = key.source !== "kitty";
+        this.trackable = !this.legacy && code !== "0";
+        this.associatedText = /^\x1b\[[\d:]+;[\d:]*;[\d:]+u$/.test(key.raw) ? key.sequence : undefined;
+        this.text = this.kind === "release" ? undefined : this.associatedText ?? (this.kind !== "release" && !key.ctrl && !key.super && !key.hyper && !key.option && !key.sequence.startsWith("\x1B") ? key.sequence : undefined);
+      }
+    };
+    subscriptions = new Set;
+  });
+
   // vendor/js/node_modules/scheduler/cjs/scheduler.production.js
   var require_scheduler_production = __commonJS((exports) => {
     function push(heap, node) {
@@ -38575,6 +38681,7 @@ No matching component was found for:
     onPasteRejected;
     pasteOverflow = false;
     maxPendingBytes;
+    onInputOverflow;
     armTimeouts;
     onTimeoutFlush;
     useKittyKeyboard;
@@ -38593,6 +38700,7 @@ No matching component was found for:
     unitStart = 0;
     paste = null;
     constructor(options = {}) {
+      this.onInputOverflow = options.onInputOverflow;
       this.timeoutMs = normalizePositiveOption(options.timeoutMs, DEFAULT_TIMEOUT_MS);
       this.maxPasteBytes = normalizePositiveOption(options.maxPasteBytes, 1024 * 1024);
       this.onPasteRejected = options.onPasteRejected;
@@ -38609,6 +38717,9 @@ No matching component was found for:
         explicitWidthCprActive: options.protocolContext?.explicitWidthCprActive ?? false,
         startupCursorCprActive: options.protocolContext?.startupCursorCprActive ?? false
       };
+    }
+    get readyForReload() {
+      return !this.destroyed && this.pending.length === 0 && this.paste === null && this.events.length === 0;
     }
     get bufferCapacity() {
       return this.pending.capacity;
@@ -39620,6 +39731,7 @@ No matching component was found for:
       if (this.pending.length === 0) {
         return;
       }
+      this.onInputOverflow?.();
       this.emitOpaqueResponse("unknown", this.pending.view());
       this.pending.clear();
       this.cursor = 0;
@@ -39872,13 +39984,28 @@ No matching component was found for:
       if (event.type === "key") {
         if (keyInterceptor?.(event.key))
           return;
-        const key = new KeyEvent(event.key);
-        if (appOptions.onKey?.(key) || key.defaultPrevented)
-          return;
+        const key = new AppKeyEvent(event.key, receivedAt, ++inputSequence, __host.now());
+        const previous = JSON.stringify(keyboard);
+        if (key.source === "kitty")
+          keyboard.protocol = "kitty";
+        else if (keyboard.protocol === "unknown")
+          keyboard.protocol = "legacy";
+        if (key.kind === "release" && key.source === "kitty") {
+          keyboard.releases = "observed";
+          keyboard.heldStateAvailable = true;
+        }
+        if (/^(left_|right_)?(shift|control|alt|super|hyper|meta)$/.test(key.name) && key.source === "kitty")
+          keyboard.modifierEvents = "observed";
+        if (previous !== JSON.stringify(keyboard))
+          reportKeyboard();
         if (!demoShortcuts) {
-          keys.emit("keypress", key);
+          dispatchAppKey(key, appOptions.onKey, (name, event2) => keys.emit(name, event2));
           return;
         }
+        if (appOptions.onKey?.(key) || key.defaultPrevented)
+          return;
+        if (key.kind === "release")
+          return;
         if (event.key.ctrl && event.key.name === "c" || event.key.name.toLowerCase() === "q") {
           __host.quit();
           return;
@@ -39892,6 +40019,13 @@ No matching component was found for:
       } else if (event.type === "mouse") {
         mouse.dispatch(event.event);
       } else if (event.type === "response" && native) {
+        if (event.sequence === "\x1B[I" || event.sequence === "\x1B[O") {
+          keyboard.focus = "observed";
+          reportKeyboard();
+          if (event.sequence === "\x1B[O")
+            resetInput("focus-loss");
+          return;
+        }
         lib2.processCapabilityResponse(native, event.sequence);
         context.capabilities = lib2.getTerminalCapabilities(native);
         const reply = event.sequence.match(/^\x1b_G([^;]*);([\s\S]*?)\x1b\\$/);
@@ -39908,10 +40042,14 @@ No matching component was found for:
       return;
     stopped = true;
     try {
-      if (container) {
-        reconciler.updateContainerSync(null, container, null, null);
-        reconciler.flushSyncWork();
-        reconciler.flushPassiveEffects();
+      try {
+        resetInput("shutdown");
+      } finally {
+        if (container) {
+          reconciler.updateContainerSync(null, container, null, null);
+          reconciler.flushSyncWork();
+          reconciler.flushPassiveEffects();
+        }
       }
     } finally {
       try {
@@ -39937,6 +40075,11 @@ No matching component was found for:
     if (container || stopped)
       throw new Error("Only one application mount per runtime is supported");
     appOptions = options;
+    keyboard.requestedFlags = keyboardFlags(options.keyboard);
+    __host.configureKeyboard(keyboard.requestedFlags);
+    parser.updateProtocolContext({ kittyKeyboardEnabled: keyboard.requestedFlags !== 0 });
+    reportKeyboard();
+    resetInput((__host.generation ?? 1) > 1 ? "reload" : "startup");
     if (options.exportState)
       Object.assign(globalThis, { __exportState: () => {
         const text = JSON.stringify(options.exportState());
@@ -39948,8 +40091,10 @@ No matching component was found for:
       Object.assign(globalThis, { __reloadNotice: options.onReloadError });
     if (options.onMessage)
       Object.assign(globalThis, { __message: options.onMessage });
-    if (options.onDisconnect)
-      Object.assign(globalThis, { __endpointClosed: options.onDisconnect });
+    Object.assign(globalThis, { __endpointClosed: (reason) => {
+      resetInput("endpoint-closed");
+      options.onDisconnect?.(reason);
+    } });
     function Mounted() {
       import_react2.useEffect(() => {
         effectMounted = true;
@@ -39970,10 +40115,17 @@ No matching component was found for:
     reconciler.flushPassiveEffects();
     return { quit: () => __host.quit(), snapshot: () => new TextDecoder().decode(lib2.getCurrentBuffer(native).getRealCharBytes(true)) };
   }
-  var import_react2, import_react_reconciler, import_events6, jsx_runtime, dirty = true, stopped = false, liveCount = 0, liveTimer, container, native, root, lib2, keys, keyInterceptor = null, graphicsState, appOptions, demoShortcuts = false, parser, selection = null, selectionOwner = null, lifecycle, context, reconciler, report = (error) => {
+  var import_react2, import_react_reconciler, import_events6, jsx_runtime, dirty = true, stopped = false, liveCount = 0, liveTimer, container, native, root, lib2, keys, keyInterceptor = null, graphicsState, appOptions, firstLayout = true, inputSequence = 0, receivedAt = 0, inputOverflow = false, keyboard, reportKeyboard = () => appOptions.onKeyboardCapabilities?.({ ...keyboard }), resetInput = (reason) => {
+    try {
+      appOptions.onInputReset?.({ reason });
+    } finally {
+      resetKeyboardSubscriptions({ reason });
+    }
+  }, demoShortcuts = false, parser, selection = null, selectionOwner = null, lifecycle, context, reconciler, report = (error) => {
     throw error;
   }, effectMounted = false, mouse;
   var init_demo = __esm(() => {
+    init_keyboard();
     init_KeyHandler();
     init_selection();
     init_host_config();
@@ -39988,7 +40140,10 @@ No matching component was found for:
     keys = new import_events6.EventEmitter;
     graphicsState = { confirmed: false };
     appOptions = {};
-    parser = new StdinParser({ onTimeoutFlush: () => drainInput(), onPasteRejected: () => appOptions.onPasteRejected?.() });
+    keyboard = { requestedFlags: 5, protocol: "unknown", releases: "unknown", focus: "unknown", modifierEvents: "unknown", heldStateAvailable: false };
+    parser = new StdinParser({ onInputOverflow: () => {
+      inputOverflow = true;
+    }, onTimeoutFlush: () => drainInput(), onPasteRejected: () => appOptions.onPasteRejected?.() });
     lifecycle = new Set;
     context = Object.assign(new import_events6.EventEmitter, {
       width: __host.width,
@@ -40085,10 +40240,17 @@ No matching component was found for:
     mouse = new MouseRouter((x2, y2) => x2 < 0 || y2 < 0 ? undefined : Renderable.renderablesByNumber.get(lib2.checkHit(native, x2, y2)));
     Object.assign(globalThis, {
       __shutdown: shutdown,
-      __input(data) {
+      __inputReset: (reason) => resetInput(reason),
+      __inputReadyForReload: () => parser.readyForReload,
+      __input(data, time = __host.now()) {
+        receivedAt = time;
         reconciler.flushSyncFromReconciler(() => {
           parser.push(new Uint8Array(data));
           drainInput();
+          if (inputOverflow) {
+            inputOverflow = false;
+            resetInput("overflow");
+          }
         });
       },
       __resize(width, height) {
@@ -40114,6 +40276,14 @@ No matching component was found for:
         const buffer = lib2.getNextBuffer(native);
         buffer.clear(RGBA.fromHex("#101820"));
         root.render(buffer, 16);
+        if (firstLayout) {
+          firstLayout = false;
+          if (appOptions.onFirstLayout) {
+            appOptions.onFirstLayout();
+            buffer.clear(RGBA.fromHex("#101820"));
+            root.render(buffer, 16);
+          }
+        }
         __host.presentFrame();
       },
       __inspect() {

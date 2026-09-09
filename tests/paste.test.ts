@@ -35,3 +35,15 @@ test("limit is bytes, exact limit succeeds, unfinished paste is discarded on res
  p.reset();p.push(encoder.encode("a"));const events:any[]=[];p.drain(e=>events.push(e));
  expect(events.length).toBe(1);expect(events[0].key.name).toBe("a");p.destroy();p.destroy();
 });
+test("reload readiness waits for queued keys, partial UTF-8, and the entire paste",()=>{
+ const p=new StdinParser({armTimeouts:false,maxPasteBytes:8});
+ expect(p.readyForReload).toBe(true);
+ p.push(encoder.encode("ab"));expect(p.readyForReload).toBe(false);
+ p.read();expect(p.readyForReload).toBe(false);p.read();expect(p.readyForReload).toBe(true);
+ const letter=encoder.encode("界");p.push(letter.slice(0,1));expect(p.readyForReload).toBe(false);
+ p.push(letter.slice(1));p.drain(()=>{});expect(p.readyForReload).toBe(true);
+ p.push(encoder.encode(start+"too much paste"));p.drain(()=>{});expect(p.readyForReload).toBe(false);
+ p.push(encoder.encode(end.slice(0,4)));expect(p.readyForReload).toBe(false);
+ p.push(encoder.encode(end.slice(4)));p.drain(()=>{});expect(p.readyForReload).toBe(true);
+ p.destroy();
+});

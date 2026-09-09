@@ -77,6 +77,11 @@ pub fn build(b: *std.Build) void {
     const run_tests = b.addRunArtifact(tests);
     const test_step = b.step("test", "Test JavaScript evaluation, jobs, errors, and native ABI calls");
     test_step.dependOn(&run_tests.step);
+    for ([_][]const u8{ "--game-self-test", "--keyboard-self-test" }) |flag| {
+        const game_test = b.addRunArtifact(exe);
+        game_test.addArg(flag);
+        test_step.dependOn(&game_test.step);
+    }
     const paint_test = b.addRunArtifact(paint);
     paint_test.addArg("--self-test");
     test_step.dependOn(&paint_test.step);
@@ -181,6 +186,14 @@ pub fn build(b: *std.Build) void {
     const reload_consumer_test = b.addSystemCommand(&.{ "python3", "scripts/test-consumer.py", "--reload" });
     reload_consumer_test.setCwd(b.path("."));
     b.step("test-reload-consumer", "Build and test the public reload API outside the checkout").dependOn(&reload_consumer_test.step);
+    const keyboard_units = b.addSystemCommand(&.{ "bun", "test", "tests/keyboard.test.ts" });
+    keyboard_units.setCwd(b.path("."));
+    const keyboard_pty = b.addSystemCommand(&.{ "python3", "scripts/test-keyboard.py" });
+    keyboard_pty.setCwd(b.path("."));
+    keyboard_pty.addArtifactArg(exe);
+    const keyboard_step = b.step("test-keyboard", "Test keyboard parsing, held state, game physics and injected PTY negotiation");
+    keyboard_step.dependOn(&keyboard_units.step);
+    keyboard_step.dependOn(&keyboard_pty.step);
     const reload_terminal_test = b.addSystemCommand(&.{ "python3", "scripts/test-reload.py" });
     reload_terminal_test.setCwd(b.path("."));
     reload_terminal_test.addArtifactArg(exe);

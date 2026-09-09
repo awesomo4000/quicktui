@@ -24,3 +24,7 @@ export function requestReload(source?:string){
   if(!__host.requestReload)throw new Error("Reload is disabled by the native host");
   __host.requestReload(source);
 }
+
+export {HeldKeys,AppKeyEvent,type KeyboardOptions,type KeyboardCapabilities,type InputReset,type InputResetReason} from "./keyboard";
+
+export {useKeyboardEvents,type KeyboardEventOptions} from "./keyboard-hooks";

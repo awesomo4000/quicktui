@@ -1,8 +1,8 @@
 # Independent reload application
 
 This example uses only the public `quicktui` JS exports and Zig module.
-It preserves draft text across fresh runtimes. Caret/selection restoration is
-left to the application and is not demonstrated here.
+It preserves draft text, caret, and selection across fresh runtimes. The example
+uses native editor offsets directly rather than converting them to JS string indices.
 
 From this directory:
 

@@ -51,6 +51,7 @@ export interface StdinParserProtocolContext {
 export interface StdinParserOptions {
   timeoutMs?: number
   maxPendingBytes?: number
+  onInputOverflow?: () => void
   maxPasteBytes?: number
   onPasteRejected?: () => void
   armTimeouts?: boolean
@@ -594,6 +595,7 @@ export class StdinParser {
   private readonly onPasteRejected?: () => void
   private pasteOverflow = false
   private readonly maxPendingBytes: number
+  private readonly onInputOverflow?: () => void
   private readonly armTimeouts: boolean
   private readonly onTimeoutFlush: (() => void) | null
   private readonly useKittyKeyboard: boolean
@@ -624,6 +626,7 @@ export class StdinParser {
   private paste: PasteCollector | null = null
 
   constructor(options: StdinParserOptions = {}) {
+    this.onInputOverflow = options.onInputOverflow
     this.timeoutMs = normalizePositiveOption(options.timeoutMs, DEFAULT_TIMEOUT_MS)
     this.maxPasteBytes = normalizePositiveOption(options.maxPasteBytes, 1024 * 1024)
     this.onPasteRejected = options.onPasteRejected
@@ -640,6 +643,12 @@ export class StdinParser {
       explicitWidthCprActive: options.protocolContext?.explicitWidthCprActive ?? false,
       startupCursorCprActive: options.protocolContext?.startupCursorCprActive ?? false,
     }
+  }
+
+  // Safe runtime retirement requires delivery of every queued event and a
+  // complete protocol unit. Overflowed paste still waits for its terminator.
+  public get readyForReload(): boolean {
+    return !this.destroyed && this.pending.length === 0 && this.paste === null && this.events.length === 0
   }
 
   public get bufferCapacity(): number {
@@ -1932,6 +1941,7 @@ export class StdinParser {
       return
     }
 
+    this.onInputOverflow?.()
     this.emitOpaqueResponse("unknown", this.pending.view())
     this.pending.clear()
     this.cursor = 0

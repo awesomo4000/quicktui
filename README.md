@@ -58,6 +58,13 @@ Kitty passthrough configuration.
 | `quicktui --messages` | A native worker exchanging queued messages with React, progress bars, and blinking activity squares |
 | `quicktui --lab` | CPU-rendered shapes, a 4D hypercube, Mandelbrot, surface fractal dithering, color washes, and saved presets |
 | `quicktui --live` | 06a: Load and replace components within one running JS runtime |
+| `quicktui --game` | Tiny platformer with overlapping movement/jump controls and explicit legacy tap mode |
+| `quicktui --keyboard` | Keyboard event, held-state, capability, and local latency diagnostic |
+
+Apps can opt into press/repeat/release input and subscribe from React components
+with `useKeyboardEvents`. Component filters can change at runtime; the native host
+owns terminal mode setup and cleanup. See the [keyboard API](docs/application-api.md#higher-fidelity-keyboard-input)
+and [tested terminal behavior](docs/keyboard-compatibility.md).
 | `quicktui --reload` | 06b: Replace the whole JS runtime, restore a JSON snapshot, and retain the terminal display |
 | `quicktui --editor [file]` | A small text editor with Open, Save, and recent files |
 | `termpaint [file.tpaint]` | Pencil, brush, spray, fill, transparency, palette cycling, and animated GIF export |

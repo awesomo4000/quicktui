@@ -22,17 +22,28 @@ try:
     initial = collect(1.5)
     assert b"Fresh runtime" in initial, initial[-1500:]
     assert b"\x1b[?1049h" in initial
-    os.write(master,b"  uu")
+    os.write(master,b"\x07\x07\x15\x15")
     collect(.3)
-    for key in (b"r",b"r",b"b",b"r"):
+    for key in (b"\x12",b"\x12",b"\x02",b"\x12"):
         os.write(master,key)
         changed=collect(1.0)
         assert process.poll() is None, changed[-1500:]
         assert changed, "Replacement did not produce a frame"
         for forbidden in (b"\x1b[?1049l",b"\x1b[?1049h",b"\x1b[2J",b"\x1b[3J",b"\x1bc",b"\x1b[?1003l"):
             assert forbidden not in changed, (forbidden,changed[-1500:])
-        if key==b"b": assert b"Replacement failed" in changed, changed[-2000:]
-    os.write(master,b"q")
+        if key==b"\x02": assert b"Replacement failed" in changed, changed[-2000:]
+    # Reload and paste prefix in one input batch, with split UTF-8/body/terminator.
+    os.write(master,b"\x12\x1b[200~PASTE-START\n\xe7")
+    pending=collect(.2)
+    assert process.poll() is None
+    os.write(master,b"\x95\x8c\nq\nTAILMARKER\x1b[20")
+    collect(.1)
+    os.write(master,b"1~")
+    pasted=collect(1)
+    assert b"PASTE-START" in pasted and b"TAILMARKER" in pasted, pasted[-2000:]
+    assert process.poll() is None, "Literal q in paste exited the app"
+    assert b"\x1b[?1049l" not in pending+pasted
+    os.write(master,b"\x03")
     final=collect(1)
     process.wait(timeout=3)
     assert process.returncode==0,final[-1500:]

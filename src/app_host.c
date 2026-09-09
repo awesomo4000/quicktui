@@ -17,6 +17,7 @@
 extern uint32_t createRenderer(uint32_t,uint32_t,uint8_t,uint8_t,void *);
 extern void destroyRenderer(uint32_t,bool);
 extern void setUseThread(uint32_t,bool);
+extern void setKittyKeyboardFlags(uint32_t,uint8_t);
 extern bool setTerminalEnvVar(uint32_t,const void *,uint32_t,const void *,uint32_t);
 extern void setupTerminal(uint32_t,bool);
 extern void enableMouse(uint32_t,bool);
@@ -28,13 +29,14 @@ extern uint32_t bufferWriteResolvedChars(uint32_t,void *,uint32_t,bool);
 typedef struct {
     uint32_t renderer;
     int renderer_borrowed;
+    int keyboard_configured;uint8_t keyboard_flags;
     int width,height,headless;
     const MessageEndpoint *endpoint;
     int endpoint_closed;
     int endpoint_closing;
     int endpoint_notified;
     const char *endpoint_reason;
-    int reloadable,reload_requested,preparing,frame_ready,generation;
+    int reloadable,reload_requested,reload_pending,preparing,frame_ready,generation;
     double deadline;
     char *next_source;size_t next_length;
     const char *snapshot;
@@ -46,10 +48,11 @@ typedef struct {
 } AppHost;
 static volatile sig_atomic_t interrupted;
 static volatile sig_atomic_t resized;
+static volatile sig_atomic_t continued;
 static volatile sig_atomic_t wake_write=-1;
 static void signal_handler(int signal) {
     int saved_errno=errno;
-    if(signal==SIGWINCH)resized=1;else interrupted=signal;
+    if(signal==SIGWINCH)resized=1;else if(signal==SIGCONT)continued=1;else interrupted=signal;
     // A self-pipe avoids losing a signal between the flag check and poll().
     if(wake_write>=0){unsigned char byte=1;(void)write(wake_write,&byte,1);}
     errno=saved_errno;
@@ -59,9 +62,9 @@ typedef struct {
     struct termios saved;
     int raw, signals;
     int wake[2];
-    struct sigaction previous[4];
+    struct sigaction previous[5];
 } TerminalSession;
-static const int signal_numbers[]={SIGINT,SIGTERM,SIGHUP,SIGWINCH};
+static const int signal_numbers[]={SIGINT,SIGTERM,SIGHUP,SIGWINCH,SIGCONT};
 static int terminal_open(TerminalSession *terminal,int headless) {
     struct sigaction action={0};
     if(pipe(terminal->wake)<0)return -1;
@@ -71,7 +74,7 @@ static int terminal_open(TerminalSession *terminal,int headless) {
     }
     wake_write=terminal->wake[1];
     action.sa_handler=signal_handler;sigemptyset(&action.sa_mask);
-    for(int i=0;i<4;i++){
+    for(int i=0;i<5;i++){
         if(sigaction(signal_numbers[i],&action,&terminal->previous[i])<0)return -1;
         terminal->signals++;
     }
@@ -131,6 +134,14 @@ static JSValue call(JSContext *ctx,const char *name,int argc,JSValue *argv) {
 }
 static void call_void(JSContext *ctx,const char *name) {JS_FreeValue(ctx,call(ctx,name,0,NULL));}
 // The renderer is host-owned. JS owns only its React tree and buffer wrappers.
+static JSValue configure_keyboard(JSContext *ctx,JSValueConst self,int argc,JSValueConst *argv) {
+    (void)self;uint32_t flags;AppHost *host=JS_GetContextOpaque(ctx);
+    if(argc!=1)return JS_ThrowTypeError(ctx,"configureKeyboard expects flags");
+    if(JS_ToUint32(ctx,&flags,argv[0])<0)return JS_EXCEPTION;
+    if(flags>31)return JS_ThrowRangeError(ctx,"Invalid keyboard flags");
+    if(host->keyboard_configured&&host->keyboard_flags!=flags)return JS_ThrowTypeError(ctx,"Keyboard options are fixed for the host lifetime");
+    host->keyboard_configured=1;host->keyboard_flags=flags;return JS_UNDEFINED;
+}
 static JSValue borrow_renderer(JSContext *ctx,JSValueConst self,int argc,JSValueConst *argv) {
     (void)self;(void)argc;(void)argv;
     AppHost *host=JS_GetContextOpaque(ctx);
@@ -139,6 +150,7 @@ static JSValue borrow_renderer(JSContext *ctx,JSValueConst self,int argc,JSValue
         host->renderer=createRenderer(host->width,host->height,host->headless?1:0,1,NULL);
         if(!host->renderer)return JS_ThrowInternalError(ctx,"Cannot create host renderer");
         setUseThread(host->renderer,false);
+        if(host->keyboard_configured)setKittyKeyboardFlags(host->renderer,host->keyboard_flags);
         const char *names[]={"TERM","COLORTERM","LANG","TMUX","STY","TERM_PROGRAM","TERM_PROGRAM_VERSION","ZELLIJ","ZELLIJ_SESSION_NAME","ZELLIJ_PANE_ID"};
         for(size_t i=0;i<sizeof(names)/sizeof(names[0]);i++){
             const char *value=getenv(names[i]);
@@ -171,6 +183,7 @@ static JSValue can_dispatch(JSContext *ctx,JSValueConst self,int argc,JSValueCon
 static JSValue request_reload(JSContext *ctx,JSValueConst self,int argc,JSValueConst *argv) {
     (void)self;AppHost *host=JS_GetContextOpaque(ctx);
     if(!host->reloadable||host->preparing||!dispatch_allowed(host))return JS_ThrowTypeError(ctx,"Reload is not available in this phase");
+    if(host->reload_pending)return JS_UNDEFINED; // Coalesce while completing input.
     if(argc&& !JS_IsUndefined(argv[0])){
         if(!JS_IsString(argv[0]))return JS_ThrowTypeError(ctx,"Replacement bundle must be a string");
         size_t length;const char *text=JS_ToCStringLen(ctx,&length,argv[0]);if(!text)return JS_EXCEPTION;
@@ -180,7 +193,11 @@ static JSValue request_reload(JSContext *ctx,JSValueConst self,int argc,JSValueC
         JS_FreeCString(ctx,text);
         if(!host->next_source)return JS_ThrowOutOfMemory(ctx);
     }
-    host->reload_requested=1;return JS_UNDEFINED;
+    JSValue ready=call(ctx,"__inputReadyForReload",0,NULL);
+    // Missing readiness hooks retain the original immediate behavior for custom hosts.
+    int safe=JS_IsUndefined(ready)||JS_ToBool(ctx,ready)>0;JS_FreeValue(ctx,ready);
+    if(safe)host->reload_requested=1;else host->reload_pending=1;
+    return JS_UNDEFINED;
 }
 static JSValue present_frame(JSContext *ctx,JSValueConst self,int argc,JSValueConst *argv) {
     (void)self;(void)argc;(void)argv;AppHost *host=JS_GetContextOpaque(ctx);
@@ -288,6 +305,10 @@ static void dimensions(int *width,int *height) {
 static void step(JSContext *ctx,JSRuntime *runtime) {
     AppHost *host=JS_GetContextOpaque(ctx);
     if(!dispatch_allowed(host))return;
+    if(continued){
+        continued=0;JSValue reason=JS_NewString(ctx,"resume");
+        JS_FreeValue(ctx,call(ctx,"__inputReset",1,&reason));JS_FreeValue(ctx,reason);
+    }
     if(!host->preparing)messages(ctx);
     if(!dispatch_allowed(host))return;
     if(!host->preparing&&host->endpoint_closed&&!host->endpoint_notified){
@@ -304,8 +325,8 @@ static void step(JSContext *ctx,JSRuntime *runtime) {
     if(dispatch_allowed(host))call_void(ctx,"__frame");
 }
 static void input(JSContext *ctx,const void *bytes,size_t length) {
-    JSValue value=JS_NewArrayBufferCopy(ctx,bytes,length);
-    JS_FreeValue(ctx,call(ctx,"__input",1,&value));JS_FreeValue(ctx,value);
+    JSValue values[]={JS_NewArrayBufferCopy(ctx,bytes,length),JS_NewFloat64(ctx,monotonic_ms())};
+    JS_FreeValue(ctx,call(ctx,"__input",2,values));JS_FreeValue(ctx,values[0]);JS_FreeValue(ctx,values[1]);
 }
 static int expect_text(JSContext *ctx,const char *needle) {
     JSValue snapshot=call(ctx,"__snapshot",0,NULL);
@@ -325,6 +346,7 @@ static void configure_ui(AppHost *host,JSContext *ctx,const char *source,size_t 
         JS_SetPropertyStr(ctx,services,"reloadState",JS_NewString(ctx,host->snapshot?host->snapshot:"null"));
         JS_SetPropertyStr(ctx,services,"reloadNotice",JS_NewString(ctx,host->notice));
     }
+    JS_SetPropertyStr(ctx,services,"configureKeyboard",JS_NewCFunction(ctx,configure_keyboard,"configureKeyboard",1));
     JS_SetPropertyStr(ctx,services,"canDispatch",JS_NewCFunction(ctx,can_dispatch,"canDispatch",0));
     JS_SetPropertyStr(ctx,services,"presentFrame",JS_NewCFunction(ctx,present_frame,"presentFrame",0));
     JS_SetPropertyStr(ctx,services,"borrowRenderer",JS_NewCFunction(ctx,borrow_renderer,"borrowRenderer",0));
@@ -361,7 +383,7 @@ int quicktui_app_messages(const char *source,size_t length,int headless,const ch
     unsigned char *retained_text=NULL;uint32_t retained_length=0;
     TerminalSession terminal={.wake={-1,-1}};
     int ffi=0;
-    interrupted=0;resized=0;
+    interrupted=0;resized=0;continued=0;
     if(!headless&&(!isatty(STDIN_FILENO)||!isatty(STDOUT_FILENO))){fputs("QuickTUI needs a terminal; use --self-test for headless checks.\n",stderr);return 1;}
     JSRuntime *runtime=JS_NewRuntime();if(!runtime)return 1;
     JS_SetMemoryLimit(runtime,128*1024*1024);
@@ -501,7 +523,7 @@ int quicktui_reload_app(const char *source,size_t length,int headless,const char
     AppHost host={.endpoint=endpoint,.headless=headless,.reloadable=1,.generation=1};
     UiRuntime ui={0};TerminalSession terminal={.wake={-1,-1}};
     char *good_source=NULL,*state=NULL;
-    interrupted=0;resized=0;
+    interrupted=0;resized=0;continued=0;
     if(!headless&&(!isatty(0)||!isatty(1)))return 1;
     if(terminal_open(&terminal,headless)<0){host.failed=1;goto done;}
     dimensions(&host.width,&host.height);if(headless){host.width=80;host.height=24;}
@@ -514,6 +536,11 @@ int quicktui_reload_app(const char *source,size_t length,int headless,const char
             resized=0;dimensions(&host.width,&host.height);
             JSValue size[]={JS_NewInt32(ui.ctx,host.width),JS_NewInt32(ui.ctx,host.height)};
             JS_FreeValue(ui.ctx,call(ui.ctx,"__resize",2,size));
+        }
+        if(host.reload_pending){
+            JSValue ready=call(ui.ctx,"__inputReadyForReload",0,NULL);
+            if(JS_ToBool(ui.ctx,ready)>0){host.reload_pending=0;host.reload_requested=1;}
+            JS_FreeValue(ui.ctx,ready);
         }
         step(ui.ctx,ui.runtime);
         if(host.reload_requested&&!host.quit&&!host.failed&&!interrupted){

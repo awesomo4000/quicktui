@@ -1,3 +1,4 @@
+import {AppKeyEvent,dispatchAppKey,resetKeyboardSubscriptions,keyboardFlags,type KeyboardOptions,type KeyboardCapabilities,type InputReset} from "../keyboard";
 import {KeyEvent,PasteEvent} from "../../vendor/opentui/packages/core/src/lib/KeyHandler";
 import {Selection} from "../../vendor/opentui/packages/core/src/lib/selection";
 import React, { useEffect } from "../../vendor/js/node_modules/react";
@@ -10,7 +11,7 @@ import { EventEmitter } from "../../vendor/js/node_modules/events";
 import { StdinParser } from "../../vendor/opentui/packages/core/src/lib/stdin-parser";
 import { MouseRouter } from "./mouse";
 
-declare const __host: {width:number,height:number,headless:boolean,env:Record<string,string>,borrowRenderer():number,presentFrame():void,canDispatch():boolean,quit():void};
+declare const __host: {width:number,height:number,headless:boolean,env:Record<string,string>,borrowRenderer():number,presentFrame():void,canDispatch():boolean,configureKeyboard(flags:number):void,generation?:number,now():number,quit():void};
 declare const __timers: {tick():void,delay():number,clear():void};
 let dirty=true;
 let stopped=false;
@@ -30,25 +31,43 @@ let keyInterceptor:((key:any)=>boolean)|null=null;
 export function interceptKeys(handler:((key:any)=>boolean)|null){keyInterceptor=handler}
 export const graphicsState={confirmed:false};
 export interface AppOptions {
+  keyboard?:KeyboardOptions;
+  onInputReset?:(event:InputReset)=>void;
+  onKeyboardCapabilities?:(capabilities:KeyboardCapabilities)=>void;
   exportState?:()=>unknown;
+  onFirstLayout?:()=>void;
   onReloadError?:(notice:string)=>void;
   onCaughtError?:(error:unknown)=>void;
-  onKey?:(key:KeyEvent)=>boolean|void;
+  onKey?:(key:AppKeyEvent)=>boolean|void;
   onPaste?:(text:string)=>void;
   onPasteRejected?:()=>void;
   onMessage?:(message:string)=>void;
   onDisconnect?:(reason:string)=>void;
 }
 let appOptions:AppOptions={};
+let firstLayout=true;
+let inputSequence=0,receivedAt=0,inputOverflow=false;
+let keyboard:KeyboardCapabilities={requestedFlags:5,protocol:"unknown",releases:"unknown",focus:"unknown",modifierEvents:"unknown",heldStateAvailable:false};
+const reportKeyboard=()=>appOptions.onKeyboardCapabilities?.({...keyboard});
+const resetInput=(reason:InputReset["reason"])=>{
+ try{appOptions.onInputReset?.({reason})}finally{resetKeyboardSubscriptions({reason})}
+};
 let demoShortcuts=false;
-const parser=new StdinParser({onTimeoutFlush:()=>drainInput(),onPasteRejected:()=>appOptions.onPasteRejected?.()});
+const parser=new StdinParser({onInputOverflow:()=>{inputOverflow=true},onTimeoutFlush:()=>drainInput(),onPasteRejected:()=>appOptions.onPasteRejected?.()});
 function drainInput(){parser.drain(event=>{
   if(!__host.canDispatch())return;
   if(event.type==="key"){
     if(keyInterceptor?.(event.key))return;
-    const key=new KeyEvent(event.key);
+    const key=new AppKeyEvent(event.key,receivedAt,++inputSequence,__host.now());
+    const previous=JSON.stringify(keyboard);
+    if(key.source==="kitty")keyboard.protocol="kitty";
+    else if(keyboard.protocol==="unknown")keyboard.protocol="legacy";
+    if(key.kind==="release"&&key.source==="kitty"){keyboard.releases="observed";keyboard.heldStateAvailable=true;}
+    if(/^(left_|right_)?(shift|control|alt|super|hyper|meta)$/.test(key.name)&&key.source==="kitty")keyboard.modifierEvents="observed";
+    if(previous!==JSON.stringify(keyboard))reportKeyboard();
+    if(!demoShortcuts){dispatchAppKey(key,appOptions.onKey,(name,event)=>keys.emit(name,event));return;}
     if(appOptions.onKey?.(key)||key.defaultPrevented)return;
-    if(!demoShortcuts){keys.emit("keypress",key);return;}
+    if(key.kind==="release")return;
     if((event.key.ctrl&&event.key.name==="c")||event.key.name.toLowerCase()==="q"){__host.quit();return}
     keys.emit("key",event.key.name.toLowerCase());
   } else if(event.type==="paste"){
@@ -57,6 +76,11 @@ function drainInput(){parser.drain(event=>{
   } else if(event.type==="mouse"){
     mouse.dispatch(event.event);
   } else if(event.type==="response"&&native){
+    if(event.sequence==="\x1b[I"||event.sequence==="\x1b[O"){
+      keyboard.focus="observed";reportKeyboard();
+      if(event.sequence==="\x1b[O")resetInput("focus-loss");
+      return;
+    }
     lib.processCapabilityResponse(native,event.sequence);
     context.capabilities=lib.getTerminalCapabilities(native) as any;
     const reply=event.sequence.match(/^\x1b_G([^;]*);([\s\S]*?)\x1b\\$/);
@@ -106,7 +130,9 @@ function shutdown(){
   if(stopped)return;
   stopped=true;
   try {
+    try{resetInput("shutdown")}finally{
     if(container){reconciler.updateContainerSync(null,container,null,null);reconciler.flushSyncWork();reconciler.flushPassiveEffects()}
+    }
   } finally {
     try { root?.destroyRecursively(); }
     finally {try{context.clearSelection();mouse.reset();native=null}finally{parser.destroy();lib?.dispose();__timers.clear()}}
@@ -114,7 +140,9 @@ function shutdown(){
 }
 Object.assign(globalThis,{
   __shutdown:shutdown,
-  __input(data:ArrayBuffer){reconciler.flushSyncFromReconciler(()=>{parser.push(new Uint8Array(data));drainInput()})},
+  __inputReset:(reason:InputReset["reason"])=>resetInput(reason),
+  __inputReadyForReload:()=>parser.readyForReload,
+  __input(data:ArrayBuffer,time=__host.now()){receivedAt=time;reconciler.flushSyncFromReconciler(()=>{parser.push(new Uint8Array(data));drainInput();if(inputOverflow){inputOverflow=false;resetInput("overflow")}})},
   __resize(width:number,height:number){
     context.width=width;context.height=height;
     lib.resizeRenderer(native,width,height);
@@ -129,6 +157,13 @@ Object.assign(globalThis,{
     const buffer=lib.getNextBuffer(native);
     buffer.clear(RGBA.fromHex("#101820"));
     root.render(buffer,16);
+    if(firstLayout){
+      firstLayout=false;
+      if(appOptions.onFirstLayout){
+        appOptions.onFirstLayout();
+        buffer.clear(RGBA.fromHex("#101820"));root.render(buffer,16);
+      }
+    }
     __host.presentFrame();
   },
   __inspect(){return JSON.stringify({effectMounted,keys:keys.listenerCount("key"),frame:context.frameId})},
@@ -141,6 +176,11 @@ export function mountDemo(App:()=>React.ReactNode,options:AppOptions={}){
 export function mountApp(App:()=>React.ReactNode,options:AppOptions={}){
 if(container||stopped)throw new Error("Only one application mount per runtime is supported");
 appOptions=options;
+keyboard.requestedFlags=keyboardFlags(options.keyboard);
+__host.configureKeyboard(keyboard.requestedFlags);
+parser.updateProtocolContext({kittyKeyboardEnabled:keyboard.requestedFlags!==0});
+reportKeyboard();
+resetInput((__host.generation??1)>1?"reload":"startup");
 if(options.exportState)Object.assign(globalThis,{__exportState:()=>{
   const text=JSON.stringify(options.exportState!());
   if(text===undefined)throw new Error("exportState must return JSON-serializable data");
@@ -148,7 +188,7 @@ if(options.exportState)Object.assign(globalThis,{__exportState:()=>{
 }});
 if(options.onReloadError)Object.assign(globalThis,{__reloadNotice:options.onReloadError});
 if(options.onMessage)Object.assign(globalThis,{__message:options.onMessage});
-if(options.onDisconnect)Object.assign(globalThis,{__endpointClosed:options.onDisconnect});
+Object.assign(globalThis,{__endpointClosed:(reason:string)=>{resetInput("endpoint-closed");options.onDisconnect?.(reason)}});
 function Mounted(){
   useEffect(()=>{effectMounted=true;return()=>{effectMounted=false}},[]);
   return <App/>;
