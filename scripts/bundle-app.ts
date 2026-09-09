@@ -22,6 +22,8 @@ const result=await Bun.build({
     build.onResolve({filter:/.*/},async(args)=>{
       if(args.path==="quicktui:entry")return {path:"entry",namespace:"quicktui-entry"};
       if(args.path==="quicktui")return {path:path.join(base,"js/app.ts")};
+      if(args.path==="quicktui/core")return {path:path.join(base,"js/core.ts")};
+      if(args.path==="quicktui/react")return {path:path.join(base,"js/app.ts")};
       if(args.path==="quicktui/testing")return {path:path.join(base,"js/testing.ts")};
       if(args.path==="quicktui/widgets")return {path:path.join(platform,"core.ts")};
       if(args.path==="react"||args.path.startsWith("react/"))return {path:Bun.resolveSync(args.path,path.join(base,"vendor/js"))};

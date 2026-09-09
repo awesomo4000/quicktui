@@ -133,7 +133,7 @@ static JSValue call(JSContext *ctx,const char *name,int argc,JSValue *argv) {
     return value;
 }
 static void call_void(JSContext *ctx,const char *name) {JS_FreeValue(ctx,call(ctx,name,0,NULL));}
-// The renderer is host-owned. JS owns only its React tree and buffer wrappers.
+// The renderer is host-owned. JS owns only its widget tree and buffer wrappers.
 static JSValue configure_keyboard(JSContext *ctx,JSValueConst self,int argc,JSValueConst *argv) {
     (void)self;uint32_t flags;AppHost *host=JS_GetContextOpaque(ctx);
     if(argc!=1)return JS_ThrowTypeError(ctx,"configureKeyboard expects flags");
@@ -166,7 +166,7 @@ static void close_presenter(AppHost *host) {
     if(host->renderer){destroyRenderer(host->renderer,false);host->renderer=0;}
     host->renderer_borrowed=0;
 }
-// Headless tests verify the last complete text frame survives React and runtime teardown.
+// Headless tests verify the last complete text frame survives adapter and runtime teardown.
 static unsigned char *presenter_text(AppHost *host,uint32_t *length) {
     uint32_t buffer=getCurrentBuffer(host->renderer);
     *length=bufferGetRealCharSize(buffer);
@@ -277,7 +277,7 @@ static JSValue take_buffer(JSContext *ctx,JSValueConst self,int argc,JSValueCons
 static void messages(JSContext *ctx) {
     AppHost *host=JS_GetContextOpaque(ctx);
     if(!host->endpoint||host->endpoint_closed)return;
-    // Bound work per turn so output floods cannot monopolize React/input.
+    // Bound work per turn so output floods cannot monopolize UI/input.
     for(int i=0;i<32&&dispatch_allowed(host)&&!host->endpoint_closed;i++){
         unsigned char bytes[4096];
         ptrdiff_t length=host->endpoint->receive(host->endpoint->context,bytes,sizeof(bytes));
@@ -446,12 +446,15 @@ int quicktui_app_messages(const char *source,size_t length,int headless,const ch
     }
 cleanup:
     if(headless&&host.renderer)retained_text=presenter_text(&host,&retained_length);
-    // Stop interrupting JS so React can unmount while native resources are live.
+    // Stop interrupting JS so the UI adapter can unmount while native resources are live.
     JS_SetInterruptHandler(runtime,NULL,NULL);
     call_void(ctx,"__shutdown");
     if(headless&&!host.failed){
         JSValue state=call(ctx,"__inspect",0,NULL);const char *text=JS_ToCString(ctx,state);
-        if(!text||!strstr(text,"\"effectMounted\":false")||!strstr(text,"\"keys\":0"))host.failed=1;
+        // Legacy standalone demos report effectMounted; the shared core reports applicationMounted.
+        if(!text||(!strstr(text,"\"applicationMounted\":false")&&!strstr(text,"\"effectMounted\":false"))||!strstr(text,"\"keys\":0"))host.failed=1;
+        if(text&&strstr(text,"\"applicationMounted\":true"))host.failed=1;
+        if(text&&strstr(text,"\"effectMounted\":")&&!strstr(text,"\"effectMounted\":false"))host.failed=1;
         JS_FreeCString(ctx,text);JS_FreeValue(ctx,state);
     }
     if(ffi)qt_close_ffi(ctx);
@@ -468,7 +471,7 @@ cleanup:
     close_presenter(&host);
     terminal_close(&terminal);
     if(host.used)fputs(host.diagnostics,stderr);
-    if(headless&&!host.failed)puts("Example self-test passed: input, React updates, native rendering, and effect cleanup.");
+    if(headless&&!host.failed)puts("Example self-test passed: input, UI updates, native rendering, and lifecycle cleanup.");
     return host.failed?1:0;
 }
 

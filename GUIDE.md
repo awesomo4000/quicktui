@@ -696,3 +696,13 @@ into releases while running. Ordinary widgets retain press/repeat handling.
 These are local JS simulations driven by native terminal input. They do not wait
 for a worker or network round trip. See [the keyboard API](docs/application-api.md)
 and [compatibility record](docs/keyboard-compatibility.md) for limitations and tests.
+
+## 10 / Vanilla JavaScript
+
+Run `quicktui --vanilla` in the main demo binary, or build the
+[vanilla example](examples/vanilla/README.md) independently. Both run the same
+example without using React. It uses
+`createApplication`, renderable widgets, and ordinary event subscriptions to
+show a counter and a focused input. Its native lifecycle and input handling
+are shared with the React demos. See the [core API](docs/core-api.md) for the
+first framework-adapter boundary.

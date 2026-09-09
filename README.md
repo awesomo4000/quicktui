@@ -59,6 +59,7 @@ Kitty passthrough configuration.
 | `quicktui --lab` | CPU-rendered shapes, a 4D hypercube, Mandelbrot, surface fractal dithering, color washes, and saved presets |
 | `quicktui --live` | 06a: Load and replace components within one running JS runtime |
 | `quicktui --game` | Tiny platformer with overlapping movement/jump controls and explicit legacy tap mode |
+| `quicktui --vanilla` | Vanilla JS widget tree, counter, and text input using the framework-neutral core |
 | `quicktui --keyboard` | Keyboard event, held-state, capability, and local latency diagnostic |
 
 Apps can opt into press/repeat/release input and subscribe from React components
@@ -160,3 +161,11 @@ Their sources, license notices, and provenance are kept with the vendored code.
 
 The [logo](assets/quicktui-logo.png) was generated with AI;
 its [prompt](assets/quicktui-logo-prompt.md) is included too.
+
+### Vanilla JavaScript and other frameworks
+
+`quicktui/core` provides a React-free application entry point using the same
+terminal runtime and widgets as the React adapter. Start with the
+[vanilla example](examples/vanilla/README.md) or the [core API](docs/core-api.md).
+The existing `quicktui` React API continues to work; `quicktui/react` is its
+explicit alias. Elm, Solid, and Svelte adapters remain future work.

@@ -2,13 +2,16 @@
 import sys
 import pathlib, shutil, subprocess, tempfile, json, os, pty, select, time, signal, termios, fcntl, struct
 reload_test="--reload" in sys.argv
+vanilla_test="--vanilla" in sys.argv
+source_dir="examples/vanilla" if vanilla_test else "examples/reload-consumer" if reload_test else "examples/consumer"
+entry="app.ts" if vanilla_test else "app.tsx"
 root=pathlib.Path(__file__).resolve().parents[1]
 with tempfile.TemporaryDirectory(prefix='quicktui-consumer-') as directory:
     app=pathlib.Path(directory).resolve()
-    for name in ('app.tsx','main.zig','build.zig'):
-        shutil.copy(root/('examples/reload-consumer' if reload_test else 'examples/consumer')/name,app/name)
+    for name in (entry,'main.zig','build.zig'):
+        shutil.copy(root/source_dir/name,app/name)
     (app/'build.zig.zon').write_text('.{ .name = .quicktui_consumer, .version = "0.0.0", .dependencies = .{ .quicktui = .{ .path = '+json.dumps(os.path.relpath(root,app))+' } }, .paths = .{""} }')
-    subprocess.run(['bun',str(root/'scripts/bundle-app.ts'),'app.tsx','app.js'],cwd=app,check=True)
+    subprocess.run(['bun',str(root/'scripts/bundle-app.ts'),entry,'app.js'],cwd=app,check=True)
     command=['zig','build','--cache-dir',str(app/'.zig-cache'),'-Doptimize=ReleaseSmall','--global-cache-dir',str(root/'.zig-cache/global')]
     result=subprocess.run(command,cwd=app,capture_output=True,text=True)
     # Zig derives a package fingerprint from its name; record the suggestion only
@@ -32,7 +35,7 @@ with tempfile.TemporaryDirectory(prefix='quicktui-consumer-') as directory:
             if time.monotonic()>deadline:raise AssertionError(('missing terminal output',needle,bytes(output[-1000:])))
             if select.select([master],[],[],.1)[0]:output.extend(os.read(master,65536))
     try:
-        read_until(b'Independent reload app' if reload_test else b'Independent app')
+        read_until(b'No React' if vanilla_test else b'Independent reload app' if reload_test else b'Independent app')
         os.write(master,b'q')
         os.write(master,b'\x1b[200~hello\nworld\x1b[201~')
         read_until(b'hello')
@@ -60,4 +63,4 @@ with tempfile.TemporaryDirectory(prefix='quicktui-consumer-') as directory:
     finally:
         if process.poll() is None:process.kill();process.wait()
         os.close(master);os.close(slave)
-    print('External reload consumer: public API, draft restoration, and PTY cleanup passed.' if reload_test else 'External consumer: build, headless input/paste/resize, and real PTY quit/cleanup passed.')
+    print('External vanilla consumer: React-free build, widgets, input and PTY cleanup passed.' if vanilla_test else 'External reload consumer: public API, draft restoration, and PTY cleanup passed.' if reload_test else 'External consumer: build, headless input/paste/resize, and real PTY quit/cleanup passed.')

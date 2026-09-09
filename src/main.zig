@@ -5,7 +5,7 @@ const examples = @embedFile("examples.js");
 pub fn main(init: std.process.Init) !void {
     const args = try init.minimal.args.toSlice(init.arena.allocator());
     if (args.len == 2) {
-        for ([_][:0]const u8{ "game", "keyboard" }) |name| {
+        for ([_][:0]const u8{ "game", "keyboard", "vanilla" }) |name| {
             const flag = try std.fmt.allocPrint(init.arena.allocator(), "--{s}", .{name});
             const check = try std.fmt.allocPrint(init.arena.allocator(), "--{s}-self-test", .{name});
             if (std.mem.eql(u8, args[1], flag) or std.mem.eql(u8, args[1], check)) return runtime.runExample(examples, name, std.mem.eql(u8, args[1], check));
@@ -74,7 +74,7 @@ pub fn main(init: std.process.Init) !void {
     }
     const headless = args.len == 2 and std.mem.eql(u8, args[1], "--self-test");
     if (args.len > 1 and !headless) {
-        std.debug.print("Usage: quicktui [--game | --keyboard | --reload | --editor [file] | --live [directory] | --lab | --messages | --gallery | --mouse | --self-test | --smoke]\n", .{});
+        std.debug.print("Usage: quicktui [--vanilla | --game | --keyboard | --reload | --editor [file] | --live [directory] | --lab | --messages | --gallery | --mouse | --self-test | --smoke]\n", .{});
         return error.InvalidArguments;
     }
     try runtime.runCounter(examples, headless);

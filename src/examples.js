@@ -22116,6 +22116,2819 @@ No matching component was found for:
     };
   });
 
+  // vendor/opentui/packages/core/src/lib/clock.ts
+  class SystemClock {
+    now() {
+      if (!globalThis.performance || typeof globalThis.performance.now !== "function") {
+        throw new Error("SystemClock requires globalThis.performance.now()");
+      }
+      return globalThis.performance.now();
+    }
+    setTimeout(fn, delayMs) {
+      return globalThis.setTimeout(fn, delayMs);
+    }
+    clearTimeout(handle) {
+      globalThis.clearTimeout(handle);
+    }
+    setInterval(fn, delayMs) {
+      return globalThis.setInterval(fn, delayMs);
+    }
+    clearInterval(handle) {
+      globalThis.clearInterval(handle);
+    }
+  }
+
+  // vendor/opentui/packages/core/src/lib/parse.keypress-kitty.ts
+  function getPrintableKittyKeyText(key) {
+    return printableKeypadText[key.name];
+  }
+  function fromKittyMods(mod) {
+    return {
+      shift: !!(mod & 1),
+      alt: !!(mod & 2),
+      ctrl: !!(mod & 4),
+      super: !!(mod & 8),
+      hyper: !!(mod & 16),
+      meta: !!(mod & 32),
+      capsLock: !!(mod & 64),
+      numLock: !!(mod & 128)
+    };
+  }
+  function parseKittySpecialKey(sequence) {
+    const specialKeyRe = /^\x1b\[(\d+);(\d+):(\d+)([A-Z~])$/;
+    const match = specialKeyRe.exec(sequence);
+    if (!match)
+      return null;
+    const keyNumOrOne = match[1];
+    const modifierStr = match[2];
+    const eventTypeStr = match[3];
+    const terminator = match[4];
+    let keyName;
+    if (terminator === "~") {
+      keyName = tildeKeyMap[keyNumOrOne];
+    } else {
+      if (keyNumOrOne !== "1")
+        return null;
+      keyName = functionalKeyMap[terminator];
+    }
+    if (!keyName)
+      return null;
+    const key = {
+      name: keyName,
+      ctrl: false,
+      meta: false,
+      shift: false,
+      option: false,
+      number: false,
+      sequence,
+      raw: sequence,
+      eventType: "press",
+      source: "kitty",
+      super: false,
+      hyper: false,
+      capsLock: false,
+      numLock: false
+    };
+    if (modifierStr) {
+      const modifierMask = parseInt(modifierStr, 10);
+      if (!isNaN(modifierMask) && modifierMask > 1) {
+        const mods = fromKittyMods(modifierMask - 1);
+        key.shift = mods.shift;
+        key.ctrl = mods.ctrl;
+        key.meta = mods.alt || mods.meta;
+        key.option = mods.alt;
+        key.super = mods.super;
+        key.hyper = mods.hyper;
+        key.capsLock = mods.capsLock;
+        key.numLock = mods.numLock;
+      }
+    }
+    if (eventTypeStr === "1" || !eventTypeStr) {
+      key.eventType = "press";
+    } else if (eventTypeStr === "2") {
+      key.eventType = "press";
+      key.repeated = true;
+    } else if (eventTypeStr === "3") {
+      key.eventType = "release";
+    }
+    return key;
+  }
+  function parseKittyKeyboard(sequence) {
+    const specialResult = parseKittySpecialKey(sequence);
+    if (specialResult)
+      return specialResult;
+    const kittyRe = /^\x1b\[([^\x1b]+)u$/;
+    const match = kittyRe.exec(sequence);
+    if (!match)
+      return null;
+    const params = match[1];
+    const fields = params.split(";");
+    if (fields.length < 1)
+      return null;
+    const key = {
+      name: "",
+      ctrl: false,
+      meta: false,
+      shift: false,
+      option: false,
+      number: false,
+      sequence,
+      raw: sequence,
+      eventType: "press",
+      source: "kitty",
+      super: false,
+      hyper: false,
+      capsLock: false,
+      numLock: false
+    };
+    let text = "";
+    const field1 = fields[0]?.split(":") || [];
+    const codepointStr = field1[0];
+    if (!codepointStr)
+      return null;
+    const codepoint = parseInt(codepointStr, 10);
+    if (isNaN(codepoint))
+      return null;
+    let shiftedCodepoint;
+    let baseCodepoint;
+    if (field1[1]) {
+      const shifted = parseInt(field1[1], 10);
+      if (!isNaN(shifted) && shifted > 0 && shifted <= 1114111) {
+        shiftedCodepoint = shifted;
+      }
+    }
+    if (field1[2]) {
+      const base = parseInt(field1[2], 10);
+      if (!isNaN(base) && base > 0 && base <= 1114111) {
+        baseCodepoint = base;
+      }
+    }
+    const knownKey = kittyKeyMap[codepoint];
+    if (knownKey) {
+      key.name = knownKey;
+      key.code = `[${codepoint}u`;
+    } else if (codepoint === 0) {
+      key.name = "";
+    } else {
+      if (codepoint > 0 && codepoint <= 1114111) {
+        const char = String.fromCodePoint(codepoint);
+        key.name = char === " " ? "space" : char;
+        if (baseCodepoint) {
+          key.baseCode = baseCodepoint;
+        }
+      } else {
+        return null;
+      }
+    }
+    if (fields[1]) {
+      const field2 = fields[1].split(":");
+      const modifierStr = field2[0];
+      const eventTypeStr = field2[1];
+      if (modifierStr) {
+        const modifierMask = parseInt(modifierStr, 10);
+        if (!isNaN(modifierMask) && modifierMask > 1) {
+          const mods = fromKittyMods(modifierMask - 1);
+          key.shift = mods.shift;
+          key.ctrl = mods.ctrl;
+          key.meta = mods.alt || mods.meta;
+          key.option = mods.alt;
+          key.super = mods.super;
+          key.hyper = mods.hyper;
+          key.capsLock = mods.capsLock;
+          key.numLock = mods.numLock;
+        }
+      }
+      if (eventTypeStr === "1" || !eventTypeStr) {
+        key.eventType = "press";
+      } else if (eventTypeStr === "2") {
+        key.eventType = "press";
+        key.repeated = true;
+      } else if (eventTypeStr === "3") {
+        key.eventType = "release";
+      } else {
+        key.eventType = "press";
+      }
+    }
+    if (fields[2]) {
+      const codepoints = fields[2].split(":");
+      for (const cpStr of codepoints) {
+        const cp = parseInt(cpStr, 10);
+        if (!isNaN(cp) && cp > 0 && cp <= 1114111) {
+          text += String.fromCodePoint(cp);
+        }
+      }
+    }
+    if (text === "") {
+      text = getPrintableKittyKeyText(key) ?? "";
+    }
+    if (text === "") {
+      const isPrintable = key.name.length > 0 && !kittyKeyMap[codepoint];
+      if (isPrintable) {
+        if (codepoint === 32) {
+          text = " ";
+        } else if (key.shift && shiftedCodepoint) {
+          text = String.fromCodePoint(shiftedCodepoint);
+        } else if (key.shift && key.name.length === 1) {
+          text = key.name.toLocaleUpperCase();
+        } else {
+          text = key.name;
+        }
+      }
+    }
+    if (text) {
+      if (codepoint === 0) {
+        key.name = text;
+      }
+      key.sequence = text;
+    }
+    if (codepoint === 0 && text === "") {
+      return null;
+    }
+    return key;
+  }
+  var kittyKeyMap, kittyNamedSingleStrokeKeys, printableKeypadText, functionalKeyMap, tildeKeyMap;
+  var init_parse_keypress_kitty = __esm(() => {
+    kittyKeyMap = {
+      27: "escape",
+      9: "tab",
+      13: "return",
+      127: "backspace",
+      57344: "escape",
+      57345: "return",
+      57346: "tab",
+      57347: "backspace",
+      57348: "insert",
+      57349: "delete",
+      57350: "left",
+      57351: "right",
+      57352: "up",
+      57353: "down",
+      57354: "pageup",
+      57355: "pagedown",
+      57356: "home",
+      57357: "end",
+      57358: "capslock",
+      57359: "scrolllock",
+      57360: "numlock",
+      57361: "printscreen",
+      57362: "pause",
+      57363: "menu",
+      57364: "f1",
+      57365: "f2",
+      57366: "f3",
+      57367: "f4",
+      57368: "f5",
+      57369: "f6",
+      57370: "f7",
+      57371: "f8",
+      57372: "f9",
+      57373: "f10",
+      57374: "f11",
+      57375: "f12",
+      57376: "f13",
+      57377: "f14",
+      57378: "f15",
+      57379: "f16",
+      57380: "f17",
+      57381: "f18",
+      57382: "f19",
+      57383: "f20",
+      57384: "f21",
+      57385: "f22",
+      57386: "f23",
+      57387: "f24",
+      57388: "f25",
+      57389: "f26",
+      57390: "f27",
+      57391: "f28",
+      57392: "f29",
+      57393: "f30",
+      57394: "f31",
+      57395: "f32",
+      57396: "f33",
+      57397: "f34",
+      57398: "f35",
+      57399: "kp0",
+      57400: "kp1",
+      57401: "kp2",
+      57402: "kp3",
+      57403: "kp4",
+      57404: "kp5",
+      57405: "kp6",
+      57406: "kp7",
+      57407: "kp8",
+      57408: "kp9",
+      57409: "kpdecimal",
+      57410: "kpdivide",
+      57411: "kpmultiply",
+      57412: "kpminus",
+      57413: "kpplus",
+      57414: "kpenter",
+      57415: "kpequal",
+      57416: "kpseparator",
+      57417: "kpleft",
+      57418: "kpright",
+      57419: "kpup",
+      57420: "kpdown",
+      57421: "kppageup",
+      57422: "kppagedown",
+      57423: "kphome",
+      57424: "kpend",
+      57425: "kpinsert",
+      57426: "kpdelete",
+      57427: "clear",
+      57428: "mediaplay",
+      57429: "mediapause",
+      57430: "mediaplaypause",
+      57431: "mediareverse",
+      57432: "mediastop",
+      57433: "mediafastforward",
+      57434: "mediarewind",
+      57435: "medianext",
+      57436: "mediaprev",
+      57437: "mediarecord",
+      57438: "volumedown",
+      57439: "volumeup",
+      57440: "mute",
+      57441: "leftshift",
+      57442: "leftctrl",
+      57443: "leftalt",
+      57444: "leftsuper",
+      57445: "lefthyper",
+      57446: "leftmeta",
+      57447: "rightshift",
+      57448: "rightctrl",
+      57449: "rightalt",
+      57450: "rightsuper",
+      57451: "righthyper",
+      57452: "rightmeta",
+      57453: "iso_level3_shift",
+      57454: "iso_level5_shift"
+    };
+    kittyNamedSingleStrokeKeys = [...new Set(Object.values(kittyKeyMap))];
+    printableKeypadText = {
+      kp0: "0",
+      kp1: "1",
+      kp2: "2",
+      kp3: "3",
+      kp4: "4",
+      kp5: "5",
+      kp6: "6",
+      kp7: "7",
+      kp8: "8",
+      kp9: "9",
+      kpdecimal: ".",
+      kpdivide: "/",
+      kpmultiply: "*",
+      kpminus: "-",
+      kpplus: "+",
+      kpequal: "=",
+      kpseparator: ","
+    };
+    functionalKeyMap = {
+      A: "up",
+      B: "down",
+      C: "right",
+      D: "left",
+      H: "home",
+      F: "end",
+      E: "clear",
+      P: "f1",
+      Q: "f2",
+      S: "f4"
+    };
+    tildeKeyMap = {
+      "1": "home",
+      "2": "insert",
+      "3": "delete",
+      "4": "end",
+      "5": "pageup",
+      "6": "pagedown",
+      "7": "home",
+      "8": "end",
+      "11": "f1",
+      "12": "f2",
+      "13": "f3",
+      "14": "f4",
+      "15": "f5",
+      "17": "f6",
+      "18": "f7",
+      "19": "f8",
+      "20": "f9",
+      "21": "f10",
+      "23": "f11",
+      "24": "f12",
+      "29": "menu",
+      "57427": "clear"
+    };
+  });
+
+  // vendor/opentui/packages/core/src/lib/parse.keypress.ts
+  var import_node_buffer, metaKeyCodeRe, fnKeyRe, keyName, nonAlphanumericKeys, terminalNamedSingleStrokeKeys, isShiftKey = (code) => {
+    return ["[a", "[b", "[c", "[d", "[e", "[2$", "[3$", "[5$", "[6$", "[7$", "[8$", "[Z"].includes(code);
+  }, isCtrlKey = (code) => {
+    return ["Oa", "Ob", "Oc", "Od", "Oe", "[2^", "[3^", "[5^", "[6^", "[7^", "[8^"].includes(code);
+  }, getCtrlKeyName = (charCode) => {
+    if (charCode === 0) {
+      return "space";
+    }
+    if (charCode >= 1 && charCode <= 26) {
+      return String.fromCharCode(charCode + 97 - 1);
+    }
+    if (charCode >= 28 && charCode <= 31) {
+      return String.fromCharCode(charCode + 64);
+    }
+    return;
+  }, ss3NumpadPrintable, modifyOtherKeysRe, parseKeypress = (s = "", options = {}) => {
+    let parts;
+    if (import_node_buffer.Buffer.isBuffer(s)) {
+      if (s[0] > 127 && s[1] === undefined) {
+        s[0] -= 128;
+        s = "\x1B" + String(s);
+      } else {
+        s = String(s);
+      }
+    } else if (s !== undefined && typeof s !== "string") {
+      s = String(s);
+    } else if (!s) {
+      s = "";
+    }
+    if (/^\x1b\[<\d+;\d+;\d+[Mm]$/.test(s)) {
+      return null;
+    }
+    if (/^\[<\d+;\d+;\d+[Mm]$/.test(s)) {
+      return null;
+    }
+    if (/^\x1b\[<[\d;]*$/.test(s)) {
+      return null;
+    }
+    if (/^\[<[\d;]*$/.test(s)) {
+      return null;
+    }
+    if (s.startsWith("\x1B[M") && s.length >= 6) {
+      return null;
+    }
+    if (/^\x1b\[\d+;\d+;\d+t$/.test(s)) {
+      return null;
+    }
+    if (/^\x1b\[\d+;\d+R$/.test(s)) {
+      return null;
+    }
+    if (/^\x1b\[\?[\d;]+c$/.test(s)) {
+      return null;
+    }
+    if (/^\x1b\[\?[\d;]+\$y$/.test(s)) {
+      return null;
+    }
+    if (s === "\x1B[I" || s === "\x1B[O") {
+      return null;
+    }
+    if (/^\x1b\][\d;].*(\x1b\\|\x07)$/.test(s)) {
+      return null;
+    }
+    if (s === "\x1B[200~" || s === "\x1B[201~") {
+      return null;
+    }
+    const key = {
+      name: "",
+      ctrl: false,
+      meta: false,
+      shift: false,
+      option: false,
+      number: false,
+      sequence: s,
+      raw: s,
+      eventType: "press",
+      source: "raw"
+    };
+    key.sequence = key.sequence || s || key.name;
+    const ctrlKeyName = s.length === 1 ? getCtrlKeyName(s.charCodeAt(0)) : undefined;
+    const metaCtrlKeyName = s.length === 2 && s[0] === "\x1B" ? getCtrlKeyName(s.charCodeAt(1)) : undefined;
+    if (options.useKittyKeyboard) {
+      const kittyResult = parseKittyKeyboard(s);
+      if (kittyResult) {
+        return kittyResult;
+      }
+    }
+    const modifyOtherKeysMatch = modifyOtherKeysRe.exec(s);
+    if (modifyOtherKeysMatch) {
+      const modifier = parseInt(modifyOtherKeysMatch[1], 10) - 1;
+      const charCode = parseInt(modifyOtherKeysMatch[2], 10);
+      key.ctrl = !!(modifier & 4);
+      key.meta = !!(modifier & 2);
+      key.shift = !!(modifier & 1);
+      key.option = !!(modifier & 2);
+      key.super = !!(modifier & 8);
+      key.hyper = !!(modifier & 16);
+      if (charCode === 13) {
+        key.name = "return";
+      } else if (charCode === 27) {
+        key.name = "escape";
+      } else if (charCode === 9) {
+        key.name = "tab";
+      } else if (charCode === 32) {
+        key.name = "space";
+      } else if (charCode === 127 || charCode === 8) {
+        key.name = "backspace";
+      } else {
+        const char = String.fromCharCode(charCode);
+        key.name = char;
+        key.sequence = char;
+        if (charCode >= 48 && charCode <= 57) {
+          key.number = true;
+        }
+      }
+      return key;
+    }
+    if (s === "\r" || s === "\x1B\r") {
+      key.name = "return";
+      key.meta = s.length === 2;
+    } else if (s === `
+` || s === `\x1B
+`) {
+      key.name = "linefeed";
+      key.meta = s.length === 2;
+    } else if (s === "\t") {
+      key.name = "tab";
+    } else if (s === "\b" || s === "\x1B\b" || s === "" || s === "\x1B") {
+      key.name = "backspace";
+      key.meta = s.charAt(0) === "\x1B";
+    } else if (s === "\x1B" || s === "\x1B\x1B") {
+      key.name = "escape";
+      key.meta = s.length === 2;
+    } else if (s === " " || s === "\x1B ") {
+      key.name = "space";
+      key.meta = s.length === 2;
+    } else if (ctrlKeyName) {
+      key.name = ctrlKeyName;
+      key.ctrl = true;
+    } else if (s.length === 1 && s >= "0" && s <= "9") {
+      key.name = s;
+      key.number = true;
+    } else if (s.length === 1 && s >= "a" && s <= "z") {
+      key.name = s;
+    } else if (s.length === 1 && s >= "A" && s <= "Z") {
+      key.name = s.toLowerCase();
+      key.shift = true;
+    } else if (s.length === 1 || s.length === 2 && s.codePointAt(0) > 65535) {
+      key.name = s;
+    } else if (parts = metaKeyCodeRe.exec(s)) {
+      key.meta = true;
+      const char = parts[1];
+      const isUpperCase = /^[A-Z]$/.test(char);
+      if (char === "F") {
+        key.name = "right";
+      } else if (char === "B") {
+        key.name = "left";
+      } else if (isUpperCase) {
+        key.shift = true;
+        key.name = char;
+      } else {
+        key.name = char;
+      }
+    } else if (metaCtrlKeyName) {
+      key.meta = true;
+      key.ctrl = true;
+      key.name = metaCtrlKeyName;
+    } else if (parts = fnKeyRe.exec(s)) {
+      const segs = [...s];
+      if (segs[0] === "\x1B" && segs[1] === "\x1B") {
+        key.option = true;
+        key.meta = true;
+      }
+      const code = [parts[1], parts[2], parts[4], parts[6]].filter(Boolean).join("");
+      const modifier = parseInt(parts[3] || parts[5] || "1", 10) - 1;
+      key.ctrl = key.ctrl || !!(modifier & 4);
+      key.meta = key.meta || !!(modifier & 2);
+      key.shift = key.shift || !!(modifier & 1);
+      key.option = key.option || !!(modifier & 2);
+      key.super = !!(modifier & 8);
+      key.hyper = !!(modifier & 16);
+      key.code = code;
+      const keyNameResult = keyName[code];
+      if (keyNameResult) {
+        key.name = keyNameResult;
+        key.shift = isShiftKey(code) || key.shift;
+        key.ctrl = isCtrlKey(code) || key.ctrl;
+        const ss3Char = ss3NumpadPrintable[code];
+        if (ss3Char !== undefined) {
+          key.sequence = ss3Char;
+          if (key.name >= "0" && key.name <= "9") {
+            key.number = true;
+          }
+        }
+      } else {
+        key.name = "";
+        key.code = undefined;
+      }
+    } else if (s === "\x1B[3~") {
+      key.name = "delete";
+      key.meta = false;
+      key.code = "[3~";
+    }
+    return key;
+  };
+  var init_parse_keypress = __esm(() => {
+    init_parse_keypress_kitty();
+    import_node_buffer = __toESM(require_buffer(), 1);
+    metaKeyCodeRe = /^(?:\x1b)([a-zA-Z0-9])$/;
+    fnKeyRe = /^(?:\x1b+)(O|N|\[|\[\[)(?:(\d+)(?:;(\d+))?([~^$])|(?:1;)?(\d+)?([a-zA-Z]))/;
+    keyName = {
+      OP: "f1",
+      OQ: "f2",
+      OR: "f3",
+      OS: "f4",
+      "[11~": "f1",
+      "[12~": "f2",
+      "[13~": "f3",
+      "[14~": "f4",
+      "[[A": "f1",
+      "[[B": "f2",
+      "[[C": "f3",
+      "[[D": "f4",
+      "[[E": "f5",
+      "[15~": "f5",
+      "[17~": "f6",
+      "[18~": "f7",
+      "[19~": "f8",
+      "[20~": "f9",
+      "[21~": "f10",
+      "[23~": "f11",
+      "[24~": "f12",
+      "[29~": "menu",
+      "[57427~": "clear",
+      "[A": "up",
+      "[B": "down",
+      "[C": "right",
+      "[D": "left",
+      "[E": "clear",
+      "[F": "end",
+      "[H": "home",
+      "[P": "f1",
+      "[Q": "f2",
+      "[S": "f4",
+      OA: "up",
+      OB: "down",
+      OC: "right",
+      OD: "left",
+      OE: "clear",
+      OF: "end",
+      OH: "home",
+      OM: "return",
+      Oj: "*",
+      Ok: "+",
+      Ol: ",",
+      Om: "-",
+      On: ".",
+      Oo: "/",
+      Op: "0",
+      Oq: "1",
+      Or: "2",
+      Os: "3",
+      Ot: "4",
+      Ou: "5",
+      Ov: "6",
+      Ow: "7",
+      Ox: "8",
+      Oy: "9",
+      OX: "=",
+      "[1~": "home",
+      "[2~": "insert",
+      "[3~": "delete",
+      "[4~": "end",
+      "[5~": "pageup",
+      "[6~": "pagedown",
+      "[[5~": "pageup",
+      "[[6~": "pagedown",
+      "[7~": "home",
+      "[8~": "end",
+      "[a": "up",
+      "[b": "down",
+      "[c": "right",
+      "[d": "left",
+      "[e": "clear",
+      f: "right",
+      b: "left",
+      p: "up",
+      n: "down",
+      "[2$": "insert",
+      "[3$": "delete",
+      "[5$": "pageup",
+      "[6$": "pagedown",
+      "[7$": "home",
+      "[8$": "end",
+      Oa: "up",
+      Ob: "down",
+      Oc: "right",
+      Od: "left",
+      Oe: "clear",
+      "[2^": "insert",
+      "[3^": "delete",
+      "[5^": "pageup",
+      "[6^": "pagedown",
+      "[7^": "home",
+      "[8^": "end",
+      "[Z": "tab"
+    };
+    nonAlphanumericKeys = [...Object.values(keyName), "backspace"];
+    terminalNamedSingleStrokeKeys = [
+      ...new Set(["return", "linefeed", "tab", "escape", "space", ...nonAlphanumericKeys, ...kittyNamedSingleStrokeKeys])
+    ];
+    ss3NumpadPrintable = {
+      Op: "0",
+      Oq: "1",
+      Or: "2",
+      Os: "3",
+      Ot: "4",
+      Ou: "5",
+      Ov: "6",
+      Ow: "7",
+      Ox: "8",
+      Oy: "9",
+      Oj: "*",
+      Ok: "+",
+      Ol: ",",
+      Om: "-",
+      On: ".",
+      Oo: "/",
+      OX: "="
+    };
+    modifyOtherKeysRe = /^\x1b\[27;(\d+);(\d+)~$/;
+  });
+
+  // vendor/opentui/packages/core/src/lib/parse.mouse.ts
+  var MouseParser;
+  var init_parse_mouse = __esm(() => {
+    MouseParser = class MouseParser {
+      mouseButtonsPressed = new Set;
+      static SCROLL_DIRECTIONS = {
+        0: "up",
+        1: "down",
+        2: "left",
+        3: "right"
+      };
+      reset() {
+        this.mouseButtonsPressed.clear();
+      }
+      decodeInput(data) {
+        const buf = Buffer.isBuffer(data) ? data : Buffer.from(data.buffer, data.byteOffset, data.byteLength);
+        return buf.toString("latin1");
+      }
+      parseMouseEvent(data) {
+        const str = this.decodeInput(data);
+        const parsed = this.parseMouseSequenceAt(str, 0);
+        return parsed?.event ?? null;
+      }
+      parseAllMouseEvents(data) {
+        const str = this.decodeInput(data);
+        const events = [];
+        let offset = 0;
+        while (offset < str.length) {
+          const parsed = this.parseMouseSequenceAt(str, offset);
+          if (!parsed) {
+            break;
+          }
+          events.push(parsed.event);
+          offset += parsed.consumed;
+        }
+        return events;
+      }
+      parseMouseSequenceAt(str, offset) {
+        if (!str.startsWith("\x1B[", offset))
+          return null;
+        const introducer = str[offset + 2];
+        if (introducer === "<") {
+          return this.parseSgrSequence(str, offset);
+        }
+        if (introducer === "M") {
+          return this.parseBasicSequence(str, offset);
+        }
+        return null;
+      }
+      parseSgrSequence(str, offset) {
+        let index = offset + 3;
+        const values = [0, 0, 0];
+        let part = 0;
+        let hasDigit = false;
+        while (index < str.length) {
+          const char = str[index];
+          const charCode = str.charCodeAt(index);
+          if (charCode >= 48 && charCode <= 57) {
+            hasDigit = true;
+            values[part] = values[part] * 10 + (charCode - 48);
+            index++;
+            continue;
+          }
+          switch (char) {
+            case ";": {
+              if (!hasDigit || part >= 2)
+                return null;
+              part++;
+              hasDigit = false;
+              index++;
+              break;
+            }
+            case "M":
+            case "m": {
+              if (!hasDigit || part !== 2)
+                return null;
+              return {
+                event: this.decodeSgrEvent(values[0], values[1], values[2], char),
+                consumed: index - offset + 1
+              };
+            }
+            default:
+              return null;
+          }
+        }
+        return null;
+      }
+      parseBasicSequence(str, offset) {
+        if (offset + 6 > str.length)
+          return null;
+        const buttonByte = str.charCodeAt(offset + 3) - 32;
+        const x = str.charCodeAt(offset + 4) - 33;
+        const y = str.charCodeAt(offset + 5) - 33;
+        return {
+          event: this.decodeBasicEvent(buttonByte, x, y),
+          consumed: 6
+        };
+      }
+      decodeSgrEvent(rawButtonCode, wireX, wireY, pressRelease) {
+        const button = rawButtonCode & 3;
+        const isScroll = (rawButtonCode & 64) !== 0;
+        const scrollDirection = !isScroll ? undefined : MouseParser.SCROLL_DIRECTIONS[button];
+        const isMotion = (rawButtonCode & 32) !== 0;
+        const modifiers = {
+          shift: (rawButtonCode & 4) !== 0,
+          alt: (rawButtonCode & 8) !== 0,
+          ctrl: (rawButtonCode & 16) !== 0
+        };
+        let type;
+        let scrollInfo;
+        if (isMotion) {
+          const isDragging = this.mouseButtonsPressed.size > 0;
+          if (button === 3) {
+            type = "move";
+          } else if (isDragging) {
+            type = "drag";
+          } else {
+            type = "move";
+          }
+        } else if (isScroll && pressRelease === "M") {
+          type = "scroll";
+          scrollInfo = {
+            direction: scrollDirection,
+            delta: 1
+          };
+        } else {
+          type = pressRelease === "M" ? "down" : "up";
+          if (type === "down" && button !== 3) {
+            this.mouseButtonsPressed.add(button);
+          } else if (type === "up") {
+            this.mouseButtonsPressed.delete(button);
+          }
+        }
+        return {
+          type,
+          button: button === 3 ? 0 : button,
+          x: wireX - 1,
+          y: wireY - 1,
+          modifiers,
+          scroll: scrollInfo
+        };
+      }
+      decodeBasicEvent(buttonByte, x, y) {
+        const button = buttonByte & 3;
+        const isScroll = (buttonByte & 64) !== 0;
+        const isMotion = (buttonByte & 32) !== 0;
+        const scrollDirection = !isScroll ? undefined : MouseParser.SCROLL_DIRECTIONS[button];
+        const modifiers = {
+          shift: (buttonByte & 4) !== 0,
+          alt: (buttonByte & 8) !== 0,
+          ctrl: (buttonByte & 16) !== 0
+        };
+        let type;
+        let actualButton;
+        let scrollInfo;
+        if (isMotion) {
+          type = "move";
+          actualButton = button === 3 ? -1 : button;
+        } else if (isScroll) {
+          type = "scroll";
+          actualButton = 0;
+          scrollInfo = {
+            direction: scrollDirection,
+            delta: 1
+          };
+        } else {
+          type = button === 3 ? "up" : "down";
+          actualButton = button === 3 ? 0 : button;
+        }
+        return {
+          type,
+          button: actualButton,
+          x,
+          y,
+          modifiers,
+          scroll: scrollInfo
+        };
+      }
+    };
+  });
+
+  // vendor/opentui/packages/core/src/lib/stdin-parser.ts
+  class ByteQueue {
+    buf;
+    start = 0;
+    end = 0;
+    constructor(capacity = INITIAL_PENDING_CAPACITY) {
+      this.buf = new Uint8Array(capacity);
+    }
+    get length() {
+      return this.end - this.start;
+    }
+    get capacity() {
+      return this.buf.length;
+    }
+    view() {
+      return this.buf.subarray(this.start, this.end);
+    }
+    take() {
+      const chunk = this.view();
+      this.start = 0;
+      this.end = 0;
+      return chunk;
+    }
+    append(chunk) {
+      if (chunk.length === 0) {
+        return;
+      }
+      this.ensureCapacity(this.length + chunk.length);
+      this.buf.set(chunk, this.end);
+      this.end += chunk.length;
+    }
+    consume(count) {
+      if (count <= 0) {
+        return;
+      }
+      if (count >= this.length) {
+        this.start = 0;
+        this.end = 0;
+        return;
+      }
+      this.start += count;
+      if (this.start >= this.buf.length / 2) {
+        this.buf.copyWithin(0, this.start, this.end);
+        this.end -= this.start;
+        this.start = 0;
+      }
+    }
+    clear() {
+      this.start = 0;
+      this.end = 0;
+    }
+    reset(capacity = INITIAL_PENDING_CAPACITY) {
+      this.buf = new Uint8Array(capacity);
+      this.start = 0;
+      this.end = 0;
+    }
+    ensureCapacity(requiredLength) {
+      const currentLength = this.length;
+      if (requiredLength <= this.buf.length) {
+        const availableAtEnd = this.buf.length - this.end;
+        if (availableAtEnd >= requiredLength - currentLength) {
+          return;
+        }
+        this.buf.copyWithin(0, this.start, this.end);
+        this.end = currentLength;
+        this.start = 0;
+        if (requiredLength <= this.buf.length) {
+          return;
+        }
+      }
+      let nextCapacity = this.buf.length;
+      while (nextCapacity < requiredLength) {
+        nextCapacity *= 2;
+      }
+      const next = new Uint8Array(nextCapacity);
+      next.set(this.view(), 0);
+      this.buf = next;
+      this.start = 0;
+      this.end = currentLength;
+    }
+  }
+  function normalizePositiveOption(value, fallback) {
+    if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+      return fallback;
+    }
+    return Math.floor(value);
+  }
+  function utf8SequenceLength(first) {
+    if (first < 128)
+      return 1;
+    if (first >= 194 && first <= 223)
+      return 2;
+    if (first >= 224 && first <= 239)
+      return 3;
+    if (first >= 240 && first <= 244)
+      return 4;
+    return 0;
+  }
+  function bytesEqual(left, right) {
+    if (left.length !== right.length) {
+      return false;
+    }
+    for (let index = 0;index < left.length; index += 1) {
+      if (left[index] !== right[index]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  function isMouseSgrSequence(sequence) {
+    if (sequence.length < 7) {
+      return false;
+    }
+    if (sequence[0] !== ESC || sequence[1] !== 91 || sequence[2] !== 60) {
+      return false;
+    }
+    const final = sequence[sequence.length - 1];
+    if (final !== 77 && final !== 109) {
+      return false;
+    }
+    let part = 0;
+    let hasDigit = false;
+    for (let index = 3;index < sequence.length - 1; index += 1) {
+      const byte = sequence[index];
+      if (byte >= 48 && byte <= 57) {
+        hasDigit = true;
+        continue;
+      }
+      if (byte === 59 && hasDigit && part < 2) {
+        part += 1;
+        hasDigit = false;
+        continue;
+      }
+      return false;
+    }
+    return part === 2 && hasDigit;
+  }
+  function isAsciiDigit(byte) {
+    return byte >= 48 && byte <= 57;
+  }
+  function parsePositiveDecimalPrefix(sequence, start, endExclusive) {
+    if (start >= endExclusive)
+      return null;
+    let value = 0;
+    let sawDigit = false;
+    for (let index = start;index < endExclusive; index += 1) {
+      const byte = sequence[index];
+      if (!isAsciiDigit(byte))
+        return null;
+      sawDigit = true;
+      value = value * 10 + (byte - 48);
+    }
+    return sawDigit ? value : null;
+  }
+  function parseKittyFirstFieldCodepoint(sequence, start, endExclusive) {
+    if (start >= endExclusive)
+      return null;
+    let firstColon = -1;
+    for (let index = start;index < endExclusive; index += 1) {
+      if (sequence[index] === 58) {
+        firstColon = index;
+        break;
+      }
+    }
+    if (firstColon === -1)
+      return null;
+    const codepoint = parsePositiveDecimalPrefix(sequence, start, firstColon);
+    if (codepoint === null)
+      return null;
+    for (let index = firstColon + 1;index < endExclusive; index += 1) {
+      const byte = sequence[index];
+      if (byte !== 58 && !isAsciiDigit(byte))
+        return null;
+    }
+    return codepoint;
+  }
+  function canStillBeKittyU(state) {
+    return state.semicolons >= 1;
+  }
+  function canStillBeKittySpecial(state) {
+    return state.semicolons === 1 && state.segments > 1;
+  }
+  function canStillBeExplicitWidthCpr(state) {
+    return state.firstParamValue === 1 && state.semicolons === 1;
+  }
+  function canStillBeStartupCursorCpr(state) {
+    return state.semicolons === 1;
+  }
+  function canStillBeStartupCursorCprPrefix(state) {
+    return state.segments === 1 && state.semicolons <= 1;
+  }
+  function canStillBePixelResolution(state) {
+    return state.firstParamValue === 4 && state.semicolons === 2;
+  }
+  function canStillBePixelResolutionPrefix(bytes) {
+    const fixedPrefix = [ESC, 91, 52, 59];
+    const fixedLength = Math.min(bytes.length, fixedPrefix.length);
+    for (let index2 = 0;index2 < fixedLength; index2 += 1) {
+      if (bytes[index2] !== fixedPrefix[index2])
+        return false;
+    }
+    if (bytes.length <= fixedPrefix.length)
+      return bytes.length > 0;
+    let index = fixedPrefix.length;
+    const heightStart = index;
+    while (index < bytes.length && isAsciiDigit(bytes[index]))
+      index += 1;
+    if (index === bytes.length)
+      return index > heightStart;
+    if (index === heightStart || bytes[index] !== 59)
+      return false;
+    index += 1;
+    const widthStart = index;
+    while (index < bytes.length && isAsciiDigit(bytes[index]))
+      index += 1;
+    if (index === bytes.length)
+      return true;
+    return index > widthStart && bytes[index] === 116;
+  }
+  function canDeferParametricCsi(state, context) {
+    return context.kittyKeyboardEnabled && (canStillBeKittyU(state) || canStillBeKittySpecial(state)) || context.explicitWidthCprActive && canStillBeExplicitWidthCpr(state) || context.startupCursorCprActive && canStillBeStartupCursorCpr(state) || context.pixelResolutionQueryActive && canStillBePixelResolution(state);
+  }
+  function canCompleteDeferredParametricCsi(state, byte, context) {
+    if (context.kittyKeyboardEnabled) {
+      if (state.hasDigit && byte === 117)
+        return true;
+      if (state.hasDigit && state.semicolons === 1 && state.segments > 1 && (byte === 126 || byte >= 65 && byte <= 90)) {
+        return true;
+      }
+    }
+    if (context.explicitWidthCprActive && state.hasDigit && state.firstParamValue === 1 && state.semicolons === 1 && byte === 82) {
+      return true;
+    }
+    if (context.startupCursorCprActive && state.hasDigit && state.semicolons === 1 && byte === 82) {
+      return true;
+    }
+    if (context.pixelResolutionQueryActive && state.hasDigit && state.firstParamValue === 4 && state.semicolons === 2 && byte === 116) {
+      return true;
+    }
+    return false;
+  }
+  function classifyParametricCsiProtocol(state, finalByte) {
+    if (finalByte === 82 && state.semicolons === 1 && state.segments === 1 && state.hasDigit) {
+      return "cpr";
+    }
+    return "csi";
+  }
+  function canDeferPrivateReplyCsi(context) {
+    return context.privateCapabilityRepliesActive;
+  }
+  function canCompleteDeferredPrivateReplyCsi(state, byte, context) {
+    if (!context.privateCapabilityRepliesActive)
+      return false;
+    if (state.sawDollar)
+      return state.hasDigit && byte === 121;
+    if (byte === 99)
+      return state.hasDigit || state.semicolons > 0;
+    if (byte === 110)
+      return state.hasDigit;
+    return state.hasDigit && byte === 117;
+  }
+  function concatBytes(left, right) {
+    if (left.length === 0) {
+      return right;
+    }
+    if (right.length === 0) {
+      return left;
+    }
+    const combined = new Uint8Array(left.length + right.length);
+    combined.set(left, 0);
+    combined.set(right, left.length);
+    return combined;
+  }
+  function withEscPrefix(bytes) {
+    const prefixed = new Uint8Array(bytes.length + 1);
+    prefixed[0] = ESC;
+    prefixed.set(bytes, 1);
+    return prefixed;
+  }
+  function indexOfBytes(haystack, needle) {
+    if (needle.length === 0) {
+      return 0;
+    }
+    const limit = haystack.length - needle.length;
+    for (let offset = 0;offset <= limit; offset += 1) {
+      let matched = true;
+      for (let index = 0;index < needle.length; index += 1) {
+        if (haystack[offset + index] !== needle[index]) {
+          matched = false;
+          break;
+        }
+      }
+      if (matched) {
+        return offset;
+      }
+    }
+    return -1;
+  }
+  function decodeLatin1(bytes) {
+    return import_node_buffer2.Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength).toString("latin1");
+  }
+  function decodeUtf8(bytes) {
+    return KEY_DECODER.decode(bytes);
+  }
+  function createPasteCollector() {
+    return {
+      tail: EMPTY_BYTES,
+      parts: [],
+      totalLength: 0
+    };
+  }
+  function joinPasteBytes(parts, totalLength) {
+    if (totalLength === 0) {
+      return EMPTY_BYTES;
+    }
+    if (parts.length === 1) {
+      return parts[0];
+    }
+    const bytes = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const part of parts) {
+      bytes.set(part, offset);
+      offset += part.length;
+    }
+    return bytes;
+  }
+
+  class StdinParser {
+    pending = new ByteQueue(INITIAL_PENDING_CAPACITY);
+    events = [];
+    timeoutMs;
+    maxPasteBytes;
+    onPasteRejected;
+    pasteOverflow = false;
+    maxPendingBytes;
+    onInputOverflow;
+    armTimeouts;
+    onTimeoutFlush;
+    useKittyKeyboard;
+    mouseParser = new MouseParser;
+    clock;
+    protocolContext;
+    timeoutId = null;
+    destroyed = false;
+    pendingSinceMs = null;
+    pendingTimeoutPaused = false;
+    suspendedPixelResolutionPrefixLength = 0;
+    forceFlush = false;
+    justFlushedEsc = false;
+    state = { tag: "ground" };
+    cursor = 0;
+    unitStart = 0;
+    paste = null;
+    constructor(options = {}) {
+      this.onInputOverflow = options.onInputOverflow;
+      this.timeoutMs = normalizePositiveOption(options.timeoutMs, DEFAULT_TIMEOUT_MS);
+      this.maxPasteBytes = normalizePositiveOption(options.maxPasteBytes, 1024 * 1024);
+      this.onPasteRejected = options.onPasteRejected;
+      this.maxPendingBytes = normalizePositiveOption(options.maxPendingBytes, DEFAULT_MAX_PENDING_BYTES);
+      this.armTimeouts = options.armTimeouts ?? true;
+      this.onTimeoutFlush = options.onTimeoutFlush ?? null;
+      this.useKittyKeyboard = options.useKittyKeyboard ?? true;
+      this.clock = options.clock ?? SYSTEM_CLOCK;
+      this.protocolContext = {
+        ...DEFAULT_PROTOCOL_CONTEXT,
+        kittyKeyboardEnabled: options.protocolContext?.kittyKeyboardEnabled ?? false,
+        privateCapabilityRepliesActive: options.protocolContext?.privateCapabilityRepliesActive ?? false,
+        pixelResolutionQueryActive: options.protocolContext?.pixelResolutionQueryActive ?? false,
+        explicitWidthCprActive: options.protocolContext?.explicitWidthCprActive ?? false,
+        startupCursorCprActive: options.protocolContext?.startupCursorCprActive ?? false
+      };
+    }
+    get readyForReload() {
+      return !this.destroyed && this.pending.length === 0 && this.paste === null && this.events.length === 0;
+    }
+    get bufferCapacity() {
+      return this.pending.capacity;
+    }
+    updateProtocolContext(patch) {
+      this.ensureAlive();
+      this.protocolContext = { ...this.protocolContext, ...patch };
+      if (!this.protocolContext.pixelResolutionQueryActive && this.suspendedPixelResolutionPrefixLength > 0) {
+        const prefixLength = this.suspendedPixelResolutionPrefixLength;
+        this.state = { tag: "ground" };
+        this.consumePrefix(prefixLength);
+        this.scanPending();
+      }
+      this.reconcileDeferredStateWithProtocolContext();
+      this.reconcileTimeoutState();
+    }
+    getAbortableStartupCursorCprState() {
+      if (this.pending.length === 0) {
+        return null;
+      }
+      switch (this.state.tag) {
+        case "csi": {
+          const bytes = this.pending.view();
+          const firstParamStart = this.unitStart + 2;
+          if (this.cursor < firstParamStart) {
+            return null;
+          }
+          let firstParamValue = null;
+          for (let index = firstParamStart;index < this.cursor; index += 1) {
+            const byte = bytes[index];
+            if (!isAsciiDigit(byte)) {
+              return null;
+            }
+            firstParamValue = (firstParamValue ?? 0) * 10 + (byte - 48);
+          }
+          return {
+            tag: "csi_parametric_ignored",
+            semicolons: 0,
+            segments: 1,
+            hasDigit: this.cursor > firstParamStart,
+            firstParamValue
+          };
+        }
+        case "csi_parametric":
+        case "csi_parametric_deferred":
+          if (!canStillBeStartupCursorCprPrefix(this.state) || this.protocolContext.explicitWidthCprActive && canStillBeExplicitWidthCpr(this.state)) {
+            return null;
+          }
+          return {
+            tag: "csi_parametric_ignored",
+            semicolons: this.state.semicolons,
+            segments: this.state.segments,
+            hasDigit: this.state.hasDigit,
+            firstParamValue: this.state.firstParamValue
+          };
+      }
+      return null;
+    }
+    abortPendingStartupCursorCpr() {
+      this.ensureAlive();
+      const nextState = this.getAbortableStartupCursorCprState();
+      if (!nextState) {
+        return;
+      }
+      this.state = nextState;
+      if (this.pendingSinceMs === null) {
+        this.markPending();
+      }
+      this.forceFlush = false;
+      this.reconcileTimeoutState();
+    }
+    push(data) {
+      this.ensureAlive();
+      if (data.length === 0) {
+        return;
+      }
+      let remainder = data;
+      while (remainder.length > 0) {
+        if (this.paste) {
+          remainder = this.consumePasteBytes(remainder);
+          continue;
+        }
+        const immediatePasteStartIndex = this.state.tag === "ground" && this.pending.length === 0 ? indexOfBytes(remainder, BRACKETED_PASTE_START) : -1;
+        const appendEnd = immediatePasteStartIndex === -1 ? remainder.length : immediatePasteStartIndex + BRACKETED_PASTE_START.length;
+        this.pending.append(remainder.subarray(0, appendEnd));
+        remainder = remainder.subarray(appendEnd);
+        if (this.suspendedPixelResolutionPrefixLength > 0 && this.protocolContext.pixelResolutionQueryActive && !canStillBePixelResolutionPrefix(this.pending.view())) {
+          const prefixLength = this.suspendedPixelResolutionPrefixLength;
+          this.state = { tag: "ground" };
+          this.consumePrefix(prefixLength);
+        }
+        this.scanPending();
+        if (this.paste && this.pending.length > 0) {
+          remainder = this.consumePasteBytes(this.takePendingBytes());
+          continue;
+        }
+        if (!this.paste && this.pending.length > this.maxPendingBytes) {
+          this.flushPendingOverflow();
+          this.scanPending();
+          if (this.paste && this.pending.length > 0) {
+            remainder = this.consumePasteBytes(this.takePendingBytes());
+          }
+        }
+      }
+      this.reconcileTimeoutState();
+    }
+    read() {
+      this.ensureAlive();
+      if (this.events.length === 0 && this.forceFlush) {
+        this.scanPending();
+        this.reconcileTimeoutState();
+      }
+      return this.events.shift() ?? null;
+    }
+    drain(onEvent) {
+      this.ensureAlive();
+      while (true) {
+        if (this.destroyed) {
+          return;
+        }
+        const event = this.read();
+        if (!event) {
+          return;
+        }
+        onEvent(event);
+      }
+    }
+    flushTimeout(nowMsValue = this.clock.now()) {
+      this.ensureAlive();
+      if (this.pendingSinceMs !== null && (nowMsValue < this.pendingSinceMs || nowMsValue - this.pendingSinceMs < this.timeoutMs)) {
+        return;
+      }
+      this.tryForceFlush();
+    }
+    tryForceFlush() {
+      if (this.paste || this.pendingSinceMs === null || this.pending.length === 0) {
+        return;
+      }
+      this.forceFlush = true;
+    }
+    reset() {
+      if (this.destroyed) {
+        return;
+      }
+      this.clearTimeout();
+      this.resetState();
+    }
+    hasPendingPixelResolutionResponse() {
+      if (!this.protocolContext.pixelResolutionQueryActive || this.pending.length === 0)
+        return false;
+      return canStillBePixelResolutionPrefix(this.pending.view());
+    }
+    pausePendingTimeout() {
+      this.ensureAlive();
+      this.pendingTimeoutPaused = true;
+      this.suspendedPixelResolutionPrefixLength = this.pending.length;
+      this.clearTimeout();
+    }
+    resumePendingTimeout() {
+      this.ensureAlive();
+      if (this.pending.length === 0)
+        this.pendingTimeoutPaused = false;
+      this.reconcileTimeoutState();
+    }
+    resetMouseState() {
+      this.ensureAlive();
+      this.mouseParser.reset();
+    }
+    destroy() {
+      if (this.destroyed) {
+        return;
+      }
+      this.clearTimeout();
+      this.destroyed = true;
+      this.resetState();
+    }
+    ensureAlive() {
+      if (this.destroyed) {
+        throw new Error("StdinParser has been destroyed");
+      }
+    }
+    scanPending() {
+      while (!this.paste) {
+        const bytes = this.pending.view();
+        if (this.state.tag === "ground" && this.cursor >= bytes.length) {
+          this.pending.clear();
+          this.cursor = 0;
+          this.unitStart = 0;
+          this.pendingSinceMs = null;
+          this.forceFlush = false;
+          return;
+        }
+        const byte = this.cursor < bytes.length ? bytes[this.cursor] : -1;
+        switch (this.state.tag) {
+          case "ground": {
+            this.unitStart = this.cursor;
+            if (this.justFlushedEsc) {
+              if (byte === 91) {
+                this.justFlushedEsc = false;
+                this.cursor += 1;
+                this.state = { tag: "esc_recovery" };
+                continue;
+              }
+              this.justFlushedEsc = false;
+            }
+            if (byte === ESC) {
+              this.cursor += 1;
+              this.state = { tag: "esc" };
+              continue;
+            }
+            if (byte < 128) {
+              this.emitKeyOrResponse("unknown", decodeUtf8(bytes.subarray(this.cursor, this.cursor + 1)));
+              this.consumePrefix(this.cursor + 1);
+              continue;
+            }
+            const expected = utf8SequenceLength(byte);
+            if (expected === 0) {
+              if (!this.forceFlush && this.cursor + 1 === bytes.length) {
+                this.markPending();
+                return;
+              }
+              this.emitLegacyHighByte(byte);
+              this.consumePrefix(this.cursor + 1);
+              continue;
+            }
+            this.cursor += 1;
+            this.state = { tag: "utf8", expected, seen: 1 };
+            continue;
+          }
+          case "utf8": {
+            if (this.cursor >= bytes.length) {
+              if (!this.forceFlush) {
+                this.markPending();
+                return;
+              }
+              this.emitLegacyHighByte(bytes[this.unitStart]);
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.unitStart + 1);
+              continue;
+            }
+            if ((byte & 192) !== 128) {
+              this.emitLegacyHighByte(bytes[this.unitStart]);
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.unitStart + 1);
+              continue;
+            }
+            const nextSeen = this.state.seen + 1;
+            this.cursor += 1;
+            if (nextSeen < this.state.expected) {
+              this.state = { tag: "utf8", expected: this.state.expected, seen: nextSeen };
+              continue;
+            }
+            this.emitKeyOrResponse("unknown", decodeUtf8(bytes.subarray(this.unitStart, this.cursor)));
+            this.state = { tag: "ground" };
+            this.consumePrefix(this.cursor);
+            continue;
+          }
+          case "esc": {
+            if (this.cursor >= bytes.length) {
+              if (!this.forceFlush) {
+                this.markPending();
+                return;
+              }
+              const flushedLoneEsc = this.cursor === this.unitStart + 1 && bytes[this.unitStart] === ESC;
+              this.emitKeyOrResponse("unknown", decodeUtf8(bytes.subarray(this.unitStart, this.cursor)));
+              this.justFlushedEsc = flushedLoneEsc;
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            switch (byte) {
+              case 91:
+                this.cursor += 1;
+                this.state = { tag: "csi" };
+                continue;
+              case 79:
+                this.cursor += 1;
+                this.state = { tag: "ss3" };
+                continue;
+              case 93:
+                this.cursor += 1;
+                this.state = { tag: "osc", sawEsc: false };
+                continue;
+              case 80:
+                this.cursor += 1;
+                this.state = { tag: "dcs", sawEsc: false };
+                continue;
+              case 95:
+                this.cursor += 1;
+                this.state = { tag: "apc", sawEsc: false };
+                continue;
+              case ESC:
+                this.cursor += 1;
+                continue;
+              default:
+                this.cursor += 1;
+                this.emitKeyOrResponse("unknown", decodeUtf8(bytes.subarray(this.unitStart, this.cursor)));
+                this.state = { tag: "ground" };
+                this.consumePrefix(this.cursor);
+                continue;
+            }
+          }
+          case "ss3": {
+            if (this.cursor >= bytes.length) {
+              if (!this.forceFlush) {
+                this.markPending();
+                return;
+              }
+              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (byte === ESC) {
+              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            this.cursor += 1;
+            this.emitKeyOrResponse("unknown", decodeUtf8(bytes.subarray(this.unitStart, this.cursor)));
+            this.state = { tag: "ground" };
+            this.consumePrefix(this.cursor);
+            continue;
+          }
+          case "esc_recovery": {
+            if (this.cursor >= bytes.length) {
+              if (!this.forceFlush) {
+                this.markPending();
+                return;
+              }
+              this.emitKeyOrResponse("unknown", decodeUtf8(bytes.subarray(this.unitStart, this.cursor)));
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (byte === 60) {
+              this.cursor += 1;
+              this.state = { tag: "esc_less_mouse" };
+              continue;
+            }
+            if (byte === 77) {
+              this.cursor += 1;
+              this.state = { tag: "esc_less_x10_mouse" };
+              continue;
+            }
+            this.emitKeyOrResponse("unknown", decodeUtf8(bytes.subarray(this.unitStart, this.unitStart + 1)));
+            this.state = { tag: "ground" };
+            this.consumePrefix(this.unitStart + 1);
+            continue;
+          }
+          case "csi": {
+            if (this.cursor >= bytes.length) {
+              if (!this.forceFlush) {
+                this.markPending();
+                return;
+              }
+              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (byte === ESC) {
+              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (byte === 77 && this.cursor === this.unitStart + 2) {
+              const end = this.cursor + 4;
+              if (bytes.length < end) {
+                if (!this.forceFlush) {
+                  this.markPending();
+                  return;
+                }
+                this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, bytes.length));
+                this.state = { tag: "ground" };
+                this.consumePrefix(bytes.length);
+                continue;
+              }
+              this.emitMouse(bytes.subarray(this.unitStart, end), "x10");
+              this.state = { tag: "ground" };
+              this.consumePrefix(end);
+              continue;
+            }
+            if (byte === 36) {
+              const candidateEnd = this.cursor + 1;
+              const candidate = decodeUtf8(bytes.subarray(this.unitStart, candidateEnd));
+              if (RXVT_DOLLAR_CSI_RE.test(candidate)) {
+                this.emitKeyOrResponse("csi", candidate);
+                this.state = { tag: "ground" };
+                this.consumePrefix(candidateEnd);
+                continue;
+              }
+              if (!this.forceFlush && candidateEnd >= bytes.length) {
+                this.markPending();
+                return;
+              }
+            }
+            if (byte === 60 && this.cursor === this.unitStart + 2) {
+              this.cursor += 1;
+              this.state = { tag: "csi_sgr_mouse", part: 0, hasDigit: false };
+              continue;
+            }
+            if (byte === 91 && this.cursor === this.unitStart + 2) {
+              this.cursor += 1;
+              continue;
+            }
+            if (byte === 63 && this.cursor === this.unitStart + 2) {
+              this.cursor += 1;
+              this.state = { tag: "csi_private_reply", semicolons: 0, hasDigit: false, sawDollar: false };
+              continue;
+            }
+            if (byte === 59) {
+              const firstParamStart = this.unitStart + 2;
+              const firstParamEnd = this.cursor;
+              let firstParamValue = parsePositiveDecimalPrefix(bytes, firstParamStart, firstParamEnd);
+              if (firstParamValue === null && this.protocolContext.kittyKeyboardEnabled) {
+                firstParamValue = parseKittyFirstFieldCodepoint(bytes, firstParamStart, firstParamEnd);
+              }
+              if (firstParamValue !== null) {
+                this.cursor += 1;
+                this.state = {
+                  tag: "csi_parametric",
+                  semicolons: 1,
+                  segments: 1,
+                  hasDigit: false,
+                  firstParamValue
+                };
+                continue;
+              }
+            }
+            if (byte >= 64 && byte <= 126) {
+              const end = this.cursor + 1;
+              const rawBytes = bytes.subarray(this.unitStart, end);
+              if (bytesEqual(rawBytes, BRACKETED_PASTE_START)) {
+                this.state = { tag: "ground" };
+                this.consumePrefix(end);
+                this.pasteOverflow = false;
+                this.paste = createPasteCollector();
+                continue;
+              }
+              if (isMouseSgrSequence(rawBytes)) {
+                this.emitMouse(rawBytes, "sgr");
+                this.state = { tag: "ground" };
+                this.consumePrefix(end);
+                continue;
+              }
+              this.emitKeyOrResponse("csi", decodeUtf8(rawBytes));
+              this.state = { tag: "ground" };
+              this.consumePrefix(end);
+              continue;
+            }
+            this.cursor += 1;
+            continue;
+          }
+          case "csi_sgr_mouse": {
+            if (this.cursor >= bytes.length) {
+              if (!this.forceFlush) {
+                this.markPending();
+                return;
+              }
+              this.state = { tag: "csi_sgr_mouse_deferred", part: this.state.part, hasDigit: this.state.hasDigit };
+              this.pendingSinceMs = null;
+              this.forceFlush = false;
+              return;
+            }
+            if (byte === ESC) {
+              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (isAsciiDigit(byte)) {
+              this.cursor += 1;
+              this.state = { tag: "csi_sgr_mouse", part: this.state.part, hasDigit: true };
+              continue;
+            }
+            if (byte === 59 && this.state.hasDigit && this.state.part < 2) {
+              this.cursor += 1;
+              this.state = { tag: "csi_sgr_mouse", part: this.state.part + 1, hasDigit: false };
+              continue;
+            }
+            if (byte >= 64 && byte <= 126) {
+              const end = this.cursor + 1;
+              const rawBytes = bytes.subarray(this.unitStart, end);
+              if (isMouseSgrSequence(rawBytes)) {
+                this.emitMouse(rawBytes, "sgr");
+              } else {
+                this.emitKeyOrResponse("csi", decodeUtf8(rawBytes));
+              }
+              this.state = { tag: "ground" };
+              this.consumePrefix(end);
+              continue;
+            }
+            this.state = { tag: "csi" };
+            continue;
+          }
+          case "csi_sgr_mouse_deferred": {
+            if (this.cursor >= bytes.length) {
+              this.pendingSinceMs = null;
+              this.forceFlush = false;
+              return;
+            }
+            if (byte === ESC) {
+              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (isAsciiDigit(byte) || byte === 59 || byte === 77 || byte === 109) {
+              this.state = { tag: "csi_sgr_mouse", part: this.state.part, hasDigit: this.state.hasDigit };
+              continue;
+            }
+            this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+            this.state = { tag: "ground" };
+            this.consumePrefix(this.cursor);
+            continue;
+          }
+          case "csi_parametric": {
+            if (this.cursor >= bytes.length) {
+              if (!this.forceFlush) {
+                this.markPending();
+                return;
+              }
+              if (canDeferParametricCsi(this.state, this.protocolContext)) {
+                this.state = {
+                  tag: "csi_parametric_deferred",
+                  semicolons: this.state.semicolons,
+                  segments: this.state.segments,
+                  hasDigit: this.state.hasDigit,
+                  firstParamValue: this.state.firstParamValue
+                };
+                this.pendingSinceMs = null;
+                this.forceFlush = false;
+                return;
+              }
+              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (byte === ESC) {
+              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (isAsciiDigit(byte)) {
+              this.cursor += 1;
+              this.state = {
+                tag: "csi_parametric",
+                semicolons: this.state.semicolons,
+                segments: this.state.segments,
+                hasDigit: true,
+                firstParamValue: this.state.firstParamValue
+              };
+              continue;
+            }
+            if (byte === 58 && this.state.hasDigit && this.state.segments < 3) {
+              this.cursor += 1;
+              this.state = {
+                tag: "csi_parametric",
+                semicolons: this.state.semicolons,
+                segments: this.state.segments + 1,
+                hasDigit: false,
+                firstParamValue: this.state.firstParamValue
+              };
+              continue;
+            }
+            if (byte === 59 && this.state.semicolons < 2) {
+              this.cursor += 1;
+              this.state = {
+                tag: "csi_parametric",
+                semicolons: this.state.semicolons + 1,
+                segments: 1,
+                hasDigit: false,
+                firstParamValue: this.state.firstParamValue
+              };
+              continue;
+            }
+            if (byte >= 64 && byte <= 126) {
+              const end = this.cursor + 1;
+              const protocol = classifyParametricCsiProtocol(this.state, byte);
+              this.emitKeyOrResponse(protocol, decodeUtf8(bytes.subarray(this.unitStart, end)));
+              this.state = { tag: "ground" };
+              this.consumePrefix(end);
+              continue;
+            }
+            this.state = { tag: "csi" };
+            continue;
+          }
+          case "csi_parametric_deferred": {
+            if (this.cursor >= bytes.length) {
+              this.pendingSinceMs = null;
+              this.forceFlush = false;
+              return;
+            }
+            if (byte === ESC) {
+              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (isAsciiDigit(byte) || byte === 58 || byte === 59) {
+              this.state = {
+                tag: "csi_parametric",
+                semicolons: this.state.semicolons,
+                segments: this.state.segments,
+                hasDigit: this.state.hasDigit,
+                firstParamValue: this.state.firstParamValue
+              };
+              continue;
+            }
+            if (canCompleteDeferredParametricCsi(this.state, byte, this.protocolContext)) {
+              this.state = {
+                tag: "csi_parametric",
+                semicolons: this.state.semicolons,
+                segments: this.state.segments,
+                hasDigit: this.state.hasDigit,
+                firstParamValue: this.state.firstParamValue
+              };
+              continue;
+            }
+            this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+            this.state = { tag: "ground" };
+            this.consumePrefix(this.cursor);
+            continue;
+          }
+          case "csi_parametric_ignored": {
+            if (this.cursor >= bytes.length) {
+              if (!this.forceFlush) {
+                this.markPending();
+                return;
+              }
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (byte === ESC) {
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (isAsciiDigit(byte)) {
+              this.cursor += 1;
+              this.state = {
+                tag: "csi_parametric_ignored",
+                semicolons: this.state.semicolons,
+                segments: this.state.segments,
+                hasDigit: true,
+                firstParamValue: this.state.semicolons === 0 ? (this.state.firstParamValue ?? 0) * 10 + (byte - 48) : this.state.firstParamValue
+              };
+              continue;
+            }
+            if (byte === 59 && this.state.semicolons === 0 && this.state.hasDigit) {
+              if (this.protocolContext.explicitWidthCprActive && this.state.firstParamValue === 1) {
+                this.state = { tag: "csi" };
+                continue;
+              }
+              this.cursor += 1;
+              this.state = {
+                tag: "csi_parametric_ignored",
+                semicolons: 1,
+                segments: 1,
+                hasDigit: false,
+                firstParamValue: this.state.firstParamValue
+              };
+              continue;
+            }
+            if (byte === 82 && this.state.semicolons === 1 && this.state.hasDigit) {
+              const end = this.cursor + 1;
+              this.state = { tag: "ground" };
+              this.consumePrefix(end);
+              continue;
+            }
+            if (this.state.semicolons === 0) {
+              this.state = { tag: "csi" };
+              continue;
+            }
+            this.state = { tag: "ground" };
+            this.consumePrefix(this.cursor);
+            continue;
+          }
+          case "csi_private_reply": {
+            if (this.cursor >= bytes.length) {
+              if (!this.forceFlush) {
+                this.markPending();
+                return;
+              }
+              if (canDeferPrivateReplyCsi(this.protocolContext)) {
+                this.state = {
+                  tag: "csi_private_reply_deferred",
+                  semicolons: this.state.semicolons,
+                  hasDigit: this.state.hasDigit,
+                  sawDollar: this.state.sawDollar
+                };
+                this.pendingSinceMs = null;
+                this.forceFlush = false;
+                return;
+              }
+              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (byte === ESC) {
+              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (isAsciiDigit(byte)) {
+              this.cursor += 1;
+              this.state = {
+                tag: "csi_private_reply",
+                semicolons: this.state.semicolons,
+                hasDigit: true,
+                sawDollar: this.state.sawDollar
+              };
+              continue;
+            }
+            if (byte === 59) {
+              this.cursor += 1;
+              this.state = {
+                tag: "csi_private_reply",
+                semicolons: this.state.semicolons + 1,
+                hasDigit: false,
+                sawDollar: false
+              };
+              continue;
+            }
+            if (byte === 36 && this.state.hasDigit && !this.state.sawDollar) {
+              this.cursor += 1;
+              this.state = {
+                tag: "csi_private_reply",
+                semicolons: this.state.semicolons,
+                hasDigit: true,
+                sawDollar: true
+              };
+              continue;
+            }
+            if (byte >= 64 && byte <= 126) {
+              const end = this.cursor + 1;
+              this.emitOpaqueResponse("csi", bytes.subarray(this.unitStart, end));
+              this.state = { tag: "ground" };
+              this.consumePrefix(end);
+              continue;
+            }
+            this.state = { tag: "csi" };
+            continue;
+          }
+          case "csi_private_reply_deferred": {
+            if (this.cursor >= bytes.length) {
+              this.pendingSinceMs = null;
+              this.forceFlush = false;
+              return;
+            }
+            if (byte === ESC) {
+              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (isAsciiDigit(byte) || byte === 59 || byte === 36) {
+              this.state = {
+                tag: "csi_private_reply",
+                semicolons: this.state.semicolons,
+                hasDigit: this.state.hasDigit,
+                sawDollar: this.state.sawDollar
+              };
+              continue;
+            }
+            if (canCompleteDeferredPrivateReplyCsi(this.state, byte, this.protocolContext)) {
+              this.state = {
+                tag: "csi_private_reply",
+                semicolons: this.state.semicolons,
+                hasDigit: this.state.hasDigit,
+                sawDollar: this.state.sawDollar
+              };
+              continue;
+            }
+            this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+            this.state = { tag: "ground" };
+            this.consumePrefix(this.cursor);
+            continue;
+          }
+          case "osc": {
+            if (this.cursor >= bytes.length) {
+              if (!this.forceFlush) {
+                this.markPending();
+                return;
+              }
+              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (this.state.sawEsc) {
+              if (byte === 92) {
+                const end = this.cursor + 1;
+                this.emitOpaqueResponse("osc", bytes.subarray(this.unitStart, end));
+                this.state = { tag: "ground" };
+                this.consumePrefix(end);
+                continue;
+              }
+              this.state = { tag: "osc", sawEsc: false };
+              continue;
+            }
+            if (byte === BEL) {
+              const end = this.cursor + 1;
+              this.emitOpaqueResponse("osc", bytes.subarray(this.unitStart, end));
+              this.state = { tag: "ground" };
+              this.consumePrefix(end);
+              continue;
+            }
+            if (byte === ESC) {
+              this.cursor += 1;
+              this.state = { tag: "osc", sawEsc: true };
+              continue;
+            }
+            this.cursor += 1;
+            continue;
+          }
+          case "dcs": {
+            if (this.cursor >= bytes.length) {
+              if (!this.forceFlush) {
+                this.markPending();
+                return;
+              }
+              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (this.state.sawEsc) {
+              if (byte === 92) {
+                const end = this.cursor + 1;
+                this.emitOpaqueResponse("dcs", bytes.subarray(this.unitStart, end));
+                this.state = { tag: "ground" };
+                this.consumePrefix(end);
+                continue;
+              }
+              this.state = { tag: "dcs", sawEsc: false };
+              continue;
+            }
+            if (byte === ESC) {
+              this.cursor += 1;
+              this.state = { tag: "dcs", sawEsc: true };
+              continue;
+            }
+            this.cursor += 1;
+            continue;
+          }
+          case "apc": {
+            if (this.cursor >= bytes.length) {
+              if (!this.forceFlush) {
+                this.markPending();
+                return;
+              }
+              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (this.state.sawEsc) {
+              if (byte === 92) {
+                const end = this.cursor + 1;
+                this.emitOpaqueResponse("apc", bytes.subarray(this.unitStart, end));
+                this.state = { tag: "ground" };
+                this.consumePrefix(end);
+                continue;
+              }
+              this.state = { tag: "apc", sawEsc: false };
+              continue;
+            }
+            if (byte === ESC) {
+              this.cursor += 1;
+              this.state = { tag: "apc", sawEsc: true };
+              continue;
+            }
+            this.cursor += 1;
+            continue;
+          }
+          case "esc_less_mouse": {
+            if (this.cursor >= bytes.length) {
+              if (!this.forceFlush) {
+                this.markPending();
+                return;
+              }
+              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+              this.state = { tag: "ground" };
+              this.consumePrefix(this.cursor);
+              continue;
+            }
+            if (byte >= 48 && byte <= 57 || byte === 59) {
+              this.cursor += 1;
+              continue;
+            }
+            if (byte === 77 || byte === 109) {
+              const end = this.cursor + 1;
+              const rawBytes = bytes.subarray(this.unitStart, end);
+              const prefixed = withEscPrefix(rawBytes);
+              if (isMouseSgrSequence(prefixed)) {
+                this.emitMouse(prefixed, "sgr");
+              } else {
+                this.emitOpaqueResponse("unknown", rawBytes);
+              }
+              this.state = { tag: "ground" };
+              this.consumePrefix(end);
+              continue;
+            }
+            this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
+            this.state = { tag: "ground" };
+            this.consumePrefix(this.cursor);
+            continue;
+          }
+          case "esc_less_x10_mouse": {
+            const end = this.unitStart + 5;
+            if (bytes.length < end) {
+              if (!this.forceFlush) {
+                this.markPending();
+                return;
+              }
+              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, bytes.length));
+              this.state = { tag: "ground" };
+              this.consumePrefix(bytes.length);
+              continue;
+            }
+            const rawBytes = bytes.subarray(this.unitStart, end);
+            this.emitMouse(withEscPrefix(rawBytes), "x10");
+            this.state = { tag: "ground" };
+            this.consumePrefix(end);
+            continue;
+          }
+        }
+      }
+    }
+    emitKeyOrResponse(protocol, raw) {
+      const parsed = parseKeypress(raw, { useKittyKeyboard: this.useKittyKeyboard });
+      if (parsed) {
+        this.events.push({
+          type: "key",
+          raw: parsed.raw,
+          key: parsed
+        });
+        return;
+      }
+      this.events.push({
+        type: "response",
+        protocol,
+        sequence: raw
+      });
+    }
+    emitMouse(rawBytes, encoding) {
+      const event = this.mouseParser.parseMouseEvent(rawBytes);
+      if (!event) {
+        this.emitOpaqueResponse("unknown", rawBytes);
+        return;
+      }
+      this.events.push({
+        type: "mouse",
+        raw: decodeLatin1(rawBytes),
+        encoding,
+        event
+      });
+    }
+    emitLegacyHighByte(byte) {
+      const parsed = parseKeypress(import_node_buffer2.Buffer.from([byte]), { useKittyKeyboard: this.useKittyKeyboard });
+      if (parsed) {
+        this.events.push({
+          type: "key",
+          raw: parsed.raw,
+          key: parsed
+        });
+        return;
+      }
+      this.events.push({
+        type: "response",
+        protocol: "unknown",
+        sequence: String.fromCharCode(byte)
+      });
+    }
+    emitOpaqueResponse(protocol, rawBytes) {
+      this.events.push({
+        type: "response",
+        protocol,
+        sequence: decodeLatin1(rawBytes)
+      });
+    }
+    consumePrefix(endExclusive) {
+      this.pending.consume(endExclusive);
+      this.pendingTimeoutPaused = false;
+      this.suspendedPixelResolutionPrefixLength = 0;
+      this.cursor = 0;
+      this.unitStart = 0;
+      this.pendingSinceMs = null;
+      this.forceFlush = false;
+    }
+    takePendingBytes() {
+      const buffered = this.pending.take();
+      this.cursor = 0;
+      this.unitStart = 0;
+      this.pendingSinceMs = null;
+      this.forceFlush = false;
+      return buffered;
+    }
+    flushPendingOverflow() {
+      if (this.pending.length === 0) {
+        return;
+      }
+      this.onInputOverflow?.();
+      this.emitOpaqueResponse("unknown", this.pending.view());
+      this.pending.clear();
+      this.cursor = 0;
+      this.unitStart = 0;
+      this.pendingSinceMs = null;
+      this.pendingTimeoutPaused = false;
+      this.suspendedPixelResolutionPrefixLength = 0;
+      this.forceFlush = false;
+      this.state = { tag: "ground" };
+    }
+    markPending() {
+      this.pendingSinceMs = this.clock.now();
+    }
+    consumePasteBytes(chunk) {
+      const paste = this.paste;
+      const combined = concatBytes(paste.tail, chunk);
+      const endIndex = indexOfBytes(combined, BRACKETED_PASTE_END);
+      if (endIndex !== -1) {
+        this.pushPasteBytes(combined.subarray(0, endIndex));
+        if (this.pasteOverflow)
+          this.onPasteRejected?.();
+        else
+          this.events.push({
+            type: "paste",
+            bytes: joinPasteBytes(paste.parts, paste.totalLength)
+          });
+        this.paste = null;
+        return combined.subarray(endIndex + BRACKETED_PASTE_END.length);
+      }
+      const keep = Math.min(BRACKETED_PASTE_END.length - 1, combined.length);
+      const stableLength = combined.length - keep;
+      if (stableLength > 0) {
+        this.pushPasteBytes(combined.subarray(0, stableLength));
+      }
+      paste.tail = Uint8Array.from(combined.subarray(stableLength));
+      return EMPTY_BYTES;
+    }
+    pushPasteBytes(bytes) {
+      if (bytes.length === 0) {
+        return;
+      }
+      if (this.pasteOverflow)
+        return;
+      if (bytes.length > this.maxPasteBytes - this.paste.totalLength) {
+        this.pasteOverflow = true;
+        this.paste.parts = [];
+        this.paste.totalLength = 0;
+        return;
+      }
+      this.paste.parts.push(Uint8Array.from(bytes));
+      this.paste.totalLength += bytes.length;
+    }
+    reconcileDeferredStateWithProtocolContext() {
+      switch (this.state.tag) {
+        case "csi_parametric_deferred":
+          if (!canDeferParametricCsi(this.state, this.protocolContext)) {
+            this.emitOpaqueResponse("unknown", this.pending.view().subarray(this.unitStart, this.cursor));
+            this.state = { tag: "ground" };
+            this.consumePrefix(this.cursor);
+          }
+          return;
+        case "csi_private_reply_deferred":
+          if (!canDeferPrivateReplyCsi(this.protocolContext)) {
+            this.emitOpaqueResponse("unknown", this.pending.view().subarray(this.unitStart, this.cursor));
+            this.state = { tag: "ground" };
+            this.consumePrefix(this.cursor);
+          }
+          return;
+      }
+    }
+    reconcileTimeoutState() {
+      if (!this.armTimeouts) {
+        return;
+      }
+      if (this.pendingTimeoutPaused) {
+        this.clearTimeout();
+        return;
+      }
+      if (this.paste || this.pendingSinceMs === null || this.pending.length === 0) {
+        this.clearTimeout();
+        return;
+      }
+      this.clearTimeout();
+      this.timeoutId = this.clock.setTimeout(() => {
+        this.timeoutId = null;
+        if (this.destroyed) {
+          return;
+        }
+        try {
+          this.tryForceFlush();
+          this.onTimeoutFlush?.();
+        } catch (error) {
+          console.error("stdin parser timeout flush failed", error);
+        }
+      }, this.timeoutMs);
+    }
+    clearTimeout() {
+      if (!this.timeoutId) {
+        return;
+      }
+      this.clock.clearTimeout(this.timeoutId);
+      this.timeoutId = null;
+    }
+    resetState() {
+      this.pending.reset(INITIAL_PENDING_CAPACITY);
+      this.events.length = 0;
+      this.pendingSinceMs = null;
+      this.pendingTimeoutPaused = false;
+      this.suspendedPixelResolutionPrefixLength = 0;
+      this.forceFlush = false;
+      this.justFlushedEsc = false;
+      this.state = { tag: "ground" };
+      this.cursor = 0;
+      this.unitStart = 0;
+      this.paste = null;
+      this.mouseParser.reset();
+    }
+  }
+  var import_node_buffer2, DEFAULT_TIMEOUT_MS = 20, DEFAULT_MAX_PENDING_BYTES, INITIAL_PENDING_CAPACITY = 256, ESC = 27, BEL = 7, BRACKETED_PASTE_START, BRACKETED_PASTE_END, EMPTY_BYTES, KEY_DECODER, DEFAULT_PROTOCOL_CONTEXT, RXVT_DOLLAR_CSI_RE, SYSTEM_CLOCK;
+  var init_stdin_parser = __esm(() => {
+    init_parse_keypress();
+    init_parse_mouse();
+    import_node_buffer2 = __toESM(require_buffer(), 1);
+    DEFAULT_MAX_PENDING_BYTES = 64 * 1024;
+    BRACKETED_PASTE_START = import_node_buffer2.Buffer.from("\x1B[200~");
+    BRACKETED_PASTE_END = import_node_buffer2.Buffer.from("\x1B[201~");
+    EMPTY_BYTES = new Uint8Array(0);
+    KEY_DECODER = new TextDecoder;
+    DEFAULT_PROTOCOL_CONTEXT = {
+      kittyKeyboardEnabled: false,
+      privateCapabilityRepliesActive: false,
+      pixelResolutionQueryActive: false,
+      explicitWidthCprActive: false,
+      startupCursorCprActive: false
+    };
+    RXVT_DOLLAR_CSI_RE = /^\x1b\[\d+\$$/;
+    SYSTEM_CLOCK = new SystemClock;
+  });
+
+  // js/platform/mouse.ts
+  class RoutedMouseEvent {
+    target;
+    propagationStopped = false;
+    defaultPrevented = false;
+    currentTarget = null;
+    type;
+    button;
+    x;
+    y;
+    modifiers;
+    scroll;
+    constructor(target, raw) {
+      this.target = target;
+      this.type = raw.type;
+      this.button = raw.button;
+      this.x = raw.x;
+      this.y = raw.y;
+      this.modifiers = raw.modifiers;
+      this.scroll = raw.scroll;
+    }
+    stopPropagation() {
+      this.propagationStopped = true;
+    }
+    preventDefault() {
+      this.defaultPrevented = true;
+    }
+  }
+
+  class MouseRouter {
+    hit;
+    hover;
+    captured = new Map;
+    constructor(hit) {
+      this.hit = hit;
+    }
+    reset() {
+      this.hover = undefined;
+      this.captured.clear();
+    }
+    send(target, raw) {
+      if (target && !target.isDestroyed)
+        target.processMouseEvent(new RoutedMouseEvent(target, raw));
+    }
+    dispatch(raw) {
+      const target = this.hit(raw.x, raw.y);
+      if (target !== this.hover) {
+        this.send(this.hover, { ...raw, type: "out" });
+        this.hover = target;
+        this.send(target, { ...raw, type: "over" });
+      }
+      if (raw.type === "down" && target)
+        this.captured.set(raw.button, target);
+      const receiver = raw.type === "drag" || raw.type === "up" ? this.captured.get(raw.button) ?? target : target;
+      this.send(receiver, raw);
+      if (raw.type === "up")
+        this.captured.delete(raw.button);
+    }
+  }
+
+  // js/platform/application.ts
+  function copyTerminalText(text) {
+    try {
+      return lib2.copyToClipboardOSC52(native, 0, new TextEncoder().encode(text));
+    } catch {
+      return false;
+    }
+  }
+  function interceptKeys(handler) {
+    keyInterceptor = handler;
+  }
+  function drainInput() {
+    parser.drain((event) => {
+      if (!__host.canDispatch())
+        return;
+      if (event.type === "key") {
+        if (keyInterceptor?.(event.key))
+          return;
+        const key = new AppKeyEvent(event.key, receivedAt, ++inputSequence, __host.now());
+        const previous = JSON.stringify(keyboard);
+        if (key.source === "kitty")
+          keyboard.protocol = "kitty";
+        else if (keyboard.protocol === "unknown")
+          keyboard.protocol = "legacy";
+        if (key.kind === "release" && key.source === "kitty") {
+          keyboard.releases = "observed";
+          keyboard.heldStateAvailable = true;
+        }
+        if (/^(left_|right_)?(shift|control|alt|super|hyper|meta)$/.test(key.name) && key.source === "kitty")
+          keyboard.modifierEvents = "observed";
+        if (previous !== JSON.stringify(keyboard))
+          reportKeyboard();
+        if (!demoShortcuts) {
+          dispatchAppKey(key, appOptions.onKey, (name, event2) => keys.emit(name, event2));
+          return;
+        }
+        if (appOptions.onKey?.(key) || key.defaultPrevented)
+          return;
+        if (key.kind === "release")
+          return;
+        if (event.key.ctrl && event.key.name === "c" || event.key.name.toLowerCase() === "q") {
+          __host.quit();
+          return;
+        }
+        keys.emit("key", event.key.name.toLowerCase());
+      } else if (event.type === "paste") {
+        if (appOptions.onPaste)
+          appOptions.onPaste(new TextDecoder().decode(event.bytes));
+        else
+          keys.emit("paste", demoShortcuts ? event : new PasteEvent(event.bytes, event.metadata));
+      } else if (event.type === "mouse") {
+        mouse.dispatch(event.event);
+      } else if (event.type === "response" && native) {
+        if (event.sequence === "\x1B[I" || event.sequence === "\x1B[O") {
+          keyboard.focus = "observed";
+          reportKeyboard();
+          if (event.sequence === "\x1B[O")
+            resetInput("focus-loss");
+          return;
+        }
+        lib2.processCapabilityResponse(native, event.sequence);
+        context.capabilities = lib2.getTerminalCapabilities(native);
+        const reply = event.sequence.match(/^\x1b_G([^;]*);([\s\S]*?)\x1b\\$/);
+        if (reply && reply[1].split(",").includes("i=31337") && reply[2] === "OK") {
+          graphicsState.confirmed = true;
+          keys.emit("graphics", true);
+          dirty = true;
+        }
+      }
+    });
+  }
+  function shutdown() {
+    if (stopped)
+      return;
+    stopped = true;
+    try {
+      try {
+        resetInput("shutdown");
+      } finally {
+        if (mounted)
+          adapter.unmount();
+      }
+    } finally {
+      try {
+        root?.destroyRecursively();
+      } finally {
+        try {
+          context.clearSelection();
+          mouse.reset();
+          native = null;
+        } finally {
+          parser.destroy();
+          lib2?.dispose();
+          __timers.clear();
+        }
+      }
+    }
+    mounted = false;
+  }
+  function mountApplication(nextAdapter, options = {}, shortcuts = false) {
+    if (mounted || stopped)
+      throw new Error("Only one application mount per runtime is supported");
+    mounted = true;
+    adapter = nextAdapter;
+    demoShortcuts = shortcuts;
+    appOptions = options;
+    keyboard.requestedFlags = keyboardFlags(options.keyboard);
+    __host.configureKeyboard(keyboard.requestedFlags);
+    parser.updateProtocolContext({ kittyKeyboardEnabled: keyboard.requestedFlags !== 0 });
+    reportKeyboard();
+    resetInput((__host.generation ?? 1) > 1 ? "reload" : "startup");
+    if (options.exportState)
+      Object.assign(globalThis, { __exportState: () => {
+        const text = JSON.stringify(options.exportState());
+        if (text === undefined)
+          throw new Error("exportState must return JSON-serializable data");
+        return text;
+      } });
+    if (options.onReloadError)
+      Object.assign(globalThis, { __reloadNotice: options.onReloadError });
+    if (options.onMessage)
+      Object.assign(globalThis, { __message: options.onMessage });
+    Object.assign(globalThis, { __endpointClosed: (reason) => {
+      resetInput("endpoint-closed");
+      options.onDisconnect?.(reason);
+    } });
+    lib2 = resolveRenderLib();
+    native = __host.borrowRenderer();
+    lib2.setBackgroundColor(native, RGBA.fromHex("#101820"));
+    context.capabilities = lib2.getTerminalCapabilities(native);
+    root = new RootRenderable(context);
+    adapter.mount(root, context);
+    return { root, context, quit: () => __host.quit(), snapshot: () => new TextDecoder().decode(lib2.getCurrentBuffer(native).getRealCharBytes(true)) };
+  }
+  var import_events5, dirty = true, stopped = false, liveCount = 0, liveTimer, mounted = false, adapter, batch = (work) => adapter?.batch ? adapter.batch(work) : work(), native, root, lib2, keys, keyInterceptor = null, graphicsState, appOptions, firstLayout = true, inputSequence = 0, receivedAt = 0, inputOverflow = false, keyboard, reportKeyboard = () => appOptions.onKeyboardCapabilities?.({ ...keyboard }), resetInput = (reason) => {
+    try {
+      appOptions.onInputReset?.({ reason });
+    } finally {
+      resetKeyboardSubscriptions({ reason });
+    }
+  }, demoShortcuts = false, parser, selection = null, selectionOwner = null, lifecycle, context, mouse;
+  var init_application = __esm(() => {
+    init_keyboard();
+    init_KeyHandler();
+    init_selection();
+    init_Renderable();
+    init_zig();
+    init_RGBA();
+    init_stdin_parser();
+    import_events5 = __toESM(require_events(), 1);
+    keys = new import_events5.EventEmitter;
+    graphicsState = { confirmed: false };
+    appOptions = {};
+    keyboard = { requestedFlags: 5, protocol: "unknown", releases: "unknown", focus: "unknown", modifierEvents: "unknown", heldStateAvailable: false };
+    parser = new StdinParser({ onInputOverflow: () => {
+      inputOverflow = true;
+    }, onTimeoutFlush: () => drainInput(), onPasteRejected: () => appOptions.onPasteRejected?.() });
+    lifecycle = new Set;
+    context = Object.assign(new import_events5.EventEmitter, {
+      width: __host.width,
+      height: __host.height,
+      frameId: 0,
+      widthMethod: "unicode",
+      capabilities: null,
+      requestRender() {
+        dirty = true;
+      },
+      getLifecyclePasses: () => lifecycle,
+      registerLifecyclePass: (node) => lifecycle.add(node),
+      unregisterLifecyclePass: (node) => lifecycle.delete(node),
+      addToHitGrid(x, y, w, h, id) {
+        lib2.addToHitGrid(native, x, y, w, h, id);
+      },
+      pushHitGridScissorRect(x, y, w, h) {
+        lib2.hitGridPushScissorRect(native, x, y, w, h);
+      },
+      popHitGridScissorRect() {
+        lib2.hitGridPopScissorRect(native);
+      },
+      clearHitGridScissorRects() {
+        lib2.hitGridClearScissorRects(native);
+      },
+      getSelection: () => selection,
+      currentFocusedRenderable: null,
+      currentFocusedEditor: null,
+      focusRenderable(node) {
+        const old = context.currentFocusedRenderable;
+        if (old && old !== node)
+          old.blur();
+        context.currentFocusedRenderable = node;
+      },
+      blurRenderable(node) {
+        if (context.currentFocusedRenderable === node)
+          context.currentFocusedRenderable = null;
+      },
+      setCursorPosition(x, y, visible) {
+        lib2.setCursorPosition(native, x, y, visible);
+      },
+      setCursorStyle(style) {
+        lib2.setCursorStyleOptions(native, style);
+      },
+      clearSelection() {
+        const old = selectionOwner;
+        selection = null;
+        selectionOwner = null;
+        if (old && !old.isDestroyed)
+          old.onSelectionChanged(null);
+        context.emit("selection", null);
+      },
+      startSelection(node, x, y) {
+        context.clearSelection();
+        selectionOwner = node;
+        selection = new Selection(node, { x, y }, { x, y });
+        selection.isStart = true;
+        node.onSelectionChanged(selection);
+      },
+      updateSelection(_node, x, y, options = {}) {
+        if (selection && selectionOwner && !selectionOwner.isDestroyed) {
+          selection.isStart = false;
+          selection.focus = { x, y };
+          selection.isDragging = !options.finishDragging;
+          selectionOwner.onSelectionChanged(selection);
+          context.emit("selection", selection);
+        }
+      },
+      requestSelectionUpdate() {
+        if (selection && selectionOwner && !selectionOwner.isDestroyed)
+          selectionOwner.onSelectionChanged(selection);
+      },
+      keyInput: keys,
+      _internalKeyInput: { onInternal: (name, handler) => keys.on(name, handler), offInternal: (name, handler) => keys.off(name, handler) },
+      requestLive() {
+        if (liveCount++ === 0) {
+          const tick = () => {
+            if (stopped || liveCount <= 0)
+              return;
+            dirty = true;
+            liveTimer = setTimeout(tick, 16);
+          };
+          liveTimer = setTimeout(tick, 16);
+        }
+      },
+      dropLive() {
+        liveCount = Math.max(0, liveCount - 1);
+        if (!liveCount)
+          clearTimeout(liveTimer);
+      }
+    });
+    Object.defineProperty(context, "hasSelection", { get: () => selection !== null });
+    mouse = new MouseRouter((x, y) => x < 0 || y < 0 ? undefined : Renderable.renderablesByNumber.get(lib2.checkHit(native, x, y)));
+    Object.assign(globalThis, {
+      __shutdown: shutdown,
+      __inputReset: (reason) => resetInput(reason),
+      __inputReadyForReload: () => parser.readyForReload,
+      __input(data, time = __host.now()) {
+        receivedAt = time;
+        batch(() => {
+          parser.push(new Uint8Array(data));
+          drainInput();
+          if (inputOverflow) {
+            inputOverflow = false;
+            resetInput("overflow");
+          }
+        });
+      },
+      __resize(width, height) {
+        context.width = width;
+        context.height = height;
+        lib2.resizeRenderer(native, width, height);
+        root.width = width;
+        root.height = height;
+        context.emit("resize", width, height);
+        dirty = true;
+      },
+      __tick() {
+        __timers.tick();
+      },
+      __delay() {
+        return __timers.delay();
+      },
+      __frame() {
+        if (stopped || !dirty)
+          return;
+        dirty = false;
+        context.frameId++;
+        const buffer = lib2.getNextBuffer(native);
+        buffer.clear(RGBA.fromHex("#101820"));
+        root.render(buffer, 16);
+        if (firstLayout) {
+          firstLayout = false;
+          if (appOptions.onFirstLayout) {
+            appOptions.onFirstLayout();
+            buffer.clear(RGBA.fromHex("#101820"));
+            root.render(buffer, 16);
+          }
+        }
+        __host.presentFrame();
+      },
+      __inspect() {
+        return JSON.stringify({ ...adapter?.inspect?.(), applicationMounted: mounted, keys: keys.listenerCount("key"), frame: context.frameId });
+      },
+      __snapshot() {
+        return new TextDecoder().decode(lib2.getCurrentBuffer(native).getRealCharBytes(true));
+      }
+    });
+  });
+
   // vendor/opentui/packages/core/src/renderables/Box.ts
   function isGapType(value) {
     if (value === undefined) {
@@ -22695,15 +25508,15 @@ No matching component was found for:
     viewPtr;
     textBuffer;
     _destroyed = false;
-    constructor(lib2, ptr2, textBuffer) {
-      this.lib = lib2;
+    constructor(lib3, ptr2, textBuffer) {
+      this.lib = lib3;
       this.viewPtr = ptr2;
       this.textBuffer = textBuffer;
     }
     static create(textBuffer) {
-      const lib2 = resolveRenderLib();
-      const viewPtr = lib2.createTextBufferView(textBuffer.ptr);
-      return new TextBufferView(lib2, viewPtr, textBuffer);
+      const lib3 = resolveRenderLib();
+      const viewPtr = lib3.createTextBufferView(textBuffer.ptr);
+      return new TextBufferView(lib3, viewPtr, textBuffer);
     }
     guard() {
       if (this._destroyed)
@@ -22874,14 +25687,14 @@ No matching component was found for:
     nameCache = new Map;
     styleDefs = new Map;
     mergedCache = new Map;
-    constructor(lib2, ptr2) {
-      this.lib = lib2;
+    constructor(lib3, ptr2) {
+      this.lib = lib3;
       this.stylePtr = ptr2;
     }
     static create() {
-      const lib2 = resolveRenderLib();
-      const ptr2 = lib2.createSyntaxStyle();
-      return new SyntaxStyle(lib2, ptr2);
+      const lib3 = resolveRenderLib();
+      const ptr2 = lib3.createSyntaxStyle();
+      return new SyntaxStyle(lib3, ptr2);
     }
     static fromTheme(theme) {
       const style = SyntaxStyle.create();
@@ -23349,14 +26162,14 @@ No matching component was found for:
         this.emit("line-info-change");
       }
       setupNativeRenderable() {
-        const lib2 = resolveRenderLib();
-        const nativeRenderable = lib2.createNativeRenderable();
-        if (!lib2.nativeRenderableAttachYogaNode(nativeRenderable, this.yogaNode.ptr)) {
-          lib2.destroyNativeRenderable(nativeRenderable);
+        const lib3 = resolveRenderLib();
+        const nativeRenderable = lib3.createNativeRenderable();
+        if (!lib3.nativeRenderableAttachYogaNode(nativeRenderable, this.yogaNode.ptr)) {
+          lib3.destroyNativeRenderable(nativeRenderable);
           throw new Error("Failed to attach native renderable Yoga node");
         }
-        if (!lib2.nativeRenderableSetMeasureTarget(nativeRenderable, NativeMeasureTargetKind.TextBufferView, this.textBufferView.ptr)) {
-          lib2.destroyNativeRenderable(nativeRenderable);
+        if (!lib3.nativeRenderableSetMeasureTarget(nativeRenderable, NativeMeasureTargetKind.TextBufferView, this.textBufferView.ptr)) {
+          lib3.destroyNativeRenderable(nativeRenderable);
           throw new Error("Failed to attach text buffer native measure target");
         }
         this.nativeRenderable = nativeRenderable;
@@ -23368,14 +26181,14 @@ No matching component was found for:
         const localY = y - this.y;
         return localX >= 0 && localX < this.width && localY >= 0 && localY < this.height;
       }
-      onSelectionChanged(selection) {
-        const localSelection = convertGlobalToLocalSelection(selection, this.x, this.y);
+      onSelectionChanged(selection2) {
+        const localSelection = convertGlobalToLocalSelection(selection2, this.x, this.y);
         this.lastLocalSelection = localSelection;
         let changed;
         if (!localSelection?.isActive) {
           this.textBufferView.resetLocalSelection();
           changed = true;
-        } else if (selection?.isStart) {
+        } else if (selection2?.isStart) {
           changed = this.textBufferView.setLocalSelection(localSelection.anchorX, localSelection.anchorY, localSelection.focusX, localSelection.focusY, this._selectionBg, this._selectionFg, localSelection.behavior);
         } else {
           changed = this.textBufferView.updateLocalSelection(localSelection.anchorX, localSelection.anchorY, localSelection.focusX, localSelection.focusY, this._selectionBg, this._selectionFg, localSelection.behavior);
@@ -23533,6 +26346,74 @@ No matching component was found for:
     };
   });
 
+  // js/services.ts
+  function quit() {
+    __host.quit();
+  }
+  function getReloadInfo() {
+    return { enabled: typeof __host.requestReload === "function", generation: __host.generation ?? 1, notice: __host.reloadNotice ?? "" };
+  }
+  function getReloadState(fallback) {
+    return __host.reloadState === undefined || __host.reloadState === "null" ? fallback : JSON.parse(__host.reloadState);
+  }
+  function requestReload(source) {
+    if (!__host.requestReload)
+      throw new Error("Reload is disabled by the native host");
+    __host.requestReload(source);
+  }
+
+  // js/core.ts
+  function createApplication(options = {}) {
+    const nodes = new Set, subscriptions2 = new Set;
+    const app = mountApplication({
+      mount() {},
+      unmount() {
+        for (const off of subscriptions2)
+          off();
+        subscriptions2.clear();
+        for (const node of nodes)
+          if (!node.isDestroyed)
+            node.destroyRecursively();
+        nodes.clear();
+      }
+    }, options);
+    function trackSubscription(off) {
+      subscriptions2.add(off);
+      return () => {
+        subscriptions2.delete(off);
+        off();
+      };
+    }
+    function create(Widget, props) {
+      const node = new Widget(app.context, props);
+      nodes.add(node);
+      node.once("destroyed", () => nodes.delete(node));
+      return node;
+    }
+    return {
+      root: app.root,
+      quit: app.quit,
+      snapshot: app.snapshot,
+      create,
+      box: (props = {}) => create(BoxRenderable, props),
+      text: (props = {}) => create(TextRenderable, props),
+      onKey: (handler) => trackSubscription(subscribeKeyboard(handler)),
+      onInputReset: (handler) => trackSubscription(subscribeKeyboard(() => {}, handler)),
+      onResize(handler) {
+        app.context.on("resize", handler);
+        return trackSubscription(() => app.context.off("resize", handler));
+      }
+    };
+  }
+  var init_core = __esm(() => {
+    init_application();
+    init_keyboard();
+    init_Box();
+    init_Text();
+    init_application();
+    init_keyboard();
+  });
+
   // quicktui:fs-promises
   function open() {
     throw new Error("File image loading is unsupported; use NativeImage pixels");
@@ -23553,12 +26434,12 @@ No matching component was found for:
     format = "rgba8";
     colorSpace = "srgb";
     alpha = "straight";
-    constructor(data, width, height, stride, lib2, handle) {
+    constructor(data, width, height, stride, lib3, handle) {
       this.data = data;
       this.width = width;
       this.height = height;
       this.stride = stride;
-      this.lib = lib2;
+      this.lib = lib3;
       this.handle = handle;
     }
     dispose() {
@@ -23734,8 +26615,8 @@ No matching component was found for:
     lib;
     handle;
     imageInfo;
-    constructor(lib2, handle, info) {
-      this.lib = lib2;
+    constructor(lib3, handle, info) {
+      this.lib = lib3;
       this.handle = handle;
       this.imageInfo = info;
     }
@@ -23743,12 +26624,12 @@ No matching component was found for:
       const bytes = encodedBytes(data);
       if (bytes.byteLength === 0)
         throw new TypeError("image data must not be empty");
-      const lib2 = resolveRenderLib();
-      const result = lib2.imageDecode(bytes);
+      const lib3 = resolveRenderLib();
+      const result = lib3.imageDecode(bytes);
       checkStatus(result.status);
       if (!result.handle)
         throw imageError(10);
-      return NativeImage.fromHandle(lib2, result.handle);
+      return NativeImage.fromHandle(lib3, result.handle);
     }
     static async load(source, options = {}) {
       if (source instanceof Response) {
@@ -23799,12 +26680,12 @@ No matching component was found for:
       requireU32(width, "width");
       requireU32(height, "height");
       requireU32(stride, "stride");
-      const lib2 = resolveRenderLib();
-      const result = lib2.imageCreateFromRgba(pixels, width, height, stride);
+      const lib3 = resolveRenderLib();
+      const result = lib3.imageCreateFromRgba(pixels, width, height, stride);
       checkStatus(result.status);
       if (!result.handle)
         throw imageError(10);
-      return NativeImage.fromHandle(lib2, result.handle);
+      return NativeImage.fromHandle(lib3, result.handle);
     }
     static fromPixels(pixels, width, height, options = {}) {
       if (!(pixels instanceof Uint8Array))
@@ -23812,20 +26693,20 @@ No matching component was found for:
       requireU32(width, "width");
       requireU32(height, "height");
       const { stride, format, alpha } = pixelImportOptions(width, options);
-      const lib2 = resolveRenderLib();
-      const result = lib2.imageCreateFromPixels(pixels, width, height, stride, format, alpha);
+      const lib3 = resolveRenderLib();
+      const result = lib3.imageCreateFromPixels(pixels, width, height, stride, format, alpha);
       checkStatus(result.status);
       if (!result.handle)
         throw imageError(10);
-      return NativeImage.fromHandle(lib2, result.handle);
+      return NativeImage.fromHandle(lib3, result.handle);
     }
-    static fromHandle(lib2, handle) {
-      const result = lib2.imageGetInfo(handle);
+    static fromHandle(lib3, handle) {
+      const result = lib3.imageGetInfo(handle);
       if (result.status !== 0) {
-        lib2.imageDestroy(handle);
+        lib3.imageDestroy(handle);
         throw imageError(result.status);
       }
-      return new NativeImage(lib2, handle, unpackInfo(result.info));
+      return new NativeImage(lib3, handle, unpackInfo(result.info));
     }
     guard() {
       if (!this.handle)
@@ -24251,11 +27132,11 @@ No matching component was found for:
   });
 
   // vendor/opentui/packages/core/src/edit-buffer.ts
-  var import_events5, EditBuffer;
+  var import_events6, EditBuffer;
   var init_edit_buffer = __esm(() => {
     init_zig();
-    import_events5 = __toESM(require_events(), 1);
-    EditBuffer = class EditBuffer extends import_events5.EventEmitter {
+    import_events6 = __toESM(require_events(), 1);
+    EditBuffer = class EditBuffer extends import_events6.EventEmitter {
       static registry = new Map;
       static nativeEventsSubscribed = false;
       lib;
@@ -24267,25 +27148,25 @@ No matching component was found for:
       _singleTextBytes = null;
       _singleTextMemId = null;
       _syntaxStyle;
-      constructor(lib2, ptr2) {
+      constructor(lib3, ptr2) {
         super();
-        this.lib = lib2;
+        this.lib = lib3;
         this.bufferPtr = ptr2;
-        this.textBufferPtr = lib2.editBufferGetTextBuffer(ptr2);
-        this.id = lib2.editBufferGetId(ptr2);
+        this.textBufferPtr = lib3.editBufferGetTextBuffer(ptr2);
+        this.id = lib3.editBufferGetId(ptr2);
         EditBuffer.registry.set(this.id, this);
-        EditBuffer.subscribeToNativeEvents(lib2);
+        EditBuffer.subscribeToNativeEvents(lib3);
       }
       static create(widthMethod) {
-        const lib2 = resolveRenderLib();
-        const ptr2 = lib2.createEditBuffer(widthMethod);
-        return new EditBuffer(lib2, ptr2);
+        const lib3 = resolveRenderLib();
+        const ptr2 = lib3.createEditBuffer(widthMethod);
+        return new EditBuffer(lib3, ptr2);
       }
-      static subscribeToNativeEvents(lib2) {
+      static subscribeToNativeEvents(lib3) {
         if (EditBuffer.nativeEventsSubscribed)
           return;
         EditBuffer.nativeEventsSubscribed = true;
-        lib2.onAnyNativeEvent((name, data) => {
+        lib3.onAnyNativeEvent((name, data) => {
           const buffer = new Uint16Array(data);
           if (name.startsWith("eb_") && buffer.length >= 1) {
             const id = buffer[0];
@@ -24582,15 +27463,15 @@ No matching component was found for:
     _destroyed = false;
     _extmarksController;
     _textBufferViewPtr;
-    constructor(lib2, ptr2, editBuffer) {
-      this.lib = lib2;
+    constructor(lib3, ptr2, editBuffer) {
+      this.lib = lib3;
       this.viewPtr = ptr2;
       this.editBuffer = editBuffer;
     }
     static create(editBuffer, viewportWidth, viewportHeight) {
-      const lib2 = resolveRenderLib();
-      const viewPtr = lib2.createEditorView(editBuffer.ptr, viewportWidth, viewportHeight);
-      return new EditorView(lib2, viewPtr, editBuffer);
+      const lib3 = resolveRenderLib();
+      const viewPtr = lib3.createEditorView(editBuffer.ptr, viewportWidth, viewportHeight);
+      return new EditorView(lib3, viewPtr, editBuffer);
     }
     guard() {
       if (this._destroyed)
@@ -25174,8 +28055,8 @@ No matching component was found for:
         const localY = y - this.y;
         return localX >= 0 && localX < this.width && localY >= 0 && localY < this.height;
       }
-      onSelectionChanged(selection) {
-        const localSelection = convertGlobalToLocalSelection(selection, this.x, this.y);
+      onSelectionChanged(selection2) {
+        const localSelection = convertGlobalToLocalSelection(selection2, this.x, this.y);
         this.lastLocalSelection = localSelection;
         const updateCursor = true;
         const followCursor = this._keyboardSelectionActive;
@@ -25184,12 +28065,12 @@ No matching component was found for:
           this._keyboardSelectionActive = false;
           this.editorView.resetLocalSelection();
           changed = true;
-        } else if (selection?.isStart) {
+        } else if (selection2?.isStart) {
           changed = this.editorView.setLocalSelection(localSelection.anchorX, localSelection.anchorY, localSelection.focusX, localSelection.focusY, this._selectionBg, this._selectionFg, updateCursor, followCursor, localSelection.behavior);
         } else {
           changed = this.editorView.updateLocalSelection(localSelection.anchorX, localSelection.anchorY, localSelection.focusX, localSelection.focusY, this._selectionBg, this._selectionFg, updateCursor, followCursor, localSelection.behavior);
         }
-        if (changed && localSelection?.isActive && selection?.isDragging) {
+        if (changed && localSelection?.isActive && selection2?.isDragging) {
           const viewport = this.editorView.getViewport();
           const focusY = localSelection.focusY;
           const scrollMargin = Math.max(1, Math.floor(viewport.height * this._scrollMargin));
@@ -25330,10 +28211,10 @@ No matching component was found for:
         return true;
       }
       collapseSelectionToEdge(edge) {
-        const selection = this.getSelection();
-        if (!selection)
+        const selection2 = this.getSelection();
+        if (!selection2)
           return false;
-        this.editBuffer.setCursorByOffset(edge === "start" ? selection.start : selection.end);
+        this.editBuffer.setCursorByOffset(edge === "start" ? selection2.start : selection2.end);
         this.clearSelection();
         return true;
       }
@@ -25547,14 +28428,14 @@ No matching component was found for:
         return true;
       }
       setupNativeRenderable() {
-        const lib2 = resolveRenderLib();
-        const nativeRenderable = lib2.createNativeRenderable();
-        if (!lib2.nativeRenderableAttachYogaNode(nativeRenderable, this.yogaNode.ptr)) {
-          lib2.destroyNativeRenderable(nativeRenderable);
+        const lib3 = resolveRenderLib();
+        const nativeRenderable = lib3.createNativeRenderable();
+        if (!lib3.nativeRenderableAttachYogaNode(nativeRenderable, this.yogaNode.ptr)) {
+          lib3.destroyNativeRenderable(nativeRenderable);
           throw new Error("Failed to attach native renderable Yoga node");
         }
-        if (!lib2.nativeRenderableSetMeasureTarget(nativeRenderable, NativeMeasureTargetKind.EditorView, this.editorView.ptr)) {
-          lib2.destroyNativeRenderable(nativeRenderable);
+        if (!lib3.nativeRenderableSetMeasureTarget(nativeRenderable, NativeMeasureTargetKind.EditorView, this.editorView.ptr)) {
+          lib3.destroyNativeRenderable(nativeRenderable);
           throw new Error("Failed to attach editor native measure target");
         }
         this.nativeRenderable = nativeRenderable;
@@ -25702,9 +28583,9 @@ No matching component was found for:
             this._ctx.startSelection(this, cursorX, cursorY);
           } else if (this._ctx.getSelection()?.behavior !== "cell") {
             if (this.editorView.convertSelectionToCell()) {
-              const selection = this._ctx.getSelection();
-              if (selection)
-                selection.behavior = "cell";
+              const selection2 = this._ctx.getSelection();
+              if (selection2)
+                selection2.behavior = "cell";
             }
           }
           return;
@@ -28033,8 +30914,8 @@ No matching component was found for:
           this.applyStickyStart(stickyStart);
         }
         this.selectionListener = () => {
-          const selection = this._ctx.getSelection();
-          if (!selection || !selection.isDragging) {
+          const selection2 = this._ctx.getSelection();
+          if (!selection2 || !selection2.isDragging) {
             this.stopAutoScroll();
           }
         };
@@ -28565,8 +31446,8 @@ No matching component was found for:
         const localY = y - this.y;
         return this.selectionHelper.shouldStartSelection(localX, localY, this.width, this.height);
       }
-      onSelectionChanged(selection) {
-        const localSelection = convertGlobalToLocalSelection(selection, this.x, this.y);
+      onSelectionChanged(selection2) {
+        const localSelection = convertGlobalToLocalSelection(selection2, this.x, this.y);
         this.lastLocalSelection = localSelection;
         const changed = this.selectionHelper.onLocalSelectionChanged(localSelection, this.width, this.height);
         if (changed) {
@@ -28576,10 +31457,10 @@ No matching component was found for:
         return this.selectionHelper.hasSelection();
       }
       getSelectedText() {
-        const selection = this.selectionHelper.getSelection();
-        if (!selection)
+        const selection2 = this.selectionHelper.getSelection();
+        if (!selection2)
           return "";
-        return this._text.slice(selection.start, selection.end);
+        return this._text.slice(selection2.start, selection2.end);
       }
       hasSelection() {
         return this.selectionHelper.hasSelection();
@@ -28600,20 +31481,20 @@ No matching component was found for:
           backgroundColor: this._backgroundColor,
           font: this._font
         });
-        const selection = this.selectionHelper.getSelection();
-        if (selection && (this._selectionBg || this._selectionFg)) {
-          this.renderSelectionHighlight(selection);
+        const selection2 = this.selectionHelper.getSelection();
+        if (selection2 && (this._selectionBg || this._selectionFg)) {
+          this.renderSelectionHighlight(selection2);
         }
       }
-      renderSelectionHighlight(selection) {
+      renderSelectionHighlight(selection2) {
         if (!this._selectionBg && !this._selectionFg)
           return;
-        const selectedText = this._text.slice(selection.start, selection.end);
+        const selectedText = this._text.slice(selection2.start, selection2.end);
         if (!selectedText)
           return;
         const positions = getCharacterPositions(this._text, this._font);
-        const startX = positions[selection.start] || 0;
-        const endX = selection.end < positions.length ? positions[selection.end] : measureText({ text: this._text, font: this._font }).width;
+        const startX = positions[selection2.start] || 0;
+        const endX = selection2.end < positions.length ? positions[selection2.end] : measureText({ text: this._text, font: this._font }).width;
         if (this._selectionBg) {
           this.frameBuffer.fillRect(startX, 0, endX - startX, this.height, parseColor(this._selectionBg));
         }
@@ -30400,10 +33281,10 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       get highlightingDone() {
         return this._highlightingPromise;
       }
-      async transformChunks(chunks, context) {
+      async transformChunks(chunks, context2) {
         if (!this._onChunks)
           return chunks;
-        const modified = await this._onChunks(chunks, context);
+        const modified = await this._onChunks(chunks, context2);
         return modified ?? chunks;
       }
       ensureVisibleTextBeforeHighlight() {
@@ -30451,12 +33332,12 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             return;
           let highlights = result.highlights ?? [];
           if (this._onHighlight && highlights.length >= 0) {
-            const context = {
+            const context2 = {
               content,
               filetype,
               syntaxStyle: this._syntaxStyle
             };
-            const modified = await this._onHighlight(highlights, context);
+            const modified = await this._onHighlight(highlights, context2);
             if (modified !== undefined) {
               highlights = modified;
             }
@@ -30474,7 +33355,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
           }
           if (highlights.length > 0 || this._onChunks || this._baseHighlight) {
             const sourceRanges = this._onChunks ? [] : undefined;
-            const context = {
+            const context2 = {
               content,
               filetype,
               syntaxStyle: this._syntaxStyle,
@@ -30487,7 +33368,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
               ranges: sourceRanges
             });
             const renderedLineSources = this._onChunks ? undefined : this.getConcealLinesSourceMap(content, highlights);
-            chunks = await this.transformChunks(chunks, context);
+            chunks = await this.transformChunks(chunks, context2);
             if (snapshotId !== this._highlightSnapshotId) {
               this.requestRender();
               return;
@@ -33564,17 +36445,17 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         const localY = y2 - this.y;
         return this.getCellAtLocalPosition(localX, localY) !== null;
       }
-      onSelectionChanged(selection) {
+      onSelectionChanged(selection2) {
         this.ensureLayoutReady();
         const previousLocalSelection = this._lastLocalSelection;
-        const localSelection = convertGlobalToLocalSelection(selection, this.x, this.y);
+        const localSelection = convertGlobalToLocalSelection(selection2, this.x, this.y);
         this._lastLocalSelection = localSelection;
         const dirtyRows = this.getDirtySelectionRowRange(previousLocalSelection, localSelection);
         if (!localSelection?.isActive) {
           this.resetCellSelections();
           this._lastSelectionMode = null;
         } else {
-          this.applySelectionToCells(localSelection, selection?.isStart ?? false);
+          this.applySelectionToCells(localSelection, selection2?.isStart ?? false);
         }
         if (dirtyRows !== null) {
           this.redrawSelectionRows(dirtyRows.firstRow, dirtyRows.lastRow);
@@ -33594,9 +36475,9 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       getSelection() {
         for (const row of this._cells) {
           for (const cell of row) {
-            const selection = cell.textBufferView.getSelection();
-            if (selection) {
-              return selection;
+            const selection2 = cell.textBufferView.getSelection();
+            if (selection2) {
+              return selection2;
             }
           }
         }
@@ -34161,10 +37042,10 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         const maxSelY = Math.max(localSelection.anchorY, localSelection.focusY);
         const firstRow = this.findRowForLocalY(minSelY);
         const lastRow = this.findRowForLocalY(maxSelY);
-        const selection = this.resolveSelectionResolution(localSelection);
-        const modeChanged = this._lastSelectionMode !== selection.mode;
-        this._lastSelectionMode = selection.mode;
-        const lockToAnchorColumn = selection.mode === "column-locked" && selection.anchorColumn !== null;
+        const selection2 = this.resolveSelectionResolution(localSelection);
+        const modeChanged = this._lastSelectionMode !== selection2.mode;
+        this._lastSelectionMode = selection2.mode;
+        const lockToAnchorColumn = selection2.mode === "column-locked" && selection2.anchorColumn !== null;
         for (let rowIdx = 0;rowIdx < this._rowCount; rowIdx++) {
           if (rowIdx < firstRow || rowIdx > lastRow) {
             this.resetRowSelection(rowIdx);
@@ -34175,7 +37056,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             const cell = this._cells[rowIdx]?.[colIdx];
             if (!cell)
               continue;
-            if (lockToAnchorColumn && colIdx !== selection.anchorColumn) {
+            if (lockToAnchorColumn && colIdx !== selection2.anchorColumn) {
               cell.textBufferView.resetLocalSelection();
               continue;
             }
@@ -34186,12 +37067,12 @@ Please report this to https://github.com/markedjs/marked.`, e) {
               focusX: localSelection.focusX - cellLeft,
               focusY: localSelection.focusY - cellTop
             };
-            const isAnchorCell = selection.anchorCell !== null && selection.anchorCell.rowIdx === rowIdx && selection.anchorCell.colIdx === colIdx;
-            if (selection.mode === "single-cell" && !isAnchorCell) {
+            const isAnchorCell = selection2.anchorCell !== null && selection2.anchorCell.rowIdx === rowIdx && selection2.anchorCell.colIdx === colIdx;
+            if (selection2.mode === "single-cell" && !isAnchorCell) {
               cell.textBufferView.resetLocalSelection();
               continue;
             }
-            const forceSet = isAnchorCell && selection.mode !== "single-cell";
+            const forceSet = isAnchorCell && selection2.mode !== "single-cell";
             if (forceSet) {
               coords = this.getFullCellSelectionCoords(rowIdx, colIdx);
             }
@@ -34268,11 +37149,11 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         }
         return this._rowCount - 1;
       }
-      getSelectionRowRange(selection) {
-        if (!selection?.isActive || this._rowCount === 0)
+      getSelectionRowRange(selection2) {
+        if (!selection2?.isActive || this._rowCount === 0)
           return null;
-        const minSelY = Math.min(selection.anchorY, selection.focusY);
-        const maxSelY = Math.max(selection.anchorY, selection.focusY);
+        const minSelY = Math.min(selection2.anchorY, selection2.focusY);
+        const maxSelY = Math.max(selection2.anchorY, selection2.focusY);
         return {
           firstRow: this.findRowForLocalY(minSelY),
           lastRow: this.findRowForLocalY(maxSelY)
@@ -34608,9 +37489,9 @@ Please report this to https://github.com/markedjs/marked.`, e) {
   function normalizeMarkdownLinkTarget(destination) {
     return destination.replace(/\\([!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~])/g, "$1");
   }
-  function detectLinks(chunks, context) {
-    const content = context.content;
-    const highlights = context.highlights;
+  function detectLinks(chunks, context2) {
+    const content = context2.content;
+    const highlights = context2.highlights;
     const hasBareUrl = HTTP_URL_PREFIX.test(content);
     if (!hasBareUrl && !highlights.some(([, , group]) => URL_SCOPES.includes(group)))
       return chunks;
@@ -34710,7 +37591,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         linkedChunks.push(chunk);
         continue;
       }
-      const providedRange = context.sourceRanges?.[index];
+      const providedRange = context2.sourceRanges?.[index];
       const start = providedRange?.start ?? content.indexOf(chunk.text, contentPos);
       if (start < 0) {
         linkedChunks.push(chunk);
@@ -34814,14 +37695,14 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       _blockStates = [];
       _stableBlockCount = 0;
       _styleDirty = false;
-      _highlightMarkdownLinks = (highlights, context) => this.addMarkdownLinkHighlights(highlights, context.content);
+      _highlightMarkdownLinks = (highlights, context2) => this.addMarkdownLinkHighlights(highlights, context2.content);
       _linkifyMarkdownChunks = detectLinks;
       _ownedStructuredRenderables = new WeakSet;
       handleCapabilities() {
         if (!this._renderNode && !this._content.includes("]"))
           return;
         const previousHighlight = this._highlightMarkdownLinks;
-        this._highlightMarkdownLinks = (highlights, context) => this.addMarkdownLinkHighlights(highlights, context.content);
+        this._highlightMarkdownLinks = (highlights, context2) => this.addMarkdownLinkHighlights(highlights, context2.content);
         for (const state of this._blockStates) {
           const renderables = [[state.renderable, state.token]];
           while (renderables.length > 0) {
@@ -36411,7 +39292,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
   });
 
   // js/platform/core.ts
-  var init_core = __esm(() => {
+  var init_core2 = __esm(() => {
     init_Renderable();
     init_types();
     init_Box();
@@ -36434,6 +39315,124 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     init_Input();
     init_Select();
     init_TabSelect();
+  });
+
+  // js/testing.ts
+  function testApp(test) {
+    if (!__host.headless)
+      return;
+    const flush = async () => {
+      for (let i = 0;i < 4; i++) {
+        host.__tick();
+        await Promise.resolve();
+        host.__frame();
+      }
+    };
+    host.__selfTest = () => test({
+      async input(text) {
+        host.__input(new TextEncoder().encode(text).buffer);
+        await flush();
+      },
+      async resize(width, height) {
+        host.__resize(width, height);
+        await flush();
+      },
+      snapshot: () => host.__snapshot()
+    });
+  }
+  var host;
+  var init_testing = __esm(() => {
+    host = globalThis;
+  });
+
+  // examples/vanilla/app.ts
+  var exports_app = {};
+  var app, panel, title, counter, updateStats = () => {}, input, stats, help, spacer, indicator, held, count = 0;
+  var init_app = __esm(() => {
+    init_core();
+    init_core2();
+    init_testing();
+    app = createApplication({ keyboard: { mode: "realtime" } });
+    panel = app.box({ id: "panel", border: true, title: " 10 / Vanilla JavaScript ", padding: 1, gap: 1, height: "100%" });
+    title = app.text({ id: "title", content: "One terminal core. No React." });
+    counter = app.text({ id: "counter", content: "Count: 0" });
+    input = app.create(InputRenderable, { id: "name", placeholder: "Type here; releases should not insert text", width: 50, onCursorChange: () => updateStats() });
+    stats = app.text({ id: "input-stats", content: "Characters: 0 · Words: 0 · Line 1, column 1", fg: "#90a6b8" });
+    updateStats = () => {
+      const text = input.value;
+      const cursor = input.logicalCursor;
+      stats.content = `Characters: ${Array.from(text).length} · Words: ${text.trim() ? text.trim().split(/\s+/u).length : 0} · Line ${cursor.row + 1}, column ${cursor.col + 1}`;
+    };
+    input.on("input", updateStats);
+    help = app.text({ id: "help", content: "Ctrl+K counts · type in the input · Ctrl+C exits" });
+    app.root.add(panel);
+    panel.add(title);
+    panel.add(counter);
+    panel.add(input);
+    panel.add(stats);
+    panel.add(help);
+    spacer = app.box({ id: "spacer", flexGrow: 1 });
+    indicator = app.text({ id: "keypress", content: "Key: none · held: none", fg: "#90a6b8", flexShrink: 0 });
+    panel.add(spacer);
+    panel.add(indicator);
+    held = new HeldKeys;
+    app.onInputReset((event) => {
+      held.reset(event.reason);
+      indicator.content = `Input reset: ${event.reason} · held: none`;
+    });
+    app.onKey((event) => {
+      held.update(event);
+      held.drainEdges();
+      const modifiers = [event.ctrl && "Ctrl", event.option && "Alt", event.shift && "Shift", event.super && "Super"].filter(Boolean);
+      indicator.content = `Key: ${[...modifiers, event.name].join("+")} · ${event.kind} · ${event.legacy ? "legacy" : "kitty"} · held: ${[...held.held].join(" ") || "none"}`;
+    });
+    input.focus();
+    app.onKey((event) => {
+      if (event.ctrl && event.name === "c" && event.kind !== "release") {
+        app.quit();
+        return true;
+      }
+      if (event.ctrl && event.name === "k") {
+        if (event.kind === "press")
+          counter.content = `Count: ${++count}`;
+        return true;
+      }
+    });
+    testApp(async (ui) => {
+      await ui.resize(80, 24);
+      if (!ui.snapshot().includes("No React"))
+        throw Error("Vanilla tree missing");
+      await ui.input("\x1B[107;5u\x1B[107;5:2u\x1B[107;5:3u");
+      if (!ui.snapshot().includes("Count: 1"))
+        throw Error("Counter event routing failed");
+      await ui.input("\x1B[97;;97u\x1B[97;1:2;97u\x1B[97;1:3u");
+      if (!ui.snapshot().includes("Key: a · release · kitty · held: none"))
+        throw Error("Key indicator missing release");
+      if (input.value !== "aa")
+        throw Error(`Widget press/repeat/release failed: ${input.value}`);
+      await ui.input(" ");
+      if (input.value !== "aa ")
+        throw Error("Space was consumed instead of inserted");
+      let calls = 0;
+      const off = app.onKey(() => {
+        calls++;
+      });
+      off();
+      await ui.input("b");
+      if (!ui.snapshot().includes("Characters: 4 · Words: 2 · Line 1, column 5"))
+        throw Error("Input statistics incorrect");
+      await ui.input("\x1B[D");
+      if (!ui.snapshot().includes("Line 1, column 4"))
+        throw Error("Cursor statistic did not follow navigation");
+      if (calls !== 0)
+        throw Error("Unsubscription failed");
+      panel.insertBefore(help, title);
+      panel.remove(counter);
+      counter.destroyRecursively();
+      await ui.input("");
+      if (ui.snapshot().includes("Count: 1"))
+        throw Error("Removed node still rendered");
+    });
   });
 
   // vendor/opentui/packages/react/package.json
@@ -36539,7 +39538,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
   // vendor/opentui/packages/react/src/components/text.ts
   var textNodeKeys, SpanRenderable, TextModifierRenderable, BoldSpanRenderable, ItalicSpanRenderable, UnderlineSpanRenderable, LineBreakRenderable, LinkRenderable;
   var init_text = __esm(() => {
-    init_core();
+    init_core2();
     textNodeKeys = ["span", "b", "strong", "i", "em", "u", "br", "a"];
     SpanRenderable = class SpanRenderable extends TextNodeRenderable {
       ctx;
@@ -36602,7 +39601,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
   }
   var catalogue, getComponentCatalogue = () => catalogue;
   var init_catalogue = __esm(() => {
-    init_core();
+    init_core2();
     init_text();
     catalogue = { box: BoxRenderable, text: TextRenderable, image: ImageRenderable, input: InputRenderable, textarea: TextareaRenderable, select: SelectRenderable, "tab-select": TabSelectRenderable, scrollbox: ScrollBoxRenderable, "ascii-font": ASCIIFontRenderable, code: CodeRenderable, diff: DiffRenderable, markdown: MarkdownRenderable, "line-number": LineNumberRenderable, slider: SliderRenderable, scrollbar: ScrollBarRenderable, table: TextTableRenderable, span: SpanRenderable, b: BoldSpanRenderable, strong: BoldSpanRenderable, i: ItalicSpanRenderable, em: ItalicSpanRenderable, u: UnderlineSpanRenderable, br: LineBreakRenderable, a: LinkRenderable };
   });
@@ -36728,7 +39727,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     }
   }
   var init_utils2 = __esm(() => {
-    init_core();
+    init_core2();
   });
 
   // vendor/opentui/packages/react/src/reconciler/host-config.ts
@@ -36739,7 +39738,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
   }
   var import_react2, import_constants, currentUpdatePriority, hostConfig;
   var init_host_config = __esm(() => {
-    init_core();
+    init_core2();
     init_package();
     init_catalogue();
     init_text();
@@ -36913,2512 +39912,6 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     };
   });
 
-  // vendor/opentui/packages/core/src/lib/clock.ts
-  class SystemClock {
-    now() {
-      if (!globalThis.performance || typeof globalThis.performance.now !== "function") {
-        throw new Error("SystemClock requires globalThis.performance.now()");
-      }
-      return globalThis.performance.now();
-    }
-    setTimeout(fn, delayMs) {
-      return globalThis.setTimeout(fn, delayMs);
-    }
-    clearTimeout(handle) {
-      globalThis.clearTimeout(handle);
-    }
-    setInterval(fn, delayMs) {
-      return globalThis.setInterval(fn, delayMs);
-    }
-    clearInterval(handle) {
-      globalThis.clearInterval(handle);
-    }
-  }
-
-  // vendor/opentui/packages/core/src/lib/parse.keypress-kitty.ts
-  function getPrintableKittyKeyText(key) {
-    return printableKeypadText[key.name];
-  }
-  function fromKittyMods(mod) {
-    return {
-      shift: !!(mod & 1),
-      alt: !!(mod & 2),
-      ctrl: !!(mod & 4),
-      super: !!(mod & 8),
-      hyper: !!(mod & 16),
-      meta: !!(mod & 32),
-      capsLock: !!(mod & 64),
-      numLock: !!(mod & 128)
-    };
-  }
-  function parseKittySpecialKey(sequence) {
-    const specialKeyRe = /^\x1b\[(\d+);(\d+):(\d+)([A-Z~])$/;
-    const match = specialKeyRe.exec(sequence);
-    if (!match)
-      return null;
-    const keyNumOrOne = match[1];
-    const modifierStr = match[2];
-    const eventTypeStr = match[3];
-    const terminator = match[4];
-    let keyName;
-    if (terminator === "~") {
-      keyName = tildeKeyMap[keyNumOrOne];
-    } else {
-      if (keyNumOrOne !== "1")
-        return null;
-      keyName = functionalKeyMap[terminator];
-    }
-    if (!keyName)
-      return null;
-    const key = {
-      name: keyName,
-      ctrl: false,
-      meta: false,
-      shift: false,
-      option: false,
-      number: false,
-      sequence,
-      raw: sequence,
-      eventType: "press",
-      source: "kitty",
-      super: false,
-      hyper: false,
-      capsLock: false,
-      numLock: false
-    };
-    if (modifierStr) {
-      const modifierMask = parseInt(modifierStr, 10);
-      if (!isNaN(modifierMask) && modifierMask > 1) {
-        const mods = fromKittyMods(modifierMask - 1);
-        key.shift = mods.shift;
-        key.ctrl = mods.ctrl;
-        key.meta = mods.alt || mods.meta;
-        key.option = mods.alt;
-        key.super = mods.super;
-        key.hyper = mods.hyper;
-        key.capsLock = mods.capsLock;
-        key.numLock = mods.numLock;
-      }
-    }
-    if (eventTypeStr === "1" || !eventTypeStr) {
-      key.eventType = "press";
-    } else if (eventTypeStr === "2") {
-      key.eventType = "press";
-      key.repeated = true;
-    } else if (eventTypeStr === "3") {
-      key.eventType = "release";
-    }
-    return key;
-  }
-  function parseKittyKeyboard(sequence) {
-    const specialResult = parseKittySpecialKey(sequence);
-    if (specialResult)
-      return specialResult;
-    const kittyRe = /^\x1b\[([^\x1b]+)u$/;
-    const match = kittyRe.exec(sequence);
-    if (!match)
-      return null;
-    const params = match[1];
-    const fields = params.split(";");
-    if (fields.length < 1)
-      return null;
-    const key = {
-      name: "",
-      ctrl: false,
-      meta: false,
-      shift: false,
-      option: false,
-      number: false,
-      sequence,
-      raw: sequence,
-      eventType: "press",
-      source: "kitty",
-      super: false,
-      hyper: false,
-      capsLock: false,
-      numLock: false
-    };
-    let text = "";
-    const field1 = fields[0]?.split(":") || [];
-    const codepointStr = field1[0];
-    if (!codepointStr)
-      return null;
-    const codepoint = parseInt(codepointStr, 10);
-    if (isNaN(codepoint))
-      return null;
-    let shiftedCodepoint;
-    let baseCodepoint;
-    if (field1[1]) {
-      const shifted = parseInt(field1[1], 10);
-      if (!isNaN(shifted) && shifted > 0 && shifted <= 1114111) {
-        shiftedCodepoint = shifted;
-      }
-    }
-    if (field1[2]) {
-      const base = parseInt(field1[2], 10);
-      if (!isNaN(base) && base > 0 && base <= 1114111) {
-        baseCodepoint = base;
-      }
-    }
-    const knownKey = kittyKeyMap[codepoint];
-    if (knownKey) {
-      key.name = knownKey;
-      key.code = `[${codepoint}u`;
-    } else if (codepoint === 0) {
-      key.name = "";
-    } else {
-      if (codepoint > 0 && codepoint <= 1114111) {
-        const char = String.fromCodePoint(codepoint);
-        key.name = char === " " ? "space" : char;
-        if (baseCodepoint) {
-          key.baseCode = baseCodepoint;
-        }
-      } else {
-        return null;
-      }
-    }
-    if (fields[1]) {
-      const field2 = fields[1].split(":");
-      const modifierStr = field2[0];
-      const eventTypeStr = field2[1];
-      if (modifierStr) {
-        const modifierMask = parseInt(modifierStr, 10);
-        if (!isNaN(modifierMask) && modifierMask > 1) {
-          const mods = fromKittyMods(modifierMask - 1);
-          key.shift = mods.shift;
-          key.ctrl = mods.ctrl;
-          key.meta = mods.alt || mods.meta;
-          key.option = mods.alt;
-          key.super = mods.super;
-          key.hyper = mods.hyper;
-          key.capsLock = mods.capsLock;
-          key.numLock = mods.numLock;
-        }
-      }
-      if (eventTypeStr === "1" || !eventTypeStr) {
-        key.eventType = "press";
-      } else if (eventTypeStr === "2") {
-        key.eventType = "press";
-        key.repeated = true;
-      } else if (eventTypeStr === "3") {
-        key.eventType = "release";
-      } else {
-        key.eventType = "press";
-      }
-    }
-    if (fields[2]) {
-      const codepoints = fields[2].split(":");
-      for (const cpStr of codepoints) {
-        const cp = parseInt(cpStr, 10);
-        if (!isNaN(cp) && cp > 0 && cp <= 1114111) {
-          text += String.fromCodePoint(cp);
-        }
-      }
-    }
-    if (text === "") {
-      text = getPrintableKittyKeyText(key) ?? "";
-    }
-    if (text === "") {
-      const isPrintable = key.name.length > 0 && !kittyKeyMap[codepoint];
-      if (isPrintable) {
-        if (codepoint === 32) {
-          text = " ";
-        } else if (key.shift && shiftedCodepoint) {
-          text = String.fromCodePoint(shiftedCodepoint);
-        } else if (key.shift && key.name.length === 1) {
-          text = key.name.toLocaleUpperCase();
-        } else {
-          text = key.name;
-        }
-      }
-    }
-    if (text) {
-      if (codepoint === 0) {
-        key.name = text;
-      }
-      key.sequence = text;
-    }
-    if (codepoint === 0 && text === "") {
-      return null;
-    }
-    return key;
-  }
-  var kittyKeyMap, kittyNamedSingleStrokeKeys, printableKeypadText, functionalKeyMap, tildeKeyMap;
-  var init_parse_keypress_kitty = __esm(() => {
-    kittyKeyMap = {
-      27: "escape",
-      9: "tab",
-      13: "return",
-      127: "backspace",
-      57344: "escape",
-      57345: "return",
-      57346: "tab",
-      57347: "backspace",
-      57348: "insert",
-      57349: "delete",
-      57350: "left",
-      57351: "right",
-      57352: "up",
-      57353: "down",
-      57354: "pageup",
-      57355: "pagedown",
-      57356: "home",
-      57357: "end",
-      57358: "capslock",
-      57359: "scrolllock",
-      57360: "numlock",
-      57361: "printscreen",
-      57362: "pause",
-      57363: "menu",
-      57364: "f1",
-      57365: "f2",
-      57366: "f3",
-      57367: "f4",
-      57368: "f5",
-      57369: "f6",
-      57370: "f7",
-      57371: "f8",
-      57372: "f9",
-      57373: "f10",
-      57374: "f11",
-      57375: "f12",
-      57376: "f13",
-      57377: "f14",
-      57378: "f15",
-      57379: "f16",
-      57380: "f17",
-      57381: "f18",
-      57382: "f19",
-      57383: "f20",
-      57384: "f21",
-      57385: "f22",
-      57386: "f23",
-      57387: "f24",
-      57388: "f25",
-      57389: "f26",
-      57390: "f27",
-      57391: "f28",
-      57392: "f29",
-      57393: "f30",
-      57394: "f31",
-      57395: "f32",
-      57396: "f33",
-      57397: "f34",
-      57398: "f35",
-      57399: "kp0",
-      57400: "kp1",
-      57401: "kp2",
-      57402: "kp3",
-      57403: "kp4",
-      57404: "kp5",
-      57405: "kp6",
-      57406: "kp7",
-      57407: "kp8",
-      57408: "kp9",
-      57409: "kpdecimal",
-      57410: "kpdivide",
-      57411: "kpmultiply",
-      57412: "kpminus",
-      57413: "kpplus",
-      57414: "kpenter",
-      57415: "kpequal",
-      57416: "kpseparator",
-      57417: "kpleft",
-      57418: "kpright",
-      57419: "kpup",
-      57420: "kpdown",
-      57421: "kppageup",
-      57422: "kppagedown",
-      57423: "kphome",
-      57424: "kpend",
-      57425: "kpinsert",
-      57426: "kpdelete",
-      57427: "clear",
-      57428: "mediaplay",
-      57429: "mediapause",
-      57430: "mediaplaypause",
-      57431: "mediareverse",
-      57432: "mediastop",
-      57433: "mediafastforward",
-      57434: "mediarewind",
-      57435: "medianext",
-      57436: "mediaprev",
-      57437: "mediarecord",
-      57438: "volumedown",
-      57439: "volumeup",
-      57440: "mute",
-      57441: "leftshift",
-      57442: "leftctrl",
-      57443: "leftalt",
-      57444: "leftsuper",
-      57445: "lefthyper",
-      57446: "leftmeta",
-      57447: "rightshift",
-      57448: "rightctrl",
-      57449: "rightalt",
-      57450: "rightsuper",
-      57451: "righthyper",
-      57452: "rightmeta",
-      57453: "iso_level3_shift",
-      57454: "iso_level5_shift"
-    };
-    kittyNamedSingleStrokeKeys = [...new Set(Object.values(kittyKeyMap))];
-    printableKeypadText = {
-      kp0: "0",
-      kp1: "1",
-      kp2: "2",
-      kp3: "3",
-      kp4: "4",
-      kp5: "5",
-      kp6: "6",
-      kp7: "7",
-      kp8: "8",
-      kp9: "9",
-      kpdecimal: ".",
-      kpdivide: "/",
-      kpmultiply: "*",
-      kpminus: "-",
-      kpplus: "+",
-      kpequal: "=",
-      kpseparator: ","
-    };
-    functionalKeyMap = {
-      A: "up",
-      B: "down",
-      C: "right",
-      D: "left",
-      H: "home",
-      F: "end",
-      E: "clear",
-      P: "f1",
-      Q: "f2",
-      S: "f4"
-    };
-    tildeKeyMap = {
-      "1": "home",
-      "2": "insert",
-      "3": "delete",
-      "4": "end",
-      "5": "pageup",
-      "6": "pagedown",
-      "7": "home",
-      "8": "end",
-      "11": "f1",
-      "12": "f2",
-      "13": "f3",
-      "14": "f4",
-      "15": "f5",
-      "17": "f6",
-      "18": "f7",
-      "19": "f8",
-      "20": "f9",
-      "21": "f10",
-      "23": "f11",
-      "24": "f12",
-      "29": "menu",
-      "57427": "clear"
-    };
-  });
-
-  // vendor/opentui/packages/core/src/lib/parse.keypress.ts
-  var import_node_buffer, metaKeyCodeRe, fnKeyRe, keyName, nonAlphanumericKeys, terminalNamedSingleStrokeKeys, isShiftKey = (code) => {
-    return ["[a", "[b", "[c", "[d", "[e", "[2$", "[3$", "[5$", "[6$", "[7$", "[8$", "[Z"].includes(code);
-  }, isCtrlKey = (code) => {
-    return ["Oa", "Ob", "Oc", "Od", "Oe", "[2^", "[3^", "[5^", "[6^", "[7^", "[8^"].includes(code);
-  }, getCtrlKeyName = (charCode) => {
-    if (charCode === 0) {
-      return "space";
-    }
-    if (charCode >= 1 && charCode <= 26) {
-      return String.fromCharCode(charCode + 97 - 1);
-    }
-    if (charCode >= 28 && charCode <= 31) {
-      return String.fromCharCode(charCode + 64);
-    }
-    return;
-  }, ss3NumpadPrintable, modifyOtherKeysRe, parseKeypress = (s = "", options = {}) => {
-    let parts;
-    if (import_node_buffer.Buffer.isBuffer(s)) {
-      if (s[0] > 127 && s[1] === undefined) {
-        s[0] -= 128;
-        s = "\x1B" + String(s);
-      } else {
-        s = String(s);
-      }
-    } else if (s !== undefined && typeof s !== "string") {
-      s = String(s);
-    } else if (!s) {
-      s = "";
-    }
-    if (/^\x1b\[<\d+;\d+;\d+[Mm]$/.test(s)) {
-      return null;
-    }
-    if (/^\[<\d+;\d+;\d+[Mm]$/.test(s)) {
-      return null;
-    }
-    if (/^\x1b\[<[\d;]*$/.test(s)) {
-      return null;
-    }
-    if (/^\[<[\d;]*$/.test(s)) {
-      return null;
-    }
-    if (s.startsWith("\x1B[M") && s.length >= 6) {
-      return null;
-    }
-    if (/^\x1b\[\d+;\d+;\d+t$/.test(s)) {
-      return null;
-    }
-    if (/^\x1b\[\d+;\d+R$/.test(s)) {
-      return null;
-    }
-    if (/^\x1b\[\?[\d;]+c$/.test(s)) {
-      return null;
-    }
-    if (/^\x1b\[\?[\d;]+\$y$/.test(s)) {
-      return null;
-    }
-    if (s === "\x1B[I" || s === "\x1B[O") {
-      return null;
-    }
-    if (/^\x1b\][\d;].*(\x1b\\|\x07)$/.test(s)) {
-      return null;
-    }
-    if (s === "\x1B[200~" || s === "\x1B[201~") {
-      return null;
-    }
-    const key = {
-      name: "",
-      ctrl: false,
-      meta: false,
-      shift: false,
-      option: false,
-      number: false,
-      sequence: s,
-      raw: s,
-      eventType: "press",
-      source: "raw"
-    };
-    key.sequence = key.sequence || s || key.name;
-    const ctrlKeyName = s.length === 1 ? getCtrlKeyName(s.charCodeAt(0)) : undefined;
-    const metaCtrlKeyName = s.length === 2 && s[0] === "\x1B" ? getCtrlKeyName(s.charCodeAt(1)) : undefined;
-    if (options.useKittyKeyboard) {
-      const kittyResult = parseKittyKeyboard(s);
-      if (kittyResult) {
-        return kittyResult;
-      }
-    }
-    const modifyOtherKeysMatch = modifyOtherKeysRe.exec(s);
-    if (modifyOtherKeysMatch) {
-      const modifier = parseInt(modifyOtherKeysMatch[1], 10) - 1;
-      const charCode = parseInt(modifyOtherKeysMatch[2], 10);
-      key.ctrl = !!(modifier & 4);
-      key.meta = !!(modifier & 2);
-      key.shift = !!(modifier & 1);
-      key.option = !!(modifier & 2);
-      key.super = !!(modifier & 8);
-      key.hyper = !!(modifier & 16);
-      if (charCode === 13) {
-        key.name = "return";
-      } else if (charCode === 27) {
-        key.name = "escape";
-      } else if (charCode === 9) {
-        key.name = "tab";
-      } else if (charCode === 32) {
-        key.name = "space";
-      } else if (charCode === 127 || charCode === 8) {
-        key.name = "backspace";
-      } else {
-        const char = String.fromCharCode(charCode);
-        key.name = char;
-        key.sequence = char;
-        if (charCode >= 48 && charCode <= 57) {
-          key.number = true;
-        }
-      }
-      return key;
-    }
-    if (s === "\r" || s === "\x1B\r") {
-      key.name = "return";
-      key.meta = s.length === 2;
-    } else if (s === `
-` || s === `\x1B
-`) {
-      key.name = "linefeed";
-      key.meta = s.length === 2;
-    } else if (s === "\t") {
-      key.name = "tab";
-    } else if (s === "\b" || s === "\x1B\b" || s === "" || s === "\x1B") {
-      key.name = "backspace";
-      key.meta = s.charAt(0) === "\x1B";
-    } else if (s === "\x1B" || s === "\x1B\x1B") {
-      key.name = "escape";
-      key.meta = s.length === 2;
-    } else if (s === " " || s === "\x1B ") {
-      key.name = "space";
-      key.meta = s.length === 2;
-    } else if (ctrlKeyName) {
-      key.name = ctrlKeyName;
-      key.ctrl = true;
-    } else if (s.length === 1 && s >= "0" && s <= "9") {
-      key.name = s;
-      key.number = true;
-    } else if (s.length === 1 && s >= "a" && s <= "z") {
-      key.name = s;
-    } else if (s.length === 1 && s >= "A" && s <= "Z") {
-      key.name = s.toLowerCase();
-      key.shift = true;
-    } else if (s.length === 1 || s.length === 2 && s.codePointAt(0) > 65535) {
-      key.name = s;
-    } else if (parts = metaKeyCodeRe.exec(s)) {
-      key.meta = true;
-      const char = parts[1];
-      const isUpperCase = /^[A-Z]$/.test(char);
-      if (char === "F") {
-        key.name = "right";
-      } else if (char === "B") {
-        key.name = "left";
-      } else if (isUpperCase) {
-        key.shift = true;
-        key.name = char;
-      } else {
-        key.name = char;
-      }
-    } else if (metaCtrlKeyName) {
-      key.meta = true;
-      key.ctrl = true;
-      key.name = metaCtrlKeyName;
-    } else if (parts = fnKeyRe.exec(s)) {
-      const segs = [...s];
-      if (segs[0] === "\x1B" && segs[1] === "\x1B") {
-        key.option = true;
-        key.meta = true;
-      }
-      const code = [parts[1], parts[2], parts[4], parts[6]].filter(Boolean).join("");
-      const modifier = parseInt(parts[3] || parts[5] || "1", 10) - 1;
-      key.ctrl = key.ctrl || !!(modifier & 4);
-      key.meta = key.meta || !!(modifier & 2);
-      key.shift = key.shift || !!(modifier & 1);
-      key.option = key.option || !!(modifier & 2);
-      key.super = !!(modifier & 8);
-      key.hyper = !!(modifier & 16);
-      key.code = code;
-      const keyNameResult = keyName[code];
-      if (keyNameResult) {
-        key.name = keyNameResult;
-        key.shift = isShiftKey(code) || key.shift;
-        key.ctrl = isCtrlKey(code) || key.ctrl;
-        const ss3Char = ss3NumpadPrintable[code];
-        if (ss3Char !== undefined) {
-          key.sequence = ss3Char;
-          if (key.name >= "0" && key.name <= "9") {
-            key.number = true;
-          }
-        }
-      } else {
-        key.name = "";
-        key.code = undefined;
-      }
-    } else if (s === "\x1B[3~") {
-      key.name = "delete";
-      key.meta = false;
-      key.code = "[3~";
-    }
-    return key;
-  };
-  var init_parse_keypress = __esm(() => {
-    init_parse_keypress_kitty();
-    import_node_buffer = __toESM(require_buffer(), 1);
-    metaKeyCodeRe = /^(?:\x1b)([a-zA-Z0-9])$/;
-    fnKeyRe = /^(?:\x1b+)(O|N|\[|\[\[)(?:(\d+)(?:;(\d+))?([~^$])|(?:1;)?(\d+)?([a-zA-Z]))/;
-    keyName = {
-      OP: "f1",
-      OQ: "f2",
-      OR: "f3",
-      OS: "f4",
-      "[11~": "f1",
-      "[12~": "f2",
-      "[13~": "f3",
-      "[14~": "f4",
-      "[[A": "f1",
-      "[[B": "f2",
-      "[[C": "f3",
-      "[[D": "f4",
-      "[[E": "f5",
-      "[15~": "f5",
-      "[17~": "f6",
-      "[18~": "f7",
-      "[19~": "f8",
-      "[20~": "f9",
-      "[21~": "f10",
-      "[23~": "f11",
-      "[24~": "f12",
-      "[29~": "menu",
-      "[57427~": "clear",
-      "[A": "up",
-      "[B": "down",
-      "[C": "right",
-      "[D": "left",
-      "[E": "clear",
-      "[F": "end",
-      "[H": "home",
-      "[P": "f1",
-      "[Q": "f2",
-      "[S": "f4",
-      OA: "up",
-      OB: "down",
-      OC: "right",
-      OD: "left",
-      OE: "clear",
-      OF: "end",
-      OH: "home",
-      OM: "return",
-      Oj: "*",
-      Ok: "+",
-      Ol: ",",
-      Om: "-",
-      On: ".",
-      Oo: "/",
-      Op: "0",
-      Oq: "1",
-      Or: "2",
-      Os: "3",
-      Ot: "4",
-      Ou: "5",
-      Ov: "6",
-      Ow: "7",
-      Ox: "8",
-      Oy: "9",
-      OX: "=",
-      "[1~": "home",
-      "[2~": "insert",
-      "[3~": "delete",
-      "[4~": "end",
-      "[5~": "pageup",
-      "[6~": "pagedown",
-      "[[5~": "pageup",
-      "[[6~": "pagedown",
-      "[7~": "home",
-      "[8~": "end",
-      "[a": "up",
-      "[b": "down",
-      "[c": "right",
-      "[d": "left",
-      "[e": "clear",
-      f: "right",
-      b: "left",
-      p: "up",
-      n: "down",
-      "[2$": "insert",
-      "[3$": "delete",
-      "[5$": "pageup",
-      "[6$": "pagedown",
-      "[7$": "home",
-      "[8$": "end",
-      Oa: "up",
-      Ob: "down",
-      Oc: "right",
-      Od: "left",
-      Oe: "clear",
-      "[2^": "insert",
-      "[3^": "delete",
-      "[5^": "pageup",
-      "[6^": "pagedown",
-      "[7^": "home",
-      "[8^": "end",
-      "[Z": "tab"
-    };
-    nonAlphanumericKeys = [...Object.values(keyName), "backspace"];
-    terminalNamedSingleStrokeKeys = [
-      ...new Set(["return", "linefeed", "tab", "escape", "space", ...nonAlphanumericKeys, ...kittyNamedSingleStrokeKeys])
-    ];
-    ss3NumpadPrintable = {
-      Op: "0",
-      Oq: "1",
-      Or: "2",
-      Os: "3",
-      Ot: "4",
-      Ou: "5",
-      Ov: "6",
-      Ow: "7",
-      Ox: "8",
-      Oy: "9",
-      Oj: "*",
-      Ok: "+",
-      Ol: ",",
-      Om: "-",
-      On: ".",
-      Oo: "/",
-      OX: "="
-    };
-    modifyOtherKeysRe = /^\x1b\[27;(\d+);(\d+)~$/;
-  });
-
-  // vendor/opentui/packages/core/src/lib/parse.mouse.ts
-  var MouseParser;
-  var init_parse_mouse = __esm(() => {
-    MouseParser = class MouseParser {
-      mouseButtonsPressed = new Set;
-      static SCROLL_DIRECTIONS = {
-        0: "up",
-        1: "down",
-        2: "left",
-        3: "right"
-      };
-      reset() {
-        this.mouseButtonsPressed.clear();
-      }
-      decodeInput(data) {
-        const buf = Buffer.isBuffer(data) ? data : Buffer.from(data.buffer, data.byteOffset, data.byteLength);
-        return buf.toString("latin1");
-      }
-      parseMouseEvent(data) {
-        const str = this.decodeInput(data);
-        const parsed = this.parseMouseSequenceAt(str, 0);
-        return parsed?.event ?? null;
-      }
-      parseAllMouseEvents(data) {
-        const str = this.decodeInput(data);
-        const events = [];
-        let offset = 0;
-        while (offset < str.length) {
-          const parsed = this.parseMouseSequenceAt(str, offset);
-          if (!parsed) {
-            break;
-          }
-          events.push(parsed.event);
-          offset += parsed.consumed;
-        }
-        return events;
-      }
-      parseMouseSequenceAt(str, offset) {
-        if (!str.startsWith("\x1B[", offset))
-          return null;
-        const introducer = str[offset + 2];
-        if (introducer === "<") {
-          return this.parseSgrSequence(str, offset);
-        }
-        if (introducer === "M") {
-          return this.parseBasicSequence(str, offset);
-        }
-        return null;
-      }
-      parseSgrSequence(str, offset) {
-        let index = offset + 3;
-        const values = [0, 0, 0];
-        let part = 0;
-        let hasDigit = false;
-        while (index < str.length) {
-          const char = str[index];
-          const charCode = str.charCodeAt(index);
-          if (charCode >= 48 && charCode <= 57) {
-            hasDigit = true;
-            values[part] = values[part] * 10 + (charCode - 48);
-            index++;
-            continue;
-          }
-          switch (char) {
-            case ";": {
-              if (!hasDigit || part >= 2)
-                return null;
-              part++;
-              hasDigit = false;
-              index++;
-              break;
-            }
-            case "M":
-            case "m": {
-              if (!hasDigit || part !== 2)
-                return null;
-              return {
-                event: this.decodeSgrEvent(values[0], values[1], values[2], char),
-                consumed: index - offset + 1
-              };
-            }
-            default:
-              return null;
-          }
-        }
-        return null;
-      }
-      parseBasicSequence(str, offset) {
-        if (offset + 6 > str.length)
-          return null;
-        const buttonByte = str.charCodeAt(offset + 3) - 32;
-        const x2 = str.charCodeAt(offset + 4) - 33;
-        const y2 = str.charCodeAt(offset + 5) - 33;
-        return {
-          event: this.decodeBasicEvent(buttonByte, x2, y2),
-          consumed: 6
-        };
-      }
-      decodeSgrEvent(rawButtonCode, wireX, wireY, pressRelease) {
-        const button = rawButtonCode & 3;
-        const isScroll = (rawButtonCode & 64) !== 0;
-        const scrollDirection = !isScroll ? undefined : MouseParser.SCROLL_DIRECTIONS[button];
-        const isMotion = (rawButtonCode & 32) !== 0;
-        const modifiers = {
-          shift: (rawButtonCode & 4) !== 0,
-          alt: (rawButtonCode & 8) !== 0,
-          ctrl: (rawButtonCode & 16) !== 0
-        };
-        let type;
-        let scrollInfo;
-        if (isMotion) {
-          const isDragging = this.mouseButtonsPressed.size > 0;
-          if (button === 3) {
-            type = "move";
-          } else if (isDragging) {
-            type = "drag";
-          } else {
-            type = "move";
-          }
-        } else if (isScroll && pressRelease === "M") {
-          type = "scroll";
-          scrollInfo = {
-            direction: scrollDirection,
-            delta: 1
-          };
-        } else {
-          type = pressRelease === "M" ? "down" : "up";
-          if (type === "down" && button !== 3) {
-            this.mouseButtonsPressed.add(button);
-          } else if (type === "up") {
-            this.mouseButtonsPressed.delete(button);
-          }
-        }
-        return {
-          type,
-          button: button === 3 ? 0 : button,
-          x: wireX - 1,
-          y: wireY - 1,
-          modifiers,
-          scroll: scrollInfo
-        };
-      }
-      decodeBasicEvent(buttonByte, x2, y2) {
-        const button = buttonByte & 3;
-        const isScroll = (buttonByte & 64) !== 0;
-        const isMotion = (buttonByte & 32) !== 0;
-        const scrollDirection = !isScroll ? undefined : MouseParser.SCROLL_DIRECTIONS[button];
-        const modifiers = {
-          shift: (buttonByte & 4) !== 0,
-          alt: (buttonByte & 8) !== 0,
-          ctrl: (buttonByte & 16) !== 0
-        };
-        let type;
-        let actualButton;
-        let scrollInfo;
-        if (isMotion) {
-          type = "move";
-          actualButton = button === 3 ? -1 : button;
-        } else if (isScroll) {
-          type = "scroll";
-          actualButton = 0;
-          scrollInfo = {
-            direction: scrollDirection,
-            delta: 1
-          };
-        } else {
-          type = button === 3 ? "up" : "down";
-          actualButton = button === 3 ? 0 : button;
-        }
-        return {
-          type,
-          button: actualButton,
-          x: x2,
-          y: y2,
-          modifiers,
-          scroll: scrollInfo
-        };
-      }
-    };
-  });
-
-  // vendor/opentui/packages/core/src/lib/stdin-parser.ts
-  class ByteQueue {
-    buf;
-    start = 0;
-    end = 0;
-    constructor(capacity = INITIAL_PENDING_CAPACITY) {
-      this.buf = new Uint8Array(capacity);
-    }
-    get length() {
-      return this.end - this.start;
-    }
-    get capacity() {
-      return this.buf.length;
-    }
-    view() {
-      return this.buf.subarray(this.start, this.end);
-    }
-    take() {
-      const chunk = this.view();
-      this.start = 0;
-      this.end = 0;
-      return chunk;
-    }
-    append(chunk) {
-      if (chunk.length === 0) {
-        return;
-      }
-      this.ensureCapacity(this.length + chunk.length);
-      this.buf.set(chunk, this.end);
-      this.end += chunk.length;
-    }
-    consume(count) {
-      if (count <= 0) {
-        return;
-      }
-      if (count >= this.length) {
-        this.start = 0;
-        this.end = 0;
-        return;
-      }
-      this.start += count;
-      if (this.start >= this.buf.length / 2) {
-        this.buf.copyWithin(0, this.start, this.end);
-        this.end -= this.start;
-        this.start = 0;
-      }
-    }
-    clear() {
-      this.start = 0;
-      this.end = 0;
-    }
-    reset(capacity = INITIAL_PENDING_CAPACITY) {
-      this.buf = new Uint8Array(capacity);
-      this.start = 0;
-      this.end = 0;
-    }
-    ensureCapacity(requiredLength) {
-      const currentLength = this.length;
-      if (requiredLength <= this.buf.length) {
-        const availableAtEnd = this.buf.length - this.end;
-        if (availableAtEnd >= requiredLength - currentLength) {
-          return;
-        }
-        this.buf.copyWithin(0, this.start, this.end);
-        this.end = currentLength;
-        this.start = 0;
-        if (requiredLength <= this.buf.length) {
-          return;
-        }
-      }
-      let nextCapacity = this.buf.length;
-      while (nextCapacity < requiredLength) {
-        nextCapacity *= 2;
-      }
-      const next = new Uint8Array(nextCapacity);
-      next.set(this.view(), 0);
-      this.buf = next;
-      this.start = 0;
-      this.end = currentLength;
-    }
-  }
-  function normalizePositiveOption(value, fallback) {
-    if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
-      return fallback;
-    }
-    return Math.floor(value);
-  }
-  function utf8SequenceLength(first) {
-    if (first < 128)
-      return 1;
-    if (first >= 194 && first <= 223)
-      return 2;
-    if (first >= 224 && first <= 239)
-      return 3;
-    if (first >= 240 && first <= 244)
-      return 4;
-    return 0;
-  }
-  function bytesEqual(left, right) {
-    if (left.length !== right.length) {
-      return false;
-    }
-    for (let index = 0;index < left.length; index += 1) {
-      if (left[index] !== right[index]) {
-        return false;
-      }
-    }
-    return true;
-  }
-  function isMouseSgrSequence(sequence) {
-    if (sequence.length < 7) {
-      return false;
-    }
-    if (sequence[0] !== ESC || sequence[1] !== 91 || sequence[2] !== 60) {
-      return false;
-    }
-    const final = sequence[sequence.length - 1];
-    if (final !== 77 && final !== 109) {
-      return false;
-    }
-    let part = 0;
-    let hasDigit = false;
-    for (let index = 3;index < sequence.length - 1; index += 1) {
-      const byte = sequence[index];
-      if (byte >= 48 && byte <= 57) {
-        hasDigit = true;
-        continue;
-      }
-      if (byte === 59 && hasDigit && part < 2) {
-        part += 1;
-        hasDigit = false;
-        continue;
-      }
-      return false;
-    }
-    return part === 2 && hasDigit;
-  }
-  function isAsciiDigit(byte) {
-    return byte >= 48 && byte <= 57;
-  }
-  function parsePositiveDecimalPrefix(sequence, start, endExclusive) {
-    if (start >= endExclusive)
-      return null;
-    let value = 0;
-    let sawDigit = false;
-    for (let index = start;index < endExclusive; index += 1) {
-      const byte = sequence[index];
-      if (!isAsciiDigit(byte))
-        return null;
-      sawDigit = true;
-      value = value * 10 + (byte - 48);
-    }
-    return sawDigit ? value : null;
-  }
-  function parseKittyFirstFieldCodepoint(sequence, start, endExclusive) {
-    if (start >= endExclusive)
-      return null;
-    let firstColon = -1;
-    for (let index = start;index < endExclusive; index += 1) {
-      if (sequence[index] === 58) {
-        firstColon = index;
-        break;
-      }
-    }
-    if (firstColon === -1)
-      return null;
-    const codepoint = parsePositiveDecimalPrefix(sequence, start, firstColon);
-    if (codepoint === null)
-      return null;
-    for (let index = firstColon + 1;index < endExclusive; index += 1) {
-      const byte = sequence[index];
-      if (byte !== 58 && !isAsciiDigit(byte))
-        return null;
-    }
-    return codepoint;
-  }
-  function canStillBeKittyU(state) {
-    return state.semicolons >= 1;
-  }
-  function canStillBeKittySpecial(state) {
-    return state.semicolons === 1 && state.segments > 1;
-  }
-  function canStillBeExplicitWidthCpr(state) {
-    return state.firstParamValue === 1 && state.semicolons === 1;
-  }
-  function canStillBeStartupCursorCpr(state) {
-    return state.semicolons === 1;
-  }
-  function canStillBeStartupCursorCprPrefix(state) {
-    return state.segments === 1 && state.semicolons <= 1;
-  }
-  function canStillBePixelResolution(state) {
-    return state.firstParamValue === 4 && state.semicolons === 2;
-  }
-  function canStillBePixelResolutionPrefix(bytes) {
-    const fixedPrefix = [ESC, 91, 52, 59];
-    const fixedLength = Math.min(bytes.length, fixedPrefix.length);
-    for (let index2 = 0;index2 < fixedLength; index2 += 1) {
-      if (bytes[index2] !== fixedPrefix[index2])
-        return false;
-    }
-    if (bytes.length <= fixedPrefix.length)
-      return bytes.length > 0;
-    let index = fixedPrefix.length;
-    const heightStart = index;
-    while (index < bytes.length && isAsciiDigit(bytes[index]))
-      index += 1;
-    if (index === bytes.length)
-      return index > heightStart;
-    if (index === heightStart || bytes[index] !== 59)
-      return false;
-    index += 1;
-    const widthStart = index;
-    while (index < bytes.length && isAsciiDigit(bytes[index]))
-      index += 1;
-    if (index === bytes.length)
-      return true;
-    return index > widthStart && bytes[index] === 116;
-  }
-  function canDeferParametricCsi(state, context) {
-    return context.kittyKeyboardEnabled && (canStillBeKittyU(state) || canStillBeKittySpecial(state)) || context.explicitWidthCprActive && canStillBeExplicitWidthCpr(state) || context.startupCursorCprActive && canStillBeStartupCursorCpr(state) || context.pixelResolutionQueryActive && canStillBePixelResolution(state);
-  }
-  function canCompleteDeferredParametricCsi(state, byte, context) {
-    if (context.kittyKeyboardEnabled) {
-      if (state.hasDigit && byte === 117)
-        return true;
-      if (state.hasDigit && state.semicolons === 1 && state.segments > 1 && (byte === 126 || byte >= 65 && byte <= 90)) {
-        return true;
-      }
-    }
-    if (context.explicitWidthCprActive && state.hasDigit && state.firstParamValue === 1 && state.semicolons === 1 && byte === 82) {
-      return true;
-    }
-    if (context.startupCursorCprActive && state.hasDigit && state.semicolons === 1 && byte === 82) {
-      return true;
-    }
-    if (context.pixelResolutionQueryActive && state.hasDigit && state.firstParamValue === 4 && state.semicolons === 2 && byte === 116) {
-      return true;
-    }
-    return false;
-  }
-  function classifyParametricCsiProtocol(state, finalByte) {
-    if (finalByte === 82 && state.semicolons === 1 && state.segments === 1 && state.hasDigit) {
-      return "cpr";
-    }
-    return "csi";
-  }
-  function canDeferPrivateReplyCsi(context) {
-    return context.privateCapabilityRepliesActive;
-  }
-  function canCompleteDeferredPrivateReplyCsi(state, byte, context) {
-    if (!context.privateCapabilityRepliesActive)
-      return false;
-    if (state.sawDollar)
-      return state.hasDigit && byte === 121;
-    if (byte === 99)
-      return state.hasDigit || state.semicolons > 0;
-    if (byte === 110)
-      return state.hasDigit;
-    return state.hasDigit && byte === 117;
-  }
-  function concatBytes(left, right) {
-    if (left.length === 0) {
-      return right;
-    }
-    if (right.length === 0) {
-      return left;
-    }
-    const combined = new Uint8Array(left.length + right.length);
-    combined.set(left, 0);
-    combined.set(right, left.length);
-    return combined;
-  }
-  function withEscPrefix(bytes) {
-    const prefixed = new Uint8Array(bytes.length + 1);
-    prefixed[0] = ESC;
-    prefixed.set(bytes, 1);
-    return prefixed;
-  }
-  function indexOfBytes(haystack, needle) {
-    if (needle.length === 0) {
-      return 0;
-    }
-    const limit = haystack.length - needle.length;
-    for (let offset = 0;offset <= limit; offset += 1) {
-      let matched = true;
-      for (let index = 0;index < needle.length; index += 1) {
-        if (haystack[offset + index] !== needle[index]) {
-          matched = false;
-          break;
-        }
-      }
-      if (matched) {
-        return offset;
-      }
-    }
-    return -1;
-  }
-  function decodeLatin1(bytes) {
-    return import_node_buffer2.Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength).toString("latin1");
-  }
-  function decodeUtf8(bytes) {
-    return KEY_DECODER.decode(bytes);
-  }
-  function createPasteCollector() {
-    return {
-      tail: EMPTY_BYTES,
-      parts: [],
-      totalLength: 0
-    };
-  }
-  function joinPasteBytes(parts, totalLength) {
-    if (totalLength === 0) {
-      return EMPTY_BYTES;
-    }
-    if (parts.length === 1) {
-      return parts[0];
-    }
-    const bytes = new Uint8Array(totalLength);
-    let offset = 0;
-    for (const part of parts) {
-      bytes.set(part, offset);
-      offset += part.length;
-    }
-    return bytes;
-  }
-
-  class StdinParser {
-    pending = new ByteQueue(INITIAL_PENDING_CAPACITY);
-    events = [];
-    timeoutMs;
-    maxPasteBytes;
-    onPasteRejected;
-    pasteOverflow = false;
-    maxPendingBytes;
-    onInputOverflow;
-    armTimeouts;
-    onTimeoutFlush;
-    useKittyKeyboard;
-    mouseParser = new MouseParser;
-    clock;
-    protocolContext;
-    timeoutId = null;
-    destroyed = false;
-    pendingSinceMs = null;
-    pendingTimeoutPaused = false;
-    suspendedPixelResolutionPrefixLength = 0;
-    forceFlush = false;
-    justFlushedEsc = false;
-    state = { tag: "ground" };
-    cursor = 0;
-    unitStart = 0;
-    paste = null;
-    constructor(options = {}) {
-      this.onInputOverflow = options.onInputOverflow;
-      this.timeoutMs = normalizePositiveOption(options.timeoutMs, DEFAULT_TIMEOUT_MS);
-      this.maxPasteBytes = normalizePositiveOption(options.maxPasteBytes, 1024 * 1024);
-      this.onPasteRejected = options.onPasteRejected;
-      this.maxPendingBytes = normalizePositiveOption(options.maxPendingBytes, DEFAULT_MAX_PENDING_BYTES);
-      this.armTimeouts = options.armTimeouts ?? true;
-      this.onTimeoutFlush = options.onTimeoutFlush ?? null;
-      this.useKittyKeyboard = options.useKittyKeyboard ?? true;
-      this.clock = options.clock ?? SYSTEM_CLOCK;
-      this.protocolContext = {
-        ...DEFAULT_PROTOCOL_CONTEXT,
-        kittyKeyboardEnabled: options.protocolContext?.kittyKeyboardEnabled ?? false,
-        privateCapabilityRepliesActive: options.protocolContext?.privateCapabilityRepliesActive ?? false,
-        pixelResolutionQueryActive: options.protocolContext?.pixelResolutionQueryActive ?? false,
-        explicitWidthCprActive: options.protocolContext?.explicitWidthCprActive ?? false,
-        startupCursorCprActive: options.protocolContext?.startupCursorCprActive ?? false
-      };
-    }
-    get readyForReload() {
-      return !this.destroyed && this.pending.length === 0 && this.paste === null && this.events.length === 0;
-    }
-    get bufferCapacity() {
-      return this.pending.capacity;
-    }
-    updateProtocolContext(patch) {
-      this.ensureAlive();
-      this.protocolContext = { ...this.protocolContext, ...patch };
-      if (!this.protocolContext.pixelResolutionQueryActive && this.suspendedPixelResolutionPrefixLength > 0) {
-        const prefixLength = this.suspendedPixelResolutionPrefixLength;
-        this.state = { tag: "ground" };
-        this.consumePrefix(prefixLength);
-        this.scanPending();
-      }
-      this.reconcileDeferredStateWithProtocolContext();
-      this.reconcileTimeoutState();
-    }
-    getAbortableStartupCursorCprState() {
-      if (this.pending.length === 0) {
-        return null;
-      }
-      switch (this.state.tag) {
-        case "csi": {
-          const bytes = this.pending.view();
-          const firstParamStart = this.unitStart + 2;
-          if (this.cursor < firstParamStart) {
-            return null;
-          }
-          let firstParamValue = null;
-          for (let index = firstParamStart;index < this.cursor; index += 1) {
-            const byte = bytes[index];
-            if (!isAsciiDigit(byte)) {
-              return null;
-            }
-            firstParamValue = (firstParamValue ?? 0) * 10 + (byte - 48);
-          }
-          return {
-            tag: "csi_parametric_ignored",
-            semicolons: 0,
-            segments: 1,
-            hasDigit: this.cursor > firstParamStart,
-            firstParamValue
-          };
-        }
-        case "csi_parametric":
-        case "csi_parametric_deferred":
-          if (!canStillBeStartupCursorCprPrefix(this.state) || this.protocolContext.explicitWidthCprActive && canStillBeExplicitWidthCpr(this.state)) {
-            return null;
-          }
-          return {
-            tag: "csi_parametric_ignored",
-            semicolons: this.state.semicolons,
-            segments: this.state.segments,
-            hasDigit: this.state.hasDigit,
-            firstParamValue: this.state.firstParamValue
-          };
-      }
-      return null;
-    }
-    abortPendingStartupCursorCpr() {
-      this.ensureAlive();
-      const nextState = this.getAbortableStartupCursorCprState();
-      if (!nextState) {
-        return;
-      }
-      this.state = nextState;
-      if (this.pendingSinceMs === null) {
-        this.markPending();
-      }
-      this.forceFlush = false;
-      this.reconcileTimeoutState();
-    }
-    push(data) {
-      this.ensureAlive();
-      if (data.length === 0) {
-        return;
-      }
-      let remainder = data;
-      while (remainder.length > 0) {
-        if (this.paste) {
-          remainder = this.consumePasteBytes(remainder);
-          continue;
-        }
-        const immediatePasteStartIndex = this.state.tag === "ground" && this.pending.length === 0 ? indexOfBytes(remainder, BRACKETED_PASTE_START) : -1;
-        const appendEnd = immediatePasteStartIndex === -1 ? remainder.length : immediatePasteStartIndex + BRACKETED_PASTE_START.length;
-        this.pending.append(remainder.subarray(0, appendEnd));
-        remainder = remainder.subarray(appendEnd);
-        if (this.suspendedPixelResolutionPrefixLength > 0 && this.protocolContext.pixelResolutionQueryActive && !canStillBePixelResolutionPrefix(this.pending.view())) {
-          const prefixLength = this.suspendedPixelResolutionPrefixLength;
-          this.state = { tag: "ground" };
-          this.consumePrefix(prefixLength);
-        }
-        this.scanPending();
-        if (this.paste && this.pending.length > 0) {
-          remainder = this.consumePasteBytes(this.takePendingBytes());
-          continue;
-        }
-        if (!this.paste && this.pending.length > this.maxPendingBytes) {
-          this.flushPendingOverflow();
-          this.scanPending();
-          if (this.paste && this.pending.length > 0) {
-            remainder = this.consumePasteBytes(this.takePendingBytes());
-          }
-        }
-      }
-      this.reconcileTimeoutState();
-    }
-    read() {
-      this.ensureAlive();
-      if (this.events.length === 0 && this.forceFlush) {
-        this.scanPending();
-        this.reconcileTimeoutState();
-      }
-      return this.events.shift() ?? null;
-    }
-    drain(onEvent) {
-      this.ensureAlive();
-      while (true) {
-        if (this.destroyed) {
-          return;
-        }
-        const event = this.read();
-        if (!event) {
-          return;
-        }
-        onEvent(event);
-      }
-    }
-    flushTimeout(nowMsValue = this.clock.now()) {
-      this.ensureAlive();
-      if (this.pendingSinceMs !== null && (nowMsValue < this.pendingSinceMs || nowMsValue - this.pendingSinceMs < this.timeoutMs)) {
-        return;
-      }
-      this.tryForceFlush();
-    }
-    tryForceFlush() {
-      if (this.paste || this.pendingSinceMs === null || this.pending.length === 0) {
-        return;
-      }
-      this.forceFlush = true;
-    }
-    reset() {
-      if (this.destroyed) {
-        return;
-      }
-      this.clearTimeout();
-      this.resetState();
-    }
-    hasPendingPixelResolutionResponse() {
-      if (!this.protocolContext.pixelResolutionQueryActive || this.pending.length === 0)
-        return false;
-      return canStillBePixelResolutionPrefix(this.pending.view());
-    }
-    pausePendingTimeout() {
-      this.ensureAlive();
-      this.pendingTimeoutPaused = true;
-      this.suspendedPixelResolutionPrefixLength = this.pending.length;
-      this.clearTimeout();
-    }
-    resumePendingTimeout() {
-      this.ensureAlive();
-      if (this.pending.length === 0)
-        this.pendingTimeoutPaused = false;
-      this.reconcileTimeoutState();
-    }
-    resetMouseState() {
-      this.ensureAlive();
-      this.mouseParser.reset();
-    }
-    destroy() {
-      if (this.destroyed) {
-        return;
-      }
-      this.clearTimeout();
-      this.destroyed = true;
-      this.resetState();
-    }
-    ensureAlive() {
-      if (this.destroyed) {
-        throw new Error("StdinParser has been destroyed");
-      }
-    }
-    scanPending() {
-      while (!this.paste) {
-        const bytes = this.pending.view();
-        if (this.state.tag === "ground" && this.cursor >= bytes.length) {
-          this.pending.clear();
-          this.cursor = 0;
-          this.unitStart = 0;
-          this.pendingSinceMs = null;
-          this.forceFlush = false;
-          return;
-        }
-        const byte = this.cursor < bytes.length ? bytes[this.cursor] : -1;
-        switch (this.state.tag) {
-          case "ground": {
-            this.unitStart = this.cursor;
-            if (this.justFlushedEsc) {
-              if (byte === 91) {
-                this.justFlushedEsc = false;
-                this.cursor += 1;
-                this.state = { tag: "esc_recovery" };
-                continue;
-              }
-              this.justFlushedEsc = false;
-            }
-            if (byte === ESC) {
-              this.cursor += 1;
-              this.state = { tag: "esc" };
-              continue;
-            }
-            if (byte < 128) {
-              this.emitKeyOrResponse("unknown", decodeUtf8(bytes.subarray(this.cursor, this.cursor + 1)));
-              this.consumePrefix(this.cursor + 1);
-              continue;
-            }
-            const expected = utf8SequenceLength(byte);
-            if (expected === 0) {
-              if (!this.forceFlush && this.cursor + 1 === bytes.length) {
-                this.markPending();
-                return;
-              }
-              this.emitLegacyHighByte(byte);
-              this.consumePrefix(this.cursor + 1);
-              continue;
-            }
-            this.cursor += 1;
-            this.state = { tag: "utf8", expected, seen: 1 };
-            continue;
-          }
-          case "utf8": {
-            if (this.cursor >= bytes.length) {
-              if (!this.forceFlush) {
-                this.markPending();
-                return;
-              }
-              this.emitLegacyHighByte(bytes[this.unitStart]);
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.unitStart + 1);
-              continue;
-            }
-            if ((byte & 192) !== 128) {
-              this.emitLegacyHighByte(bytes[this.unitStart]);
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.unitStart + 1);
-              continue;
-            }
-            const nextSeen = this.state.seen + 1;
-            this.cursor += 1;
-            if (nextSeen < this.state.expected) {
-              this.state = { tag: "utf8", expected: this.state.expected, seen: nextSeen };
-              continue;
-            }
-            this.emitKeyOrResponse("unknown", decodeUtf8(bytes.subarray(this.unitStart, this.cursor)));
-            this.state = { tag: "ground" };
-            this.consumePrefix(this.cursor);
-            continue;
-          }
-          case "esc": {
-            if (this.cursor >= bytes.length) {
-              if (!this.forceFlush) {
-                this.markPending();
-                return;
-              }
-              const flushedLoneEsc = this.cursor === this.unitStart + 1 && bytes[this.unitStart] === ESC;
-              this.emitKeyOrResponse("unknown", decodeUtf8(bytes.subarray(this.unitStart, this.cursor)));
-              this.justFlushedEsc = flushedLoneEsc;
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            switch (byte) {
-              case 91:
-                this.cursor += 1;
-                this.state = { tag: "csi" };
-                continue;
-              case 79:
-                this.cursor += 1;
-                this.state = { tag: "ss3" };
-                continue;
-              case 93:
-                this.cursor += 1;
-                this.state = { tag: "osc", sawEsc: false };
-                continue;
-              case 80:
-                this.cursor += 1;
-                this.state = { tag: "dcs", sawEsc: false };
-                continue;
-              case 95:
-                this.cursor += 1;
-                this.state = { tag: "apc", sawEsc: false };
-                continue;
-              case ESC:
-                this.cursor += 1;
-                continue;
-              default:
-                this.cursor += 1;
-                this.emitKeyOrResponse("unknown", decodeUtf8(bytes.subarray(this.unitStart, this.cursor)));
-                this.state = { tag: "ground" };
-                this.consumePrefix(this.cursor);
-                continue;
-            }
-          }
-          case "ss3": {
-            if (this.cursor >= bytes.length) {
-              if (!this.forceFlush) {
-                this.markPending();
-                return;
-              }
-              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (byte === ESC) {
-              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            this.cursor += 1;
-            this.emitKeyOrResponse("unknown", decodeUtf8(bytes.subarray(this.unitStart, this.cursor)));
-            this.state = { tag: "ground" };
-            this.consumePrefix(this.cursor);
-            continue;
-          }
-          case "esc_recovery": {
-            if (this.cursor >= bytes.length) {
-              if (!this.forceFlush) {
-                this.markPending();
-                return;
-              }
-              this.emitKeyOrResponse("unknown", decodeUtf8(bytes.subarray(this.unitStart, this.cursor)));
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (byte === 60) {
-              this.cursor += 1;
-              this.state = { tag: "esc_less_mouse" };
-              continue;
-            }
-            if (byte === 77) {
-              this.cursor += 1;
-              this.state = { tag: "esc_less_x10_mouse" };
-              continue;
-            }
-            this.emitKeyOrResponse("unknown", decodeUtf8(bytes.subarray(this.unitStart, this.unitStart + 1)));
-            this.state = { tag: "ground" };
-            this.consumePrefix(this.unitStart + 1);
-            continue;
-          }
-          case "csi": {
-            if (this.cursor >= bytes.length) {
-              if (!this.forceFlush) {
-                this.markPending();
-                return;
-              }
-              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (byte === ESC) {
-              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (byte === 77 && this.cursor === this.unitStart + 2) {
-              const end = this.cursor + 4;
-              if (bytes.length < end) {
-                if (!this.forceFlush) {
-                  this.markPending();
-                  return;
-                }
-                this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, bytes.length));
-                this.state = { tag: "ground" };
-                this.consumePrefix(bytes.length);
-                continue;
-              }
-              this.emitMouse(bytes.subarray(this.unitStart, end), "x10");
-              this.state = { tag: "ground" };
-              this.consumePrefix(end);
-              continue;
-            }
-            if (byte === 36) {
-              const candidateEnd = this.cursor + 1;
-              const candidate = decodeUtf8(bytes.subarray(this.unitStart, candidateEnd));
-              if (RXVT_DOLLAR_CSI_RE.test(candidate)) {
-                this.emitKeyOrResponse("csi", candidate);
-                this.state = { tag: "ground" };
-                this.consumePrefix(candidateEnd);
-                continue;
-              }
-              if (!this.forceFlush && candidateEnd >= bytes.length) {
-                this.markPending();
-                return;
-              }
-            }
-            if (byte === 60 && this.cursor === this.unitStart + 2) {
-              this.cursor += 1;
-              this.state = { tag: "csi_sgr_mouse", part: 0, hasDigit: false };
-              continue;
-            }
-            if (byte === 91 && this.cursor === this.unitStart + 2) {
-              this.cursor += 1;
-              continue;
-            }
-            if (byte === 63 && this.cursor === this.unitStart + 2) {
-              this.cursor += 1;
-              this.state = { tag: "csi_private_reply", semicolons: 0, hasDigit: false, sawDollar: false };
-              continue;
-            }
-            if (byte === 59) {
-              const firstParamStart = this.unitStart + 2;
-              const firstParamEnd = this.cursor;
-              let firstParamValue = parsePositiveDecimalPrefix(bytes, firstParamStart, firstParamEnd);
-              if (firstParamValue === null && this.protocolContext.kittyKeyboardEnabled) {
-                firstParamValue = parseKittyFirstFieldCodepoint(bytes, firstParamStart, firstParamEnd);
-              }
-              if (firstParamValue !== null) {
-                this.cursor += 1;
-                this.state = {
-                  tag: "csi_parametric",
-                  semicolons: 1,
-                  segments: 1,
-                  hasDigit: false,
-                  firstParamValue
-                };
-                continue;
-              }
-            }
-            if (byte >= 64 && byte <= 126) {
-              const end = this.cursor + 1;
-              const rawBytes = bytes.subarray(this.unitStart, end);
-              if (bytesEqual(rawBytes, BRACKETED_PASTE_START)) {
-                this.state = { tag: "ground" };
-                this.consumePrefix(end);
-                this.pasteOverflow = false;
-                this.paste = createPasteCollector();
-                continue;
-              }
-              if (isMouseSgrSequence(rawBytes)) {
-                this.emitMouse(rawBytes, "sgr");
-                this.state = { tag: "ground" };
-                this.consumePrefix(end);
-                continue;
-              }
-              this.emitKeyOrResponse("csi", decodeUtf8(rawBytes));
-              this.state = { tag: "ground" };
-              this.consumePrefix(end);
-              continue;
-            }
-            this.cursor += 1;
-            continue;
-          }
-          case "csi_sgr_mouse": {
-            if (this.cursor >= bytes.length) {
-              if (!this.forceFlush) {
-                this.markPending();
-                return;
-              }
-              this.state = { tag: "csi_sgr_mouse_deferred", part: this.state.part, hasDigit: this.state.hasDigit };
-              this.pendingSinceMs = null;
-              this.forceFlush = false;
-              return;
-            }
-            if (byte === ESC) {
-              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (isAsciiDigit(byte)) {
-              this.cursor += 1;
-              this.state = { tag: "csi_sgr_mouse", part: this.state.part, hasDigit: true };
-              continue;
-            }
-            if (byte === 59 && this.state.hasDigit && this.state.part < 2) {
-              this.cursor += 1;
-              this.state = { tag: "csi_sgr_mouse", part: this.state.part + 1, hasDigit: false };
-              continue;
-            }
-            if (byte >= 64 && byte <= 126) {
-              const end = this.cursor + 1;
-              const rawBytes = bytes.subarray(this.unitStart, end);
-              if (isMouseSgrSequence(rawBytes)) {
-                this.emitMouse(rawBytes, "sgr");
-              } else {
-                this.emitKeyOrResponse("csi", decodeUtf8(rawBytes));
-              }
-              this.state = { tag: "ground" };
-              this.consumePrefix(end);
-              continue;
-            }
-            this.state = { tag: "csi" };
-            continue;
-          }
-          case "csi_sgr_mouse_deferred": {
-            if (this.cursor >= bytes.length) {
-              this.pendingSinceMs = null;
-              this.forceFlush = false;
-              return;
-            }
-            if (byte === ESC) {
-              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (isAsciiDigit(byte) || byte === 59 || byte === 77 || byte === 109) {
-              this.state = { tag: "csi_sgr_mouse", part: this.state.part, hasDigit: this.state.hasDigit };
-              continue;
-            }
-            this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-            this.state = { tag: "ground" };
-            this.consumePrefix(this.cursor);
-            continue;
-          }
-          case "csi_parametric": {
-            if (this.cursor >= bytes.length) {
-              if (!this.forceFlush) {
-                this.markPending();
-                return;
-              }
-              if (canDeferParametricCsi(this.state, this.protocolContext)) {
-                this.state = {
-                  tag: "csi_parametric_deferred",
-                  semicolons: this.state.semicolons,
-                  segments: this.state.segments,
-                  hasDigit: this.state.hasDigit,
-                  firstParamValue: this.state.firstParamValue
-                };
-                this.pendingSinceMs = null;
-                this.forceFlush = false;
-                return;
-              }
-              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (byte === ESC) {
-              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (isAsciiDigit(byte)) {
-              this.cursor += 1;
-              this.state = {
-                tag: "csi_parametric",
-                semicolons: this.state.semicolons,
-                segments: this.state.segments,
-                hasDigit: true,
-                firstParamValue: this.state.firstParamValue
-              };
-              continue;
-            }
-            if (byte === 58 && this.state.hasDigit && this.state.segments < 3) {
-              this.cursor += 1;
-              this.state = {
-                tag: "csi_parametric",
-                semicolons: this.state.semicolons,
-                segments: this.state.segments + 1,
-                hasDigit: false,
-                firstParamValue: this.state.firstParamValue
-              };
-              continue;
-            }
-            if (byte === 59 && this.state.semicolons < 2) {
-              this.cursor += 1;
-              this.state = {
-                tag: "csi_parametric",
-                semicolons: this.state.semicolons + 1,
-                segments: 1,
-                hasDigit: false,
-                firstParamValue: this.state.firstParamValue
-              };
-              continue;
-            }
-            if (byte >= 64 && byte <= 126) {
-              const end = this.cursor + 1;
-              const protocol = classifyParametricCsiProtocol(this.state, byte);
-              this.emitKeyOrResponse(protocol, decodeUtf8(bytes.subarray(this.unitStart, end)));
-              this.state = { tag: "ground" };
-              this.consumePrefix(end);
-              continue;
-            }
-            this.state = { tag: "csi" };
-            continue;
-          }
-          case "csi_parametric_deferred": {
-            if (this.cursor >= bytes.length) {
-              this.pendingSinceMs = null;
-              this.forceFlush = false;
-              return;
-            }
-            if (byte === ESC) {
-              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (isAsciiDigit(byte) || byte === 58 || byte === 59) {
-              this.state = {
-                tag: "csi_parametric",
-                semicolons: this.state.semicolons,
-                segments: this.state.segments,
-                hasDigit: this.state.hasDigit,
-                firstParamValue: this.state.firstParamValue
-              };
-              continue;
-            }
-            if (canCompleteDeferredParametricCsi(this.state, byte, this.protocolContext)) {
-              this.state = {
-                tag: "csi_parametric",
-                semicolons: this.state.semicolons,
-                segments: this.state.segments,
-                hasDigit: this.state.hasDigit,
-                firstParamValue: this.state.firstParamValue
-              };
-              continue;
-            }
-            this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-            this.state = { tag: "ground" };
-            this.consumePrefix(this.cursor);
-            continue;
-          }
-          case "csi_parametric_ignored": {
-            if (this.cursor >= bytes.length) {
-              if (!this.forceFlush) {
-                this.markPending();
-                return;
-              }
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (byte === ESC) {
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (isAsciiDigit(byte)) {
-              this.cursor += 1;
-              this.state = {
-                tag: "csi_parametric_ignored",
-                semicolons: this.state.semicolons,
-                segments: this.state.segments,
-                hasDigit: true,
-                firstParamValue: this.state.semicolons === 0 ? (this.state.firstParamValue ?? 0) * 10 + (byte - 48) : this.state.firstParamValue
-              };
-              continue;
-            }
-            if (byte === 59 && this.state.semicolons === 0 && this.state.hasDigit) {
-              if (this.protocolContext.explicitWidthCprActive && this.state.firstParamValue === 1) {
-                this.state = { tag: "csi" };
-                continue;
-              }
-              this.cursor += 1;
-              this.state = {
-                tag: "csi_parametric_ignored",
-                semicolons: 1,
-                segments: 1,
-                hasDigit: false,
-                firstParamValue: this.state.firstParamValue
-              };
-              continue;
-            }
-            if (byte === 82 && this.state.semicolons === 1 && this.state.hasDigit) {
-              const end = this.cursor + 1;
-              this.state = { tag: "ground" };
-              this.consumePrefix(end);
-              continue;
-            }
-            if (this.state.semicolons === 0) {
-              this.state = { tag: "csi" };
-              continue;
-            }
-            this.state = { tag: "ground" };
-            this.consumePrefix(this.cursor);
-            continue;
-          }
-          case "csi_private_reply": {
-            if (this.cursor >= bytes.length) {
-              if (!this.forceFlush) {
-                this.markPending();
-                return;
-              }
-              if (canDeferPrivateReplyCsi(this.protocolContext)) {
-                this.state = {
-                  tag: "csi_private_reply_deferred",
-                  semicolons: this.state.semicolons,
-                  hasDigit: this.state.hasDigit,
-                  sawDollar: this.state.sawDollar
-                };
-                this.pendingSinceMs = null;
-                this.forceFlush = false;
-                return;
-              }
-              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (byte === ESC) {
-              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (isAsciiDigit(byte)) {
-              this.cursor += 1;
-              this.state = {
-                tag: "csi_private_reply",
-                semicolons: this.state.semicolons,
-                hasDigit: true,
-                sawDollar: this.state.sawDollar
-              };
-              continue;
-            }
-            if (byte === 59) {
-              this.cursor += 1;
-              this.state = {
-                tag: "csi_private_reply",
-                semicolons: this.state.semicolons + 1,
-                hasDigit: false,
-                sawDollar: false
-              };
-              continue;
-            }
-            if (byte === 36 && this.state.hasDigit && !this.state.sawDollar) {
-              this.cursor += 1;
-              this.state = {
-                tag: "csi_private_reply",
-                semicolons: this.state.semicolons,
-                hasDigit: true,
-                sawDollar: true
-              };
-              continue;
-            }
-            if (byte >= 64 && byte <= 126) {
-              const end = this.cursor + 1;
-              this.emitOpaqueResponse("csi", bytes.subarray(this.unitStart, end));
-              this.state = { tag: "ground" };
-              this.consumePrefix(end);
-              continue;
-            }
-            this.state = { tag: "csi" };
-            continue;
-          }
-          case "csi_private_reply_deferred": {
-            if (this.cursor >= bytes.length) {
-              this.pendingSinceMs = null;
-              this.forceFlush = false;
-              return;
-            }
-            if (byte === ESC) {
-              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (isAsciiDigit(byte) || byte === 59 || byte === 36) {
-              this.state = {
-                tag: "csi_private_reply",
-                semicolons: this.state.semicolons,
-                hasDigit: this.state.hasDigit,
-                sawDollar: this.state.sawDollar
-              };
-              continue;
-            }
-            if (canCompleteDeferredPrivateReplyCsi(this.state, byte, this.protocolContext)) {
-              this.state = {
-                tag: "csi_private_reply",
-                semicolons: this.state.semicolons,
-                hasDigit: this.state.hasDigit,
-                sawDollar: this.state.sawDollar
-              };
-              continue;
-            }
-            this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-            this.state = { tag: "ground" };
-            this.consumePrefix(this.cursor);
-            continue;
-          }
-          case "osc": {
-            if (this.cursor >= bytes.length) {
-              if (!this.forceFlush) {
-                this.markPending();
-                return;
-              }
-              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (this.state.sawEsc) {
-              if (byte === 92) {
-                const end = this.cursor + 1;
-                this.emitOpaqueResponse("osc", bytes.subarray(this.unitStart, end));
-                this.state = { tag: "ground" };
-                this.consumePrefix(end);
-                continue;
-              }
-              this.state = { tag: "osc", sawEsc: false };
-              continue;
-            }
-            if (byte === BEL) {
-              const end = this.cursor + 1;
-              this.emitOpaqueResponse("osc", bytes.subarray(this.unitStart, end));
-              this.state = { tag: "ground" };
-              this.consumePrefix(end);
-              continue;
-            }
-            if (byte === ESC) {
-              this.cursor += 1;
-              this.state = { tag: "osc", sawEsc: true };
-              continue;
-            }
-            this.cursor += 1;
-            continue;
-          }
-          case "dcs": {
-            if (this.cursor >= bytes.length) {
-              if (!this.forceFlush) {
-                this.markPending();
-                return;
-              }
-              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (this.state.sawEsc) {
-              if (byte === 92) {
-                const end = this.cursor + 1;
-                this.emitOpaqueResponse("dcs", bytes.subarray(this.unitStart, end));
-                this.state = { tag: "ground" };
-                this.consumePrefix(end);
-                continue;
-              }
-              this.state = { tag: "dcs", sawEsc: false };
-              continue;
-            }
-            if (byte === ESC) {
-              this.cursor += 1;
-              this.state = { tag: "dcs", sawEsc: true };
-              continue;
-            }
-            this.cursor += 1;
-            continue;
-          }
-          case "apc": {
-            if (this.cursor >= bytes.length) {
-              if (!this.forceFlush) {
-                this.markPending();
-                return;
-              }
-              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (this.state.sawEsc) {
-              if (byte === 92) {
-                const end = this.cursor + 1;
-                this.emitOpaqueResponse("apc", bytes.subarray(this.unitStart, end));
-                this.state = { tag: "ground" };
-                this.consumePrefix(end);
-                continue;
-              }
-              this.state = { tag: "apc", sawEsc: false };
-              continue;
-            }
-            if (byte === ESC) {
-              this.cursor += 1;
-              this.state = { tag: "apc", sawEsc: true };
-              continue;
-            }
-            this.cursor += 1;
-            continue;
-          }
-          case "esc_less_mouse": {
-            if (this.cursor >= bytes.length) {
-              if (!this.forceFlush) {
-                this.markPending();
-                return;
-              }
-              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-              this.state = { tag: "ground" };
-              this.consumePrefix(this.cursor);
-              continue;
-            }
-            if (byte >= 48 && byte <= 57 || byte === 59) {
-              this.cursor += 1;
-              continue;
-            }
-            if (byte === 77 || byte === 109) {
-              const end = this.cursor + 1;
-              const rawBytes = bytes.subarray(this.unitStart, end);
-              const prefixed = withEscPrefix(rawBytes);
-              if (isMouseSgrSequence(prefixed)) {
-                this.emitMouse(prefixed, "sgr");
-              } else {
-                this.emitOpaqueResponse("unknown", rawBytes);
-              }
-              this.state = { tag: "ground" };
-              this.consumePrefix(end);
-              continue;
-            }
-            this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, this.cursor));
-            this.state = { tag: "ground" };
-            this.consumePrefix(this.cursor);
-            continue;
-          }
-          case "esc_less_x10_mouse": {
-            const end = this.unitStart + 5;
-            if (bytes.length < end) {
-              if (!this.forceFlush) {
-                this.markPending();
-                return;
-              }
-              this.emitOpaqueResponse("unknown", bytes.subarray(this.unitStart, bytes.length));
-              this.state = { tag: "ground" };
-              this.consumePrefix(bytes.length);
-              continue;
-            }
-            const rawBytes = bytes.subarray(this.unitStart, end);
-            this.emitMouse(withEscPrefix(rawBytes), "x10");
-            this.state = { tag: "ground" };
-            this.consumePrefix(end);
-            continue;
-          }
-        }
-      }
-    }
-    emitKeyOrResponse(protocol, raw) {
-      const parsed = parseKeypress(raw, { useKittyKeyboard: this.useKittyKeyboard });
-      if (parsed) {
-        this.events.push({
-          type: "key",
-          raw: parsed.raw,
-          key: parsed
-        });
-        return;
-      }
-      this.events.push({
-        type: "response",
-        protocol,
-        sequence: raw
-      });
-    }
-    emitMouse(rawBytes, encoding) {
-      const event = this.mouseParser.parseMouseEvent(rawBytes);
-      if (!event) {
-        this.emitOpaqueResponse("unknown", rawBytes);
-        return;
-      }
-      this.events.push({
-        type: "mouse",
-        raw: decodeLatin1(rawBytes),
-        encoding,
-        event
-      });
-    }
-    emitLegacyHighByte(byte) {
-      const parsed = parseKeypress(import_node_buffer2.Buffer.from([byte]), { useKittyKeyboard: this.useKittyKeyboard });
-      if (parsed) {
-        this.events.push({
-          type: "key",
-          raw: parsed.raw,
-          key: parsed
-        });
-        return;
-      }
-      this.events.push({
-        type: "response",
-        protocol: "unknown",
-        sequence: String.fromCharCode(byte)
-      });
-    }
-    emitOpaqueResponse(protocol, rawBytes) {
-      this.events.push({
-        type: "response",
-        protocol,
-        sequence: decodeLatin1(rawBytes)
-      });
-    }
-    consumePrefix(endExclusive) {
-      this.pending.consume(endExclusive);
-      this.pendingTimeoutPaused = false;
-      this.suspendedPixelResolutionPrefixLength = 0;
-      this.cursor = 0;
-      this.unitStart = 0;
-      this.pendingSinceMs = null;
-      this.forceFlush = false;
-    }
-    takePendingBytes() {
-      const buffered = this.pending.take();
-      this.cursor = 0;
-      this.unitStart = 0;
-      this.pendingSinceMs = null;
-      this.forceFlush = false;
-      return buffered;
-    }
-    flushPendingOverflow() {
-      if (this.pending.length === 0) {
-        return;
-      }
-      this.onInputOverflow?.();
-      this.emitOpaqueResponse("unknown", this.pending.view());
-      this.pending.clear();
-      this.cursor = 0;
-      this.unitStart = 0;
-      this.pendingSinceMs = null;
-      this.pendingTimeoutPaused = false;
-      this.suspendedPixelResolutionPrefixLength = 0;
-      this.forceFlush = false;
-      this.state = { tag: "ground" };
-    }
-    markPending() {
-      this.pendingSinceMs = this.clock.now();
-    }
-    consumePasteBytes(chunk) {
-      const paste = this.paste;
-      const combined = concatBytes(paste.tail, chunk);
-      const endIndex = indexOfBytes(combined, BRACKETED_PASTE_END);
-      if (endIndex !== -1) {
-        this.pushPasteBytes(combined.subarray(0, endIndex));
-        if (this.pasteOverflow)
-          this.onPasteRejected?.();
-        else
-          this.events.push({
-            type: "paste",
-            bytes: joinPasteBytes(paste.parts, paste.totalLength)
-          });
-        this.paste = null;
-        return combined.subarray(endIndex + BRACKETED_PASTE_END.length);
-      }
-      const keep = Math.min(BRACKETED_PASTE_END.length - 1, combined.length);
-      const stableLength = combined.length - keep;
-      if (stableLength > 0) {
-        this.pushPasteBytes(combined.subarray(0, stableLength));
-      }
-      paste.tail = Uint8Array.from(combined.subarray(stableLength));
-      return EMPTY_BYTES;
-    }
-    pushPasteBytes(bytes) {
-      if (bytes.length === 0) {
-        return;
-      }
-      if (this.pasteOverflow)
-        return;
-      if (bytes.length > this.maxPasteBytes - this.paste.totalLength) {
-        this.pasteOverflow = true;
-        this.paste.parts = [];
-        this.paste.totalLength = 0;
-        return;
-      }
-      this.paste.parts.push(Uint8Array.from(bytes));
-      this.paste.totalLength += bytes.length;
-    }
-    reconcileDeferredStateWithProtocolContext() {
-      switch (this.state.tag) {
-        case "csi_parametric_deferred":
-          if (!canDeferParametricCsi(this.state, this.protocolContext)) {
-            this.emitOpaqueResponse("unknown", this.pending.view().subarray(this.unitStart, this.cursor));
-            this.state = { tag: "ground" };
-            this.consumePrefix(this.cursor);
-          }
-          return;
-        case "csi_private_reply_deferred":
-          if (!canDeferPrivateReplyCsi(this.protocolContext)) {
-            this.emitOpaqueResponse("unknown", this.pending.view().subarray(this.unitStart, this.cursor));
-            this.state = { tag: "ground" };
-            this.consumePrefix(this.cursor);
-          }
-          return;
-      }
-    }
-    reconcileTimeoutState() {
-      if (!this.armTimeouts) {
-        return;
-      }
-      if (this.pendingTimeoutPaused) {
-        this.clearTimeout();
-        return;
-      }
-      if (this.paste || this.pendingSinceMs === null || this.pending.length === 0) {
-        this.clearTimeout();
-        return;
-      }
-      this.clearTimeout();
-      this.timeoutId = this.clock.setTimeout(() => {
-        this.timeoutId = null;
-        if (this.destroyed) {
-          return;
-        }
-        try {
-          this.tryForceFlush();
-          this.onTimeoutFlush?.();
-        } catch (error) {
-          console.error("stdin parser timeout flush failed", error);
-        }
-      }, this.timeoutMs);
-    }
-    clearTimeout() {
-      if (!this.timeoutId) {
-        return;
-      }
-      this.clock.clearTimeout(this.timeoutId);
-      this.timeoutId = null;
-    }
-    resetState() {
-      this.pending.reset(INITIAL_PENDING_CAPACITY);
-      this.events.length = 0;
-      this.pendingSinceMs = null;
-      this.pendingTimeoutPaused = false;
-      this.suspendedPixelResolutionPrefixLength = 0;
-      this.forceFlush = false;
-      this.justFlushedEsc = false;
-      this.state = { tag: "ground" };
-      this.cursor = 0;
-      this.unitStart = 0;
-      this.paste = null;
-      this.mouseParser.reset();
-    }
-  }
-  var import_node_buffer2, DEFAULT_TIMEOUT_MS = 20, DEFAULT_MAX_PENDING_BYTES, INITIAL_PENDING_CAPACITY = 256, ESC = 27, BEL = 7, BRACKETED_PASTE_START, BRACKETED_PASTE_END, EMPTY_BYTES, KEY_DECODER, DEFAULT_PROTOCOL_CONTEXT, RXVT_DOLLAR_CSI_RE, SYSTEM_CLOCK;
-  var init_stdin_parser = __esm(() => {
-    init_parse_keypress();
-    init_parse_mouse();
-    import_node_buffer2 = __toESM(require_buffer(), 1);
-    DEFAULT_MAX_PENDING_BYTES = 64 * 1024;
-    BRACKETED_PASTE_START = import_node_buffer2.Buffer.from("\x1B[200~");
-    BRACKETED_PASTE_END = import_node_buffer2.Buffer.from("\x1B[201~");
-    EMPTY_BYTES = new Uint8Array(0);
-    KEY_DECODER = new TextDecoder;
-    DEFAULT_PROTOCOL_CONTEXT = {
-      kittyKeyboardEnabled: false,
-      privateCapabilityRepliesActive: false,
-      pixelResolutionQueryActive: false,
-      explicitWidthCprActive: false,
-      startupCursorCprActive: false
-    };
-    RXVT_DOLLAR_CSI_RE = /^\x1b\[\d+\$$/;
-    SYSTEM_CLOCK = new SystemClock;
-  });
-
-  // js/platform/mouse.ts
-  class RoutedMouseEvent {
-    target;
-    propagationStopped = false;
-    defaultPrevented = false;
-    currentTarget = null;
-    type;
-    button;
-    x;
-    y;
-    modifiers;
-    scroll;
-    constructor(target, raw) {
-      this.target = target;
-      this.type = raw.type;
-      this.button = raw.button;
-      this.x = raw.x;
-      this.y = raw.y;
-      this.modifiers = raw.modifiers;
-      this.scroll = raw.scroll;
-    }
-    stopPropagation() {
-      this.propagationStopped = true;
-    }
-    preventDefault() {
-      this.defaultPrevented = true;
-    }
-  }
-
-  class MouseRouter {
-    hit;
-    hover;
-    captured = new Map;
-    constructor(hit) {
-      this.hit = hit;
-    }
-    reset() {
-      this.hover = undefined;
-      this.captured.clear();
-    }
-    send(target, raw) {
-      if (target && !target.isDestroyed)
-        target.processMouseEvent(new RoutedMouseEvent(target, raw));
-    }
-    dispatch(raw) {
-      const target = this.hit(raw.x, raw.y);
-      if (target !== this.hover) {
-        this.send(this.hover, { ...raw, type: "out" });
-        this.hover = target;
-        this.send(target, { ...raw, type: "over" });
-      }
-      if (raw.type === "down" && target)
-        this.captured.set(raw.button, target);
-      const receiver = raw.type === "drag" || raw.type === "up" ? this.captured.get(raw.button) ?? target : target;
-      this.send(receiver, raw);
-      if (raw.type === "up")
-        this.captured.delete(raw.button);
-    }
-  }
-
   // vendor/js/node_modules/react/cjs/react-jsx-runtime.production.js
   var require_react_jsx_runtime_production = __commonJS((exports) => {
     var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element");
@@ -39455,134 +39948,18 @@ Please report this to https://github.com/markedjs/marked.`, e) {
   });
 
   // js/platform/demo.tsx
-  function copyTerminalText(text) {
-    try {
-      return lib2.copyToClipboardOSC52(native, 0, new TextEncoder().encode(text));
-    } catch {
-      return false;
-    }
-  }
-  function interceptKeys(handler) {
-    keyInterceptor = handler;
-  }
-  function drainInput() {
-    parser.drain((event) => {
-      if (!__host.canDispatch())
-        return;
-      if (event.type === "key") {
-        if (keyInterceptor?.(event.key))
-          return;
-        const key = new AppKeyEvent(event.key, receivedAt, ++inputSequence, __host.now());
-        const previous = JSON.stringify(keyboard);
-        if (key.source === "kitty")
-          keyboard.protocol = "kitty";
-        else if (keyboard.protocol === "unknown")
-          keyboard.protocol = "legacy";
-        if (key.kind === "release" && key.source === "kitty") {
-          keyboard.releases = "observed";
-          keyboard.heldStateAvailable = true;
-        }
-        if (/^(left_|right_)?(shift|control|alt|super|hyper|meta)$/.test(key.name) && key.source === "kitty")
-          keyboard.modifierEvents = "observed";
-        if (previous !== JSON.stringify(keyboard))
-          reportKeyboard();
-        if (!demoShortcuts) {
-          dispatchAppKey(key, appOptions.onKey, (name, event2) => keys.emit(name, event2));
-          return;
-        }
-        if (appOptions.onKey?.(key) || key.defaultPrevented)
-          return;
-        if (key.kind === "release")
-          return;
-        if (event.key.ctrl && event.key.name === "c" || event.key.name.toLowerCase() === "q") {
-          __host.quit();
-          return;
-        }
-        keys.emit("key", event.key.name.toLowerCase());
-      } else if (event.type === "paste") {
-        if (appOptions.onPaste)
-          appOptions.onPaste(new TextDecoder().decode(event.bytes));
-        else
-          keys.emit("paste", demoShortcuts ? event : new PasteEvent(event.bytes, event.metadata));
-      } else if (event.type === "mouse") {
-        mouse.dispatch(event.event);
-      } else if (event.type === "response" && native) {
-        if (event.sequence === "\x1B[I" || event.sequence === "\x1B[O") {
-          keyboard.focus = "observed";
-          reportKeyboard();
-          if (event.sequence === "\x1B[O")
-            resetInput("focus-loss");
-          return;
-        }
-        lib2.processCapabilityResponse(native, event.sequence);
-        context.capabilities = lib2.getTerminalCapabilities(native);
-        const reply = event.sequence.match(/^\x1b_G([^;]*);([\s\S]*?)\x1b\\$/);
-        if (reply && reply[1].split(",").includes("i=31337") && reply[2] === "OK") {
-          graphicsState.confirmed = true;
-          keys.emit("graphics", true);
-          dirty = true;
-        }
-      }
-    });
-  }
-  function shutdown() {
-    if (stopped)
-      return;
-    stopped = true;
-    try {
-      try {
-        resetInput("shutdown");
-      } finally {
-        if (container) {
-          reconciler.updateContainerSync(null, container, null, null);
-          reconciler.flushSyncWork();
-          reconciler.flushPassiveEffects();
-        }
-      }
-    } finally {
-      try {
-        root?.destroyRecursively();
-      } finally {
-        try {
-          context.clearSelection();
-          mouse.reset();
-          native = null;
-        } finally {
-          parser.destroy();
-          lib2?.dispose();
-          __timers.clear();
-        }
-      }
-    }
+  function mountApp(App, options = {}) {
+    return mountReact(App, options, false);
   }
   function mountDemo(App, options = {}) {
-    demoShortcuts = true;
-    return mountApp(App, options);
+    return mountReact(App, options, true);
   }
-  function mountApp(App, options = {}) {
-    if (container || stopped)
-      throw new Error("Only one application mount per runtime is supported");
-    appOptions = options;
-    keyboard.requestedFlags = keyboardFlags(options.keyboard);
-    __host.configureKeyboard(keyboard.requestedFlags);
-    parser.updateProtocolContext({ kittyKeyboardEnabled: keyboard.requestedFlags !== 0 });
-    reportKeyboard();
-    resetInput((__host.generation ?? 1) > 1 ? "reload" : "startup");
-    if (options.exportState)
-      Object.assign(globalThis, { __exportState: () => {
-        const text = JSON.stringify(options.exportState());
-        if (text === undefined)
-          throw new Error("exportState must return JSON-serializable data");
-        return text;
-      } });
-    if (options.onReloadError)
-      Object.assign(globalThis, { __reloadNotice: options.onReloadError });
-    if (options.onMessage)
-      Object.assign(globalThis, { __message: options.onMessage });
-    Object.assign(globalThis, { __endpointClosed: (reason) => {
-      resetInput("endpoint-closed");
-      options.onDisconnect?.(reason);
-    } });
+  function mountReact(App, options, shortcuts) {
+    const reconciler = import_react_reconciler2.default(hostConfig);
+    const report = (error) => {
+      throw error;
+    };
+    let container, effectMounted = false;
     function Mounted() {
       import_react3.useEffect(() => {
         effectMounted = true;
@@ -39592,195 +39969,33 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       }, []);
       return /* @__PURE__ */ jsx_runtime.jsx(App, {});
     }
-    lib2 = resolveRenderLib();
-    native = __host.borrowRenderer();
-    lib2.setBackgroundColor(native, RGBA.fromHex("#101820"));
-    context.capabilities = lib2.getTerminalCapabilities(native);
-    root = new RootRenderable(context);
-    container = reconciler.createContainer(root, 1, null, false, null, "", report, options.onCaughtError ?? report, report, () => {});
-    reconciler.updateContainerSync(/* @__PURE__ */ jsx_runtime.jsx(Mounted, {}), container, null, null);
-    reconciler.flushSyncWork();
-    reconciler.flushPassiveEffects();
-    return { quit: () => __host.quit(), snapshot: () => new TextDecoder().decode(lib2.getCurrentBuffer(native).getRealCharBytes(true)) };
+    const app2 = mountApplication({
+      batch: (work) => reconciler.flushSyncFromReconciler(work),
+      mount(root2) {
+        container = reconciler.createContainer(root2, 1, null, false, null, "", report, options.onCaughtError ?? report, report, () => {});
+        reconciler.updateContainerSync(/* @__PURE__ */ jsx_runtime.jsx(Mounted, {}), container, null, null);
+        reconciler.flushSyncWork();
+        reconciler.flushPassiveEffects();
+      },
+      unmount() {
+        if (container) {
+          reconciler.updateContainerSync(null, container, null, null);
+          reconciler.flushSyncWork();
+          reconciler.flushPassiveEffects();
+        }
+      },
+      inspect: () => ({ effectMounted })
+    }, options, shortcuts);
+    return { quit: app2.quit, snapshot: app2.snapshot };
   }
-  var import_react3, import_react_reconciler2, import_events6, jsx_runtime, dirty = true, stopped = false, liveCount = 0, liveTimer, container, native, root, lib2, keys, keyInterceptor = null, graphicsState, appOptions, firstLayout = true, inputSequence = 0, receivedAt = 0, inputOverflow = false, keyboard, reportKeyboard = () => appOptions.onKeyboardCapabilities?.({ ...keyboard }), resetInput = (reason) => {
-    try {
-      appOptions.onInputReset?.({ reason });
-    } finally {
-      resetKeyboardSubscriptions({ reason });
-    }
-  }, demoShortcuts = false, parser, selection = null, selectionOwner = null, lifecycle, context, reconciler, report = (error) => {
-    throw error;
-  }, effectMounted = false, mouse;
+  var import_react3, import_react_reconciler2, jsx_runtime;
   var init_demo = __esm(() => {
-    init_keyboard();
-    init_KeyHandler();
-    init_selection();
     init_host_config();
-    init_Renderable();
-    init_zig();
-    init_RGBA();
-    init_stdin_parser();
+    init_application();
+    init_application();
     import_react3 = __toESM(require_react(), 1);
     import_react_reconciler2 = __toESM(require_react_reconciler(), 1);
-    import_events6 = __toESM(require_events(), 1);
     jsx_runtime = __toESM(require_jsx_runtime(), 1);
-    keys = new import_events6.EventEmitter;
-    graphicsState = { confirmed: false };
-    appOptions = {};
-    keyboard = { requestedFlags: 5, protocol: "unknown", releases: "unknown", focus: "unknown", modifierEvents: "unknown", heldStateAvailable: false };
-    parser = new StdinParser({ onInputOverflow: () => {
-      inputOverflow = true;
-    }, onTimeoutFlush: () => drainInput(), onPasteRejected: () => appOptions.onPasteRejected?.() });
-    lifecycle = new Set;
-    context = Object.assign(new import_events6.EventEmitter, {
-      width: __host.width,
-      height: __host.height,
-      frameId: 0,
-      widthMethod: "unicode",
-      capabilities: null,
-      requestRender() {
-        dirty = true;
-      },
-      getLifecyclePasses: () => lifecycle,
-      registerLifecyclePass: (node) => lifecycle.add(node),
-      unregisterLifecyclePass: (node) => lifecycle.delete(node),
-      addToHitGrid(x2, y2, w2, h, id) {
-        lib2.addToHitGrid(native, x2, y2, w2, h, id);
-      },
-      pushHitGridScissorRect(x2, y2, w2, h) {
-        lib2.hitGridPushScissorRect(native, x2, y2, w2, h);
-      },
-      popHitGridScissorRect() {
-        lib2.hitGridPopScissorRect(native);
-      },
-      clearHitGridScissorRects() {
-        lib2.hitGridClearScissorRects(native);
-      },
-      getSelection: () => selection,
-      currentFocusedRenderable: null,
-      currentFocusedEditor: null,
-      focusRenderable(node) {
-        const old = context.currentFocusedRenderable;
-        if (old && old !== node)
-          old.blur();
-        context.currentFocusedRenderable = node;
-      },
-      blurRenderable(node) {
-        if (context.currentFocusedRenderable === node)
-          context.currentFocusedRenderable = null;
-      },
-      setCursorPosition(x2, y2, visible) {
-        lib2.setCursorPosition(native, x2, y2, visible);
-      },
-      setCursorStyle(style) {
-        lib2.setCursorStyleOptions(native, style);
-      },
-      clearSelection() {
-        const old = selectionOwner;
-        selection = null;
-        selectionOwner = null;
-        if (old && !old.isDestroyed)
-          old.onSelectionChanged(null);
-        context.emit("selection", null);
-      },
-      startSelection(node, x2, y2) {
-        context.clearSelection();
-        selectionOwner = node;
-        selection = new Selection(node, { x: x2, y: y2 }, { x: x2, y: y2 });
-        selection.isStart = true;
-        node.onSelectionChanged(selection);
-      },
-      updateSelection(_node, x2, y2, options = {}) {
-        if (selection && selectionOwner && !selectionOwner.isDestroyed) {
-          selection.isStart = false;
-          selection.focus = { x: x2, y: y2 };
-          selection.isDragging = !options.finishDragging;
-          selectionOwner.onSelectionChanged(selection);
-          context.emit("selection", selection);
-        }
-      },
-      requestSelectionUpdate() {
-        if (selection && selectionOwner && !selectionOwner.isDestroyed)
-          selectionOwner.onSelectionChanged(selection);
-      },
-      keyInput: keys,
-      _internalKeyInput: { onInternal: (name, handler) => keys.on(name, handler), offInternal: (name, handler) => keys.off(name, handler) },
-      requestLive() {
-        if (liveCount++ === 0) {
-          const tick = () => {
-            if (stopped || liveCount <= 0)
-              return;
-            dirty = true;
-            liveTimer = setTimeout(tick, 16);
-          };
-          liveTimer = setTimeout(tick, 16);
-        }
-      },
-      dropLive() {
-        liveCount = Math.max(0, liveCount - 1);
-        if (!liveCount)
-          clearTimeout(liveTimer);
-      }
-    });
-    Object.defineProperty(context, "hasSelection", { get: () => selection !== null });
-    reconciler = import_react_reconciler2.default(hostConfig);
-    mouse = new MouseRouter((x2, y2) => x2 < 0 || y2 < 0 ? undefined : Renderable.renderablesByNumber.get(lib2.checkHit(native, x2, y2)));
-    Object.assign(globalThis, {
-      __shutdown: shutdown,
-      __inputReset: (reason) => resetInput(reason),
-      __inputReadyForReload: () => parser.readyForReload,
-      __input(data, time = __host.now()) {
-        receivedAt = time;
-        reconciler.flushSyncFromReconciler(() => {
-          parser.push(new Uint8Array(data));
-          drainInput();
-          if (inputOverflow) {
-            inputOverflow = false;
-            resetInput("overflow");
-          }
-        });
-      },
-      __resize(width, height) {
-        context.width = width;
-        context.height = height;
-        lib2.resizeRenderer(native, width, height);
-        root.width = width;
-        root.height = height;
-        context.emit("resize", width, height);
-        dirty = true;
-      },
-      __tick() {
-        __timers.tick();
-      },
-      __delay() {
-        return __timers.delay();
-      },
-      __frame() {
-        if (stopped || !dirty)
-          return;
-        dirty = false;
-        context.frameId++;
-        const buffer = lib2.getNextBuffer(native);
-        buffer.clear(RGBA.fromHex("#101820"));
-        root.render(buffer, 16);
-        if (firstLayout) {
-          firstLayout = false;
-          if (appOptions.onFirstLayout) {
-            appOptions.onFirstLayout();
-            buffer.clear(RGBA.fromHex("#101820"));
-            root.render(buffer, 16);
-          }
-        }
-        __host.presentFrame();
-      },
-      __inspect() {
-        return JSON.stringify({ effectMounted, keys: keys.listenerCount("key"), frame: context.frameId });
-      },
-      __snapshot() {
-        return new TextDecoder().decode(lib2.getCurrentBuffer(native).getRealCharBytes(true));
-      }
-    });
   });
 
   // js/keyboard-hooks.ts
@@ -39807,21 +40022,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
   });
 
   // js/app.ts
-  function quit() {
-    __host.quit();
-  }
-  function getReloadInfo() {
-    return { enabled: typeof __host.requestReload === "function", generation: __host.generation ?? 1, notice: __host.reloadNotice ?? "" };
-  }
-  function getReloadState(fallback) {
-    return __host.reloadState === undefined || __host.reloadState === "null" ? fallback : JSON.parse(__host.reloadState);
-  }
-  function requestReload(source) {
-    if (!__host.requestReload)
-      throw new Error("Reload is disabled by the native host");
-    __host.requestReload(source);
-  }
-  var init_app = __esm(() => {
+  var init_app2 = __esm(() => {
     init_demo();
     init_keyboard();
     init_keyboard_hooks();
@@ -39903,7 +40104,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
 
   // js/game.tsx
   var exports_game = {};
-  function input(event) {
+  function input2(event) {
     recent.push(event);
     if (recent.length > 8)
       recent.shift();
@@ -39935,12 +40136,12 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     redraw();
     return true;
   }
-  function stats() {
+  function stats2() {
     const a = [...latencies].sort((a2, b2) => a2 - b2), q2 = (p) => (a[Math.min(a.length - 1, Math.floor(a.length * p))] ?? 0).toFixed(2);
     return `local read→dispatch ms p95 ${q2(0.95)} p99 ${q2(0.99)} max ${q2(1)} · n=${a.length}`;
   }
   function App() {
-    useKeyboardEvents(input, { realtime: true, onReset(event) {
+    useKeyboardEvents(input2, { realtime: true, onReset(event) {
       tracker.reset(event.reason);
       pendingJump = false;
       tap = 0;
@@ -40053,7 +40254,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         }),
         /* @__PURE__ */ jsx_runtime2.jsx("text", {
           fg: "#90a6b8",
-          children: stats()
+          children: stats2()
         }),
         diagnostic && recent.map((e) => /* @__PURE__ */ jsx_runtime2.jsxs("text", {
           children: [
@@ -40082,7 +40283,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
   var import_react5, jsx_runtime2, diagnostic, game, redraw = () => {}, status = "startup", caps, tracker, recent, latencies, pendingJump = false, tap = 0, paused = false;
   var init_game = __esm(() => {
     init_demo();
-    init_app();
+    init_app2();
     import_react5 = __toESM(require_react(), 1);
     jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
     diagnostic = __host.example === "keyboard";
@@ -40169,7 +40370,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     });
   }
   function App2() {
-    const [count, setCount] = import_react6.useState(0);
+    const [count2, setCount] = import_react6.useState(0);
     const [spriteFrame, setSpriteFrame] = import_react6.useState(0);
     const [playing, setPlaying] = import_react6.useState(true);
     import_react6.useEffect(() => {
@@ -40186,7 +40387,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     const [size, setSize] = import_react6.useState([context2.width, context2.height]);
     const [graphics, setGraphics] = import_react6.useState({ status: graphicsStatus, confirmed: graphicsConfirmed });
     import_react6.useEffect(() => {
-      effectMounted2 = true;
+      effectMounted = true;
       const key = (name) => {
         if (name === "space" || name === "up" || name === "+")
           setCount((v2) => v2 + 1);
@@ -40205,7 +40406,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       context2.on("resize", resize);
       context2.on("graphics", graphicsChanged);
       return () => {
-        effectMounted2 = false;
+        effectMounted = false;
         keys2.off("key", key);
         context2.off("resize", resize);
         context2.off("graphics", graphicsChanged);
@@ -40236,7 +40437,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
             fg: "#f6f0dd",
             children: [
               "Count: ",
-              count
+              count2
             ]
           }),
           /* @__PURE__ */ jsx_runtime3.jsx("text", {
@@ -40275,7 +40476,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                 width: 40,
                 height: Math.max(8, size[1] - 22),
                 protocol: graphics.confirmed ? "kitty" : "blocks",
-                onError: report2
+                onError: report
               }),
               /* @__PURE__ */ jsx_runtime3.jsxs("box", {
                 flexDirection: "column",
@@ -40287,7 +40488,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
                     width: 32,
                     height: Math.max(6, size[1] - 24),
                     protocol: graphics.confirmed ? "kitty" : "blocks",
-                    onError: report2
+                    onError: report
                   }),
                   /* @__PURE__ */ jsx_runtime3.jsxs("text", {
                     fg: "#718b99",
@@ -40311,10 +40512,10 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       return;
     stopped2 = true;
     try {
-      if (container2) {
-        reconciler2.updateContainerSync(null, container2, null, null);
-        reconciler2.flushSyncWork();
-        reconciler2.flushPassiveEffects();
+      if (container) {
+        reconciler.updateContainerSync(null, container, null, null);
+        reconciler.flushSyncWork();
+        reconciler.flushPassiveEffects();
       }
     } finally {
       try {
@@ -40334,9 +40535,9 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       }
     }
   }
-  var import_buffer6, import_react6, import_react_reconciler3, import_events7, jsx_runtime3, dirty2 = true, stopped2 = false, container2, native2, root2, lib3, sampleImage, spriteFrames, graphicsStatus = "Checking graphics support…", graphicsConfirmed = false, probeFinished = false, keys2, parser2, lifecycle2, context2, reconciler2, report2 = (error) => {
+  var import_buffer6, import_react6, import_react_reconciler3, import_events7, jsx_runtime3, dirty2 = true, stopped2 = false, container, native2, root2, lib3, sampleImage, spriteFrames, graphicsStatus = "Checking graphics support…", graphicsConfirmed = false, probeFinished = false, keys2, parser2, lifecycle2, context2, reconciler, report = (error) => {
     throw error;
-  }, effectMounted2 = false;
+  }, effectMounted = false;
   var init_counter = __esm(() => {
     init_host_config();
     init_Renderable();
@@ -40380,7 +40581,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       },
       dropLive() {}
     });
-    reconciler2 = import_react_reconciler3.default(hostConfig);
+    reconciler = import_react_reconciler3.default(hostConfig);
     Object.assign(globalThis, {
       __shutdown: shutdown2,
       __input(data) {
@@ -40413,7 +40614,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         lib3.render(native2, false);
       },
       __inspect() {
-        return JSON.stringify({ effectMounted: effectMounted2, keys: keys2.listenerCount("key"), frame: context2.frameId, graphicsConfirmed, graphicsStatus });
+        return JSON.stringify({ effectMounted, keys: keys2.listenerCount("key"), frame: context2.frameId, graphicsConfirmed, graphicsStatus });
       },
       __snapshot() {
         return new TextDecoder().decode(lib3.getCurrentBuffer(native2).getRealCharBytes(true));
@@ -40442,10 +40643,10 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       }
     }, 2000);
     root2 = new RootRenderable(context2);
-    container2 = reconciler2.createContainer(root2, 1, null, false, null, "", report2, report2, report2, () => {});
-    reconciler2.updateContainerSync(/* @__PURE__ */ jsx_runtime3.jsx(App2, {}), container2, null, null);
-    reconciler2.flushSyncWork();
-    reconciler2.flushPassiveEffects();
+    container = reconciler.createContainer(root2, 1, null, false, null, "", report, report, report, () => {});
+    reconciler.updateContainerSync(/* @__PURE__ */ jsx_runtime3.jsx(App2, {}), container, null, null);
+    reconciler.flushSyncWork();
+    reconciler.flushPassiveEffects();
   });
 
   // js/mouse.tsx
@@ -40473,11 +40674,11 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     const [last, setLast] = import_react7.useState("Move the pointer into this pane");
     const [size, setSize] = import_react7.useState([context3.width, context3.height]);
     import_react7.useEffect(() => {
-      effectMounted3 = true;
+      effectMounted2 = true;
       const resize = (w2, h) => setSize([w2, h]);
       context3.on("resize", resize);
       return () => {
-        effectMounted3 = false;
+        effectMounted2 = false;
         context3.off("resize", resize);
       };
     }, []);
@@ -40601,10 +40802,10 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       return;
     stopped3 = true;
     try {
-      if (container3) {
-        reconciler3.updateContainerSync(null, container3, null, null);
-        reconciler3.flushSyncWork();
-        reconciler3.flushPassiveEffects();
+      if (container2) {
+        reconciler2.updateContainerSync(null, container2, null, null);
+        reconciler2.flushSyncWork();
+        reconciler2.flushPassiveEffects();
       }
     } finally {
       try {
@@ -40624,9 +40825,9 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       }
     }
   }
-  var import_react7, import_react_reconciler4, import_events8, jsx_runtime4, dirty3 = true, stopped3 = false, container3, native3, root3, lib4, keys3, parser3, lifecycle3, context3, reconciler3, report3 = (error) => {
+  var import_react7, import_react_reconciler4, import_events8, jsx_runtime4, dirty3 = true, stopped3 = false, container2, native3, root3, lib4, keys3, parser3, lifecycle3, context3, reconciler2, report2 = (error) => {
     throw error;
-  }, effectMounted3 = false, mouse2;
+  }, effectMounted2 = false, mouse2;
   var init_mouse = __esm(() => {
     init_host_config();
     init_Renderable();
@@ -40675,7 +40876,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       },
       dropLive() {}
     });
-    reconciler3 = import_react_reconciler4.default(hostConfig);
+    reconciler2 = import_react_reconciler4.default(hostConfig);
     mouse2 = new MouseRouter((x2, y2) => x2 < 0 || y2 < 0 ? undefined : Renderable.renderablesByNumber.get(lib4.checkHit(native3, x2, y2)));
     Object.assign(globalThis, {
       __shutdown: shutdown3,
@@ -40709,7 +40910,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         lib4.render(native3, false);
       },
       __inspect() {
-        return JSON.stringify({ effectMounted: effectMounted3, keys: keys3.listenerCount("key"), frame: context3.frameId });
+        return JSON.stringify({ effectMounted: effectMounted2, keys: keys3.listenerCount("key"), frame: context3.frameId });
       },
       __snapshot() {
         return new TextDecoder().decode(lib4.getCurrentBuffer(native3).getRealCharBytes(true));
@@ -40731,61 +40932,61 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     if (!__host.headless)
       lib4.enableMouse(native3, true);
     root3 = new RootRenderable(context3);
-    container3 = reconciler3.createContainer(root3, 1, null, false, null, "", report3, report3, report3, () => {});
-    reconciler3.updateContainerSync(/* @__PURE__ */ jsx_runtime4.jsx(App3, {}), container3, null, null);
-    reconciler3.flushSyncWork();
-    reconciler3.flushPassiveEffects();
+    container2 = reconciler2.createContainer(root3, 1, null, false, null, "", report2, report2, report2, () => {});
+    reconciler2.updateContainerSync(/* @__PURE__ */ jsx_runtime4.jsx(App3, {}), container2, null, null);
+    reconciler2.flushSyncWork();
+    reconciler2.flushPassiveEffects();
     if (__host.headless)
       Object.assign(globalThis, {
         __selfTest() {
-          const host = globalThis;
+          const host2 = globalThis;
           const frame = () => {
-            reconciler3.flushSyncWork();
-            reconciler3.flushPassiveEffects();
-            host.__frame();
+            reconciler2.flushSyncWork();
+            reconciler2.flushPassiveEffects();
+            host2.__frame();
           };
           const expect = (text) => {
-            if (!host.__snapshot().includes(text))
-              throw new Error(`Mouse snapshot missing ${text}: ${host.__snapshot()}`);
+            if (!host2.__snapshot().includes(text))
+              throw new Error(`Mouse snapshot missing ${text}: ${host2.__snapshot()}`);
           };
           const feed = (text) => {
-            reconciler3.flushSyncFromReconciler(() => host.__input(new TextEncoder().encode(text).buffer));
+            reconciler2.flushSyncFromReconciler(() => host2.__input(new TextEncoder().encode(text).buffer));
             frame();
           };
           const point = (id) => {
             const node = [...Renderable.renderablesByNumber.values()].find((n) => n.id === id);
             return [node.x + 2, node.y + 1];
           };
-          const report4 = (code, x3, y3, release = false) => `\x1B[<${code};${x3 + 1};${y3 + 1}${release ? "m" : "M"}`;
+          const report3 = (code, x3, y3, release = false) => `\x1B[<${code};${x3 + 1};${y3 + 1}${release ? "m" : "M"}`;
           frame();
           let [x2, y2] = point("click-pad");
           feed("\x1B[<35;");
           feed(`${x2 + 1};${y2 + 1}M`);
           expect("hover: click");
           for (let button = 0;button < 3; button++) {
-            feed(report4(button, x2, y2));
-            feed(report4(button, x2, y2, true));
+            feed(report3(button, x2, y2));
+            feed(report3(button, x2, y2, true));
           }
           expect("Left 1 · Middle 1 · Right 1");
-          feed(report4(0, 0, 0));
-          feed(report4(0, 0, 0, true));
+          feed(report3(0, 0, 0));
+          feed(report3(0, 0, 0, true));
           expect("Left 1 · Middle 1 · Right 1");
           [x2, y2] = point("drag-pad");
-          feed(report4(0, x2, y2));
-          feed(report4(32, 0, 0));
+          feed(report3(0, x2, y2));
+          feed(report3(32, 0, 0));
           expect("Dragging at 1,1");
-          feed(report4(0, 0, 0, true));
+          feed(report3(0, 0, 0, true));
           expect("Released at 1,1");
           [x2, y2] = point("wheel-pad");
-          feed(report4(64, x2, y2));
+          feed(report3(64, x2, y2));
           expect("Wheel value: 1");
-          feed(report4(65, x2, y2));
+          feed(report3(65, x2, y2));
           expect("Wheel value: 0");
-          reconciler3.flushSyncFromReconciler(() => host.__resize(64, 24));
+          reconciler2.flushSyncFromReconciler(() => host2.__resize(64, 24));
           frame();
           [x2, y2] = point("click-pad");
-          feed(report4(0, x2, y2));
-          feed(report4(0, x2, y2, true));
+          feed(report3(0, x2, y2));
+          feed(report3(0, x2, y2, true));
           expect("Left 2");
           expect("Terminal 64 × 24");
         }
@@ -40799,7 +41000,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     return { ...saved, draft: node.plainText, caret: node.cursorOffset, selection: node.getSelection(), scrollX: view.offsetX, scrollY: view.offsetY };
   }
   function App4() {
-    const [count, setCount] = import_react8.useState(saved.count), [scratch, setScratch] = import_react8.useState(0);
+    const [count2, setCount] = import_react8.useState(saved.count), [scratch, setScratch] = import_react8.useState(0);
     const [notice, setNotice] = import_react8.useState(getReloadInfo().notice || "Ready. Type a draft, then press Ctrl+R.");
     const [events, setEvents] = import_react8.useState(0);
     import_react8.useEffect(() => {
@@ -40822,11 +41023,11 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       };
       keys.on("key", key);
       keys.on("reload-notice", setNotice);
-      host.__message = () => setEvents((n) => n + 1);
+      host2.__message = () => setEvents((n) => n + 1);
       return () => {
         keys.off("key", key);
         keys.off("reload-notice", setNotice);
-        delete host.__message;
+        delete host2.__message;
       };
     }, []);
     const accent = __host.generation % 2 ? "#85ddca" : "#d8b5ff";
@@ -40850,7 +41051,7 @@ Please report this to https://github.com/markedjs/marked.`, e) {
         /* @__PURE__ */ jsx_runtime5.jsxs("text", {
           children: [
             "Saved counter: ",
-            count,
+            count2,
             "     Unsaved counter: ",
             scratch
           ]
@@ -40893,16 +41094,16 @@ Please report this to https://github.com/markedjs/marked.`, e) {
       ]
     });
   }
-  var import_react8, jsx_runtime5, host, saved, editor;
+  var import_react8, jsx_runtime5, host2, saved, editor;
   var init_reload = __esm(() => {
     init_demo();
-    init_app();
+    init_app2();
     import_react8 = __toESM(require_react(), 1);
     jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
-    host = globalThis;
-    if (host.__reloadCanary !== undefined)
+    host2 = globalThis;
+    if (host2.__reloadCanary !== undefined)
       throw Error("Previous runtime globals survived");
-    host.__reloadCanary = __host.generation;
+    host2.__reloadCanary = __host.generation;
     saved = getReloadState({ count: 0, round: 0, draft: "", caret: 0, selection: null, scrollX: 0, scrollY: 0 });
     editor = import_react8.default.createRef();
     if (!Number.isInteger(saved.count) || !Number.isInteger(saved.round))
@@ -40934,11 +41135,11 @@ q
 ` + Array.from({ length: 30 }, (_2, i) => `line ${i}`).join(`
 `);
       if (saved.round === 0) {
-        setTimeout(() => host.__input(new TextEncoder().encode("\x1B[200~" + literal.slice(0, 5)).buffer), 20);
+        setTimeout(() => host2.__input(new TextEncoder().encode("\x1B[200~" + literal.slice(0, 5)).buffer), 20);
         setTimeout(() => {
           if (__host.generation !== 1)
             throw Error("Reload retired a partial paste");
-          host.__input(new TextEncoder().encode(literal.slice(5) + "\x1B[201~").buffer);
+          host2.__input(new TextEncoder().encode(literal.slice(5) + "\x1B[201~").buffer);
           editor.current.cursorOffset = 3;
           editor.current.setSelection(1, 3);
           const view = editor.current.editorView.getViewport();
@@ -40947,7 +41148,7 @@ q
         }, 180);
       }
       setTimeout(() => {
-        if (!host.__snapshot().includes("Unsaved counter: 0"))
+        if (!host2.__snapshot().includes("Unsaved counter: 0"))
           throw Error("Unsaved state survived replacement");
         keys.emit("key", "u");
       }, 40);
@@ -40966,7 +41167,7 @@ q
           throw Error("Broken bundle was not recovered");
         if (saved.round === 6 && !__host.reloadNotice.includes("Replacement failed"))
           throw Error("Timed-out bundle was not recovered");
-        const text = host.__snapshot();
+        const text = host2.__snapshot();
         if (!text.includes("Unsaved counter: 1") || !text.includes("06b"))
           throw Error("Fresh UI did not render");
         if (saved.round === 8) {
@@ -41025,7 +41226,7 @@ q
     }
   }
   function App5() {
-    const [count, setCount] = import_react9.useState(0), [items, setItems] = import_react9.useState(extensions), [status2, setStatus] = import_react9.useState("Same runtime: load scripts to add or replace components.");
+    const [count2, setCount] = import_react9.useState(0), [items, setItems] = import_react9.useState(extensions), [status2, setStatus] = import_react9.useState("Same runtime: load scripts to add or replace components.");
     const [selected, setSelected] = import_react9.useState("counter"), [watch, setWatch] = import_react9.useState(false);
     const selection2 = import_react9.useRef({ file: "counter", watch: false });
     const request = (file = selection2.current.file, watching = selection2.current.watch) => {
@@ -41114,7 +41315,7 @@ q
                 fg: "#edce86",
                 children: [
                   "Host count: ",
-                  count
+                  count2
                 ]
               }),
               button("Space / click +1", () => setCount((value) => value + 1))
@@ -41233,21 +41434,21 @@ q
     } });
     if (__host.headless)
       Object.assign(globalThis, { async __selfTest() {
-        const host2 = globalThis;
-        host2.__resize(110, 40);
+        const host3 = globalThis;
+        host3.__resize(110, 40);
         const wait = () => new Promise((resolve) => setTimeout(resolve, 25));
         const until = async (text) => {
           const end = Date.now() + 3000;
-          while (!host2.__snapshot().includes(text) && Date.now() < end)
+          while (!host3.__snapshot().includes(text) && Date.now() < end)
             await wait();
-          if (!host2.__snapshot().includes(text))
+          if (!host3.__snapshot().includes(text))
             throw new Error("Missing live state: " + text + `
-` + host2.__snapshot());
+` + host3.__snapshot());
         };
-        host2.__input(new TextEncoder().encode(" ").buffer);
-        host2.__input(new TextEncoder().encode("1").buffer);
+        host3.__input(new TextEncoder().encode(" ").buffer);
+        host3.__input(new TextEncoder().encode("1").buffer);
         await until("A counter loaded from JavaScript");
-        host2.__input(new TextEncoder().encode("2").buffer);
+        host3.__input(new TextEncoder().encode("2").buffer);
         await until("A clock added by a second script");
         await until("Host count: 1");
         evaluate('api.register("counter",{title:"Replacement counter",render:()=>h("text",{},"new code")});', "counter");
@@ -41257,12 +41458,12 @@ q
         evaluate('api.register("counter",{title:"Effect test",render:()=>{React.useEffect(()=>{globalThis.__liveEffectMounted=true;return()=>{globalThis.__liveEffectCleaned=true}},[]);return h("text",{},"effect mounted")}});', "counter");
         await until("effect mounted");
         await wait();
-        if (!host2.__liveEffectMounted)
+        if (!host3.__liveEffectMounted)
           throw new Error("Extension effect did not mount");
         evaluate('api.register("counter",{title:"Replacement counter",render:()=>h("text",{},"new code")});', "counter");
         await until("Replacement counter");
         await wait();
-        if (!host2.__liveEffectCleaned)
+        if (!host3.__liveEffectCleaned)
           throw new Error("Replaced extension effect was not cleaned up");
         if (extensions.map((item) => item.id).join(",") !== "counter,clock")
           throw new Error("Reload moved components");
@@ -41279,16 +41480,16 @@ q
         await until("A clock added by a second script");
         evaluate('api.register("counter",{title:"Recovered",render:()=>h("text",{},"working again")});', "counter");
         await until("working again");
-        host2.__input(new TextEncoder().encode("wc").buffer);
+        host3.__input(new TextEncoder().encode("wc").buffer);
         await until("Components cleared.");
         await wait();
-        if (extensions.length || host2.__snapshot().includes("working again"))
+        if (extensions.length || host3.__snapshot().includes("working again"))
           throw new Error("Clear left components mounted");
         await until("Host count: 1");
         await until("watch: off");
-        host2.__input(new TextEncoder().encode("1").buffer);
+        host3.__input(new TextEncoder().encode("1").buffer);
         await until("A counter loaded from JavaScript");
-        host2.__input(new TextEncoder().encode("2").buffer);
+        host3.__input(new TextEncoder().encode("2").buffer);
         await until("A clock added by a second script");
       } });
   });
@@ -41367,7 +41568,7 @@ q
           for (let y2 = 0;y2 < rows; y2++) {
             let line = "";
             for (let x2 = 0;x2 < cols; x2++) {
-              let mask = 0, count = 0, darkCount = 0;
+              let mask = 0, count2 = 0, darkCount = 0;
               const dark = [0, 0, 0];
               const sum = [0, 0, 0];
               for (let dy = 0;dy < 4; dy++)
@@ -41376,7 +41577,7 @@ q
                   const visible = this.tone === 6 ? Math.max(...c) > 180 : this.tone === 0 || this.tone === 4 || this.tone === 5 ? Math.max(...c) > 60 : c[0] * 0.299 + c[1] * 0.587 + c[2] * 0.114 > 90;
                   if (visible) {
                     mask |= 1 << bits[dy][dx];
-                    count++;
+                    count2++;
                     for (let i = 0;i < 3; i++)
                       sum[i] += c[i];
                   } else {
@@ -41389,7 +41590,7 @@ q
               if (this.tone === 2 || this.tone === 3)
                 line += char;
               else
-                buffer.drawText(char, left + x2, top + y2, count ? RGBA.fromInts(...sum.map((v2) => Math.round(v2 / count))) : FG, this.tone === 6 && darkCount ? RGBA.fromInts(...dark.map((v2) => Math.round(v2 / darkCount))) : BG);
+                buffer.drawText(char, left + x2, top + y2, count2 ? RGBA.fromInts(...sum.map((v2) => Math.round(v2 / count2))) : FG, this.tone === 6 && darkCount ? RGBA.fromInts(...dark.map((v2) => Math.round(v2 / darkCount))) : BG);
             }
             if (this.tone === 2 || this.tone === 3)
               buffer.drawText(line, left, top + y2, FG, BG);
@@ -42310,25 +42511,25 @@ q
         releaseBefore(mock, 3);
         if (released.join(",") !== "1,2" || mock.size !== 1)
           throw new Error("Superseded frames must be released");
-        const host2 = globalThis;
+        const host3 = globalThis;
         const wait = () => new Promise((resolve) => setTimeout(resolve, 30));
         for (const key of ["p", "2", "3", "1", "w", "c", "\x1B[D"]) {
-          host2.__input(new TextEncoder().encode(key).buffer);
+          host3.__input(new TextEncoder().encode(key).buffer);
           await wait();
         }
-        host2.__input(new TextEncoder().encode("[[").buffer);
+        host3.__input(new TextEncoder().encode("[[").buffer);
         await wait();
-        if (!host2.__snapshot().includes("rotation 0.25×"))
+        if (!host3.__snapshot().includes("rotation 0.25×"))
           throw new Error("Rotation speed control failed");
-        host2.__input(new TextEncoder().encode("]]").buffer);
+        host3.__input(new TextEncoder().encode("]]").buffer);
         await wait();
-        for (const [input2, label] of [["[".repeat(17), "rotation 0×"], ["[", "rotation -1/65536×"], ["[", "rotation -1/32768×"], ["]", "rotation -1/65536×"], ["]", "rotation 0×"], ["]".repeat(17), "rotation 1×"]]) {
-          host2.__input(new TextEncoder().encode(input2).buffer);
+        for (const [input3, label] of [["[".repeat(17), "rotation 0×"], ["[", "rotation -1/65536×"], ["[", "rotation -1/32768×"], ["]", "rotation -1/65536×"], ["]", "rotation 0×"], ["]".repeat(17), "rotation 1×"]]) {
+          host3.__input(new TextEncoder().encode(input3).buffer);
           await wait();
-          if (!host2.__snapshot().includes(label))
+          if (!host3.__snapshot().includes(label))
             throw new Error("Signed rotation control failed: " + label);
         }
-        const snapshot = host2.__snapshot();
+        const snapshot = host3.__snapshot();
         if (!snapshot.includes("wireframe") || !snapshot.includes("paused"))
           throw new Error("Lab controls failed: " + snapshot);
         const deadline = Date.now() + 3000;
@@ -42337,32 +42538,32 @@ q
         if (framesReceived < 2)
           throw new Error("Native worker must deliver frames through messages");
         const canvas = [...Renderable.renderablesByNumber.values()].find((node) => node.id === "lab-canvas");
-        host2.__input(new TextEncoder().encode("p").buffer);
+        host3.__input(new TextEncoder().encode("p").buffer);
         const before = framesReceived;
         for (let i = 0;i < 60; i++) {
           const wheel = `\x1B[<${i % 2 ? 65 : 64};${canvas.x + 3};${canvas.y + 3}M`;
-          host2.__input(new TextEncoder().encode(wheel).buffer);
+          host3.__input(new TextEncoder().encode(wheel).buffer);
           await new Promise((resolve) => setTimeout(resolve, 4));
         }
         await wait();
         if (framesReceived <= before)
           throw new Error("Zoom must keep receiving native frames");
         for (const [key, label] of [["=", "target 15"], ["-", "target 10"], ["4", "4D hypercube"], ["5", "Mandelbrot"], ["t", "250.0× zoom"], ["d", "Grayscale"], ["d", "Screen Bayer"], ["d", "Surface fractal"], ["d", "Surface fractal color", "Surface fractal wash", "Surface two-shade"], ["m", "Half blocks"], ["m", "Braille"], ["m", "G charset"], ["g", "Shades"], ["g", "Quadrants"], ["g", "Braille + punctuation"], ["g", "ASCII + braille"], ["g", "Box drawing"], ["g", "Blocks"], ["g", "Pure braille"], ["m", "Block fallback"]]) {
-          host2.__input(new TextEncoder().encode(key).buffer);
+          host3.__input(new TextEncoder().encode(key).buffer);
           await wait();
-          if (!host2.__snapshot().includes(label))
+          if (!host3.__snapshot().includes(label))
             throw new Error("Missing lab control state: " + label);
-          if (label === "Half blocks" && !host2.__snapshot().includes("▀"))
+          if (label === "Half blocks" && !host3.__snapshot().includes("▀"))
             throw new Error("Half-block canvas must draw cells");
-          if (label === "Braille" && !/[\u2801-\u28ff]/.test(host2.__snapshot()))
+          if (label === "Braille" && !/[\u2801-\u28ff]/.test(host3.__snapshot()))
             throw new Error("Braille canvas must draw dots");
         }
-        host2.__input(new TextEncoder().encode("g").buffer);
+        host3.__input(new TextEncoder().encode("g").buffer);
         await new Promise((resolve) => setTimeout(resolve, 250));
         const glyphNode = [...Renderable.renderablesByNumber.values()].find((node) => node.glyphCols > 0);
         if (!glyphNode || !glyphNode.glyphs.trim())
           throw new Error("Native glyph rows must reach the canvas");
-        host2.__input(new TextEncoder().encode("d").buffer);
+        host3.__input(new TextEncoder().encode("d").buffer);
         await new Promise((resolve) => setTimeout(resolve, 250));
         let colored = false;
         glyphNode.renderSelf({ drawText(_text, _x, _y, fg2, bg) {
@@ -42384,44 +42585,44 @@ q
         if (!colored)
           throw new Error("Braille drawing must submit source colors to OpenTUI");
         glyphNode.mode = "glyphs";
-        host2.__resize(60, 18);
+        host3.__resize(60, 18);
         await new Promise((resolve) => setTimeout(resolve, 700));
         if (glyphNode.glyphCols > glyphNode.width || glyphNode.glyphRows > glyphNode.height)
           throw new Error("Native glyph dimensions must follow resize");
-        host2.__resize(80, 24);
+        host3.__resize(80, 24);
         const press = async (text) => {
-          host2.__input(new TextEncoder().encode(text).buffer);
+          host3.__input(new TextEncoder().encode(text).buffer);
           await new Promise((resolve) => setTimeout(resolve, 180));
         };
         await press("4");
         const codeBox = [...Renderable.renderablesByNumber.values()].find((node) => node.id === "lab-settings-code");
         const copyButton = [...Renderable.renderablesByNumber.values()].find((node) => node.id === "lab-copy-code");
-        if (!host2.__snapshot().includes("QT1") || !host2.__snapshot().includes("[copy]") || copyButton.y !== codeBox.y)
+        if (!host3.__snapshot().includes("QT1") || !host3.__snapshot().includes("[copy]") || copyButton.y !== codeBox.y)
           throw new Error("Settings code and border copy button must be visible");
         await press(`\x1B[<0;${copyButton.x + 1};${copyButton.y + 1}M\x1B[<0;${copyButton.x + 1};${copyButton.y + 1}m`);
-        if (!host2.__snapshot().includes("[sent]"))
+        if (!host3.__snapshot().includes("[sent]"))
           throw new Error("Copy click must reach the native clipboard operation");
         await press("f");
-        for (let i = 0;i < 100 && !host2.__snapshot().includes("Choose a slot"); i++)
+        for (let i = 0;i < 100 && !host3.__snapshot().includes("Choose a slot"); i++)
           await new Promise((resolve) => setTimeout(resolve, 30));
-        if (!host2.__snapshot().includes("Auto:"))
+        if (!host3.__snapshot().includes("Auto:"))
           throw new Error("Preset must preview automatic name");
         await press("\x1B[F");
-        if (!host2.__snapshot().includes("128."))
+        if (!host3.__snapshot().includes("128."))
           throw new Error("Preset picker must scroll to last slot");
         await press("\x1B[H");
         await press("\t");
         await press("quiet cube");
-        if (!host2.__snapshot().includes("quiet cube"))
+        if (!host3.__snapshot().includes("quiet cube"))
           throw new Error("Preset descriptions must accept q and spaces without triggering shortcuts");
         await press("\r");
         await press("\x1B");
         await press("5");
         await press("f");
-        for (let i = 0;i < 100 && !host2.__snapshot().includes("Choose a slot"); i++)
+        for (let i = 0;i < 100 && !host3.__snapshot().includes("Choose a slot"); i++)
           await new Promise((resolve) => setTimeout(resolve, 30));
         await press("\r");
-        if (!host2.__snapshot().includes("4D hypercube") || host2.__snapshot().includes("128 local slots"))
+        if (!host3.__snapshot().includes("4D hypercube") || host3.__snapshot().includes("128 local slots"))
           throw new Error("Loading must restore the saved scene and close the panel");
         if (__host.takeBuffer(0) !== null)
           throw new Error("Unknown frame IDs must not expose pixels");
@@ -42445,8 +42646,8 @@ q
     const columns = Math.max(1, Math.floor((size.width - 4) / 3));
     const rows = Math.max(1, Math.min(12, size.height - 4));
     import_react12.useEffect(() => {
-      const host2 = globalThis.__host;
-      if (!host2.postMessage(`grid:${columns}:${rows}`))
+      const host3 = globalThis.__host;
+      if (!host3.postMessage(`grid:${columns}:${rows}`))
         throw new Error("Native grid configuration rejected");
     }, [columns, rows]);
     import_react12.useEffect(() => {
@@ -42669,8 +42870,8 @@ q
       setJobs((rows) => rows.filter((row) => !ids.has(row.id)));
       setEvents((rows) => rows.filter((event) => event.type === "blink" || !ids.has(event.id)));
     }
-    function submit(count = 1) {
-      for (let i = 0;i < count; i++) {
+    function submit(count2 = 1) {
+      for (let i = 0;i < count2; i++) {
         const id = nextId++;
         if (__host.postMessage(String(id))) {
           sent++;
@@ -43076,12 +43277,12 @@ q
     if (__host.headless)
       Object.assign(globalThis, {
         async __selfTest() {
-          const host2 = globalThis;
+          const host3 = globalThis;
           const expect = (condition, message) => {
             if (!condition)
               throw new Error(message);
           };
-          const feed = (text) => host2.__input(new TextEncoder().encode(text).buffer);
+          const feed = (text) => host3.__input(new TextEncoder().encode(text).buffer);
           const idleDeadline = Date.now() + 5500;
           while (nativeBlinks.length === 0 && Date.now() < idleDeadline)
             await new Promise((resolve) => setTimeout(resolve, 10));
@@ -43123,7 +43324,7 @@ q
           expect(received.filter((e) => e.id === first).map((e) => e.progress).join(",") === "0,20,40,60,80,100", "progress must preserve FIFO order");
           expect(uiTicks > 1, "JS timers must run while worker is busy");
           await new Promise((resolve) => setTimeout(resolve, 20));
-          expect(host2.__snapshot().includes("UI counter 1"), `React input must update during native work: ${host2.__snapshot()}`);
+          expect(host3.__snapshot().includes("UI counter 1"), `React input must update during native work: ${host3.__snapshot()}`);
           const spreadFirst = nextId;
           const started = Date.now();
           feed("f");
@@ -43152,7 +43353,7 @@ q
           for (const style of ["segmented", "thin", "solid"]) {
             feed("v");
             await new Promise((resolve) => setTimeout(resolve, 20));
-            expect(host2.__snapshot().includes(`bar style ${style}`), "style key should cycle rendered bars");
+            expect(host3.__snapshot().includes(`bar style ${style}`), "style key should cycle rendered bars");
           }
           const find = (id) => [...Renderable.renderablesByNumber.values()].find((node) => node.id === id);
           const divider = find("message-divider"), left = find("message-request-panel"), right = find("message-reply-panel");
@@ -43162,13 +43363,13 @@ q
             const x2 = divider.x + offset;
             feed(`\x1B[<0;${x2 + 1};${divider.y + 2}M`);
             feed(`\x1B[<32;${x2 + 1};${divider.y + 2}M`);
-            host2.__frame();
+            host3.__frame();
             expect(divider.x === startX, "stationary drag must not jump at any grab point");
             feed(`\x1B[<32;${x2 + 2};${divider.y + 2}M`);
-            host2.__frame();
+            host3.__frame();
             expect(divider.x === startX + 1, "divider must track a one-column drag exactly");
             feed(`\x1B[<32;${x2 + 1};${divider.y + 2}M`);
-            host2.__frame();
+            host3.__frame();
             expect(divider.x === startX, "reverse drag must return exactly without drift");
             feed(`\x1B[<0;${x2 + 1};${divider.y + 2}m`);
           }
@@ -43183,8 +43384,8 @@ q
           await new Promise((resolve) => setTimeout(resolve, 50));
           const percent = find("message-percent-1");
           expect(percent.x + percent.width <= requestScroll.viewport.x + requestScroll.viewport.width, `percentage outside resized viewport: ${percent.x}+${percent.width}, viewport ${requestScroll.viewport.x}+${requestScroll.viewport.width}`);
-          expect(host2.__snapshot().split(`
-`).some((line) => line.includes("100%")), `completed percentages should remain visible after narrowing: ${host2.__snapshot()}`);
+          expect(host3.__snapshot().split(`
+`).some((line) => line.includes("100%")), `completed percentages should remain visible after narrowing: ${host3.__snapshot()}`);
           for (let style = 0;style < 3; style++) {
             const divider2 = find("message-divider"), row = find("message-split");
             feed(`\x1B[<0;${divider2.x + 1};${divider2.y + 2}M`);
@@ -43206,31 +43407,31 @@ q
           const horizontalY = horizontal.y;
           feed(`\x1B[<0;${horizontal.x + 2};${horizontal.y + 1}M`);
           feed(`\x1B[<32;${horizontal.x + 2};${horizontalY + 1}M`);
-          host2.__frame();
+          host3.__frame();
           expect(horizontal.y === horizontalY, "horizontal divider must not jump on grab");
           feed(`\x1B[<32;${horizontal.x + 2};${horizontalY}M`);
-          host2.__frame();
+          host3.__frame();
           expect(horizontal.y === horizontalY - 1, "horizontal divider must track one row");
           feed(`\x1B[<0;${horizontal.x + 2};${horizontalY}m`);
           expect(activity.height > 0, "activity pane must retain visible space");
           const panels = ["message-requests", "message-replies"].map((id) => [...Renderable.renderablesByNumber.values()].find((node) => node.id === id));
           expect(panels[0].scrollHeight >= sent, "request history must retain earlier batches");
           expect(panels[1].scrollHeight >= received.length, "reply history must retain every event");
-          for (const panel of panels) {
-            panel.scrollTo(Infinity);
+          for (const panel2 of panels) {
+            panel2.scrollTo(Infinity);
             await new Promise((resolve) => setTimeout(resolve, 30));
-            expect(!panel.verticalScrollBar.visible && panel.viewport.width === panel.width, "scrollbar must not reserve a column");
-            const before = panel.scrollTop;
+            expect(!panel2.verticalScrollBar.visible && panel2.viewport.width === panel2.width, "scrollbar must not reserve a column");
+            const before = panel2.scrollTop;
             expect(before > 0, "history must overflow its viewport");
-            feed(`\x1B[<64;${panel.viewport.x + 2};${panel.viewport.y + 2}M`);
+            feed(`\x1B[<64;${panel2.viewport.x + 2};${panel2.viewport.y + 2}M`);
             await new Promise((resolve) => setTimeout(resolve, 50));
-            expect(panel.scrollTop < before, "wheel must scroll the hovered history panel");
-            panel.scrollTo(0);
+            expect(panel2.scrollTop < before, "wheel must scroll the hovered history panel");
+            panel2.scrollTo(0);
           }
           await new Promise((resolve) => setTimeout(resolve, 30));
           for (const [panelId, thumbId] of [["message-request-panel", "request-scroll-thumb"], ["message-reply-panel", "reply-scroll-thumb"]]) {
-            const panel = find(panelId), thumb = find(thumbId);
-            expect(thumb.x === panel.x + panel.width - 1, `thumb must overlay border: ${thumb.x} vs ${panel.x + panel.width - 1}`);
+            const panel2 = find(panelId), thumb = find(thumbId);
+            expect(thumb.x === panel2.x + panel2.width - 1, `thumb must overlay border: ${thumb.x} vs ${panel2.x + panel2.width - 1}`);
             const scroll = panelId === "message-request-panel" ? panels[0] : panels[1];
             feed(`\x1B[<0;${thumb.x + 1};${thumb.y + 1}M`);
             feed(`\x1B[<32;${thumb.x + 1};${thumb.y + 2}M`);
@@ -43239,11 +43440,11 @@ q
             scroll.scrollTo(0);
           }
           await new Promise((resolve) => setTimeout(resolve, 30));
-          expect(host2.__snapshot().includes("← #1"), "oldest reply must remain accessible");
+          expect(host3.__snapshot().includes("← #1"), "oldest reply must remain accessible");
           feed("sc");
           await new Promise((resolve) => setTimeout(resolve, 20));
-          expect(host2.__snapshot().includes("Requests (1)"), "clear finished must preserve new work");
-          expect(!host2.__snapshot().includes("← #1 "), "clear finished must remove replies for completed jobs");
+          expect(host3.__snapshot().includes("Requests (1)"), "clear finished must preserve new work");
+          expect(!host3.__snapshot().includes("← #1 "), "clear finished must remove replies for completed jobs");
           const beforeBursts = sent;
           feed("bb");
           expect(sent === beforeBursts + 24 && rejected === 0, "two bursts must queue completely while a job is running");
@@ -43755,7 +43956,7 @@ q
     });
   }
   async function testEditor(frame, feed) {
-    const host2 = globalThis;
+    const host3 = globalThis;
     const pause = async () => {
       await new Promise((resolve) => setTimeout(resolve, 80));
       frame();
@@ -43773,43 +43974,43 @@ q
     if (node.plainText !== `Hello café
 Second line`)
       throw new Error("Down on the last line must move to its end before Return");
-    if (!host2.__snapshot().includes("Modified"))
+    if (!host3.__snapshot().includes("Modified"))
       throw new Error("Editor must track changes");
     feed("\x13");
-    for (let i = 0;i < 100 && !host2.__snapshot().includes("Saved"); i++)
+    for (let i = 0;i < 100 && !host3.__snapshot().includes("Saved"); i++)
       await pause();
-    if (!host2.__snapshot().includes("Saved"))
+    if (!host3.__snapshot().includes("Saved"))
       throw new Error("Editor save failed");
     feed(" extra");
     await pause();
     feed("\x11");
     await pause();
-    if (!host2.__snapshot().includes("Quit and discard"))
+    if (!host3.__snapshot().includes("Quit and discard"))
       throw new Error("Quit must protect unsaved changes");
     feed("\x1B");
     await pause();
     feed("\x13");
-    for (let i = 0;i < 100 && !host2.__snapshot().includes("Replace the existing"); i++)
+    for (let i = 0;i < 100 && !host3.__snapshot().includes("Replace the existing"); i++)
       await pause();
-    if (!host2.__snapshot().includes("Replace the existing"))
+    if (!host3.__snapshot().includes("Replace the existing"))
       throw new Error("Overwrite must ask before replacing a file");
     feed("\x1B");
     await pause();
     feed("\x0F");
     await pause();
-    if (!host2.__snapshot().includes("Open file"))
+    if (!host3.__snapshot().includes("Open file"))
       throw new Error("Ctrl+O must open the path dialog");
     feed("\r");
     await pause();
-    if (!host2.__snapshot().includes("Discard unsaved"))
+    if (!host3.__snapshot().includes("Discard unsaved"))
       throw new Error("Load must protect unsaved changes");
     feed("\r");
     await pause();
-    if (!host2.__snapshot().includes("Loaded") || host2.__snapshot().includes("extra"))
+    if (!host3.__snapshot().includes("Loaded") || host3.__snapshot().includes("extra"))
       throw new Error("Editor load round trip failed");
     feed("\x1Bf");
     await pause();
-    if (!host2.__snapshot().includes("Recent files"))
+    if (!host3.__snapshot().includes("Recent files"))
       throw new Error("Alt+F must open File menu");
     for (const arrow of ["\x1B[B", "\x1B[B", "\x1B[B", "\x1B[C"]) {
       feed(arrow);
@@ -43825,7 +44026,7 @@ Second line`)
       feed(arrow);
       await pause();
     }
-    if (!host2.__snapshot().includes("Loaded") || host2.__snapshot().includes("Recent files"))
+    if (!host3.__snapshot().includes("Loaded") || host3.__snapshot().includes("Recent files"))
       throw new Error("Recent selection must load and close menus");
   }
   var import_react14, jsx_runtime11, pending = null;
@@ -44334,10 +44535,10 @@ console.log(fly(12));`, patch = `--- a/dragon.js
     const [selected, setSelected] = import_react16.useState(0);
     setPageState = setSelected;
     import_react16.useEffect(() => {
-      effectMounted4 = true;
+      effectMounted3 = true;
       if (isEditor)
         return () => {
-          effectMounted4 = false;
+          effectMounted3 = false;
         };
       const key = (e) => {
         if (e.name === "escape") {
@@ -44358,7 +44559,7 @@ console.log(fly(12));`, patch = `--- a/dragon.js
       };
       keys4.on("keypress", key);
       return () => {
-        effectMounted4 = false;
+        effectMounted3 = false;
         keys4.off("keypress", key);
       };
     }, []);
@@ -44374,10 +44575,10 @@ console.log(fly(12));`, patch = `--- a/dragon.js
       return;
     stopped4 = true;
     try {
-      if (container4) {
-        reconciler4.updateContainerSync(null, container4, null, null);
-        reconciler4.flushSyncWork();
-        reconciler4.flushPassiveEffects();
+      if (container3) {
+        reconciler3.updateContainerSync(null, container3, null, null);
+        reconciler3.flushSyncWork();
+        reconciler3.flushPassiveEffects();
       }
     } finally {
       try {
@@ -44399,10 +44600,10 @@ console.log(fly(12));`, patch = `--- a/dragon.js
       }
     }
   }
-  var import_react16, import_react_reconciler5, import_events9, jsx_runtime13, isEditor, dirty4 = true, stopped4 = false, container4, native4, root4, lib5, keys4, selection2 = null, selectionOwner2 = null, liveCount2 = 0, liveTimer2, parser4, lifecycle4, context4, reconciler4, report4 = (error) => {
+  var import_react16, import_react_reconciler5, import_events9, jsx_runtime13, isEditor, dirty4 = true, stopped4 = false, container3, native4, root4, lib5, keys4, selection2 = null, selectionOwner2 = null, liveCount2 = 0, liveTimer2, parser4, lifecycle4, context4, reconciler3, report3 = (error) => {
     console.error(String(error), error?.stack ?? "");
     throw error;
-  }, effectMounted4 = false, hit = (x2, y2) => x2 < 0 || y2 < 0 ? undefined : Renderable.renderablesByNumber.get(lib5.checkHit(native4, x2, y2)), mouse3, page = 0, setPageState;
+  }, effectMounted3 = false, hit = (x2, y2) => x2 < 0 || y2 < 0 ? undefined : Renderable.renderablesByNumber.get(lib5.checkHit(native4, x2, y2)), mouse3, page = 0, setPageState;
   var init_gallery = __esm(() => {
     init_host_config();
     init_Renderable();
@@ -44514,7 +44715,7 @@ console.log(fly(12));`, patch = `--- a/dragon.js
       }
     });
     Object.defineProperty(context4, "hasSelection", { get: () => selection2 !== null });
-    reconciler4 = import_react_reconciler5.default(hostConfig);
+    reconciler3 = import_react_reconciler5.default(hostConfig);
     mouse3 = new MouseRouter(hit);
     Object.assign(globalThis, {
       __shutdown: shutdown4,
@@ -44548,7 +44749,7 @@ console.log(fly(12));`, patch = `--- a/dragon.js
         lib5.render(native4, false);
       },
       __inspect() {
-        return JSON.stringify({ effectMounted: effectMounted4, keys: keys4.listenerCount("keypress"), frame: context4.frameId });
+        return JSON.stringify({ effectMounted: effectMounted3, keys: keys4.listenerCount("keypress"), frame: context4.frameId });
       },
       __snapshot() {
         return new TextDecoder().decode(lib5.getCurrentBuffer(native4).getRealCharBytes(true));
@@ -44570,32 +44771,32 @@ console.log(fly(12));`, patch = `--- a/dragon.js
     if (!__host.headless)
       lib5.enableMouse(native4, true);
     root4 = new RootRenderable(context4);
-    container4 = reconciler4.createContainer(root4, 1, null, false, null, "", report4, report4, report4, () => {});
-    reconciler4.updateContainerSync(/* @__PURE__ */ jsx_runtime13.jsx(App8, {}), container4, null, null);
-    reconciler4.flushSyncWork();
-    reconciler4.flushPassiveEffects();
+    container3 = reconciler3.createContainer(root4, 1, null, false, null, "", report3, report3, report3, () => {});
+    reconciler3.updateContainerSync(/* @__PURE__ */ jsx_runtime13.jsx(App8, {}), container3, null, null);
+    reconciler3.flushSyncWork();
+    reconciler3.flushPassiveEffects();
     if (__host.headless)
       Object.assign(globalThis, {
         async __selfTest() {
-          const host2 = globalThis;
+          const host3 = globalThis;
           const frame = () => {
-            reconciler4.flushSyncWork();
-            reconciler4.flushPassiveEffects();
-            host2.__frame();
+            reconciler3.flushSyncWork();
+            reconciler3.flushPassiveEffects();
+            host3.__frame();
           };
           const sync = (fn) => {
-            reconciler4.flushSyncFromReconciler(fn);
+            reconciler3.flushSyncFromReconciler(fn);
             frame();
           };
           if (isEditor) {
-            await testEditor(frame, (text) => sync(() => host2.__input(new TextEncoder().encode(text).buffer)));
+            await testEditor(frame, (text) => sync(() => host3.__input(new TextEncoder().encode(text).buffer)));
             return;
           }
           const expect = (text) => {
-            if (!host2.__snapshot().includes(text))
-              throw new Error(`Gallery snapshot missing ${text}: ${host2.__snapshot()}`);
+            if (!host3.__snapshot().includes(text))
+              throw new Error(`Gallery snapshot missing ${text}: ${host3.__snapshot()}`);
           };
-          const feed = (text) => sync(() => host2.__input(new TextEncoder().encode(text).buffer));
+          const feed = (text) => sync(() => host3.__input(new TextEncoder().encode(text).buffer));
           const node = (id) => {
             const n = [...Renderable.renderablesByNumber.values()].find((n2) => n2.id === id);
             if (!n)
@@ -44606,7 +44807,7 @@ console.log(fly(12));`, patch = `--- a/dragon.js
             sync(() => changePage(p));
             frame();
           };
-          sync(() => host2.__resize(96, 34));
+          sync(() => host3.__resize(96, 34));
           frame();
           expect("Unicode:");
           for (let i = 0;i < pages.length; i++) {
@@ -44664,9 +44865,9 @@ Two`))
           }
           expect("Dragon field guide");
           expect("Nimbus");
-          if (host2.__snapshot().includes("**Ember**") || host2.__snapshot().includes("# Dragon"))
+          if (host3.__snapshot().includes("**Ember**") || host3.__snapshot().includes("# Dragon"))
             throw new Error("Markdown markers were not concealed");
-          sync(() => host2.__resize(72, 28));
+          sync(() => host3.__resize(72, 28));
           for (let i = 0;i < pages.length; i++)
             visit(i);
           visit(0);
@@ -44683,6 +44884,9 @@ Two`))
     } else {
       init_bootstrap();
       switch (__host.example) {
+        case "vanilla":
+          init_app();
+          break;
         case "game":
         case "keyboard":
           init_game();

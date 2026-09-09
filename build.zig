@@ -77,7 +77,7 @@ pub fn build(b: *std.Build) void {
     const run_tests = b.addRunArtifact(tests);
     const test_step = b.step("test", "Test JavaScript evaluation, jobs, errors, and native ABI calls");
     test_step.dependOn(&run_tests.step);
-    for ([_][]const u8{ "--game-self-test", "--keyboard-self-test" }) |flag| {
+    for ([_][]const u8{ "--game-self-test", "--keyboard-self-test", "--vanilla-self-test" }) |flag| {
         const game_test = b.addRunArtifact(exe);
         game_test.addArg(flag);
         test_step.dependOn(&game_test.step);
@@ -155,6 +155,8 @@ pub fn build(b: *std.Build) void {
     b.step("test-endpoint-terminal", "Stress input, resize, disconnect and quit under message flood").dependOn(&endpoint_pty.step);
     const consumer_test = b.addSystemCommand(&.{ "python3", "scripts/test-consumer.py" });
     b.step("test-consumer", "Build and run an external consumer, requires Bun and Python").dependOn(&consumer_test.step);
+    const vanilla_test = b.addSystemCommand(&.{ "python3", "scripts/test-consumer.py", "--vanilla" });
+    b.step("test-vanilla", "Build and exercise a React-free consumer").dependOn(&vanilla_test.step);
     const bundler_test = b.addSystemCommand(&.{ "bun", "test", "tests/bundler.test.ts" });
     b.step("test-bundler", "Check consumer imports and source maps, requires Bun").dependOn(&bundler_test.step);
     const paste_test = b.addSystemCommand(&.{ "bun", "test", "tests/paste.test.ts" });

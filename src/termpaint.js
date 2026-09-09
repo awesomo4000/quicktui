@@ -29700,287 +29700,6 @@ Please report this to https://github.com/markedjs/marked.`, e) {
     }
   });
 
-  // vendor/opentui/packages/core/src/lib/KeyHandler.ts
-  class KeyEvent {
-    name;
-    ctrl;
-    meta;
-    shift;
-    option;
-    sequence;
-    number;
-    raw;
-    eventType;
-    source;
-    code;
-    super;
-    hyper;
-    capsLock;
-    numLock;
-    baseCode;
-    repeated;
-    _defaultPrevented = false;
-    _propagationStopped = false;
-    constructor(key) {
-      this.name = key.name;
-      this.ctrl = key.ctrl;
-      this.meta = key.meta;
-      this.shift = key.shift;
-      this.option = key.option;
-      this.sequence = key.sequence;
-      this.number = key.number;
-      this.raw = key.raw;
-      this.eventType = key.eventType;
-      this.source = key.source;
-      this.code = key.code;
-      this.super = key.super;
-      this.hyper = key.hyper;
-      this.capsLock = key.capsLock;
-      this.numLock = key.numLock;
-      this.baseCode = key.baseCode;
-      this.repeated = key.repeated;
-    }
-    get defaultPrevented() {
-      return this._defaultPrevented;
-    }
-    get propagationStopped() {
-      return this._propagationStopped;
-    }
-    preventDefault() {
-      this._defaultPrevented = true;
-    }
-    stopPropagation() {
-      this._propagationStopped = true;
-    }
-  }
-
-  class PasteEvent {
-    type = "paste";
-    bytes;
-    metadata;
-    _defaultPrevented = false;
-    _propagationStopped = false;
-    constructor(bytes, metadata) {
-      this.bytes = bytes;
-      this.metadata = metadata;
-    }
-    get defaultPrevented() {
-      return this._defaultPrevented;
-    }
-    get propagationStopped() {
-      return this._propagationStopped;
-    }
-    preventDefault() {
-      this._defaultPrevented = true;
-    }
-    stopPropagation() {
-      this._propagationStopped = true;
-    }
-  }
-  var import_events5, KeyHandler, InternalKeyHandler;
-  var init_KeyHandler = __esm(() => {
-    import_events5 = __toESM(require_events(), 1);
-    KeyHandler = class KeyHandler extends import_events5.EventEmitter {
-      processParsedKey(parsedKey) {
-        try {
-          switch (parsedKey.eventType) {
-            case "press":
-              this.emit("keypress", new KeyEvent(parsedKey));
-              break;
-            case "release":
-              this.emit("keyrelease", new KeyEvent(parsedKey));
-              break;
-            default:
-              this.emit("keypress", new KeyEvent(parsedKey));
-              break;
-          }
-        } catch (error) {
-          console.error(`[KeyHandler] Error processing parsed key:`, error);
-          return true;
-        }
-        return true;
-      }
-      processPaste(bytes, metadata) {
-        try {
-          this.emit("paste", new PasteEvent(bytes, metadata));
-        } catch (error) {
-          console.error(`[KeyHandler] Error processing paste:`, error);
-        }
-      }
-    };
-    InternalKeyHandler = class InternalKeyHandler extends KeyHandler {
-      renderableHandlers = new Map;
-      emit(event, ...args) {
-        return this.emitWithPriority(event, ...args);
-      }
-      emitWithPriority(event, ...args) {
-        let hasGlobalListeners = false;
-        const globalListeners = this.listeners(event);
-        if (globalListeners.length > 0) {
-          hasGlobalListeners = true;
-          for (const listener of globalListeners) {
-            try {
-              listener(...args);
-            } catch (error) {
-              console.error(`[KeyHandler] Error in global ${event} handler:`, error);
-            }
-            if (event === "keypress" || event === "keyrelease" || event === "paste") {
-              const keyEvent = args[0];
-              if (keyEvent.propagationStopped) {
-                return hasGlobalListeners;
-              }
-            }
-          }
-        }
-        const renderableSet = this.renderableHandlers.get(event);
-        const renderableHandlers = renderableSet && renderableSet.size > 0 ? [...renderableSet] : [];
-        let hasRenderableListeners = false;
-        if (renderableSet && renderableSet.size > 0) {
-          hasRenderableListeners = true;
-          if (event === "keypress" || event === "keyrelease" || event === "paste") {
-            const keyEvent = args[0];
-            if (keyEvent.defaultPrevented)
-              return hasGlobalListeners || hasRenderableListeners;
-            if (keyEvent.propagationStopped)
-              return hasGlobalListeners || hasRenderableListeners;
-          }
-          for (const handler of renderableHandlers) {
-            try {
-              handler(...args);
-            } catch (error) {
-              console.error(`[KeyHandler] Error in renderable ${event} handler:`, error);
-            }
-            if (event === "keypress" || event === "keyrelease" || event === "paste") {
-              const keyEvent = args[0];
-              if (keyEvent.propagationStopped) {
-                return hasGlobalListeners || hasRenderableListeners;
-              }
-            }
-          }
-        }
-        return hasGlobalListeners || hasRenderableListeners;
-      }
-      onInternal(event, handler) {
-        if (!this.renderableHandlers.has(event)) {
-          this.renderableHandlers.set(event, new Set);
-        }
-        this.renderableHandlers.get(event).add(handler);
-      }
-      offInternal(event, handler) {
-        const handlers = this.renderableHandlers.get(event);
-        if (handlers) {
-          handlers.delete(handler);
-        }
-      }
-    };
-  });
-
-  // js/keyboard.ts
-  function keyboardFlags(options = {}) {
-    const defaults = options.mode === "realtime" ? 31 : 5;
-    return ["disambiguate", "events", "alternateKeys", "allKeysAsEscapes", "reportText"].reduce((flags, name, i) => {
-      const value = options[name];
-      return value === undefined ? flags : value ? flags | 1 << i : flags & ~(1 << i);
-    }, defaults);
-  }
-
-  class HeldKeys {
-    onReset;
-    maxEdges;
-    down = new Map;
-    edges = [];
-    constructor(onReset, maxEdges = 256) {
-      this.onReset = onReset;
-      this.maxEdges = maxEdges;
-    }
-    has(name) {
-      return [...this.down.values()].includes(name);
-    }
-    get held() {
-      return new Set(this.down.keys());
-    }
-    update(event) {
-      if (!event.trackable)
-        return;
-      if (event.kind === "release") {
-        const name = this.down.get(event.identity);
-        if (name === undefined)
-          return;
-        this.down.delete(event.identity);
-        this.push({ identity: event.identity, name, kind: "release" });
-      } else if (event.kind === "press" && !this.down.has(event.identity)) {
-        if (this.down.size >= this.maxEdges) {
-          this.reset("overflow");
-          return;
-        }
-        this.down.set(event.identity, event.name);
-        this.push({ identity: event.identity, name: event.name, kind: "press" });
-      }
-    }
-    push(edge) {
-      if (this.edges.length >= this.maxEdges) {
-        this.reset("overflow");
-        return;
-      }
-      this.edges.push(edge);
-    }
-    drainEdges() {
-      const result = this.edges;
-      this.edges = [];
-      return result;
-    }
-    reset(reason = "manual") {
-      this.down.clear();
-      this.edges = [];
-      this.onReset?.({ reason });
-    }
-  }
-  function resetKeyboardSubscriptions(event) {
-    for (const subscription of [...subscriptions])
-      if (subscriptions.has(subscription))
-        subscription.reset?.(event);
-  }
-  function dispatchAppKey(event, onKey, emit) {
-    if (onKey?.(event) || event.defaultPrevented || event.propagationStopped)
-      return;
-    for (const subscription of [...subscriptions]) {
-      if (!subscriptions.has(subscription))
-        continue;
-      if (subscription.key(event) || event.defaultPrevented || event.propagationStopped)
-        return;
-    }
-    emit(event.kind === "release" ? "keyrelease" : "keypress", event);
-  }
-  var AppKeyEvent, subscriptions;
-  var init_keyboard = __esm(() => {
-    init_KeyHandler();
-    AppKeyEvent = class AppKeyEvent extends KeyEvent {
-      receivedAt;
-      sequenceNumber;
-      dispatchedAt;
-      kind;
-      identity;
-      text;
-      associatedText;
-      legacy;
-      trackable;
-      constructor(key, receivedAt, sequenceNumber, dispatchedAt) {
-        super(key);
-        this.receivedAt = receivedAt;
-        this.sequenceNumber = sequenceNumber;
-        this.dispatchedAt = dispatchedAt;
-        this.kind = key.eventType === "release" ? "release" : key.repeated ? "repeat" : "press";
-        const code = key.raw.match(/^\x1b\[(\d+)/)?.[1];
-        this.identity = key.source === "kitty" ? `kitty:${key.code ?? (key.raw.endsWith("u") ? code : undefined) ?? key.name}` : `legacy:${key.name.toLowerCase()}`;
-        this.legacy = key.source !== "kitty";
-        this.trackable = !this.legacy && code !== "0";
-        this.associatedText = /^\x1b\[[\d:]+;[\d:]*;[\d:]+u$/.test(key.raw) ? key.sequence : undefined;
-        this.text = this.kind === "release" ? undefined : this.associatedText ?? (this.kind !== "release" && !key.ctrl && !key.super && !key.hyper && !key.option && !key.sequence.startsWith("\x1B") ? key.sequence : undefined);
-      }
-    };
-    subscriptions = new Set;
-  });
-
   // vendor/js/node_modules/scheduler/cjs/scheduler.production.js
   var require_scheduler_production = __commonJS((exports) => {
     function push(heap, node) {
@@ -37425,6 +37144,287 @@ No matching component was found for:
     };
   });
 
+  // vendor/opentui/packages/core/src/lib/KeyHandler.ts
+  class KeyEvent {
+    name;
+    ctrl;
+    meta;
+    shift;
+    option;
+    sequence;
+    number;
+    raw;
+    eventType;
+    source;
+    code;
+    super;
+    hyper;
+    capsLock;
+    numLock;
+    baseCode;
+    repeated;
+    _defaultPrevented = false;
+    _propagationStopped = false;
+    constructor(key) {
+      this.name = key.name;
+      this.ctrl = key.ctrl;
+      this.meta = key.meta;
+      this.shift = key.shift;
+      this.option = key.option;
+      this.sequence = key.sequence;
+      this.number = key.number;
+      this.raw = key.raw;
+      this.eventType = key.eventType;
+      this.source = key.source;
+      this.code = key.code;
+      this.super = key.super;
+      this.hyper = key.hyper;
+      this.capsLock = key.capsLock;
+      this.numLock = key.numLock;
+      this.baseCode = key.baseCode;
+      this.repeated = key.repeated;
+    }
+    get defaultPrevented() {
+      return this._defaultPrevented;
+    }
+    get propagationStopped() {
+      return this._propagationStopped;
+    }
+    preventDefault() {
+      this._defaultPrevented = true;
+    }
+    stopPropagation() {
+      this._propagationStopped = true;
+    }
+  }
+
+  class PasteEvent {
+    type = "paste";
+    bytes;
+    metadata;
+    _defaultPrevented = false;
+    _propagationStopped = false;
+    constructor(bytes, metadata) {
+      this.bytes = bytes;
+      this.metadata = metadata;
+    }
+    get defaultPrevented() {
+      return this._defaultPrevented;
+    }
+    get propagationStopped() {
+      return this._propagationStopped;
+    }
+    preventDefault() {
+      this._defaultPrevented = true;
+    }
+    stopPropagation() {
+      this._propagationStopped = true;
+    }
+  }
+  var import_events5, KeyHandler, InternalKeyHandler;
+  var init_KeyHandler = __esm(() => {
+    import_events5 = __toESM(require_events(), 1);
+    KeyHandler = class KeyHandler extends import_events5.EventEmitter {
+      processParsedKey(parsedKey) {
+        try {
+          switch (parsedKey.eventType) {
+            case "press":
+              this.emit("keypress", new KeyEvent(parsedKey));
+              break;
+            case "release":
+              this.emit("keyrelease", new KeyEvent(parsedKey));
+              break;
+            default:
+              this.emit("keypress", new KeyEvent(parsedKey));
+              break;
+          }
+        } catch (error) {
+          console.error(`[KeyHandler] Error processing parsed key:`, error);
+          return true;
+        }
+        return true;
+      }
+      processPaste(bytes, metadata) {
+        try {
+          this.emit("paste", new PasteEvent(bytes, metadata));
+        } catch (error) {
+          console.error(`[KeyHandler] Error processing paste:`, error);
+        }
+      }
+    };
+    InternalKeyHandler = class InternalKeyHandler extends KeyHandler {
+      renderableHandlers = new Map;
+      emit(event, ...args) {
+        return this.emitWithPriority(event, ...args);
+      }
+      emitWithPriority(event, ...args) {
+        let hasGlobalListeners = false;
+        const globalListeners = this.listeners(event);
+        if (globalListeners.length > 0) {
+          hasGlobalListeners = true;
+          for (const listener of globalListeners) {
+            try {
+              listener(...args);
+            } catch (error) {
+              console.error(`[KeyHandler] Error in global ${event} handler:`, error);
+            }
+            if (event === "keypress" || event === "keyrelease" || event === "paste") {
+              const keyEvent = args[0];
+              if (keyEvent.propagationStopped) {
+                return hasGlobalListeners;
+              }
+            }
+          }
+        }
+        const renderableSet = this.renderableHandlers.get(event);
+        const renderableHandlers = renderableSet && renderableSet.size > 0 ? [...renderableSet] : [];
+        let hasRenderableListeners = false;
+        if (renderableSet && renderableSet.size > 0) {
+          hasRenderableListeners = true;
+          if (event === "keypress" || event === "keyrelease" || event === "paste") {
+            const keyEvent = args[0];
+            if (keyEvent.defaultPrevented)
+              return hasGlobalListeners || hasRenderableListeners;
+            if (keyEvent.propagationStopped)
+              return hasGlobalListeners || hasRenderableListeners;
+          }
+          for (const handler of renderableHandlers) {
+            try {
+              handler(...args);
+            } catch (error) {
+              console.error(`[KeyHandler] Error in renderable ${event} handler:`, error);
+            }
+            if (event === "keypress" || event === "keyrelease" || event === "paste") {
+              const keyEvent = args[0];
+              if (keyEvent.propagationStopped) {
+                return hasGlobalListeners || hasRenderableListeners;
+              }
+            }
+          }
+        }
+        return hasGlobalListeners || hasRenderableListeners;
+      }
+      onInternal(event, handler) {
+        if (!this.renderableHandlers.has(event)) {
+          this.renderableHandlers.set(event, new Set);
+        }
+        this.renderableHandlers.get(event).add(handler);
+      }
+      offInternal(event, handler) {
+        const handlers = this.renderableHandlers.get(event);
+        if (handlers) {
+          handlers.delete(handler);
+        }
+      }
+    };
+  });
+
+  // js/keyboard.ts
+  function keyboardFlags(options = {}) {
+    const defaults = options.mode === "realtime" ? 31 : 5;
+    return ["disambiguate", "events", "alternateKeys", "allKeysAsEscapes", "reportText"].reduce((flags, name, i) => {
+      const value = options[name];
+      return value === undefined ? flags : value ? flags | 1 << i : flags & ~(1 << i);
+    }, defaults);
+  }
+
+  class HeldKeys {
+    onReset;
+    maxEdges;
+    down = new Map;
+    edges = [];
+    constructor(onReset, maxEdges = 256) {
+      this.onReset = onReset;
+      this.maxEdges = maxEdges;
+    }
+    has(name) {
+      return [...this.down.values()].includes(name);
+    }
+    get held() {
+      return new Set(this.down.keys());
+    }
+    update(event) {
+      if (!event.trackable)
+        return;
+      if (event.kind === "release") {
+        const name = this.down.get(event.identity);
+        if (name === undefined)
+          return;
+        this.down.delete(event.identity);
+        this.push({ identity: event.identity, name, kind: "release" });
+      } else if (event.kind === "press" && !this.down.has(event.identity)) {
+        if (this.down.size >= this.maxEdges) {
+          this.reset("overflow");
+          return;
+        }
+        this.down.set(event.identity, event.name);
+        this.push({ identity: event.identity, name: event.name, kind: "press" });
+      }
+    }
+    push(edge) {
+      if (this.edges.length >= this.maxEdges) {
+        this.reset("overflow");
+        return;
+      }
+      this.edges.push(edge);
+    }
+    drainEdges() {
+      const result = this.edges;
+      this.edges = [];
+      return result;
+    }
+    reset(reason = "manual") {
+      this.down.clear();
+      this.edges = [];
+      this.onReset?.({ reason });
+    }
+  }
+  function resetKeyboardSubscriptions(event) {
+    for (const subscription of [...subscriptions])
+      if (subscriptions.has(subscription))
+        subscription.reset?.(event);
+  }
+  function dispatchAppKey(event, onKey, emit) {
+    if (onKey?.(event) || event.defaultPrevented || event.propagationStopped)
+      return;
+    for (const subscription of [...subscriptions]) {
+      if (!subscriptions.has(subscription))
+        continue;
+      if (subscription.key(event) || event.defaultPrevented || event.propagationStopped)
+        return;
+    }
+    emit(event.kind === "release" ? "keyrelease" : "keypress", event);
+  }
+  var AppKeyEvent, subscriptions;
+  var init_keyboard = __esm(() => {
+    init_KeyHandler();
+    AppKeyEvent = class AppKeyEvent extends KeyEvent {
+      receivedAt;
+      sequenceNumber;
+      dispatchedAt;
+      kind;
+      identity;
+      text;
+      associatedText;
+      legacy;
+      trackable;
+      constructor(key, receivedAt, sequenceNumber, dispatchedAt) {
+        super(key);
+        this.receivedAt = receivedAt;
+        this.sequenceNumber = sequenceNumber;
+        this.dispatchedAt = dispatchedAt;
+        this.kind = key.eventType === "release" ? "release" : key.repeated ? "repeat" : "press";
+        const code = key.raw.match(/^\x1b\[(\d+)/)?.[1];
+        this.identity = key.source === "kitty" ? `kitty:${key.code ?? (key.raw.endsWith("u") ? code : undefined) ?? key.name}` : `legacy:${key.name.toLowerCase()}`;
+        this.legacy = key.source !== "kitty";
+        this.trackable = !this.legacy && code !== "0";
+        this.associatedText = /^\x1b\[[\d:]+;[\d:]*;[\d:]+u$/.test(key.raw) ? key.sequence : undefined;
+        this.text = this.kind === "release" ? undefined : this.associatedText ?? (this.kind !== "release" && !key.ctrl && !key.super && !key.hyper && !key.option && !key.sequence.startsWith("\x1B") ? key.sequence : undefined);
+      }
+    };
+    subscriptions = new Set;
+  });
+
   // vendor/opentui/packages/core/src/lib/clock.ts
   class SystemClock {
     now() {
@@ -39931,42 +39931,7 @@ No matching component was found for:
     }
   }
 
-  // vendor/js/node_modules/react/cjs/react-jsx-runtime.production.js
-  var require_react_jsx_runtime_production = __commonJS((exports) => {
-    var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element");
-    var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
-    function jsxProd(type, config, maybeKey) {
-      var key = null;
-      maybeKey !== undefined && (key = "" + maybeKey);
-      config.key !== undefined && (key = "" + config.key);
-      if ("key" in config) {
-        maybeKey = {};
-        for (var propName in config)
-          propName !== "key" && (maybeKey[propName] = config[propName]);
-      } else
-        maybeKey = config;
-      config = maybeKey.ref;
-      return {
-        $$typeof: REACT_ELEMENT_TYPE,
-        type,
-        key,
-        ref: config !== undefined ? config : null,
-        props: maybeKey
-      };
-    }
-    exports.Fragment = REACT_FRAGMENT_TYPE;
-    exports.jsx = jsxProd;
-    exports.jsxs = jsxProd;
-  });
-
-  // vendor/js/node_modules/react/jsx-runtime.js
-  var require_jsx_runtime = __commonJS((exports, module) => {
-    if (true) {
-      module.exports = require_react_jsx_runtime_production();
-    }
-  });
-
-  // js/platform/demo.tsx
+  // js/platform/application.ts
   function copyTerminalText(text) {
     try {
       return lib2.copyToClipboardOSC52(native, 0, new TextEncoder().encode(text));
@@ -40045,11 +40010,8 @@ No matching component was found for:
       try {
         resetInput("shutdown");
       } finally {
-        if (container) {
-          reconciler.updateContainerSync(null, container, null, null);
-          reconciler.flushSyncWork();
-          reconciler.flushPassiveEffects();
-        }
+        if (mounted)
+          adapter.unmount();
       }
     } finally {
       try {
@@ -40066,14 +40028,14 @@ No matching component was found for:
         }
       }
     }
+    mounted = false;
   }
-  function mountDemo(App, options = {}) {
-    demoShortcuts = true;
-    return mountApp(App, options);
-  }
-  function mountApp(App, options = {}) {
-    if (container || stopped)
+  function mountApplication(nextAdapter, options = {}, shortcuts = false) {
+    if (mounted || stopped)
       throw new Error("Only one application mount per runtime is supported");
+    mounted = true;
+    adapter = nextAdapter;
+    demoShortcuts = shortcuts;
     appOptions = options;
     keyboard.requestedFlags = keyboardFlags(options.keyboard);
     __host.configureKeyboard(keyboard.requestedFlags);
@@ -40095,48 +40057,30 @@ No matching component was found for:
       resetInput("endpoint-closed");
       options.onDisconnect?.(reason);
     } });
-    function Mounted() {
-      import_react2.useEffect(() => {
-        effectMounted = true;
-        return () => {
-          effectMounted = false;
-        };
-      }, []);
-      return /* @__PURE__ */ jsx_runtime.jsx(App, {});
-    }
     lib2 = resolveRenderLib();
     native = __host.borrowRenderer();
     lib2.setBackgroundColor(native, RGBA.fromHex("#101820"));
     context.capabilities = lib2.getTerminalCapabilities(native);
     root = new RootRenderable(context);
-    container = reconciler.createContainer(root, 1, null, false, null, "", report, options.onCaughtError ?? report, report, () => {});
-    reconciler.updateContainerSync(/* @__PURE__ */ jsx_runtime.jsx(Mounted, {}), container, null, null);
-    reconciler.flushSyncWork();
-    reconciler.flushPassiveEffects();
-    return { quit: () => __host.quit(), snapshot: () => new TextDecoder().decode(lib2.getCurrentBuffer(native).getRealCharBytes(true)) };
+    adapter.mount(root, context);
+    return { root, context, quit: () => __host.quit(), snapshot: () => new TextDecoder().decode(lib2.getCurrentBuffer(native).getRealCharBytes(true)) };
   }
-  var import_react2, import_react_reconciler, import_events6, jsx_runtime, dirty = true, stopped = false, liveCount = 0, liveTimer, container, native, root, lib2, keys, keyInterceptor = null, graphicsState, appOptions, firstLayout = true, inputSequence = 0, receivedAt = 0, inputOverflow = false, keyboard, reportKeyboard = () => appOptions.onKeyboardCapabilities?.({ ...keyboard }), resetInput = (reason) => {
+  var import_events6, dirty = true, stopped = false, liveCount = 0, liveTimer, mounted = false, adapter, batch = (work) => adapter?.batch ? adapter.batch(work) : work(), native, root, lib2, keys, keyInterceptor = null, graphicsState, appOptions, firstLayout = true, inputSequence = 0, receivedAt = 0, inputOverflow = false, keyboard, reportKeyboard = () => appOptions.onKeyboardCapabilities?.({ ...keyboard }), resetInput = (reason) => {
     try {
       appOptions.onInputReset?.({ reason });
     } finally {
       resetKeyboardSubscriptions({ reason });
     }
-  }, demoShortcuts = false, parser, selection = null, selectionOwner = null, lifecycle, context, reconciler, report = (error) => {
-    throw error;
-  }, effectMounted = false, mouse;
-  var init_demo = __esm(() => {
+  }, demoShortcuts = false, parser, selection = null, selectionOwner = null, lifecycle, context, mouse;
+  var init_application = __esm(() => {
     init_keyboard();
     init_KeyHandler();
     init_selection();
-    init_host_config();
     init_Renderable();
     init_zig();
     init_RGBA();
     init_stdin_parser();
-    import_react2 = __toESM(require_react(), 1);
-    import_react_reconciler = __toESM(require_react_reconciler(), 1);
     import_events6 = __toESM(require_events(), 1);
-    jsx_runtime = __toESM(require_jsx_runtime(), 1);
     keys = new import_events6.EventEmitter;
     graphicsState = { confirmed: false };
     appOptions = {};
@@ -40236,7 +40180,6 @@ No matching component was found for:
       }
     });
     Object.defineProperty(context, "hasSelection", { get: () => selection !== null });
-    reconciler = import_react_reconciler.default(hostConfig);
     mouse = new MouseRouter((x2, y2) => x2 < 0 || y2 < 0 ? undefined : Renderable.renderablesByNumber.get(lib2.checkHit(native, x2, y2)));
     Object.assign(globalThis, {
       __shutdown: shutdown,
@@ -40244,7 +40187,7 @@ No matching component was found for:
       __inputReadyForReload: () => parser.readyForReload,
       __input(data, time = __host.now()) {
         receivedAt = time;
-        reconciler.flushSyncFromReconciler(() => {
+        batch(() => {
           parser.push(new Uint8Array(data));
           drainInput();
           if (inputOverflow) {
@@ -40287,12 +40230,95 @@ No matching component was found for:
         __host.presentFrame();
       },
       __inspect() {
-        return JSON.stringify({ effectMounted, keys: keys.listenerCount("key"), frame: context.frameId });
+        return JSON.stringify({ ...adapter?.inspect?.(), applicationMounted: mounted, keys: keys.listenerCount("key"), frame: context.frameId });
       },
       __snapshot() {
         return new TextDecoder().decode(lib2.getCurrentBuffer(native).getRealCharBytes(true));
       }
     });
+  });
+
+  // vendor/js/node_modules/react/cjs/react-jsx-runtime.production.js
+  var require_react_jsx_runtime_production = __commonJS((exports) => {
+    var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element");
+    var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
+    function jsxProd(type, config, maybeKey) {
+      var key = null;
+      maybeKey !== undefined && (key = "" + maybeKey);
+      config.key !== undefined && (key = "" + config.key);
+      if ("key" in config) {
+        maybeKey = {};
+        for (var propName in config)
+          propName !== "key" && (maybeKey[propName] = config[propName]);
+      } else
+        maybeKey = config;
+      config = maybeKey.ref;
+      return {
+        $$typeof: REACT_ELEMENT_TYPE,
+        type,
+        key,
+        ref: config !== undefined ? config : null,
+        props: maybeKey
+      };
+    }
+    exports.Fragment = REACT_FRAGMENT_TYPE;
+    exports.jsx = jsxProd;
+    exports.jsxs = jsxProd;
+  });
+
+  // vendor/js/node_modules/react/jsx-runtime.js
+  var require_jsx_runtime = __commonJS((exports, module) => {
+    if (true) {
+      module.exports = require_react_jsx_runtime_production();
+    }
+  });
+
+  // js/platform/demo.tsx
+  function mountDemo(App, options = {}) {
+    return mountReact(App, options, true);
+  }
+  function mountReact(App, options, shortcuts) {
+    const reconciler = import_react_reconciler.default(hostConfig);
+    const report = (error) => {
+      throw error;
+    };
+    let container, effectMounted = false;
+    function Mounted() {
+      import_react2.useEffect(() => {
+        effectMounted = true;
+        return () => {
+          effectMounted = false;
+        };
+      }, []);
+      return /* @__PURE__ */ jsx_runtime.jsx(App, {});
+    }
+    const app = mountApplication({
+      batch: (work) => reconciler.flushSyncFromReconciler(work),
+      mount(root2) {
+        container = reconciler.createContainer(root2, 1, null, false, null, "", report, options.onCaughtError ?? report, report, () => {});
+        reconciler.updateContainerSync(/* @__PURE__ */ jsx_runtime.jsx(Mounted, {}), container, null, null);
+        reconciler.flushSyncWork();
+        reconciler.flushPassiveEffects();
+      },
+      unmount() {
+        if (container) {
+          reconciler.updateContainerSync(null, container, null, null);
+          reconciler.flushSyncWork();
+          reconciler.flushPassiveEffects();
+        }
+      },
+      inspect: () => ({ effectMounted })
+    }, options, shortcuts);
+    return { quit: app.quit, snapshot: app.snapshot };
+  }
+  var import_react2, import_react_reconciler, jsx_runtime;
+  var init_demo = __esm(() => {
+    init_host_config();
+    init_application();
+    init_application();
+    import_react2 = __toESM(require_react(), 1);
+    import_react_reconciler = __toESM(require_react_reconciler(), 1);
+    jsx_runtime = __toESM(require_jsx_runtime(), 1);
   });
 
   // js/termpaint.tsx

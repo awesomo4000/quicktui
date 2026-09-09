@@ -40,6 +40,21 @@ restart a working session merely to perform this check.
 No physical p95 latency measurement is recorded yet. The diagnostic reports a rolling
 256-event local read-to-dispatch p95/p99/max, which excludes OS and display latency.
 
+## Background modifier events in Ghostty
+
+During testing, pressing Shift in another Ghostty window also delivered a modifier
+event to the game window. The inspected macOS Ghostty source forwards modifier
+changes to other terminal surfaces in
+`BaseTerminalController.localEventFlagsChanged`, including background surfaces.
+This matches the observation; it does not imply that ordinary character keys are
+broadcast the same way.
+
+QuickTUI exposes these received events without filtering them by terminal focus.
+Component keyboard subscriptions are not automatically focus-scoped. Consumers
+should not infer focus from receiving a modifier event. The game currently
+resumes on any press, so a background modifier press can also resume it after a
+focus-loss reset. This behavior is documented and intentionally unchanged here.
+
 ## Remaining checks
 
 Run `quicktui --keyboard` directly and through Herdr. Test A/D/W individually,

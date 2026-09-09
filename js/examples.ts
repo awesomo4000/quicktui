@@ -6,6 +6,7 @@ if(typeof __host==="undefined"){
 }else{
   require("./platform/bootstrap");
   switch(__host.example){
+    case "vanilla": require("../examples/vanilla/app");break;
     case "game":
     case "keyboard": require("./game");break;
     case "counter": require("./counter");break;

@@ -1,3 +1,7 @@
+For applications without React, see [the core API](core-api.md). The `quicktui`
+entry point documented here remains the compatible React adapter; it is also
+available as `quicktui/react`.
+
 # Building an application with QuickTUI
 
 The [independent consumer](../examples/consumer/) is a complete small application.

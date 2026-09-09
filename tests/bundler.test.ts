@@ -23,3 +23,14 @@ test("consumer filesystem and socket imports fail during bundling",async()=>{
   }
  }finally{await rm(temp,{recursive:true,force:true});}
 });
+
+test("vanilla core bundle has no React or reconciler modules",async()=>{
+ const temp=await mkdtemp(path.join(tmpdir(),"quicktui-vanilla-bundle-"));
+ try{
+  const output=path.join(temp,"app.js");
+  await bundleApp({entry:path.resolve(import.meta.dir,"../examples/vanilla/app.ts"),output,sourcemap:"external"});
+  const map=JSON.parse(await readFile(output+".map","utf8"));
+  expect(map.sources.some((s:string)=>/node_modules\/(react|react-reconciler|scheduler)\//.test(s))).toBe(false);
+  expect(map.sources.some((s:string)=>s.includes("platform/application"))).toBe(true);
+ }finally{await rm(temp,{recursive:true,force:true});}
+});

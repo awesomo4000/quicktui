@@ -2,6 +2,10 @@
 
 ## Unreleased - 09/09/2026
 
+- Extract shared terminal application lifecycle from React; add `quicktui/core`,
+  the `quicktui/react` alias, and an independent vanilla JS consumer with a
+  React-free bundle check. Existing React APIs use the shared runtime.
+
 - Add public `useKeyboardEvents` with runtime component enable/release filtering, reset notifications, automatic unsubscription, and explicit event consumption. The game uses the hook.
 
 - Add opt-in keyboard enhancement flags, normalized key metadata, release routing, held-key/reset helpers, and game/keyboard diagnostics with deterministic and injected PTY tests. Direct Ghostty letter events were verified; the tested Herdr 0.8.2 path still drops printable releases.
