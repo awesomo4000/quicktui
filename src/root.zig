@@ -124,6 +124,13 @@ test "endpoint closure, poll faults, pressure and repeated teardown" {
     try std.testing.expectEqual(@as(c_int, 0), quicktui_endpoint_tests());
 }
 
+/// Run an application from a module image (see `addModuleImage` in build.zig).
+/// The image must outlive the call; @embedFile data does.
+pub fn runImage(image: []const u8, options: struct { headless: bool = false, reload: bool = false, endpoint: ?*const MessageEndpoint = null }) error{ApplicationFailed}!void {
+    modules.enableImage(image);
+    return runApp("", .{ .headless = options.headless, .reload = options.reload, .endpoint = options.endpoint });
+}
+
 /// Run an application. Reload is opt-in; the caller owns its endpoint.
 pub fn runApp(source: [:0]const u8, options: struct { headless: bool = false, reload: bool = false, endpoint: ?*const MessageEndpoint = null }) error{ApplicationFailed}!void {
     if (options.reload) return runReloadable(source, "app", options.headless, options.endpoint);

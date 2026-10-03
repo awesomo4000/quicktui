@@ -1,8 +1,14 @@
 const std = @import("std");
 const runtime = @import("quicktui");
+/// `zig build -Dmodule-image=true` embeds js/termpaint-entry.ts precompiled.
+const embedded_image: ?[]const u8 = if (@import("quicktui_app_options").module_image) @embedFile("quicktui-termpaint-image") else null;
 pub fn main(init: std.process.Init) !void {
     const args = try init.minimal.args.toSlice(init.arena.allocator());
-    // QUICKTUI_SOURCE=<checkout> runs termpaint from js/*.ts(x) instead of the bundle.
+    // QUICKTUI_IMAGE=<image> and/or QUICKTUI_SOURCE=<checkout> run termpaint
+    // from modules instead of the bundle.
+    if (std.c.getenv("QUICKTUI_IMAGE")) |path| runtime.modules.enableImage(try runtime.modules.readImage(std.mem.span(path))) else if (std.c.getenv("QUICKTUI_SOURCE") == null) {
+        if (embedded_image) |image| runtime.modules.enableImage(image);
+    }
     if (std.c.getenv("QUICKTUI_SOURCE")) |root| try runtime.modules.enable(init.arena.allocator(), .{
         .root = std.mem.span(root),
         .entry = "js/termpaint-entry.ts",

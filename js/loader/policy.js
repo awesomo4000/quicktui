@@ -332,12 +332,62 @@
     if (!callsRequire.test(code) || declaresRequire.test(code)) return code;
     return `const require = globalThis.__quicktuiRequireFrom(${JSON.stringify(id)}); ` + code;
   }
+  // Literal require("...") calls in built code. Dynamic requires are invisible
+  // here; images reject them at run time with "not in image".
+  const requireCall = /(?:^|[^.\w$])require\s*\(\s*(["'])((?:\\.|(?!\1)[^\\\n])*)\1\s*\)/g;
+  function requireSpecifiers(code) {
+    const specs = [];
+    for (const match of code.matchAll(requireCall)) specs.push(match[2]); // escapes in paths are not decoded
+    return specs;
+  }
+  // Branches a build never takes (React's development builds) are left out of
+  // facade keys and images. Override with __loaderConfig.exclude (a RegExp source).
+  const excluded = new RegExp(config.exclude || "\\.development\\.js$");
+  // The static CommonJS closure discovery would execute: ids in load order.
+  function commonJsClosure(id, seen = new Set()) {
+    if (seen.has(id)) return [...seen];
+    seen.add(id);
+    if (source(id).kind !== "cjs") return [...seen];
+    for (const spec of requireSpecifiers(source(id).text)) {
+      let target;
+      try { target = resolve(spec, id); } catch { continue; }
+      if (!excluded.test(target)) commonJsClosure(target, seen);
+    }
+    return [...seen];
+  }
   function key(id, mode) {
     const { kind, text } = source(id);
-    if (mode === "module" && kind === "cjs") return null; // facade depends on discovery
+    if (mode === "module" && kind === "cjs") {
+      // A facade depends on every source its discovery run can execute.
+      return "facade\0" + commonJsClosure(id).map((dep) => `${dep}\0${source(dep).kind}\0${source(dep).text}`).join("\0\0");
+    }
     return `${kind}\0${text}`;
   }
+  // [specifier, resolved id or null, "cjs" | "esm" | error message] for every
+  // literal require in the built module; used to close module images over
+  // require() targets that static imports do not reach.
+  function requires(id, mode) {
+    if (mode === "module" && source(id).kind === "cjs") return JSON.stringify([[id, id, "cjs"]]);
+    const out = [];
+    for (const spec of requireSpecifiers(build(id, mode))) {
+      try {
+        const target = resolve(spec, id);
+        if (!excluded.test(target)) out.push([spec, target, format(target)]);
+      } catch (error) {
+        out.push([spec, null, String(error && error.message || error)]);
+      }
+    }
+    return JSON.stringify(out);
+  }
+  const built = new Map();
   function build(id, mode) {
+    const memo = `${mode}\0${id}`;
+    if (built.has(memo)) return built.get(memo);
+    const code = buildUncached(id, mode);
+    built.set(memo, code);
+    return code;
+  }
+  function buildUncached(id, mode) {
     const { kind, text } = source(id);
     if (mode === "cjs") return commonJsBody(id);
     if (kind === "ts" || kind === "tsx") return withRequire(id, transformTypeScript(id, kind, text));
@@ -347,5 +397,5 @@
     if (kind === "json") return `export default ${JSON.stringify(JSON.parse(text))};\n`;
     throw new Error(`Unknown module kind ${kind} for ${id}`);
   }
-  Object.defineProperty(global, "__loaderPolicy", { value: Object.freeze({ resolve, format, key, build, entry: "quicktui:entry" }) });
+  Object.defineProperty(global, "__loaderPolicy", { value: Object.freeze({ resolve, format, key, build, requires, entry: "quicktui:entry" }) });
 })(globalThis);

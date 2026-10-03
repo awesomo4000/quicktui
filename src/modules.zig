@@ -5,6 +5,10 @@
 //! the prebuilt bundle. Sucrase (vendor/sucrase) strips types and converts JSX
 //! inside QuickJS; compiled modules are cached as QuickJS bytecode keyed by a
 //! BLAKE3 hash of the loader, the transform, and the module source.
+//!
+//! A module image is the same bytecode plus the resolution table, written once
+//! by `buildImage` and loaded by `enableImage`, usually from @embedFile. An
+//! image needs no checkout, no Sucrase run, and no cache.
 const std = @import("std");
 const c = std.c;
 
@@ -31,6 +35,15 @@ pub const Config = extern struct {
     cache_dir: [*:0]const u8 = "",
     /// Print cache hits/misses and load timing to stderr.
     trace: c_int = 0,
+    /// Module image; must outlive every runtime (embedded or process-lifetime).
+    image: ?[*]const u8 = null,
+    image_len: usize = 0,
+    /// Set while buildImage runs.
+    record: c_int = 0,
+    /// buildImage: write a Makefile depfile listing every file read, or "".
+    depfile: [*:0]const u8 = "",
+    /// buildImage: suppress the summary line.
+    quiet: c_int = 0,
 };
 
 var config: Config = .{};
@@ -47,6 +60,10 @@ pub const Options = struct {
     demo_assets: bool = false,
     /// Overrides the default cache directory; empty disables the cache.
     cache_dir: ?[:0]const u8 = null,
+    /// buildImage only: depfile path for build systems.
+    depfile: [:0]const u8 = "",
+    /// buildImage only: no summary on stderr.
+    quiet: bool = false,
 };
 
 /// Switch the next application runs to source-module mode.
@@ -58,6 +75,36 @@ pub fn enable(allocator: std.mem.Allocator, options: Options) !void {
     config.cache_dir = if (options.cache_dir) |dir| dir else try defaultCacheDir(allocator);
     config.trace = @intFromBool(getenv("QUICKTUI_TRACE_MODULES") != null);
     config.active = 1;
+}
+
+/// Load modules from a prebuilt image. Combine with `enable` to fall back to
+/// a checkout for modules the image lacks (an application under development).
+pub fn enableImage(image: []const u8) void {
+    config.image = image.ptr;
+    config.image_len = image.len;
+    config.trace = @intFromBool(getenv("QUICKTUI_TRACE_MODULES") != null);
+    config.active = 1;
+}
+
+/// Read an image file for the rest of the process (bytecode references it).
+pub fn readImage(path: [:0]const u8) ![]const u8 {
+    var len: usize = 0;
+    const bytes = qt_fs_read(path.ptr, &len) orelse return error.FileNotFound;
+    return bytes[0..len];
+}
+
+extern "c" fn quicktui_build_image(out_path: [*:0]const u8) c_int;
+
+/// Compile every module reachable from `options.entry` (static imports plus
+/// literal require() targets) and write a module image to `out_path`.
+/// No application code is evaluated.
+pub fn buildImage(allocator: std.mem.Allocator, options: Options, out_path: [:0]const u8) !void {
+    try enable(allocator, options);
+    config.depfile = options.depfile;
+    config.quiet = @intFromBool(options.quiet);
+    config.record = 1;
+    defer config.record = 0;
+    if (quicktui_build_image(out_path.ptr) != 0) return error.ImageBuildFailed;
 }
 
 fn getenv(name: [*:0]const u8) ?[:0]const u8 {
@@ -113,6 +160,21 @@ pub export fn qt_fs_read(path: [*:0]const u8, out_len: *usize) ?[*]u8 {
 }
 
 /// Openable and not a directory. (std.c has no portable stat on Linux in 0.16.)
+/// Write a whole file atomically (temporary file, then rename). 0 on success.
+pub export fn qt_fs_write(path: [*:0]const u8, bytes: [*]const u8, len: usize) c_int {
+    var temp_buffer: [4096]u8 = undefined;
+    const temp = std.fmt.bufPrintSentinel(&temp_buffer, "{s}.{d}.tmp", .{ std.mem.span(path), c.getpid() }, 0) catch return -1;
+    const fd = c.open(temp, .{ .ACCMODE = .WRONLY, .CREAT = true, .TRUNC = true, .CLOEXEC = true }, @as(c.mode_t, 0o644));
+    if (fd < 0) return -1;
+    const ok = writeAll(fd, bytes[0..len]);
+    _ = close(fd);
+    if (!ok or c.rename(temp, path) != 0) {
+        _ = c.unlink(temp);
+        return -1;
+    }
+    return 0;
+}
+
 pub export fn qt_fs_is_file(path: [*:0]const u8) c_int {
     const fd = c.open(path, .{ .ACCMODE = .RDONLY, .CLOEXEC = true });
     if (fd < 0) return 0;

@@ -17,18 +17,13 @@ pub fn build(b: *std.Build) void {
         .@"quicktui-static" = true,
     }).artifact("opentui");
 
-    const quickjs_module = b.createModule(.{
-        .target = target,
-        .optimize = optimize,
-        .link_libc = true,
-    });
-    quickjs_module.addIncludePath(b.path("vendor/quickjs"));
-    quickjs_module.addCSourceFiles(.{
-        .root = b.path("vendor/quickjs"),
-        .files = &.{ "quickjs.c", "dtoa.c", "libregexp.c", "libunicode.c", "cutils.c" },
-        .flags = &.{ "-std=gnu11", "-D_GNU_SOURCE", "-DCONFIG_VERSION=\"2026-06-04\"", "-fno-sanitize=undefined" },
-    });
-    const quickjs = b.addLibrary(.{ .name = "quickjs", .linkage = .static, .root_module = quickjs_module });
+    const quickjs = quickjsLibrary(b, target, optimize);
+    // Module images (docs/source-modules.md). The tool runs on the build host.
+    const image_tool = addImageTool(b);
+    b.installArtifact(image_tool);
+    const use_image = b.option(bool, "module-image", "Embed precompiled module images and load them instead of evaluating the JS bundles") orelse false;
+    const app_options = b.addOptions();
+    app_options.addOption(bool, "module_image", use_image);
 
     const runtime = b.addModule("quicktui", .{
         .root_source_file = b.path("src/root.zig"),
@@ -41,15 +36,7 @@ pub fn build(b: *std.Build) void {
     runtime.addIncludePath(b.path("vendor/quickjs"));
     runtime.addCSourceFile(.{ .file = b.path("src/quickjs_bridge.c"), .flags = &.{"-std=c11"} });
     runtime.addCSourceFiles(.{ .files = &.{ "src/native_bridge.c", "src/native_generated.c", "src/app_host.c", "src/endpoint_tests.c" }, .flags = &.{"-std=c11"} });
-    // Source-module mode: QuickJS module hooks, Sucrase, and the loader policy.
-    runtime.addCSourceFile(.{ .file = b.path("src/module_loader.c"), .flags = &.{ "-std=c11", "-DQUICKJS_LOADER_VERSION=\"2026-06-04\"" } });
-    runtime.addAnonymousImport("quicktui-sucrase", .{ .root_source_file = b.path("vendor/sucrase/sucrase.js") });
-    runtime.addAnonymousImport("quicktui-loader-policy", .{ .root_source_file = b.path("js/loader/policy.js") });
-    runtime.addAnonymousImport("quicktui-loader-cjs", .{ .root_source_file = b.path("js/loader/cjs.js") });
-    const module_options = b.addOptions();
-    // Default checkout for `--run` when QUICKTUI_SOURCE is unset.
-    module_options.addOption([]const u8, "source_root", b.build_root.path orelse ".");
-    runtime.addOptions("quicktui_build_options", module_options);
+    addModuleLoader(b, runtime);
     runtime.linkLibrary(quickjs);
     runtime.linkLibrary(native);
 
@@ -62,6 +49,10 @@ pub fn build(b: *std.Build) void {
             .imports = &.{.{ .name = "quicktui", .module = runtime }},
         }),
     });
+    exe.root_module.addOptions("quicktui_app_options", app_options);
+    if (use_image) exe.root_module.addAnonymousImport("quicktui-demo-image", .{
+        .root_source_file = moduleImage(b, image_tool, b.path("."), b.path("js/examples.ts"), "examples.qtimg", true),
+    });
     b.installArtifact(exe);
     const paint = b.addExecutable(.{
         .name = "termpaint",
@@ -71,6 +62,10 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{.{ .name = "quicktui", .module = runtime }},
         }),
+    });
+    paint.root_module.addOptions("quicktui_app_options", app_options);
+    if (use_image) paint.root_module.addAnonymousImport("quicktui-termpaint-image", .{
+        .root_source_file = moduleImage(b, image_tool, b.path("."), b.path("js/termpaint-entry.ts"), "termpaint.qtimg", false),
     });
     b.installArtifact(paint);
     b.getInstallStep().dependOn(&b.addInstallDirectory(.{ .source_dir = b.path("skills"), .install_dir = .prefix, .install_subdir = "share/termpaint/skills" }).step);
@@ -239,4 +234,77 @@ pub fn build(b: *std.Build) void {
     paint_bundle.step.dependOn(&bindings.step);
     b.step("bundle-termpaint", "Regenerate the standalone paint JS bundle").dependOn(&paint_bundle.step);
     bundle.step.dependOn(&paint_bundle.step);
+}
+
+fn quickjsLibrary(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) *std.Build.Step.Compile {
+    const quickjs_module = b.createModule(.{
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+    });
+    quickjs_module.addIncludePath(b.path("vendor/quickjs"));
+    quickjs_module.addCSourceFiles(.{
+        .root = b.path("vendor/quickjs"),
+        .files = &.{ "quickjs.c", "dtoa.c", "libregexp.c", "libunicode.c", "cutils.c" },
+        .flags = &.{ "-std=gnu11", "-D_GNU_SOURCE", "-DCONFIG_VERSION=\"2026-06-04\"", "-fno-sanitize=undefined" },
+    });
+    return b.addLibrary(.{ .name = "quickjs", .linkage = .static, .root_module = quickjs_module });
+}
+
+/// QuickJS module hooks, Sucrase, and the loader policy (src/modules.zig).
+fn addModuleLoader(b: *std.Build, module: *std.Build.Module) void {
+    module.addIncludePath(b.path("vendor/quickjs"));
+    module.addIncludePath(b.path("src"));
+    module.addCSourceFile(.{ .file = b.path("src/module_loader.c"), .flags = &.{ "-std=c11", "-DQUICKJS_LOADER_VERSION=\"2026-06-04\"" } });
+    module.addAnonymousImport("quicktui-sucrase", .{ .root_source_file = b.path("vendor/sucrase/sucrase.js") });
+    module.addAnonymousImport("quicktui-loader-policy", .{ .root_source_file = b.path("js/loader/policy.js") });
+    module.addAnonymousImport("quicktui-loader-cjs", .{ .root_source_file = b.path("js/loader/cjs.js") });
+    const options = b.addOptions();
+    // Default checkout for `--run` when QUICKTUI_SOURCE is unset.
+    options.addOption([]const u8, "source_root", b.build_root.path orelse ".");
+    module.addOptions("quicktui_build_options", options);
+}
+
+/// quicktui-image for the build host: QuickJS and the loader only, no OpenTUI.
+fn addImageTool(b: *std.Build) *std.Build.Step.Compile {
+    const host = b.graph.host;
+    const module = b.createModule(.{
+        .root_source_file = b.path("src/image_tool.zig"),
+        .target = host,
+        .optimize = .ReleaseFast,
+        .link_libc = true,
+    });
+    addModuleLoader(b, module);
+    module.linkLibrary(quickjsLibrary(b, host, .ReleaseFast));
+    return b.addExecutable(.{ .name = "quicktui-image", .root_module = module });
+}
+
+/// Run quicktui-image over `entry`; the result is suitable for @embedFile
+/// (via addAnonymousImport) and quicktui.runImage. Reruns when any file the
+/// image was built from changes (depfile).
+fn moduleImage(b: *std.Build, tool: *std.Build.Step.Compile, root: std.Build.LazyPath, entry: std.Build.LazyPath, name: []const u8, demo: bool) std.Build.LazyPath {
+    const run = b.addRunArtifact(tool);
+    run.addDirectoryArg(root);
+    run.addFileArg(entry);
+    const image = run.addOutputFileArg(name);
+    if (demo) run.addArg("--demo");
+    run.addArg("--depfile");
+    _ = run.addDepFileOutputArg(b.fmt("{s}.d", .{name}));
+    return image;
+}
+
+/// For applications that depend on quicktui: build a module image of `entry`
+/// (an app.tsx in the consumer's tree) with no Bun or Node, then embed it:
+///
+///   const image = @import("quicktui").addModuleImage(b, dep, b.path("app.tsx"));
+///   exe.root_module.addAnonymousImport("app.qtimg", .{ .root_source_file = image });
+///   // main.zig: try quicktui.runImage(@embedFile("app.qtimg"), .{});
+pub fn addModuleImage(b: *std.Build, quicktui: *std.Build.Dependency, entry: std.Build.LazyPath) std.Build.LazyPath {
+    const run = b.addRunArtifact(quicktui.artifact("quicktui-image"));
+    run.addDirectoryArg(quicktui.path("."));
+    run.addFileArg(entry);
+    const image = run.addOutputFileArg("app.qtimg");
+    run.addArg("--depfile");
+    _ = run.addDepFileOutputArg("app.qtimg.d");
+    return image;
 }
