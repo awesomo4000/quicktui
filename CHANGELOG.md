@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased - 10/03/2026
+
+- Add source-module mode: `quicktui --run app.tsx [--reload] [--self-test]` and `QUICKTUI_SOURCE=<checkout>` load `.ts`/`.tsx` directly through QuickJS's module loader, with vendored Sucrase for types and JSX, CommonJS facades, and a BLAKE3-keyed bytecode cache. No Bun at build or run time. Every demo self-test and both consumer self-tests pass in source mode; `--reload` picks up edited files. See [docs/source-modules.md](docs/source-modules.md).
+
 ## Unreleased - 09/09/2026
 
 - Extract shared terminal application lifecycle from React; add `quicktui/core`,

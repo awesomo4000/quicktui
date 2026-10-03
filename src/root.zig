@@ -2,6 +2,12 @@ comptime {
     _ = @import("buffer_views.zig");
 }
 const std = @import("std");
+/// Source-module mode: load .ts/.tsx sources instead of the prebuilt bundle.
+pub const modules = @import("modules.zig");
+comptime {
+    // Reference every export so C callers link even when only a test imports us.
+    for (@typeInfo(modules).@"struct".decls) |decl| _ = &@field(modules, decl.name);
+}
 
 extern "c" fn quicktui_eval(source: [*:0]const u8, len: usize, diagnostics: c_int) c_int;
 /// Optional application-owned transport. Callbacks run on the UI thread and must

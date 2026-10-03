@@ -41,6 +41,15 @@ pub fn build(b: *std.Build) void {
     runtime.addIncludePath(b.path("vendor/quickjs"));
     runtime.addCSourceFile(.{ .file = b.path("src/quickjs_bridge.c"), .flags = &.{"-std=c11"} });
     runtime.addCSourceFiles(.{ .files = &.{ "src/native_bridge.c", "src/native_generated.c", "src/app_host.c", "src/endpoint_tests.c" }, .flags = &.{"-std=c11"} });
+    // Source-module mode: QuickJS module hooks, Sucrase, and the loader policy.
+    runtime.addCSourceFile(.{ .file = b.path("src/module_loader.c"), .flags = &.{ "-std=c11", "-DQUICKJS_LOADER_VERSION=\"2026-06-04\"" } });
+    runtime.addAnonymousImport("quicktui-sucrase", .{ .root_source_file = b.path("vendor/sucrase/sucrase.js") });
+    runtime.addAnonymousImport("quicktui-loader-policy", .{ .root_source_file = b.path("js/loader/policy.js") });
+    runtime.addAnonymousImport("quicktui-loader-cjs", .{ .root_source_file = b.path("js/loader/cjs.js") });
+    const module_options = b.addOptions();
+    // Default checkout for `--run` when QUICKTUI_SOURCE is unset.
+    module_options.addOption([]const u8, "source_root", b.build_root.path orelse ".");
+    runtime.addOptions("quicktui_build_options", module_options);
     runtime.linkLibrary(quickjs);
     runtime.linkLibrary(native);
 

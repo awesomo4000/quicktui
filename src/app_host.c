@@ -14,6 +14,7 @@
 #include <fcntl.h>
 
 #include "message_endpoint.h"
+#include "module_loader.h"
 extern uint32_t createRenderer(uint32_t,uint32_t,uint8_t,uint8_t,void *);
 extern void destroyRenderer(uint32_t,bool);
 extern void setUseThread(uint32_t,bool);
@@ -45,6 +46,8 @@ typedef struct {
     int failed;
     char diagnostics[16384];
     size_t used;
+    const char *original_source; // source mode loads modules only for this, not replacement bundles
+    int compile_depth;double compile_remaining; // deadline paused while compiling modules
 } AppHost;
 static volatile sig_atomic_t interrupted;
 static volatile sig_atomic_t resized;
@@ -297,6 +300,13 @@ static void rejection(JSContext *ctx,JSValueConst promise,JSValueConst reason,JS
 static int interrupt_js(JSRuntime *runtime,void *opaque) {
     (void)runtime;AppHost *host=opaque;return interrupted || (host&&host->deadline&&monotonic_ms()>host->deadline);
 }
+// Source mode: deadlines bound application JavaScript, not module compilation.
+// Ctrl+C still interrupts a compile.
+static void compile_hook(JSContext *ctx,int begin) {
+    AppHost *host=JS_GetContextOpaque(ctx);if(!host)return;
+    if(begin){if(host->compile_depth++==0){host->compile_remaining=host->deadline?host->deadline-monotonic_ms():0;host->deadline=0;}}
+    else if(--host->compile_depth==0&&host->compile_remaining)host->deadline=monotonic_ms()+host->compile_remaining;
+}
 static void dimensions(int *width,int *height) {
     struct winsize size;
     *width=80;*height=24;
@@ -374,12 +384,17 @@ static void configure_ui(AppHost *host,JSContext *ctx,const char *source,size_t 
     *ffi=1;
     if(qt_register_ffi(ctx,global)<0){JS_FreeValue(ctx,global);exception(ctx);return;}
     JS_FreeValue(ctx,global);
+    if(qt_modules_enabled()&&source==host->original_source){
+        // Source-module mode: load the entry graph from .ts/.tsx sources.
+        if(qt_modules_install(ctx,compile_hook)<0||qt_modules_run_entry(ctx)<0)exception(ctx);
+        return;
+    }
     JSValue result=JS_Eval(ctx,source,length,"examples.js",JS_EVAL_TYPE_GLOBAL);
     if(JS_IsException(result))exception(ctx);
     JS_FreeValue(ctx,result);
 }
 int quicktui_app_messages(const char *source,size_t length,int headless,const char *example,const MessageEndpoint *endpoint) {
-    AppHost host={.endpoint=endpoint,.headless=headless};
+    AppHost host={.endpoint=endpoint,.headless=headless,.original_source=source};
     unsigned char *retained_text=NULL;uint32_t retained_length=0;
     TerminalSession terminal={.wake={-1,-1}};
     int ffi=0;
@@ -458,7 +473,7 @@ cleanup:
         JS_FreeCString(ctx,text);JS_FreeValue(ctx,state);
     }
     if(ffi)qt_close_ffi(ctx);
-    JS_FreeContext(ctx);JS_FreeRuntime(runtime);qt_views_deinit();
+    JS_FreeContext(ctx);qt_modules_release(runtime);JS_FreeRuntime(runtime);qt_views_deinit();
     host.renderer_borrowed=0;
     if(headless&&host.renderer){
         uint32_t after_length=0;unsigned char *after=presenter_text(&host,&after_length);
@@ -489,7 +504,7 @@ static void retire_ui(AppHost *host,UiRuntime *ui) {
         if(ui->ffi)qt_close_ffi(ui->ctx);
         JS_FreeContext(ui->ctx);
     }
-    if(ui->runtime)JS_FreeRuntime(ui->runtime);
+    if(ui->runtime){qt_modules_release(ui->runtime);JS_FreeRuntime(ui->runtime);}
     qt_views_deinit();memset(ui,0,sizeof(*ui));host->renderer_borrowed=0;host->deadline=0;
 }
 static int prepare_ui(AppHost *host,UiRuntime *ui,const char *source,size_t length,const char *example) {
@@ -523,7 +538,7 @@ static void activate_ui(AppHost *host,UiRuntime *ui) {
     if(qt_callback_failed(ui->ctx))exception(ui->ctx);
 }
 int quicktui_reload_app(const char *source,size_t length,int headless,const char *example,const MessageEndpoint *endpoint) {
-    AppHost host={.endpoint=endpoint,.headless=headless,.reloadable=1,.generation=1};
+    AppHost host={.endpoint=endpoint,.headless=headless,.reloadable=1,.generation=1,.original_source=source};
     UiRuntime ui={0};TerminalSession terminal={.wake={-1,-1}};
     char *good_source=NULL,*state=NULL;
     interrupted=0;resized=0;continued=0;

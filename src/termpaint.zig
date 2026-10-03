@@ -2,6 +2,11 @@ const std = @import("std");
 const runtime = @import("quicktui");
 pub fn main(init: std.process.Init) !void {
     const args = try init.minimal.args.toSlice(init.arena.allocator());
+    // QUICKTUI_SOURCE=<checkout> runs termpaint from js/*.ts(x) instead of the bundle.
+    if (std.c.getenv("QUICKTUI_SOURCE")) |root| try runtime.modules.enable(init.arena.allocator(), .{
+        .root = std.mem.span(root),
+        .entry = "js/termpaint-entry.ts",
+    });
     const headless = args.len == 2 and std.mem.eql(u8, args[1], "--self-test");
     if (args.len > 2 or (args.len == 2 and std.mem.startsWith(u8, args[1], "-") and !headless)) {
         std.debug.print("Usage: termpaint [drawing.tpaint]\n", .{});

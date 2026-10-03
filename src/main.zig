@@ -4,6 +4,30 @@ const examples = @embedFile("examples.js");
 
 pub fn main(init: std.process.Init) !void {
     const args = try init.minimal.args.toSlice(init.arena.allocator());
+    // `quicktui --run app.tsx [--self-test]`: run an application from source,
+    // with no bundling step. Library modules come from QUICKTUI_SOURCE or the
+    // checkout this binary was built from.
+    if (args.len >= 3 and std.mem.eql(u8, args[1], "--run")) {
+        var headless = false;
+        var reload = false;
+        for (args[3..]) |flag| {
+            if (std.mem.eql(u8, flag, "--self-test")) headless = true else if (std.mem.eql(u8, flag, "--reload")) reload = true else return error.InvalidArguments;
+        }
+        const arena = init.arena.allocator();
+        try runtime.modules.enable(arena, .{
+            .root = if (std.c.getenv("QUICKTUI_SOURCE")) |root| std.mem.span(root) else runtime.modules.default_root,
+            .entry = try runtime.modules.absolute(arena, args[2]),
+        });
+        // Under --reload, Ctrl+R re-reads changed sources; unchanged modules
+        // come from the bytecode cache.
+        return runtime.runApp("", .{ .headless = headless, .reload = reload });
+    }
+    // QUICKTUI_SOURCE=<checkout> runs the demos from js/*.ts(x) instead of the bundle.
+    if (std.c.getenv("QUICKTUI_SOURCE")) |root| try runtime.modules.enable(init.arena.allocator(), .{
+        .root = std.mem.span(root),
+        .entry = "js/examples.ts",
+        .demo_assets = true,
+    });
     if (args.len == 2) {
         for ([_][:0]const u8{ "game", "keyboard", "vanilla" }) |name| {
             const flag = try std.fmt.allocPrint(init.arena.allocator(), "--{s}", .{name});
@@ -74,7 +98,7 @@ pub fn main(init: std.process.Init) !void {
     }
     const headless = args.len == 2 and std.mem.eql(u8, args[1], "--self-test");
     if (args.len > 1 and !headless) {
-        std.debug.print("Usage: quicktui [--vanilla | --game | --keyboard | --reload | --editor [file] | --live [directory] | --lab | --messages | --gallery | --mouse | --self-test | --smoke]\n", .{});
+        std.debug.print("Usage: quicktui [--run app.tsx [--reload] [--self-test] | --vanilla | --game | --keyboard | --reload | --editor [file] | --live [directory] | --lab | --messages | --gallery | --mouse | --self-test | --smoke]\n", .{});
         return error.InvalidArguments;
     }
     try runtime.runCounter(examples, headless);
