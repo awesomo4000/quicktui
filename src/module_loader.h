@@ -3,9 +3,10 @@
 #include "quickjs.h"
 /* Source-module mode (see src/module_loader.c and src/modules.zig). */
 int qt_modules_enabled(void);
-/* Called with begin=1/0 around each module compile, so the host can pause
-   execution deadlines. May be NULL. */
-typedef void QtCompileHook(JSContext *ctx, int begin);
+/* Called with begin=1/0 around loader-policy execution. The host budgets
+   compilation separately from UI execution. Return -1 with a pending exception
+   when the budget is exhausted. May be NULL. */
+typedef int QtCompileHook(JSContext *ctx, int begin);
 /* Install the loader realm, module hooks, and CommonJS runtime into ctx. */
 int qt_modules_install(JSContext *ctx, QtCompileHook *hook);
 /* Evaluate the entry graph; returns -1 with an exception pending in ctx. */

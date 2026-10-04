@@ -96,7 +96,7 @@ I want to explore how much of that combination I can keep small and explicit.
 
 React provides component composition, state, hooks, and lifecycle cleanup.
 OpenTUI turns those components into terminal renderables and native drawing
-operations. QuickJS runs the bundled JavaScript. There is no browser DOM here;
+operations. QuickJS runs the packed JavaScript modules. There is no browser DOM here;
 JSX describes terminal widgets.
 
 The intended split is for JavaScript to describe the UI and for application
@@ -114,8 +114,8 @@ JavaScript.** The live-loading demo currently runs trusted code in the same
 context as the application.
 
 A smaller executable and fewer runtime dependencies are design preferences,
-not promises about every build. The demos share one bundled copy of their JS
-libraries; termpaint has its own executable and bundle. The vendored native
+not promises about every build. The demos share one packed copy of their JS
+libraries; termpaint has its own executable and pack. The vendored native
 library still brings its upstream dependency set, and macOS builds link system
 frameworks. There is room to trim things as the project takes shape.
 
@@ -139,7 +139,7 @@ and pull apart.
 ## Build your own app
 
 Start with the [independent consumer example](examples/consumer/) and the
-[application API](docs/application-api.md). QuickTUI supplies the consumer bundler,
+[application API](docs/application-api.md). QuickTUI supplies the build-time module packer,
 React runtime, application startup, text paste events, and native message delivery.
 
 ## Working on it
@@ -147,12 +147,14 @@ React runtime, application startup, text paste events, and native message delive
 ```sh
 zig build test
 
-# After editing TypeScript or JSX, regenerate the checked-in bundles with Bun:
-zig build bundle
+# After editing TypeScript or JSX, Zig rebuilds the affected module packs:
 zig build -Doptimize=ReleaseSmall
+
+# Or load source directly during development:
+./zig-out/bin/quicktui --run examples/consumer/app.tsx --reload
 ```
 
-The [guide](GUIDE.md#tests) lists the extra PTY and tmux checks.
+Tests require Python 3. The [guide](GUIDE.md#tests) lists the extra PTY and tmux checks.
 See the [bridge contract](js/platform/README.md),
 [vendored dependencies and provenance](vendor/README.md), and
 [changelog](CHANGELOG.md) for more detail.
@@ -178,7 +180,7 @@ explicit alias. Elm, Solid, and Svelte adapters remain future work.
 
 ### Source development and packed applications
 
-The integration branch supports running TS/TSX directly with
+Development builds support running TS/TSX directly with
 `quicktui --run app.tsx --reload`. For distribution, the
 [pack consumer](examples/pack-consumer/README.md) compiles its module graph at
 build time and embeds it without a filesystem module loader. See

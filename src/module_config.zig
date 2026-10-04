@@ -24,4 +24,5 @@ pub const Config = extern struct {
     depfile: [*:0]const u8 = "",
     /// buildPack: suppress the summary line.
     quiet: c_int = 0,
+    app_root: [*:0]const u8 = "",
 };

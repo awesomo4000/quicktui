@@ -24,7 +24,7 @@ QUICKTUI_PACK=examples.pack ./zig-out/bin/quicktui --gallery   # after --build-p
 zig build -Dmodule-pack=true   # embed the demo and termpaint packs instead of evaluating the bundles
 ```
 
-The prebuilt bundles remain the default when source loading is enabled.
+Module packs are the default. `-Dmodule-pack=false` selects the legacy bundles.
 The macOS integration checks below cover bundle, source, and pack modes.
 
 ## Pieces
@@ -109,8 +109,9 @@ rejected.
 - Sucrase 3.35 redeclares the parameter when an enum member has the enum's own
   name (`enum Wrap { Wrap }`). `policy.js` renames that parameter after the
   transform.
-- The host's preparation deadline (06b reload) is paused while modules compile;
-  Ctrl+C still interrupts.
+- The loader has a cumulative 30-second policy/transform budget per UI runtime.
+  This preserves the shorter UI preparation budget; Ctrl+C still interrupts.
+  The build-host pack tool also has a 30-second execution deadline.
 - `requestReload(source)` with an explicit bundle string still evaluates that
   string as a script. Without one, reload re-runs the module graph, which
   re-reads changed files.
@@ -144,7 +145,8 @@ The header records the QuickJS version and pointer size. A mismatched pack is
 rejected rather than parsed. Bytecode is read with `JS_READ_OBJ_ROM_DATA`, so the
 pack must stay mapped: `@embedFile` data, or `readPack`, which keeps the file
 for the process lifetime. IDs use logical library/application roots in stack traces. Source imports outside
-those roots are rejected; place shared application modules below the entry directory.
+those roots are rejected. `--app-root` selects the application root, and
+`addModulePack` uses the consumer build root automatically.
 
 ### Applications without Bun
 
@@ -185,8 +187,8 @@ stderr.
 - Source mode reads library modules (`js/`, `vendor/`) from the checkout:
   `QUICKTUI_SOURCE`, or the build root baked into the executable. Packs have
   no such dependency.
-- The source loader currently requires application files to be below the entry
-  directory or the QuickTUI checkout.
+- Application files must be below `--app-root` or the QuickTUI checkout.
+  Without an explicit application root, the entry directory is used.
 
 ## Pack-only release builds
 
@@ -223,6 +225,7 @@ module entry, but it can execute CommonJS dependencies during that discovery.
 ## Integration checks
 
 ```sh
+zig build -Dmodule-pack=false  # compare against the legacy bundle path
 python3 scripts/test-modules.py
 python3 scripts/test-modules.py --embedded-only --bin-dir /path/to/pack-only/bin
 python3 scripts/test-pack-consumer.py
@@ -261,7 +264,56 @@ SDKROOT=/path/to/MacOSX26.5.sdk zig build -Doptimize=ReleaseSmall --libc /tmp/qu
 ```
 
 No system SDK selection or installed toolchain was modified. Interactive visual
-checks of every demo and Linux reruns of these integration changes remain to do.
-Before making source loading the default development workflow, review its compile
-budget, CommonJS discovery behavior, and parity with the Bun resolver. The
-existing reload deadline is still paused during source compilation.
+checks of every demo remain to do. Linux results are recorded below.
+Compilation budgets and application roots were added in the next integration pass.
+CommonJS discovery remains a trusted build/development operation.
+
+### Development without Bun
+
+Default builds compile packs from the current TS/TSX sources. The ordinary React,
+vanilla, and reload consumer examples now use `addModulePack` and `runPack`.
+`test-paste` and the keyboard unit tests run the same 15 regression cases inside
+QuickJS. `zig build bindings` uses Python; its generated ABI declarations and
+metadata match the previous generator.
+
+`quicktui --run src/app.tsx --app-root . --reload` lets the app import sibling
+source directories. The low-level Zig module options also accept `app_root`;
+the pack tool takes `--app-root`. None of these enable filesystem loading in a
+`source-loader=false` executable.
+
+`python3 scripts/test-module-edges.py` covers sibling imports, changed dependency
+cache invalidation, corrupt cache recovery, import cycles, missing modules,
+truncated pack framing, path leakage, and nonterminating CommonJS discovery.
+All filesystem fixtures are temporary. It does not feed fabricated bytecode to
+QuickJS; packs remain trusted artifacts.
+
+Remaining Bun use is confined to the optional legacy bundler, its comparison
+tests, and regeneration of that legacy output. These can be removed once the
+pack workflow has had real consumer use; they are not part of normal builds,
+source loading, input tests, or consumer builds.
+
+### Linux integration, 10/04/2026
+
+Verified on Linux x86-64 with glibc 2.39 and Zig 0.16.0:
+
+```sh
+zig build -j2 -Doptimize=ReleaseSmall -Dtarget=x86_64-linux-gnu.2.39
+zig build test -j2 -Doptimize=ReleaseSmall -Dtarget=x86_64-linux-gnu.2.39
+```
+
+The 48-case bundle/cold/warm/pack matrix passed, as did the updated default-pack
+native/demo/input suite, module edge cases, and source-reload PTY check. Source
+reload preserved the typed draft. The embedded-only release matrix also passed,
+including ignored loader overrides, rejected loader CLI options, and no module
+cache creation. The external pack-only consumer passed input/resize and missing
+import checks with its source removed. Since the Linux release is stripped,
+`check-pack-loader.py` separately inspects an unstripped loader object for
+filesystem/cache/build-tool entry points and references. No Bun was needed for
+these builds or tests.
+An explicit GNU target was used to avoid the handoff's reported native glibc
+header-discovery issue; native target autodetection and musl are not verified here.
+
+The x86-64 Zig test server hung when native code wrote to its stdout protocol.
+Native tests now use the stock test runner in standalone mode, with a Python
+wrapper checking its exit code and enforcing a 180-second timeout. This path
+passes on macOS too and preserves the stock runner's allocator leak checks.

@@ -9,6 +9,8 @@
 //    bytecode by src/modules.zig. Only strings cross between the two realms.
 // With both configured, the pack wins and the realm handles the rest.
 // CommonJS packages run in js/loader/cjs.js behind ES module facades.
+#define _POSIX_C_SOURCE 200809L
+#include <time.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,6 +33,7 @@ typedef struct {
     int record;                 // quicktui_build_pack is running
     const char *depfile;        // build mode: Makefile depfile of every file read, or ""
     int quiet;                  // build mode: no summary line (zig build treats stderr as failure)
+    const char *app_root;
 } QtModuleConfig;
 
 // Implemented in src/modules.zig.
@@ -312,11 +315,16 @@ static const char *call_policy(JSContext *ctx, Loader *loader, JSValueConst fn, 
     if (is_null) *is_null = 0;
     if (!realm) { JS_ThrowReferenceError(ctx, "%s %s: not in the module pack", what, a); return NULL; }
     JSRuntime *rt = JS_GetRuntime(realm);
+    if (loader->hook && loader->hook(ctx, 1) < 0) return NULL;
     JSValue args[2] = { JS_NewString(realm, a), JS_NewString(realm, b) };
     JS_SetMaxStackSize(rt, QT_LOADER_STACK_SIZE);
     JSValue result = JS_Call(realm, fn, JS_UNDEFINED, 2, args);
     JS_SetMaxStackSize(rt, JS_DEFAULT_STACK_SIZE);
     JS_FreeValue(realm, args[0]); JS_FreeValue(realm, args[1]);
+    if (loader->hook && loader->hook(ctx, 0) < 0) {
+        JS_FreeValue(realm, result);
+        return NULL;
+    }
     if (JS_IsException(result)) { forward_exception(ctx, realm, what, a); return NULL; }
     if (JS_IsNull(result) && is_null) { *is_null = 1; return NULL; }
     const char *text = JS_ToCStringLen(realm, len, result);
@@ -350,9 +358,7 @@ static JSValue obtain(JSContext *ctx, Loader *loader, const char *id, const char
         }
     }
 #if QT_SOURCE_LOADER
-    if (loader->hook) loader->hook(ctx, 1);
     JSValue value = obtain_uncounted(ctx, loader, id, mode, eval_type);
-    if (loader->hook) loader->hook(ctx, 0);
     if (!JS_IsException(value)) record_value(ctx, loader, mode[0] == 'm' ? TAG_MODULE : TAG_CJS, id, value);
     return value;
 #else
@@ -563,6 +569,7 @@ static int install_realm(JSContext *ctx, Loader *loader) {
     JS_SetPropertyStr(realm, global, "__loaderHost", host);
     JSValue settings = JS_NewObject(realm);
     JS_SetPropertyStr(realm, settings, "root", JS_NewString(realm, config->root));
+    JS_SetPropertyStr(realm, settings, "appRoot", JS_NewString(realm, config->app_root));
     JS_SetPropertyStr(realm, settings, "entry", JS_NewString(realm, config->entry));
     JS_SetPropertyStr(realm, settings, "demoAssets", JS_NewBool(realm, config->demo_assets));
     JS_SetPropertyStr(realm, settings, "hosted", JS_NewBool(realm, config->hosted));
@@ -813,6 +820,14 @@ static int write_depfile(const char *depfile, const char *out_path, Recorder *r)
     return failed;
 }
 
+static double build_clock_ms(void) {
+    struct timespec ts;clock_gettime(CLOCK_MONOTONIC,&ts);
+    return ts.tv_sec*1000.0+ts.tv_nsec/1000000.0;
+}
+static int build_interrupt(JSRuntime *rt,void *opaque) {
+    (void)rt;return build_clock_ms()>*(double *)opaque;
+}
+
 // Record every module reachable from the configured entry and write a pack.
 // The ES entry is not evaluated; CommonJS export discovery can execute dependencies.
 int quicktui_build_pack(const char *out_path) {
@@ -820,6 +835,8 @@ int quicktui_build_pack(const char *out_path) {
     JSRuntime *rt = JS_NewRuntime();
     if (!rt) return 1;
     JS_SetMemoryLimit(rt, 1024u * 1024 * 1024);
+    double deadline=build_clock_ms()+30000;
+    JS_SetInterruptHandler(rt,build_interrupt,&deadline);
     // Like qjsc's default: drop function source text (Function.prototype.toString
     // then returns a stub) but keep line tables for stack traces.
     JS_SetStripInfo(rt, JS_STRIP_SOURCE);
@@ -833,6 +850,7 @@ int quicktui_build_pack(const char *out_path) {
     loader->recorder = &recorder;
     if (load_graph(ctx, entry_source, sizeof(entry_source) - 1, "<quicktui>") < 0) { print_exception(ctx, "entry"); goto done; }
     if (follow_requires(ctx, loader) < 0) goto done;
+    if (build_clock_ms()>deadline) { fputs("quicktui pack: compilation budget exhausted\n",stderr); goto done; }
 
     uint8_t *buf = NULL; size_t len = 0, cap = 0;
     unsigned counts[4] = { 0 };

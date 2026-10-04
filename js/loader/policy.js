@@ -43,7 +43,7 @@
   const platform = join(base, "js/platform");
   const vendorJs = join(base, "vendor/js");
   const entry = resolvePath(base, config.entry);
-  const appRoot = dirname(entry);
+  const appRoot = config.appRoot ? normalize(config.appRoot) : dirname(entry);
   // Stable IDs belong to the library or application root, never the build machine.
   function moduleId(path) {
     if (!path.startsWith("/")) return path;
@@ -120,7 +120,7 @@
     if (/bun-ffi-structs\/dist\/index\.js$/.test(id)) {
       const start = text.indexOf("// src/structs_ffi.ts");
       if (start < 0) throw new Error(`bun-ffi-structs patch anchor not found in ${id}`);
-      return `import {ptr,toArrayBuffer} from ${JSON.stringify(join(platform, "ffi.ts"))};\n` + text.slice(start);
+      return `import {ptr,toArrayBuffer} from ${JSON.stringify(moduleId(join(platform, "ffi.ts")))};\n` + text.slice(start);
     }
     return text;
   }

@@ -1,4 +1,4 @@
-import {test,expect} from "bun:test";
+import {test,expect} from "./assert";
 import {AppKeyEvent,HeldKeys,keyboardFlags,dispatchAppKey} from "../js/keyboard";
 import {StdinParser} from "../vendor/opentui/packages/core/src/lib/stdin-parser";
 import {PlatformGame} from "../js/game-model";

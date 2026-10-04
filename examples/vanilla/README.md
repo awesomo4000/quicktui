@@ -10,7 +10,6 @@ below excludes React entirely.
 From the repository root:
 
 ```sh
-bun scripts/bundle-app.ts examples/vanilla/app.ts examples/vanilla/app.js
 cd examples/vanilla
 zig build -Doptimize=ReleaseSmall
 ./zig-out/bin/consumer
@@ -24,3 +23,6 @@ independent build and PTY test.
 Property changes schedule a frame automatically. The example also checks child
 reordering/removal, subscription removal, and that key-up does not insert text.
 See [the core API](../../docs/core-api.md) for lifecycle and adapter details.
+
+The build uses Zig and the embedded QuickJS transpiler; Bun is not required.
+The executable has filesystem module loading disabled.

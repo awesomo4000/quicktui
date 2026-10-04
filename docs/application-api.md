@@ -5,12 +5,12 @@ available as `quicktui/react`.
 # Building an application with QuickTUI
 
 The [independent consumer](../examples/consumer/) is a complete small application.
-That example uses a generated JS file; rebundling its TSX requires Bun.
-The [pack consumer](../examples/pack-consumer/) instead builds directly from TSX
-with Zig and embeds a closed module graph. See [source modules](source-modules.md)
-for development loading and pack-only release configuration.
+It builds its TSX with Zig's build-host pack tool and embeds the result. Bun is
+not required. The consumer disables filesystem module loading in its executable.
+See [source modules](source-modules.md) for `addModulePack`, `runPack`, and source
+loading during development.
 
-## Bundling
+## Legacy bundle compatibility
 
 ```sh
 bun path/to/quicktui/scripts/bundle-app.ts app.tsx generated/app.js
@@ -138,12 +138,13 @@ Input and resize flush scheduled UI work. Use the same `mountApp` as production.
 
 ```sh
 zig build test -Doptimize=ReleaseSmall
-zig build test-paste test-bundler
+zig build test-paste test-keyboard
 zig build test-endpoint-terminal -Doptimize=ReleaseSmall
 zig build test-consumer
 ```
 
-The extra tests require Bun and/or Python. They use disposable pipes, PTYs, and
+The extra PTY and consumer tests require Python. Input unit tests run in QuickJS.
+The optional `test-bundler` comparison still requires Bun. They use disposable pipes, PTYs, and
 temporary directories. Tests cover closed and faulty endpoints, hangup with queued
 messages, sending during hangup, message flooding alongside other event sources,
 full-queue shutdown, repeated teardown, paste fragmentation and overflow, and an

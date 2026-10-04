@@ -40,6 +40,8 @@ pub const Options = struct {
     /// Entry module, absolute or relative to root.
     entry: [:0]const u8,
     demo_assets: bool = false,
+    /// Application source tree; defaults to the entry directory.
+    app_root: ?[:0]const u8 = null,
     /// Overrides the default cache directory; empty disables the cache.
     cache_dir: ?[:0]const u8 = null,
     /// buildPack only: depfile path for build systems.
@@ -53,6 +55,7 @@ pub fn enable(allocator: std.mem.Allocator, options: Options) !void {
     const root = try absolute(allocator, options.root);
     config.root = root;
     config.entry = if (options.entry.len > 0 and options.entry[0] == '/') options.entry else try std.fmt.allocPrintSentinel(allocator, "{s}/{s}", .{ root, options.entry }, 0);
+    config.app_root = if (options.app_root) |path| try absolute(allocator, path) else "";
     config.demo_assets = @intFromBool(options.demo_assets);
     config.cache_dir = if (options.cache_dir) |dir| dir else try defaultCacheDir(allocator);
     config.trace = @intFromBool(getenv("QUICKTUI_TRACE_MODULES") != null);

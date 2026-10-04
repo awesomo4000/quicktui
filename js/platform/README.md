@@ -2,7 +2,7 @@
 
 `symbols.json` is the shared runtime allowlist. `bindings.json` records the
 FFI declaration, checked native argument and return types, and source location
-for each of its 247 functions. `scripts/generate-bindings.ts` refuses unknown
+for each of its 247 functions. `scripts/generate-bindings.py` refuses unknown
 native types and signature mismatches, then writes fixed C calls. Pointer-taking
 arguments use the platform C pointer ABI; native object handles remain `u32`.
 

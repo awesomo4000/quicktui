@@ -3,7 +3,8 @@
 `quicktui/core` runs a terminal application without React. `quicktui` remains the
 compatible React entry point; `quicktui/react` is an explicit alias for it. Both
 use the same input parser, terminal context, native renderer, and host lifecycle.
-Use the QuickTUI bundler for all three entry points.
+All three entry points work with the QuickTUI source loader and module packer.
+The legacy Bun bundler remains available for comparison.
 
 ```js
 import {createApplication} from "quicktui/core";
@@ -27,7 +28,8 @@ app.onKey(event => {
 });
 ```
 
-The native caller runs the bundle with Zig `quicktui.runApp`. Calling
+The native caller runs an embedded pack with Zig `quicktui.runPack`, or a legacy
+bundle with `quicktui.runApp`. Calling
 `createApplication` initializes its tree; there is no separate JS `run()` call.
 The native host owns the event loop. Only one application may be created in a
 QuickJS runtime. Native host reload replaces that runtime, not just its tree.
@@ -136,7 +138,9 @@ the render-context contract is refined during consumer testing. Existing
 
 See [the vanilla consumer](../examples/vanilla/README.md). `zig build test-vanilla`
 builds it outside this checkout and checks rendering, input, node updates,
-subscription cleanup, paste/resize, and PTY shutdown. `zig build test-bundler`
-checks that its source map includes no React, reconciler, or scheduler modules.
+subscription cleanup, paste/resize, and PTY shutdown. It also checks that the
+packed executable contains no React, reconciler, or scheduler module IDs.
+The optional legacy `test-bundler` comparison checks the same exclusions in
+bundle source maps.
 License notices may still mention those vendored dependencies; that does not
 mean their runtime code is included.

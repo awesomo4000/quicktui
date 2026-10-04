@@ -6,11 +6,13 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 
 root = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser()
 parser.add_argument('--libc')
+parser.add_argument('--target')
 args = parser.parse_args()
 with tempfile.TemporaryDirectory(prefix='quicktui-pack-consumer-') as directory:
     work = Path(directory).resolve()
@@ -20,6 +22,8 @@ with tempfile.TemporaryDirectory(prefix='quicktui-pack-consumer-') as directory:
     manifest.write_text(manifest.read_text().replace('"../.."', json.dumps(os.path.relpath(root, work))))
     command = ['zig', 'build', '-Doptimize=ReleaseSmall', '--global-cache-dir', str(root / '.zig-cache/global')]
     if args.libc: command += ['--libc', args.libc]
+    if args.target: command += ['-Dtarget='+args.target]
+    command += ['-j2']
     subprocess.run(command, cwd=work, check=True, timeout=240)
     executable = work / 'zig-out/bin/consumer'
     # Remove application sources and make a real, safe file that was not packed.
@@ -33,7 +37,8 @@ with tempfile.TemporaryDirectory(prefix='quicktui-pack-consumer-') as directory:
         symbols = subprocess.check_output(['nm', str(executable)], text=True)
         for symbol in ['qt_fs_read', 'qt_fs_write', 'qt_fs_is_file', 'qt_cache_get', 'qt_cache_put', 'quicktui_build_pack']:
             assert symbol not in symbols, f'Release contains {symbol}'
+    subprocess.run([sys.executable, str(root/'scripts/check-pack-loader.py')], check=True)
     data = executable.read_bytes()
     assert b'__loaderPolicy' not in data, 'Release contains transpiler'
     assert str(work).encode() not in data, 'Release leaks application build path'
-    print('Pack consumer: typing, paste, resize, closed imports, ignored overrides, no loader symbols passed')
+    print('Pack consumer: typing, paste, resize, closed imports, ignored overrides and loader exclusion passed')

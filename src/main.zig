@@ -26,14 +26,27 @@ pub fn main(init: std.process.Init) !void {
         if (args.len >= 3 and (std.mem.eql(u8, args[1], "--run") or std.mem.eql(u8, args[1], "--run-pack"))) {
             var headless = false;
             var reload = false;
+            var app_root: ?[:0]const u8 = null;
+            var expect_root = false;
             for (args[3..]) |flag| {
+                if (expect_root) {
+                    app_root = flag;
+                    expect_root = false;
+                    continue;
+                }
+                if (std.mem.eql(u8, flag, "--app-root")) {
+                    expect_root = true;
+                    continue;
+                }
                 if (std.mem.eql(u8, flag, "--self-test")) headless = true else if (std.mem.eql(u8, flag, "--reload")) reload = true else return error.InvalidArguments;
             }
+            if (expect_root) return error.InvalidArguments;
             if (std.mem.eql(u8, args[1], "--run-pack")) {
                 runtime.modules.enablePack(try runtime.modules.readPack(args[2]));
             } else try runtime.modules.enable(arena, .{
                 .root = source_root orelse runtime.modules.default_root,
                 .entry = try runtime.modules.absolute(arena, args[2]),
+                .app_root = app_root,
             });
             return runtime.runApp("", .{ .headless = headless, .reload = reload });
         }

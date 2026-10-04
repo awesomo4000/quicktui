@@ -134,17 +134,20 @@ list/tab navigation, scrolling, sliders, diff switching, Markdown, and resizing.
 
 ## Editing the example
 
-Edit `js/counter.tsx`, `js/mouse.tsx`, `js/gallery-app.tsx`, or `js/messages.tsx`, then regenerate the checked-in bundles with Bun:
+Edit `js/counter.tsx`, `js/mouse.tsx`, `js/gallery-app.tsx`, or `js/messages.tsx`,
+then build. Zig tracks the module pack dependencies and recompiles affected packs.
 
 ```sh
-zig build bundle
 zig build test
-zig build
+zig build -Doptimize=ReleaseSmall
+# Development source loading, without a separate bundler:
+./zig-out/bin/quicktui --run examples/consumer/app.tsx --reload
 ```
 
-Bundle regeneration was tested with Bun 1.3.14. It resolves packages from
-`vendor/js/node_modules`; no install step is needed. `bundle` also regenerates
-the fixed C wrappers and checks their signatures against the pinned native source.
+Normal application development and distribution require no Bun. `zig build bindings`
+uses Python to regenerate the fixed C wrappers and verify their native signatures.
+The old `bundle` and `bundle-termpaint` steps remain optional Bun-based comparison
+paths; `-Dmodule-pack=false` selects those checked-in legacy bundles.
 
 
 ## Native messages example
@@ -370,20 +373,20 @@ ES module imports, and Node APIs need an external bundling step.
 recovery. `zig build test-live` checks actual file edits, atomic-save watching,
 and terminal cleanup using disposable files in `/tmp`.
 
-## Shared JavaScript bundle
+## Shared JavaScript modules
 
-`js/examples.ts` selects the demo and `scripts/bundle.ts` builds one dependency
-graph into `src/examples.js`. React, the reconciler, OpenTUI, and utility packages
-are included once. The native executable embeds that bundle once and passes the
-selected example name to the host. Lazy module initializers start only the chosen
-demo; the smoke check also reuses the same React modules.
+`js/examples.ts` selects the demo. Zig invokes `quicktui-pack` to compile its
+module graph, including one copy of React, the reconciler, OpenTUI, and utilities.
+The executable embeds that pack and evaluates only the selected demo. Termpaint
+has a separate pack. Source files and Bun are not needed to run either executable.
 
-The matching macOS arm64 ReleaseSmall builds measured 10,273,000 bytes before
-sharing and 7,909,064 bytes after sharing. JS remains unminified, and dragon assets
-are unchanged.
+Use `-Dsource-loader=false` for a release that also excludes filesystem module
+loading, source transpilation, and the disk module cache. See
+[source modules and packs](docs/source-modules.md) for the consumer build API.
 
-There are no runtime JS files to install. Regenerating the bundle checks that
-React, its reconciler, and the native-library adapter each occur once.
+The historical bundled build measured 10,273,000 bytes before library sharing
+and 7,909,064 bytes after sharing on macOS arm64 ReleaseSmall. Those are bundle-era
+measurements, not measurements of current pack builds.
 
 ## Implementation
 
@@ -392,7 +395,7 @@ React, its reconciler, and the native-library adapter each occur once.
 - `js/counter.tsx` supplies the React application and a minimal OpenTUI render context. OpenTUI's root render traversal determines layout and drawing after a dirty notification.
 - `js/platform/` provides the restricted component catalogue, scheduling and UTF-8 adapters, and native registry interface.
 - `src/native_bridge.c` handles pointers and fixed callback registrations. `src/native_generated.c` contains the selected native wrappers.
-- `scripts/bundle.ts` adapts upstream runtime imports at bundle time. The upstream React host configuration and box/text implementations remain in use.
+- `js/loader/policy.js` adapts upstream imports when compiling modules. The upstream React host configuration and box/text implementations remain in use. The optional legacy bundler mirrors this policy.
 - `vendor/` contains pinned sources, npm packages, licenses, and provenance.
 
 See [the binding contract](js/platform/README.md) and
@@ -529,7 +532,7 @@ These are not implemented by the editor demo.
 ### termpaint: standalone paint application
 
 `zig build -Doptimize=ReleaseSmall` also installs **termpaint**, a separate
-executable with its own JS bundle and no embedded demo pictures.
+executable with its own module pack and no embedded demo pictures.
 
 ```sh
 zig-out/bin/termpaint
@@ -560,8 +563,8 @@ index per character to keep even the largest canvas below the file worker limit;
 versions 1 and 2 paintings still load. Saving uses the
 native file worker and asks before replacing an existing file. Pass a filename
 when starting termpaint to reopen a drawing or choose a new save destination.
-`zig build bundle-termpaint` regenerates its checked-in JS using Bun;
-`zig build bundle` regenerates both application bundles. Normal builds need only Zig.
+`zig build` rebuilds its pack from source automatically. The legacy
+`bundle-termpaint` and `bundle` steps remain optional Bun-based comparisons.
 
 The original sprite sheet `examples/paint/players-monsters.tpaint` contains twenty
 16×16 tiles: adventurer, slime, bat, and skeleton rows, with five poses each. Its
@@ -644,7 +647,7 @@ the unsaved counter resets. The generation number and accent color change.
 **Ctrl+B** tries a deliberately broken bundle and demonstrates reconstruction from
 the previous bundle and snapshot. **Ctrl+C** exits normally.
 
-06b currently reuses the embedded application bundle on Ctrl+R. It has no disk watcher.
+06b reuses the embedded application pack on Ctrl+R in the default build. It has no disk watcher.
 It exercises the experimental `runReloadable` host rather than component evaluation
 inside the old runtime. Preparation renders into the native next-frame buffer;
 the previous complete frame remains displayed until the host presents the new one.

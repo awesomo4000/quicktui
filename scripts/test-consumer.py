@@ -11,8 +11,10 @@ with tempfile.TemporaryDirectory(prefix='quicktui-consumer-') as directory:
     for name in (entry,'main.zig','build.zig'):
         shutil.copy(root/source_dir/name,app/name)
     (app/'build.zig.zon').write_text('.{ .name = .quicktui_consumer, .version = "0.0.0", .dependencies = .{ .quicktui = .{ .path = '+json.dumps(os.path.relpath(root,app))+' } }, .paths = .{""} }')
-    subprocess.run(['bun',str(root/'scripts/bundle-app.ts'),entry,'app.js'],cwd=app,check=True)
     command=['zig','build','--cache-dir',str(app/'.zig-cache'),'-Doptimize=ReleaseSmall','--global-cache-dir',str(root/'.zig-cache/global')]
+    if '--libc' in sys.argv: command+=['--libc',sys.argv[sys.argv.index('--libc')+1]]
+    if '--target' in sys.argv: command+=['-Dtarget='+sys.argv[sys.argv.index('--target')+1]]
+    command+=['-j2']
     result=subprocess.run(command,cwd=app,capture_output=True,text=True)
     # Zig derives a package fingerprint from its name; record the suggestion only
     # in this disposable manifest, never by editing the checked-in project.
@@ -24,6 +26,10 @@ with tempfile.TemporaryDirectory(prefix='quicktui-consumer-') as directory:
             result=subprocess.run(command,cwd=app,capture_output=True,text=True)
     if result.returncode: raise RuntimeError(result.stderr)
     executable=app/'zig-out/bin/consumer'
+    if vanilla_test:
+        binary=executable.read_bytes()
+        for package in ('react','react-reconciler','scheduler'):
+            assert ('quicktui:/vendor/js/node_modules/'+package+'/').encode() not in binary, 'Vanilla pack includes '+package
     if not reload_test: subprocess.run([str(executable),'--self-test'],check=True,timeout=30)
     master,slave=pty.openpty();saved=termios.tcgetattr(slave)
     fcntl.ioctl(slave,termios.TIOCSWINSZ,struct.pack('HHHH',24,80,0,0))

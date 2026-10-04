@@ -2,6 +2,12 @@
 
 ## Unreleased - 10/04/2026
 
+- Make module packs the default build and migrate standalone consumers to packs.
+  Run input regression tests in QuickJS and generate native bindings with Python.
+- Fix the Linux native-test stdout protocol hang with a bounded standalone runner.
+- Bound source compilation, add explicit application roots, and test cache,
+  module-cycle, pack-framing, and compilation-timeout behavior.
+
 - Integrate source modules and packs on a development branch; add a build-time
   switch that excludes filesystem module loading from embedded-pack releases.
 - Use logical module IDs, remove duplicate bundles from pack builds, and add

@@ -1,4 +1,4 @@
-import {test,expect} from "bun:test";
+import {test,expect} from "./assert";
 import {StdinParser} from "../vendor/opentui/packages/core/src/lib/stdin-parser";
 const start="\x1b[200~",end="\x1b[201~",encoder=new TextEncoder();
 function collect(chunks:Uint8Array[],limit=1024){

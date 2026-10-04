@@ -22,7 +22,7 @@ pub fn build(b: *std.Build) void {
     const pack_tool = addPackTool(b);
     const source_loader = b.option(bool, "source-loader", "Include filesystem source loading and transpilation (disable for embedded-pack releases)") orelse true;
     if (source_loader) b.installArtifact(pack_tool);
-    const use_pack = b.option(bool, "module-pack", "Embed precompiled module packs and load them instead of evaluating the JS bundles") orelse !source_loader;
+    const use_pack = b.option(bool, "module-pack", "Embed precompiled module packs and load them instead of evaluating the JS bundles") orelse true;
     if (!source_loader and !use_pack) @panic("-Dsource-loader=false requires -Dmodule-pack=true for the demos");
     const app_options = b.addOptions();
     app_options.addOption(bool, "module_pack", use_pack);
@@ -80,7 +80,7 @@ pub fn build(b: *std.Build) void {
     b.step("run", "Run the interactive React / QuickJS / OpenTUI counter").dependOn(&run.step);
 
     const tests = b.addTest(.{ .root_module = runtime });
-    const run_tests = b.addRunArtifact(tests);
+    const run_tests = runNativeTests(b, tests);
     const test_step = b.step("test", "Test JavaScript evaluation, jobs, errors, and native ABI calls");
     test_step.dependOn(&run_tests.step);
     for ([_][]const u8{ "--game-self-test", "--keyboard-self-test", "--vanilla-self-test" }) |flag| {
@@ -117,7 +117,7 @@ pub fn build(b: *std.Build) void {
         .link_libc = true,
         .imports = &.{.{ .name = "quicktui", .module = runtime }},
     }) });
-    const lab_native_run = b.addRunArtifact(lab_native_test);
+    const lab_native_run = runNativeTests(b, lab_native_test);
     test_step.dependOn(&lab_native_run.step);
     const editor_worker_tests = b.addTest(.{ .root_module = b.createModule(.{
         .root_source_file = b.path("src/examples/editor_worker.zig"),
@@ -126,7 +126,7 @@ pub fn build(b: *std.Build) void {
         .link_libc = true,
         .imports = &.{.{ .name = "quicktui", .module = runtime }},
     }) });
-    test_step.dependOn(&b.addRunArtifact(editor_worker_tests).step);
+    test_step.dependOn(&runNativeTests(b, editor_worker_tests).step);
     const editor_test = b.addRunArtifact(exe);
     editor_test.addArg("--editor-self-test");
     test_step.dependOn(&editor_test.step);
@@ -140,7 +140,7 @@ pub fn build(b: *std.Build) void {
         .link_libc = true,
         .imports = &.{.{ .name = "quicktui", .module = runtime }},
     }) });
-    const run_worker_tests = b.addRunArtifact(worker_tests);
+    const run_worker_tests = runNativeTests(b, worker_tests);
     test_step.dependOn(&run_worker_tests.step);
     const mouse_test = b.addRunArtifact(exe);
     mouse_test.addArg("--mouse-self-test");
@@ -160,13 +160,26 @@ pub fn build(b: *std.Build) void {
     endpoint_pty.addArtifactArg(endpoint_terminal);
     b.step("test-endpoint-terminal", "Stress input, resize, disconnect and quit under message flood").dependOn(&endpoint_pty.step);
     const consumer_test = b.addSystemCommand(&.{ "python3", "scripts/test-consumer.py" });
-    b.step("test-consumer", "Build and run an external consumer, requires Bun and Python").dependOn(&consumer_test.step);
+    b.step("test-consumer", "Build and run an external packed consumer, requires Python").dependOn(&consumer_test.step);
     const vanilla_test = b.addSystemCommand(&.{ "python3", "scripts/test-consumer.py", "--vanilla" });
     b.step("test-vanilla", "Build and exercise a React-free consumer").dependOn(&vanilla_test.step);
     const bundler_test = b.addSystemCommand(&.{ "bun", "test", "tests/bundler.test.ts" });
     b.step("test-bundler", "Check consumer imports and source maps, requires Bun").dependOn(&bundler_test.step);
-    const paste_test = b.addSystemCommand(&.{ "bun", "test", "tests/paste.test.ts" });
-    b.step("test-paste", "Exercise fragmented and oversized paste input, requires Bun").dependOn(&paste_test.step);
+    const input_suite = b.addExecutable(.{
+        .name = "input-tests",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/input_tests.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{.{ .name = "quicktui", .module = runtime }},
+        }),
+    });
+    input_suite.root_module.addAnonymousImport("input-tests.pack", .{
+        .root_source_file = modulePack(b, pack_tool, b.path("."), b.path("tests/input-suite.ts"), "input-tests.pack", false),
+    });
+    const input_units = b.addRunArtifact(input_suite);
+    b.step("test-paste", "Exercise paste and keyboard input in QuickJS").dependOn(&input_units.step);
+    test_step.dependOn(&input_units.step);
 
     const failure_test = b.addExecutable(.{
         .name = "quicktui-failure-test",
@@ -194,8 +207,8 @@ pub fn build(b: *std.Build) void {
     const reload_consumer_test = b.addSystemCommand(&.{ "python3", "scripts/test-consumer.py", "--reload" });
     reload_consumer_test.setCwd(b.path("."));
     b.step("test-reload-consumer", "Build and test the public reload API outside the checkout").dependOn(&reload_consumer_test.step);
-    const keyboard_units = b.addSystemCommand(&.{ "bun", "test", "tests/keyboard.test.ts" });
-    keyboard_units.setCwd(b.path("."));
+    const keyboard_units = input_units;
+
     const keyboard_pty = b.addSystemCommand(&.{ "python3", "scripts/test-keyboard.py" });
     keyboard_pty.setCwd(b.path("."));
     keyboard_pty.addArtifactArg(exe);
@@ -228,8 +241,9 @@ pub fn build(b: *std.Build) void {
     const bundle = b.addSystemCommand(&.{ "bun", "scripts/bundle.ts" });
     bundle.setCwd(b.path("."));
     b.step("bundle", "Regenerate the checked-in JavaScript bundle using Bun").dependOn(&bundle.step);
-    const bindings = b.addSystemCommand(&.{ "bun", "scripts/generate-bindings.ts" });
+    const bindings = b.addSystemCommand(&.{ "python3", "scripts/generate-bindings.py" });
     bindings.setCwd(b.path("."));
+    b.step("bindings", "Regenerate native bindings with Python").dependOn(&bindings.step);
     bundle.step.dependOn(&bindings.step);
     const paint_bundle = b.addSystemCommand(&.{ "bun", "scripts/bundle.ts", "--termpaint" });
     paint_bundle.setCwd(b.path("."));
@@ -307,7 +321,19 @@ pub fn addModulePack(b: *std.Build, quicktui: *std.Build.Dependency, entry: std.
     run.addDirectoryArg(quicktui.path("."));
     run.addFileArg(entry);
     const pack = run.addOutputFileArg("app.pack");
+    run.addArg("--app-root");
+    run.addDirectoryArg(b.path("."));
     run.addArg("--depfile");
     _ = run.addDepFileOutputArg("app.pack.d");
     return pack;
+}
+
+// Native tests print to stdout. On x86-64 Zig otherwise uses stdout for its
+// --listen protocol, so run the stock runner directly with an exit-code check.
+fn runNativeTests(b: *std.Build, tests: *std.Build.Step.Compile) *std.Build.Step.Run {
+    const run = b.addSystemCommand(&.{"python3"});
+    run.addFileArg(b.path("scripts/run-native-tests.py"));
+    run.addArtifactArg(tests);
+    run.expectExitCode(0);
+    return run;
 }

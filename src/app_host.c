@@ -47,7 +47,7 @@ typedef struct {
     char diagnostics[16384];
     size_t used;
     const char *original_source; // source mode loads modules only for this, not replacement bundles
-    int compile_depth;double compile_remaining; // deadline paused while compiling modules
+    int compile_depth;double compile_remaining,compile_started,compile_budget; // separate cumulative loader budget
 } AppHost;
 static volatile sig_atomic_t interrupted;
 static volatile sig_atomic_t resized;
@@ -300,12 +300,24 @@ static void rejection(JSContext *ctx,JSValueConst promise,JSValueConst reason,JS
 static int interrupt_js(JSRuntime *runtime,void *opaque) {
     (void)runtime;AppHost *host=opaque;return interrupted || (host&&host->deadline&&monotonic_ms()>host->deadline);
 }
-// Source mode: deadlines bound application JavaScript, not module compilation.
-// Ctrl+C still interrupts a compile.
-static void compile_hook(JSContext *ctx,int begin) {
-    AppHost *host=JS_GetContextOpaque(ctx);if(!host)return;
-    if(begin){if(host->compile_depth++==0){host->compile_remaining=host->deadline?host->deadline-monotonic_ms():0;host->deadline=0;}}
-    else if(--host->compile_depth==0&&host->compile_remaining)host->deadline=monotonic_ms()+host->compile_remaining;
+// Source work has a cumulative 30-second budget per UI runtime. Preserve the
+// application's shorter preparation budget while the loader transforms sources.
+static int compile_hook(JSContext *ctx,int begin) {
+    AppHost *host=JS_GetContextOpaque(ctx);if(!host)return 0;
+    double now=monotonic_ms();
+    if(begin){
+        if(host->compile_budget<=0){JS_ThrowInternalError(ctx,"Module compilation budget exhausted");return -1;}
+        if(host->compile_depth++==0){
+            host->compile_remaining=host->deadline?host->deadline-now:0;
+            host->compile_started=now;
+            host->deadline=now+host->compile_budget;
+        }
+    }else if(--host->compile_depth==0){
+        host->compile_budget-=now-host->compile_started;
+        host->deadline=host->compile_remaining?now+host->compile_remaining:0;
+        if(host->compile_budget<=0){JS_ThrowInternalError(ctx,"Module compilation budget exhausted");return -1;}
+    }
+    return 0;
 }
 static void dimensions(int *width,int *height) {
     struct winsize size;
@@ -347,6 +359,7 @@ static int expect_text(JSContext *ctx,const char *needle) {
     return ok;
 }
 static void configure_ui(AppHost *host,JSContext *ctx,const char *source,size_t length,const char *example,int *ffi) {
+    host->compile_budget=30000;host->compile_depth=0;
     JSValue global=JS_GetGlobalObject(ctx), services=JS_NewObject(ctx), env=JS_NewObject(ctx);
     if(host->endpoint){JS_SetPropertyStr(ctx,services,"postMessage",JS_NewCFunction(ctx,post_message,"postMessage",1));JS_SetPropertyStr(ctx,services,"tryPostMessage",JS_NewCFunction(ctx,try_post_message,"tryPostMessage",1));}
     if(host->endpoint&&host->endpoint->borrow_buffer&&host->endpoint->release_buffer)JS_SetPropertyStr(ctx,services,"takeBuffer",JS_NewCFunction(ctx,take_buffer,"takeBuffer",1));
