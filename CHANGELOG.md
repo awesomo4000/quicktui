@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased - 10/04/2026
+
+- Integrate source modules and packs on a development branch; add a build-time
+  switch that excludes filesystem module loading from embedded-pack releases.
+- Use logical module IDs, remove duplicate bundles from pack builds, and add
+  portable mode-parity and independent pack-consumer checks.
+
 ## Unreleased - 10/03/2026
 
 - Add source-module mode: `quicktui --run app.tsx [--reload] [--self-test]` and `QUICKTUI_SOURCE=<checkout>` load `.ts`/`.tsx` directly through QuickJS's module loader, with vendored Sucrase for types and JSX, CommonJS facades, and a BLAKE3-keyed bytecode cache. No Bun at build or run time. Every demo self-test and both consumer self-tests pass in source mode; `--reload` picks up edited files. See [docs/source-modules.md](docs/source-modules.md).

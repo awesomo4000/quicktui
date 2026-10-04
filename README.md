@@ -169,3 +169,11 @@ terminal runtime and widgets as the React adapter. Start with the
 [vanilla example](examples/vanilla/README.md) or the [core API](docs/core-api.md).
 The existing `quicktui` React API continues to work; `quicktui/react` is its
 explicit alias. Elm, Solid, and Svelte adapters remain future work.
+
+### Source development and packed applications
+
+The integration branch supports running TS/TSX directly with
+`quicktui --run app.tsx --reload`. For distribution, the
+[pack consumer](examples/pack-consumer/README.md) compiles its module graph at
+build time and embeds it without a filesystem module loader. See
+[source modules and packs](docs/source-modules.md) for build options and limits.

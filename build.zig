@@ -20,8 +20,10 @@ pub fn build(b: *std.Build) void {
     const quickjs = quickjsLibrary(b, target, optimize);
     // Module packs (docs/source-modules.md). The tool runs on the build host.
     const pack_tool = addPackTool(b);
-    b.installArtifact(pack_tool);
-    const use_pack = b.option(bool, "module-pack", "Embed precompiled module packs and load them instead of evaluating the JS bundles") orelse false;
+    const source_loader = b.option(bool, "source-loader", "Include filesystem source loading and transpilation (disable for embedded-pack releases)") orelse true;
+    if (source_loader) b.installArtifact(pack_tool);
+    const use_pack = b.option(bool, "module-pack", "Embed precompiled module packs and load them instead of evaluating the JS bundles") orelse !source_loader;
+    if (!source_loader and !use_pack) @panic("-Dsource-loader=false requires -Dmodule-pack=true for the demos");
     const app_options = b.addOptions();
     app_options.addOption(bool, "module_pack", use_pack);
 
@@ -36,7 +38,7 @@ pub fn build(b: *std.Build) void {
     runtime.addIncludePath(b.path("vendor/quickjs"));
     runtime.addCSourceFile(.{ .file = b.path("src/quickjs_bridge.c"), .flags = &.{"-std=c11"} });
     runtime.addCSourceFiles(.{ .files = &.{ "src/native_bridge.c", "src/native_generated.c", "src/app_host.c", "src/endpoint_tests.c" }, .flags = &.{"-std=c11"} });
-    addModuleLoader(b, runtime);
+    addModuleLoader(b, runtime, source_loader);
     runtime.linkLibrary(quickjs);
     runtime.linkLibrary(native);
 
@@ -252,16 +254,17 @@ fn quickjsLibrary(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std
 }
 
 /// QuickJS module hooks, Sucrase, and the loader policy (src/modules.zig).
-fn addModuleLoader(b: *std.Build, module: *std.Build.Module) void {
+fn addModuleLoader(b: *std.Build, module: *std.Build.Module, source_loader: bool) void {
     module.addIncludePath(b.path("vendor/quickjs"));
     module.addIncludePath(b.path("src"));
-    module.addCSourceFile(.{ .file = b.path("src/module_loader.c"), .flags = &.{ "-std=c11", "-DQUICKJS_LOADER_VERSION=\"2026-06-04\"" } });
-    module.addAnonymousImport("quicktui-sucrase", .{ .root_source_file = b.path("vendor/sucrase/sucrase.js") });
-    module.addAnonymousImport("quicktui-loader-policy", .{ .root_source_file = b.path("js/loader/policy.js") });
+    module.addCSourceFile(.{ .file = b.path("src/module_loader.c"), .flags = &.{ "-std=c11", "-DQUICKJS_LOADER_VERSION=\"2026-06-04\"", if (source_loader) "-DQT_SOURCE_LOADER=1" else "-DQT_SOURCE_LOADER=0" } });
+    if (source_loader) module.addAnonymousImport("quicktui-sucrase", .{ .root_source_file = b.path("vendor/sucrase/sucrase.js") });
+    if (source_loader) module.addAnonymousImport("quicktui-loader-policy", .{ .root_source_file = b.path("js/loader/policy.js") });
     module.addAnonymousImport("quicktui-loader-cjs", .{ .root_source_file = b.path("js/loader/cjs.js") });
     const options = b.addOptions();
     // Default checkout for `--run` when QUICKTUI_SOURCE is unset.
-    options.addOption([]const u8, "source_root", b.build_root.path orelse ".");
+    options.addOption(bool, "source_loader", source_loader);
+    options.addOption([]const u8, "source_root", if (source_loader) b.build_root.path orelse "." else "");
     module.addOptions("quicktui_build_options", options);
 }
 
@@ -274,7 +277,7 @@ fn addPackTool(b: *std.Build) *std.Build.Step.Compile {
         .optimize = .ReleaseFast,
         .link_libc = true,
     });
-    addModuleLoader(b, module);
+    addModuleLoader(b, module, true);
     module.linkLibrary(quickjsLibrary(b, host, .ReleaseFast));
     return b.addExecutable(.{ .name = "quicktui-pack", .root_module = module });
 }
@@ -300,7 +303,7 @@ fn modulePack(b: *std.Build, tool: *std.Build.Step.Compile, root: std.Build.Lazy
 ///   exe.root_module.addAnonymousImport("app.pack", .{ .root_source_file = pack });
 ///   // main.zig: try quicktui.runPack(@embedFile("app.pack"), .{});
 pub fn addModulePack(b: *std.Build, quicktui: *std.Build.Dependency, entry: std.Build.LazyPath) std.Build.LazyPath {
-    const run = b.addRunArtifact(quicktui.artifact("quicktui-pack"));
+    const run = b.addRunArtifact(addPackTool(quicktui.builder));
     run.addDirectoryArg(quicktui.path("."));
     run.addFileArg(entry);
     const pack = run.addOutputFileArg("app.pack");

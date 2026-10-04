@@ -1,0 +1,4 @@
+/.zig-cache/
+/zig-out/
+/app.js
+/app.js.map

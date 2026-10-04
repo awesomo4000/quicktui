@@ -24,8 +24,8 @@ QUICKTUI_PACK=examples.pack ./zig-out/bin/quicktui --gallery   # after --build-p
 zig build -Dmodule-pack=true   # embed the demo and termpaint packs instead of evaluating the bundles
 ```
 
-The prebuilt bundles remain the default. Every self-test passes in bundle,
-source, and pack modes.
+The prebuilt bundles remain the default when source loading is enabled.
+The macOS integration checks below cover bundle, source, and pack modes.
 
 ## Pieces
 
@@ -45,7 +45,7 @@ transform exists. All three JavaScript files are embedded in the executable.
 
 1. QuickJS calls the normalize hook with `(specifier, importer)`. The loader
    realm, a second `JSContext` in the application's runtime, runs
-   `policy.resolve` and returns a canonical id: an absolute path, or a
+   `policy.resolve` and returns a canonical id: a `quicktui:/` library ID, an `app:/` application ID, or a
    `quicktui:*` virtual module.
 2. The load hook calls `policy.key(id, mode)`. The cache key is
    BLAKE3(salt, mode, id, kind, patched source). The salt covers the QuickJS
@@ -143,8 +143,8 @@ The examples pack includes about 1.5 MB of base64 sprite frames.
 The header records the QuickJS version and pointer size. A mismatched pack is
 rejected rather than parsed. Bytecode is read with `JS_READ_OBJ_ROM_DATA`, so the
 pack must stay mapped: `@embedFile` data, or `readPack`, which keeps the file
-for the process lifetime. Ids are absolute paths on the build machine; they
-appear in stack traces.
+for the process lifetime. IDs use logical library/application roots in stack traces. Source imports outside
+those roots are rejected; place shared application modules below the entry directory.
 
 ### Applications without Bun
 
@@ -185,5 +185,83 @@ stderr.
 - Source mode reads library modules (`js/`, `vendor/`) from the checkout:
   `QUICKTUI_SOURCE`, or the build root baked into the executable. Packs have
   no such dependency.
-- `-Dmodule-pack=true` still embeds `src/examples.js` too, which `--smoke` and
-  the bundle code paths use.
+- The source loader currently requires application files to be below the entry
+  directory or the QuickTUI checkout.
+
+## Pack-only release builds
+
+Development builds include the source loader by default. To compile it out:
+
+```sh
+zig build -Doptimize=ReleaseSmall -Dsource-loader=false
+```
+
+This also selects embedded demo packs by default. The resulting applications
+contain the pack resolver and CommonJS runtime, but no filesystem module loader,
+Sucrase, source-resolution policy, or disk bytecode cache. The build-host pack
+compiler still reads the sources during the build; it is not installed by this
+configuration. Module path environment overrides are ignored, and `--run`,
+`--run-pack`, and `--build-pack` are unavailable in the resulting demo executable.
+Pack builds no longer embed a redundant copy of the JavaScript bundle.
+
+Library consumers pass `.@"source-loader" = false` in the dependency options,
+then call `addModulePack` at build time and `runPack` at runtime. See
+[the pack consumer](../examples/pack-consumer/README.md).
+
+This removes filesystem **module loading**, not every native application feature.
+The editor and paint examples still use their explicit native file services.
+The live demo and explicit replacement-source reload APIs still evaluate supplied
+JavaScript. Hosts that want a fixed-code application must also choose which of
+those features they expose. Packs and bytecode caches are trusted build artifacts,
+not safe containers for untrusted bytecode.
+
+Source development is also a trusted operation: imports can read files, and
+CommonJS export discovery executes dependencies in the loader context, which has
+file-reading helpers. Building a pack does not evaluate the application's ES
+module entry, but it can execute CommonJS dependencies during that discovery.
+
+## Integration checks
+
+```sh
+python3 scripts/test-modules.py
+python3 scripts/test-modules.py --embedded-only --bin-dir /path/to/pack-only/bin
+python3 scripts/test-pack-consumer.py
+```
+
+The matrix uses Python timeouts and monotonic timing on macOS and Linux. Every
+failure, including termpaint failures, contributes to its exit status. Test
+artifacts and module caches stay in disposable temporary directories.
+
+### macOS integration checkpoint, 10/04/2026
+
+Verified on arm64 with Zig 0.16.0, ReleaseSmall:
+
+- All 48 demo checks across bundle, cold source, warm source, and pack modes.
+- Both independent source consumers and the packed React consumer.
+- Embedded-only demos, smoke check, rejected loader CLI options, ignored source
+  and pack-file environment overrides, and no module cache creation.
+- A separate pack-only consumer, with its source removed and a real unpacked
+  file present. Dynamic import rejected the unpacked file. The executable had
+  no filesystem-loader/cache/build-pack symbols or application build path.
+- The existing `zig build test` suite.
+- `python3 scripts/test-source-reload.py`: edit source, Ctrl+R, updated text,
+  preserved draft, and successful PTY shutdown.
+
+The installed default macOS 27 SDK failed while Zig compiled libc++, with an
+undefined `INFINITY`. These checks used the installed macOS 26.5 SDK instead.
+`SDKROOT` alone did not change Zig's detected libc headers. A temporary libc
+configuration supplied the matching include directories:
+
+```sh
+zig libc > /tmp/quicktui-libc.txt
+# Edit include_dir and sys_include_dir in that temporary file to point to
+# the compatible SDK's usr/include directory.
+SDKROOT=/path/to/MacOSX26.5.sdk zig build -Doptimize=ReleaseSmall --libc /tmp/quicktui-libc.txt
+# test-pack-consumer.py also accepts --libc /tmp/quicktui-libc.txt.
+```
+
+No system SDK selection or installed toolchain was modified. Interactive visual
+checks of every demo and Linux reruns of these integration changes remain to do.
+Before making source loading the default development workflow, review its compile
+budget, CommonJS discovery behavior, and parity with the Bun resolver. The
+existing reload deadline is still paused during source compilation.

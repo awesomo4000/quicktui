@@ -3,7 +3,8 @@
 //!   quicktui-pack <checkout> <entry> <out.pack> [--demo] [--depfile <path>]
 //!
 //! Library modules resolve inside <checkout> (js/, vendor/). Nothing is
-//! evaluated and no disk cache is used, so the output depends only on the
+//! evaluated as an ES module; CommonJS export discovery can execute dependencies.
+//! No disk cache is used, so the output depends only on the
 //! files listed in the depfile and on this tool's embedded loader.
 const std = @import("std");
 const modules = @import("modules.zig");

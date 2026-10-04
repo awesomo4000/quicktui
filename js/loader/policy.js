@@ -43,6 +43,20 @@
   const platform = join(base, "js/platform");
   const vendorJs = join(base, "vendor/js");
   const entry = resolvePath(base, config.entry);
+  const appRoot = dirname(entry);
+  // Stable IDs belong to the library or application root, never the build machine.
+  function moduleId(path) {
+    if (!path.startsWith("/")) return path;
+    if (path.startsWith(base + "/")) return "quicktui:/" + path.slice(base.length + 1);
+    if (path.startsWith(appRoot + "/")) return "app:/" + path.slice(appRoot.length + 1);
+    throw new Error(`Module outside library/application roots: ${path}`);
+  }
+  function modulePath(id) {
+    if (id.startsWith("quicktui:/")) return join(base, id.slice(10));
+    if (id.startsWith("app:/")) return join(appRoot, id.slice(5));
+    return id;
+  }
+
   const replacements = new Map([
     [join(native, "platform/ffi.ts"), join(platform, "ffi.ts")],
     [join(native, "platform/runtime.ts"), join(platform, "runtime.ts")],
@@ -182,6 +196,9 @@
 
   // ---- Resolution (mirrors the onResolve hook) ----------------------------
   function resolve(spec, importer) {
+    return moduleId(resolveFile(modulePath(spec), modulePath(importer)));
+  }
+  function resolveFile(spec, importer) {
     if (spec === "quicktui:entry" || virtualSources.has(spec)) return spec;
     if (aliases.has(spec)) return aliases.get(spec);
     if (spec === "react" || spec.startsWith("react/")) return resolvePackage(spec, vendorJs);
@@ -222,14 +239,15 @@
       // Same order as the bundle's entry: bootstrap first when hosted. Static
       // imports keep evaluation synchronous, like the bundle's IIFE.
       const imports = config.hosted ? [join(platform, "bootstrap.ts"), entry] : [entry];
-      result = { kind: "esm", text: imports.map((path) => `import ${JSON.stringify(path)};`).join("\n") + "\n" };
+      result = { kind: "esm", text: imports.map((path) => `import ${JSON.stringify(moduleId(path))};`).join("\n") + "\n" };
     } else if (virtualSources.has(id)) {
       result = { kind: "ts", text: virtualSources.get(id) };
     } else {
-      const raw = host.read(id);
+      const path = modulePath(id);
+      const raw = host.read(path);
       if (raw === undefined) throw new Error(`Cannot read module ${id}`);
       const ext = extname(id);
-      const text = patch(id, raw);
+      const text = patch(path, raw);
       let kind;
       if (ext === ".ts" || ext === ".mts" || ext === ".cts") kind = "ts";
       else if (ext === ".tsx" || ext === ".jsx") kind = "tsx";
@@ -237,7 +255,7 @@
       else if (ext === ".json") kind = "json";
       else if (ext === ".mjs") kind = "esm";
       else if (ext === ".cjs") kind = "cjs";
-      else kind = packageType(id) === "module" || esmSyntax.test(text) ? "esm" : "cjs";
+      else kind = packageType(path) === "module" || esmSyntax.test(text) ? "esm" : "cjs";
       result = { kind, text: kind === "text" || kind === "json" ? text : applyDefines(text) };
     }
     sources.set(id, result);

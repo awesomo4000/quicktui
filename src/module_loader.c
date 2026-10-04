@@ -155,6 +155,7 @@ static const char *pack_resolve(const Pack *pk, const char *base, const char *na
 typedef struct { uint8_t tag; char *a; size_t a_len; uint8_t *b; size_t b_len; } Record;
 typedef struct { Record *items; size_t count, cap; Table seen; Table read_set; char **reads; size_t read_count, read_cap; } Recorder;
 
+#if QT_SOURCE_LOADER
 // Build mode: remember every file the policy read, for the depfile.
 static void record_read(Recorder *r, const char *path) {
     size_t len = strlen(path);
@@ -209,6 +210,8 @@ static void recorder_free(Recorder *r) {
     memset(r, 0, sizeof(*r));
 }
 
+#endif
+
 // ---- Loader state --------------------------------------------------------------------
 
 typedef struct {
@@ -224,15 +227,19 @@ typedef struct {
 
 int qt_modules_enabled(void) { return qt_modules_config()->active; }
 
+#if QT_SOURCE_LOADER
 static void note_read(JSContext *realm, const char *path, int found) {
     Loader *loader = JS_GetRuntimeOpaque(JS_GetRuntime(realm));
     if (found && loader && loader->recorder) record_read(loader->recorder, path);
 }
 
+#endif
+
 static Loader *loader_of(JSContext *ctx) {
     return JS_GetRuntimeOpaque(JS_GetRuntime(ctx));
 }
 
+#if QT_SOURCE_LOADER
 // ---- Loader realm host functions ---------------------------------------------
 
 static void note_read(JSContext *realm, const char *path, int found);
@@ -318,8 +325,11 @@ static const char *call_policy(JSContext *ctx, Loader *loader, JSValueConst fn, 
     return text;
 }
 
+#endif
+
 // ---- Compilation: pack, then bytecode cache, then build ---------------------------
 
+#if QT_SOURCE_LOADER
 static void record_value(JSContext *ctx, Loader *loader, uint8_t tag, const char *id, JSValueConst value) {
     if (!loader->recorder) return;
     size_t size = 0; uint8_t *bytecode = JS_WriteObject(ctx, &size, value, JS_WRITE_OBJ_BYTECODE);
@@ -329,6 +339,7 @@ static void record_value(JSContext *ctx, Loader *loader, uint8_t tag, const char
 }
 
 static JSValue obtain_uncounted(JSContext *ctx, Loader *loader, const char *id, const char *mode, int eval_type);
+#endif
 // Compile module `id` for `mode` ("module" or "cjs") in ctx, compile-only.
 static JSValue obtain(JSContext *ctx, Loader *loader, const char *id, const char *mode, int eval_type) {
     if (loader->pack) {
@@ -338,13 +349,18 @@ static JSValue obtain(JSContext *ctx, Loader *loader, const char *id, const char
             return JS_ReadObject(ctx, slot->value, slot->value_len, JS_READ_OBJ_BYTECODE | JS_READ_OBJ_ROM_DATA);
         }
     }
+#if QT_SOURCE_LOADER
     if (loader->hook) loader->hook(ctx, 1);
     JSValue value = obtain_uncounted(ctx, loader, id, mode, eval_type);
     if (loader->hook) loader->hook(ctx, 0);
     if (!JS_IsException(value)) record_value(ctx, loader, mode[0] == 'm' ? TAG_MODULE : TAG_CJS, id, value);
     return value;
+#else
+    return JS_ThrowReferenceError(ctx, "Cannot load %s: not in the module pack", id);
+#endif
 }
 
+#if QT_SOURCE_LOADER
 static JSValue obtain_uncounted(JSContext *ctx, Loader *loader, const char *id, const char *mode, int eval_type) {
     JSContext *realm = loader->realm;
     size_t key_len = 0; int no_cache = 0;
@@ -388,6 +404,8 @@ static JSValue obtain_uncounted(JSContext *ctx, Loader *loader, const char *id, 
     return value;
 }
 
+#endif
+
 // Resolve `name` imported from `base`; returns js_malloc'd storage in ctx.
 static char *resolve_to(JSContext *ctx, Loader *loader, const char *base, const char *name, size_t *out_len) {
     size_t len = 0;
@@ -399,6 +417,7 @@ static char *resolve_to(JSContext *ctx, Loader *loader, const char *base, const 
             return copy;
         }
     }
+#if QT_SOURCE_LOADER
     const char *resolved = call_policy(ctx, loader, loader->resolve, name, base, &len, NULL, "Cannot resolve");
     if (!resolved) return NULL;
     char *copy = js_malloc(ctx, len + 1);
@@ -414,6 +433,10 @@ static char *resolve_to(JSContext *ctx, Loader *loader, const char *base, const 
         }
     }
     return copy;
+#else
+    JS_ThrowReferenceError(ctx, "Cannot resolve %s: not in the module pack", name);
+    return NULL;
+#endif
 }
 
 static char *normalize(JSContext *ctx, const char *base, const char *name, void *opaque) {
@@ -454,6 +477,7 @@ static JSValue app_format(JSContext *ctx, JSValueConst self, int argc, JSValueCo
         const char *known = table_get(&loader->pack->cjs, id, id_len) ? "cjs" : table_get(&loader->pack->modules, id, id_len) ? "esm" : NULL;
         if (known) { JS_FreeCString(ctx, id); return JS_NewString(ctx, known); }
     }
+#if QT_SOURCE_LOADER
     size_t len = 0;
     const char *format = call_policy(ctx, loader, loader->format, id, "", &len, NULL, "Cannot load");
     JS_FreeCString(ctx, id);
@@ -461,6 +485,11 @@ static JSValue app_format(JSContext *ctx, JSValueConst self, int argc, JSValueCo
     JSValue result = JS_NewStringLen(ctx, format, len);
     JS_FreeCString(loader->realm, format);
     return result;
+#else
+    JS_ThrowReferenceError(ctx, "Cannot load %s: not in the module pack", id);
+    JS_FreeCString(ctx, id);
+    return JS_EXCEPTION;
+#endif
 }
 
 // Evaluate a one-line ES module (`import * as ns from id; export { ns }`) now
@@ -514,6 +543,7 @@ static int eval_into(JSContext *realm, const char *source, size_t len, const cha
     return 0;
 }
 
+#if QT_SOURCE_LOADER
 static void report(JSContext *realm, JSContext *ctx) {
     JSValue error = JS_GetException(realm);
     const char *message = JS_ToCString(realm, error);
@@ -571,6 +601,8 @@ static int install_realm(JSContext *ctx, Loader *loader) {
     return 0;
 }
 
+#endif
+
 int qt_modules_install(JSContext *ctx, QtCompileHook *hook) {
     const QtModuleConfig *config = qt_modules_config();
     JSRuntime *rt = JS_GetRuntime(ctx);
@@ -584,7 +616,9 @@ int qt_modules_install(JSContext *ctx, QtCompileHook *hook) {
         loader->pack = pack_get();
         if (!loader->pack) { JS_ThrowInternalError(ctx, "module pack rejected: %s", pack.error ? pack.error : "unknown error"); return -1; }
     }
+#if QT_SOURCE_LOADER
     if (config->root && config->root[0] && install_realm(ctx, loader) < 0) return -1;
+#endif
     if (!loader->pack && !loader->realm) { JS_ThrowInternalError(ctx, "source mode needs a checkout or a module pack"); return -1; }
 
     JS_SetModuleLoaderFunc2(rt, normalize, load_module, NULL, loader);
@@ -658,6 +692,7 @@ void qt_modules_release(JSRuntime *rt) {
     free(loader);
 }
 
+#if QT_SOURCE_LOADER
 // ---- Building a pack -----------------------------------------------------------------
 
 static void print_exception(JSContext *ctx, const char *what) {
@@ -779,7 +814,7 @@ static int write_depfile(const char *depfile, const char *out_path, Recorder *r)
 }
 
 // Record every module reachable from the configured entry and write a pack.
-// Nothing is evaluated: no application code runs at build time.
+// The ES entry is not evaluated; CommonJS export discovery can execute dependencies.
 int quicktui_build_pack(const char *out_path) {
     int result = 1;
     JSRuntime *rt = JS_NewRuntime();
@@ -828,3 +863,5 @@ done:
     recorder_free(&recorder);
     return result;
 }
+
+#endif // QT_SOURCE_LOADER

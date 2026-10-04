@@ -4,15 +4,19 @@ const runtime = @import("quicktui");
 const embedded_pack: ?[]const u8 = if (@import("quicktui_app_options").module_pack) @embedFile("quicktui-termpaint-pack") else null;
 pub fn main(init: std.process.Init) !void {
     const args = try init.minimal.args.toSlice(init.arena.allocator());
-    // QUICKTUI_PACK=<pack> and/or QUICKTUI_SOURCE=<checkout> run termpaint
-    // from modules instead of the bundle.
-    if (std.c.getenv("QUICKTUI_PACK")) |path| runtime.modules.enablePack(try runtime.modules.readPack(std.mem.span(path))) else if (std.c.getenv("QUICKTUI_SOURCE") == null) {
-        if (embedded_pack) |pack| runtime.modules.enablePack(pack);
+    if (runtime.source_loader_enabled) {
+        // QUICKTUI_PACK=<pack> and/or QUICKTUI_SOURCE=<checkout> run termpaint
+        // from modules instead of the bundle.
+        if (std.c.getenv("QUICKTUI_PACK")) |path| runtime.modules.enablePack(try runtime.modules.readPack(std.mem.span(path))) else if (std.c.getenv("QUICKTUI_SOURCE") == null) {
+            if (embedded_pack) |pack| runtime.modules.enablePack(pack);
+        }
+        if (std.c.getenv("QUICKTUI_SOURCE")) |root| try runtime.modules.enable(init.arena.allocator(), .{
+            .root = std.mem.span(root),
+            .entry = "js/termpaint-entry.ts",
+        });
+    } else {
+        runtime.modules.enablePack(embedded_pack.?);
     }
-    if (std.c.getenv("QUICKTUI_SOURCE")) |root| try runtime.modules.enable(init.arena.allocator(), .{
-        .root = std.mem.span(root),
-        .entry = "js/termpaint-entry.ts",
-    });
     const headless = args.len == 2 and std.mem.eql(u8, args[1], "--self-test");
     if (args.len > 2 or (args.len == 2 and std.mem.startsWith(u8, args[1], "-") and !headless)) {
         std.debug.print("Usage: termpaint [drawing.tpaint]\n", .{});
@@ -27,5 +31,5 @@ pub fn main(init: std.process.Init) !void {
     try worker.start();
     defer worker.stop();
     const endpoint = worker.endpoint();
-    try runtime.runWithMessages(@embedFile("termpaint.js"), "termpaint", headless, &endpoint);
+    try runtime.runWithMessages(if (embedded_pack != null) "" else @embedFile("termpaint.js"), "termpaint", headless, &endpoint);
 }

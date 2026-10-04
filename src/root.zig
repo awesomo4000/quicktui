@@ -3,7 +3,8 @@ comptime {
 }
 const std = @import("std");
 /// Source-module mode: load .ts/.tsx sources instead of the prebuilt bundle.
-pub const modules = @import("modules.zig");
+pub const source_loader_enabled = @import("quicktui_build_options").source_loader;
+pub const modules = if (source_loader_enabled) @import("modules.zig") else @import("pack_runtime.zig");
 comptime {
     // Reference every export so C callers link even when only a test imports us.
     for (@typeInfo(modules).@"struct".decls) |decl| _ = &@field(modules, decl.name);

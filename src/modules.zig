@@ -19,34 +19,16 @@ const commonjs_source = @embedFile("quicktui-loader-cjs");
 pub const default_root: [:0]const u8 = @import("quicktui_build_options").source_root ++ "";
 
 /// Read by module_loader.c. Strings are NUL-terminated and live for the process.
-pub const Config = extern struct {
-    active: c_int = 0,
-    root: [*:0]const u8 = "",
-    entry: [*:0]const u8 = "",
-    demo_assets: c_int = 0,
-    hosted: c_int = 1,
-    sucrase: [*]const u8 = sucrase_source.ptr,
-    sucrase_len: usize = sucrase_source.len,
-    policy: [*]const u8 = policy_source.ptr,
-    policy_len: usize = policy_source.len,
-    commonjs: [*]const u8 = commonjs_source.ptr,
-    commonjs_len: usize = commonjs_source.len,
-    /// Cache directory, or empty to disable caching.
-    cache_dir: [*:0]const u8 = "",
-    /// Print cache hits/misses and load timing to stderr.
-    trace: c_int = 0,
-    /// Module pack; must outlive every runtime (embedded or process-lifetime).
-    pack: ?[*]const u8 = null,
-    pack_len: usize = 0,
-    /// Set while buildPack runs.
-    record: c_int = 0,
-    /// buildPack: write a Makefile depfile listing every file read, or "".
-    depfile: [*:0]const u8 = "",
-    /// buildPack: suppress the summary line.
-    quiet: c_int = 0,
-};
+pub const Config = @import("module_config.zig").Config;
 
-var config: Config = .{};
+var config: Config = .{
+    .sucrase = sucrase_source.ptr,
+    .sucrase_len = sucrase_source.len,
+    .policy = policy_source.ptr,
+    .policy_len = policy_source.len,
+    .commonjs = commonjs_source.ptr,
+    .commonjs_len = commonjs_source.len,
+};
 
 pub export fn qt_modules_config() *const Config {
     return &config;
@@ -97,7 +79,7 @@ extern "c" fn quicktui_build_pack(out_path: [*:0]const u8) c_int;
 
 /// Compile every module reachable from `options.entry` (static imports plus
 /// literal require() targets) and write a module pack to `out_path`.
-/// No application code is evaluated.
+/// The ES entry is not evaluated; CommonJS export discovery can execute dependencies.
 pub fn buildPack(allocator: std.mem.Allocator, options: Options, out_path: [:0]const u8) !void {
     try enable(allocator, options);
     config.depfile = options.depfile;

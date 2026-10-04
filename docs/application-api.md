@@ -5,7 +5,10 @@ available as `quicktui/react`.
 # Building an application with QuickTUI
 
 The [independent consumer](../examples/consumer/) is a complete small application.
-Normal builds use its generated JS file; rebundling TSX requires Bun.
+That example uses a generated JS file; rebundling its TSX requires Bun.
+The [pack consumer](../examples/pack-consumer/) instead builds directly from TSX
+with Zig and embeds a closed module graph. See [source modules](source-modules.md)
+for development loading and pack-only release configuration.
 
 ## Bundling
 
