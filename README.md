@@ -48,6 +48,12 @@ has been cross-compiled but has not been run here. See the
 [build and terminal notes](GUIDE.md#build-and-run) for supported targets and
 Kitty passthrough configuration.
 
+With Zig 0.16.0, the macOS 27 SDK failed to compile libc++ with an undefined
+`INFINITY`. The tested workaround uses the installed macOS 26.5 SDK via
+`SDKROOT` and an explicit `--libc` configuration; `SDKROOT` alone was not enough.
+See the [SDK workaround](docs/source-modules.md#macos-integration-checkpoint-10042026).
+No system-wide SDK change is needed.
+
 ## Things to play with
 
 | Run | What is in it |
