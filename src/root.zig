@@ -124,10 +124,10 @@ test "endpoint closure, poll faults, pressure and repeated teardown" {
     try std.testing.expectEqual(@as(c_int, 0), quicktui_endpoint_tests());
 }
 
-/// Run an application from a module image (see `addModuleImage` in build.zig).
-/// The image must outlive the call; @embedFile data does.
-pub fn runImage(image: []const u8, options: struct { headless: bool = false, reload: bool = false, endpoint: ?*const MessageEndpoint = null }) error{ApplicationFailed}!void {
-    modules.enableImage(image);
+/// Run an application from a module pack (see `addModulePack` in build.zig).
+/// The pack must outlive the call; @embedFile data does.
+pub fn runPack(pack: []const u8, options: struct { headless: bool = false, reload: bool = false, endpoint: ?*const MessageEndpoint = null }) error{ApplicationFailed}!void {
+    modules.enablePack(pack);
     return runApp("", .{ .headless = options.headless, .reload = options.reload, .endpoint = options.endpoint });
 }
 

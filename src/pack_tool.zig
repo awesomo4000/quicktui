@@ -1,6 +1,6 @@
-//! quicktui-image: build a module image at build time, for @embedFile.
+//! quicktui-pack: build a module pack at build time, for @embedFile.
 //!
-//!   quicktui-image <checkout> <entry> <out.qtimg> [--demo] [--depfile <path>]
+//!   quicktui-pack <checkout> <entry> <out.pack> [--demo] [--depfile <path>]
 //!
 //! Library modules resolve inside <checkout> (js/, vendor/). Nothing is
 //! evaluated and no disk cache is used, so the output depends only on the
@@ -25,7 +25,7 @@ pub fn main(init: std.process.Init) !void {
             depfile = args[i];
         } else return usage();
     }
-    try modules.buildImage(arena, .{
+    try modules.buildPack(arena, .{
         .root = args[1],
         .entry = try modules.absolute(arena, args[2]),
         .demo_assets = demo,
@@ -37,6 +37,6 @@ pub fn main(init: std.process.Init) !void {
 }
 
 fn usage() error{InvalidArguments} {
-    std.debug.print("usage: quicktui-image <checkout> <entry> <out.qtimg> [--demo] [--depfile <path>]\n", .{});
+    std.debug.print("usage: quicktui-pack <checkout> <entry> <out.pack> [--demo] [--depfile <path>]\n", .{});
     return error.InvalidArguments;
 }

@@ -10,9 +10,9 @@ typedef void QtCompileHook(JSContext *ctx, int begin);
 int qt_modules_install(JSContext *ctx, QtCompileHook *hook);
 /* Evaluate the entry graph; returns -1 with an exception pending in ctx. */
 int qt_modules_run_entry(JSContext *ctx);
-/* Record the graph of the configured entry and write a module image.
-   Returns 0 on success. Called by src/modules.zig buildImage. */
-int quicktui_build_image(const char *out_path);
+/* Record the graph of the configured entry and write a module pack.
+   Returns 0 on success. Called by src/modules.zig buildPack. */
+int quicktui_build_pack(const char *out_path);
 /* Free the loader realm. Call after freeing the app context, before JS_FreeRuntime. */
 void qt_modules_release(JSRuntime *rt);
 #endif

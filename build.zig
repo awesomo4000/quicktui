@@ -18,12 +18,12 @@ pub fn build(b: *std.Build) void {
     }).artifact("opentui");
 
     const quickjs = quickjsLibrary(b, target, optimize);
-    // Module images (docs/source-modules.md). The tool runs on the build host.
-    const image_tool = addImageTool(b);
-    b.installArtifact(image_tool);
-    const use_image = b.option(bool, "module-image", "Embed precompiled module images and load them instead of evaluating the JS bundles") orelse false;
+    // Module packs (docs/source-modules.md). The tool runs on the build host.
+    const pack_tool = addPackTool(b);
+    b.installArtifact(pack_tool);
+    const use_pack = b.option(bool, "module-pack", "Embed precompiled module packs and load them instead of evaluating the JS bundles") orelse false;
     const app_options = b.addOptions();
-    app_options.addOption(bool, "module_image", use_image);
+    app_options.addOption(bool, "module_pack", use_pack);
 
     const runtime = b.addModule("quicktui", .{
         .root_source_file = b.path("src/root.zig"),
@@ -50,8 +50,8 @@ pub fn build(b: *std.Build) void {
         }),
     });
     exe.root_module.addOptions("quicktui_app_options", app_options);
-    if (use_image) exe.root_module.addAnonymousImport("quicktui-demo-image", .{
-        .root_source_file = moduleImage(b, image_tool, b.path("."), b.path("js/examples.ts"), "examples.qtimg", true),
+    if (use_pack) exe.root_module.addAnonymousImport("quicktui-demo-pack", .{
+        .root_source_file = modulePack(b, pack_tool, b.path("."), b.path("js/examples.ts"), "examples.pack", true),
     });
     b.installArtifact(exe);
     const paint = b.addExecutable(.{
@@ -64,8 +64,8 @@ pub fn build(b: *std.Build) void {
         }),
     });
     paint.root_module.addOptions("quicktui_app_options", app_options);
-    if (use_image) paint.root_module.addAnonymousImport("quicktui-termpaint-image", .{
-        .root_source_file = moduleImage(b, image_tool, b.path("."), b.path("js/termpaint-entry.ts"), "termpaint.qtimg", false),
+    if (use_pack) paint.root_module.addAnonymousImport("quicktui-termpaint-pack", .{
+        .root_source_file = modulePack(b, pack_tool, b.path("."), b.path("js/termpaint-entry.ts"), "termpaint.pack", false),
     });
     b.installArtifact(paint);
     b.getInstallStep().dependOn(&b.addInstallDirectory(.{ .source_dir = b.path("skills"), .install_dir = .prefix, .install_subdir = "share/termpaint/skills" }).step);
@@ -265,46 +265,46 @@ fn addModuleLoader(b: *std.Build, module: *std.Build.Module) void {
     module.addOptions("quicktui_build_options", options);
 }
 
-/// quicktui-image for the build host: QuickJS and the loader only, no OpenTUI.
-fn addImageTool(b: *std.Build) *std.Build.Step.Compile {
+/// quicktui-pack for the build host: QuickJS and the loader only, no OpenTUI.
+fn addPackTool(b: *std.Build) *std.Build.Step.Compile {
     const host = b.graph.host;
     const module = b.createModule(.{
-        .root_source_file = b.path("src/image_tool.zig"),
+        .root_source_file = b.path("src/pack_tool.zig"),
         .target = host,
         .optimize = .ReleaseFast,
         .link_libc = true,
     });
     addModuleLoader(b, module);
     module.linkLibrary(quickjsLibrary(b, host, .ReleaseFast));
-    return b.addExecutable(.{ .name = "quicktui-image", .root_module = module });
+    return b.addExecutable(.{ .name = "quicktui-pack", .root_module = module });
 }
 
-/// Run quicktui-image over `entry`; the result is suitable for @embedFile
-/// (via addAnonymousImport) and quicktui.runImage. Reruns when any file the
-/// image was built from changes (depfile).
-fn moduleImage(b: *std.Build, tool: *std.Build.Step.Compile, root: std.Build.LazyPath, entry: std.Build.LazyPath, name: []const u8, demo: bool) std.Build.LazyPath {
+/// Run quicktui-pack over `entry`; the result is suitable for @embedFile
+/// (via addAnonymousImport) and quicktui.runPack. Reruns when any file the
+/// pack was built from changes (depfile).
+fn modulePack(b: *std.Build, tool: *std.Build.Step.Compile, root: std.Build.LazyPath, entry: std.Build.LazyPath, name: []const u8, demo: bool) std.Build.LazyPath {
     const run = b.addRunArtifact(tool);
     run.addDirectoryArg(root);
     run.addFileArg(entry);
-    const image = run.addOutputFileArg(name);
+    const pack = run.addOutputFileArg(name);
     if (demo) run.addArg("--demo");
     run.addArg("--depfile");
     _ = run.addDepFileOutputArg(b.fmt("{s}.d", .{name}));
-    return image;
+    return pack;
 }
 
-/// For applications that depend on quicktui: build a module image of `entry`
+/// For applications that depend on quicktui: build a module pack of `entry`
 /// (an app.tsx in the consumer's tree) with no Bun or Node, then embed it:
 ///
-///   const image = @import("quicktui").addModuleImage(b, dep, b.path("app.tsx"));
-///   exe.root_module.addAnonymousImport("app.qtimg", .{ .root_source_file = image });
-///   // main.zig: try quicktui.runImage(@embedFile("app.qtimg"), .{});
-pub fn addModuleImage(b: *std.Build, quicktui: *std.Build.Dependency, entry: std.Build.LazyPath) std.Build.LazyPath {
-    const run = b.addRunArtifact(quicktui.artifact("quicktui-image"));
+///   const pack = @import("quicktui").addModulePack(b, dep, b.path("app.tsx"));
+///   exe.root_module.addAnonymousImport("app.pack", .{ .root_source_file = pack });
+///   // main.zig: try quicktui.runPack(@embedFile("app.pack"), .{});
+pub fn addModulePack(b: *std.Build, quicktui: *std.Build.Dependency, entry: std.Build.LazyPath) std.Build.LazyPath {
+    const run = b.addRunArtifact(quicktui.artifact("quicktui-pack"));
     run.addDirectoryArg(quicktui.path("."));
     run.addFileArg(entry);
-    const image = run.addOutputFileArg("app.qtimg");
+    const pack = run.addOutputFileArg("app.pack");
     run.addArg("--depfile");
-    _ = run.addDepFileOutputArg("app.qtimg.d");
-    return image;
+    _ = run.addDepFileOutputArg("app.pack.d");
+    return pack;
 }

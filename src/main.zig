@@ -1,46 +1,46 @@
 const runtime = @import("quicktui");
 const std = @import("std");
 const examples = @embedFile("examples.js");
-/// `zig build -Dmodule-image=true` embeds js/examples.ts precompiled.
-const embedded_image: ?[]const u8 = if (@import("quicktui_app_options").module_image) @embedFile("quicktui-demo-image") else null;
+/// `zig build -Dmodule-pack=true` embeds js/examples.ts precompiled.
+const embedded_pack: ?[]const u8 = if (@import("quicktui_app_options").module_pack) @embedFile("quicktui-demo-pack") else null;
 
 pub fn main(init: std.process.Init) !void {
     const args = try init.minimal.args.toSlice(init.arena.allocator());
     const arena = init.arena.allocator();
     const source_root: ?[:0]const u8 = if (std.c.getenv("QUICKTUI_SOURCE")) |root| std.mem.span(root) else null;
-    // `quicktui --build-image out.qtimg app.tsx [--demo]`: compile everything
-    // app.tsx reaches into a module image. `--demo` bakes the demo assets in.
-    if (args.len >= 4 and std.mem.eql(u8, args[1], "--build-image")) {
+    // `quicktui --build-pack out.pack app.tsx [--demo]`: compile everything
+    // app.tsx reaches into a module pack. `--demo` bakes the demo assets in.
+    if (args.len >= 4 and std.mem.eql(u8, args[1], "--build-pack")) {
         if (args.len > 5 or (args.len == 5 and !std.mem.eql(u8, args[4], "--demo"))) return error.InvalidArguments;
-        return runtime.modules.buildImage(arena, .{
+        return runtime.modules.buildPack(arena, .{
             .root = source_root orelse runtime.modules.default_root,
             .entry = try runtime.modules.absolute(arena, args[3]),
             .demo_assets = args.len == 5,
         }, args[2]);
     }
-    // `quicktui --run app.tsx` runs an application from source; `--run-image
-    // app.qtimg` runs a prebuilt image with no checkout. Both take
+    // `quicktui --run app.tsx` runs an application from source; `--run-pack
+    // app.pack` runs a prebuilt pack with no checkout. Both take
     // [--reload] [--self-test]. Under --reload with --run, Ctrl+R re-reads
     // changed sources; unchanged modules come from the bytecode cache.
-    if (args.len >= 3 and (std.mem.eql(u8, args[1], "--run") or std.mem.eql(u8, args[1], "--run-image"))) {
+    if (args.len >= 3 and (std.mem.eql(u8, args[1], "--run") or std.mem.eql(u8, args[1], "--run-pack"))) {
         var headless = false;
         var reload = false;
         for (args[3..]) |flag| {
             if (std.mem.eql(u8, flag, "--self-test")) headless = true else if (std.mem.eql(u8, flag, "--reload")) reload = true else return error.InvalidArguments;
         }
-        if (std.mem.eql(u8, args[1], "--run-image")) {
-            runtime.modules.enableImage(try runtime.modules.readImage(args[2]));
+        if (std.mem.eql(u8, args[1], "--run-pack")) {
+            runtime.modules.enablePack(try runtime.modules.readPack(args[2]));
         } else try runtime.modules.enable(arena, .{
             .root = source_root orelse runtime.modules.default_root,
             .entry = try runtime.modules.absolute(arena, args[2]),
         });
         return runtime.runApp("", .{ .headless = headless, .reload = reload });
     }
-    // QUICKTUI_IMAGE=<image> and/or QUICKTUI_SOURCE=<checkout> run the demos
-    // from modules instead of the bundle (the image first, then the checkout).
-    // Otherwise an embedded image, if built with one, replaces the bundle.
-    if (std.c.getenv("QUICKTUI_IMAGE")) |path| runtime.modules.enableImage(try runtime.modules.readImage(std.mem.span(path))) else if (source_root == null) {
-        if (embedded_image) |image| runtime.modules.enableImage(image);
+    // QUICKTUI_PACK=<pack> and/or QUICKTUI_SOURCE=<checkout> run the demos
+    // from modules instead of the bundle (the pack first, then the checkout).
+    // Otherwise an embedded pack, if built with one, replaces the bundle.
+    if (std.c.getenv("QUICKTUI_PACK")) |path| runtime.modules.enablePack(try runtime.modules.readPack(std.mem.span(path))) else if (source_root == null) {
+        if (embedded_pack) |pack| runtime.modules.enablePack(pack);
     }
     if (source_root) |root| try runtime.modules.enable(arena, .{
         .root = root,
@@ -117,7 +117,7 @@ pub fn main(init: std.process.Init) !void {
     }
     const headless = args.len == 2 and std.mem.eql(u8, args[1], "--self-test");
     if (args.len > 1 and !headless) {
-        std.debug.print("Usage: quicktui [--run app.tsx [--reload] [--self-test] | --run-image app.qtimg [--reload] [--self-test] | --build-image out.qtimg app.tsx [--demo] | --vanilla | --game | --keyboard | --reload | --editor [file] | --live [directory] | --lab | --messages | --gallery | --mouse | --self-test | --smoke]\n", .{});
+        std.debug.print("Usage: quicktui [--run app.tsx [--reload] [--self-test] | --run-pack app.pack [--reload] [--self-test] | --build-pack out.pack app.tsx [--demo] | --vanilla | --game | --keyboard | --reload | --editor [file] | --live [directory] | --lab | --messages | --gallery | --mouse | --self-test | --smoke]\n", .{});
         return error.InvalidArguments;
     }
     try runtime.runCounter(examples, headless);

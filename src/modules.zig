@@ -6,9 +6,9 @@
 //! inside QuickJS; compiled modules are cached as QuickJS bytecode keyed by a
 //! BLAKE3 hash of the loader, the transform, and the module source.
 //!
-//! A module image is the same bytecode plus the resolution table, written once
-//! by `buildImage` and loaded by `enableImage`, usually from @embedFile. An
-//! image needs no checkout, no Sucrase run, and no cache.
+//! A module pack is the same bytecode plus the resolution table, written once
+//! by `buildPack` and loaded by `enablePack`, usually from @embedFile. An
+//! pack needs no checkout, no Sucrase run, and no cache.
 const std = @import("std");
 const c = std.c;
 
@@ -35,14 +35,14 @@ pub const Config = extern struct {
     cache_dir: [*:0]const u8 = "",
     /// Print cache hits/misses and load timing to stderr.
     trace: c_int = 0,
-    /// Module image; must outlive every runtime (embedded or process-lifetime).
-    image: ?[*]const u8 = null,
-    image_len: usize = 0,
-    /// Set while buildImage runs.
+    /// Module pack; must outlive every runtime (embedded or process-lifetime).
+    pack: ?[*]const u8 = null,
+    pack_len: usize = 0,
+    /// Set while buildPack runs.
     record: c_int = 0,
-    /// buildImage: write a Makefile depfile listing every file read, or "".
+    /// buildPack: write a Makefile depfile listing every file read, or "".
     depfile: [*:0]const u8 = "",
-    /// buildImage: suppress the summary line.
+    /// buildPack: suppress the summary line.
     quiet: c_int = 0,
 };
 
@@ -60,9 +60,9 @@ pub const Options = struct {
     demo_assets: bool = false,
     /// Overrides the default cache directory; empty disables the cache.
     cache_dir: ?[:0]const u8 = null,
-    /// buildImage only: depfile path for build systems.
+    /// buildPack only: depfile path for build systems.
     depfile: [:0]const u8 = "",
-    /// buildImage only: no summary on stderr.
+    /// buildPack only: no summary on stderr.
     quiet: bool = false,
 };
 
@@ -77,34 +77,34 @@ pub fn enable(allocator: std.mem.Allocator, options: Options) !void {
     config.active = 1;
 }
 
-/// Load modules from a prebuilt image. Combine with `enable` to fall back to
-/// a checkout for modules the image lacks (an application under development).
-pub fn enableImage(image: []const u8) void {
-    config.image = image.ptr;
-    config.image_len = image.len;
+/// Load modules from a prebuilt pack. Combine with `enable` to fall back to
+/// a checkout for modules the pack lacks (an application under development).
+pub fn enablePack(pack: []const u8) void {
+    config.pack = pack.ptr;
+    config.pack_len = pack.len;
     config.trace = @intFromBool(getenv("QUICKTUI_TRACE_MODULES") != null);
     config.active = 1;
 }
 
-/// Read an image file for the rest of the process (bytecode references it).
-pub fn readImage(path: [:0]const u8) ![]const u8 {
+/// Read a pack file for the rest of the process (bytecode references it).
+pub fn readPack(path: [:0]const u8) ![]const u8 {
     var len: usize = 0;
     const bytes = qt_fs_read(path.ptr, &len) orelse return error.FileNotFound;
     return bytes[0..len];
 }
 
-extern "c" fn quicktui_build_image(out_path: [*:0]const u8) c_int;
+extern "c" fn quicktui_build_pack(out_path: [*:0]const u8) c_int;
 
 /// Compile every module reachable from `options.entry` (static imports plus
-/// literal require() targets) and write a module image to `out_path`.
+/// literal require() targets) and write a module pack to `out_path`.
 /// No application code is evaluated.
-pub fn buildImage(allocator: std.mem.Allocator, options: Options, out_path: [:0]const u8) !void {
+pub fn buildPack(allocator: std.mem.Allocator, options: Options, out_path: [:0]const u8) !void {
     try enable(allocator, options);
     config.depfile = options.depfile;
     config.quiet = @intFromBool(options.quiet);
     config.record = 1;
     defer config.record = 0;
-    if (quicktui_build_image(out_path.ptr) != 0) return error.ImageBuildFailed;
+    if (quicktui_build_pack(out_path.ptr) != 0) return error.PackBuildFailed;
 }
 
 fn getenv(name: [*:0]const u8) ?[:0]const u8 {

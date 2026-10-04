@@ -2,7 +2,7 @@
 
 Source mode runs QuickTUI applications straight from `.ts`/`.tsx` files.
 QuickJS loads ES modules natively; the loader adds resolution, the TypeScript
-and JSX transform, CommonJS interop, and a bytecode cache. A module image is
+and JSX transform, CommonJS interop, and a bytecode cache. A module pack is
 the same compiled graph in one file, for shipping without the sources. No Bun,
 Node, or bundling step is involved in either.
 
@@ -17,15 +17,15 @@ Node, or bundling step is involved in either.
 QUICKTUI_SOURCE=. ./zig-out/bin/quicktui --gallery
 QUICKTUI_SOURCE=. ./zig-out/bin/termpaint
 
-# Module images: precompiled graphs that need no checkout at run time
-./zig-out/bin/quicktui --build-image app.qtimg app.tsx
-./zig-out/bin/quicktui --run-image app.qtimg [--reload] [--self-test]
-QUICKTUI_IMAGE=examples.qtimg ./zig-out/bin/quicktui --gallery   # after --build-image ... js/examples.ts --demo
-zig build -Dmodule-image=true   # embed the demo and termpaint images instead of evaluating the bundles
+# Module packs: precompiled graphs that need no checkout at run time
+./zig-out/bin/quicktui --build-pack app.pack app.tsx
+./zig-out/bin/quicktui --run-pack app.pack [--reload] [--self-test]
+QUICKTUI_PACK=examples.pack ./zig-out/bin/quicktui --gallery   # after --build-pack ... js/examples.ts --demo
+zig build -Dmodule-pack=true   # embed the demo and termpaint packs instead of evaluating the bundles
 ```
 
 The prebuilt bundles remain the default. Every self-test passes in bundle,
-source, and image modes.
+source, and pack modes.
 
 ## Pieces
 
@@ -35,8 +35,8 @@ source, and image modes.
 | `js/loader/policy.js` | Resolution, source patches, defines, and module kinds. A port of the `onResolve`/`onLoad` hooks in `scripts/bundle-app.ts`; keep the two in step. |
 | `js/loader/cjs.js` | CommonJS runtime, evaluated in both realms. |
 | `src/module_loader.c` | QuickJS glue: module hooks, the loader realm, compile and cache. |
-| `src/modules.zig` | File reads, BLAKE3 hashing, the bytecode cache, configuration, `buildImage`/`enableImage`. |
-| `src/image_tool.zig` | `quicktui-image`, the build-host tool that `zig build` runs to make images. |
+| `src/modules.zig` | File reads, BLAKE3 hashing, the bytecode cache, configuration, `buildPack`/`enablePack`. |
+| `src/pack_tool.zig` | `quicktui-pack`, the build-host tool that `zig build` runs to make packs. |
 
 `policy.js` and `cjs.js` are plain JavaScript because they load before the
 transform exists. All three JavaScript files are embedded in the executable.
@@ -115,34 +115,34 @@ rejected.
   string as a script. Without one, reload re-runs the module graph, which
   re-reads changed files.
 
-## Module images
+## Module packs
 
-An image holds module bytecode, CommonJS wrapper bytecode, and the resolution
-table (importer and specifier to id). Loading from an image creates no loader
+A pack holds module bytecode, CommonJS wrapper bytecode, and the resolution
+table (importer and specifier to id). Loading from a pack creates no loader
 realm, runs no Sucrase, and reads nothing from disk, so it also starts faster
 than evaluating the bundle: the vanilla demo self-test takes 0.04 s against
 0.31 s.
 
-`--build-image` (or `quicktui-image`) loads the entry's graph without
+`--build-pack` (or `quicktui-pack`) loads the entry's graph without
 evaluating it, using `JS_ResolveModule`. It then follows every literal
 `require("...")` in the recorded modules, because `js/examples.ts` selects
 demos with `require()`. A dynamic `require(variable)` is not followed and fails
-at run time with "not in the module image". Paths matching `\.development\.js$`
+at run time with "not in the module pack". Paths matching `\.development\.js$`
 (React's development builds, which `"production"` defines never select) are
 left out. Function source text is stripped (`JS_STRIP_SOURCE`, as `qjsc` does by
 default); line tables stay, for stack traces.
 
-| Image | Modules | CommonJS bodies | Edges | Size | Bundle size |
+| Pack | Modules | CommonJS bodies | Edges | Size | Bundle size |
 | --- | --- | --- | --- | --- | --- |
 | `js/examples.ts --demo` | 140 | 14 | 378 | 3.36 MB | 3.83 MB |
 | `js/termpaint-entry.ts` | 125 | 14 | 285 | 1.25 MB | 1.70 MB |
 | `examples/consumer/app.tsx` | 121 | 14 | 275 | 1.18 MB | not measured |
 
-The examples image includes about 1.5 MB of base64 sprite frames.
+The examples pack includes about 1.5 MB of base64 sprite frames.
 
-The header records the QuickJS version and pointer size. A mismatched image is
+The header records the QuickJS version and pointer size. A mismatched pack is
 rejected rather than parsed. Bytecode is read with `JS_READ_OBJ_ROM_DATA`, so the
-image must stay mapped: `@embedFile` data, or `readImage`, which keeps the file
+pack must stay mapped: `@embedFile` data, or `readPack`, which keeps the file
 for the process lifetime. Ids are absolute paths on the build machine; they
 appear in stack traces.
 
@@ -151,15 +151,15 @@ appear in stack traces.
 ```zig
 // build.zig
 const dep = b.dependency("quicktui", .{ .target = target, .optimize = optimize });
-const image = @import("quicktui").addModuleImage(b, dep, b.path("app.tsx"));
-exe.root_module.addAnonymousImport("app.qtimg", .{ .root_source_file = image });
+const pack = @import("quicktui").addModulePack(b, dep, b.path("app.tsx"));
+exe.root_module.addAnonymousImport("app.pack", .{ .root_source_file = pack });
 
 // main.zig
-try quicktui.runImage(@embedFile("app.qtimg"), .{ .headless = self_test });
+try quicktui.runPack(@embedFile("app.pack"), .{ .headless = self_test });
 ```
 
-`addModuleImage` runs `quicktui-image` on the build host with a depfile, so
-`zig build` rebuilds the image only when a file it was built from changes.
+`addModulePack` runs `quicktui-pack` on the build host with a depfile, so
+`zig build` rebuilds the pack only when a file it was built from changes.
 `examples/consumer/app.tsx` built this way passes its self-test and the
 interactive typing and paste check with the checkout removed.
 
@@ -183,7 +183,7 @@ stderr.
 - `const enum` across files, and TypeScript namespaces with values, depend on
   what Sucrase supports.
 - Source mode reads library modules (`js/`, `vendor/`) from the checkout:
-  `QUICKTUI_SOURCE`, or the build root baked into the executable. Images have
+  `QUICKTUI_SOURCE`, or the build root baked into the executable. Packs have
   no such dependency.
-- `-Dmodule-image=true` still embeds `src/examples.js` too, which `--smoke` and
+- `-Dmodule-pack=true` still embeds `src/examples.js` too, which `--smoke` and
   the bundle code paths use.

@@ -4,7 +4,7 @@
 
 - Add source-module mode: `quicktui --run app.tsx [--reload] [--self-test]` and `QUICKTUI_SOURCE=<checkout>` load `.ts`/`.tsx` directly through QuickJS's module loader, with vendored Sucrase for types and JSX, CommonJS facades, and a BLAKE3-keyed bytecode cache. No Bun at build or run time. Every demo self-test and both consumer self-tests pass in source mode; `--reload` picks up edited files. See [docs/source-modules.md](docs/source-modules.md).
 
-- Add module images: `--build-image`/`--run-image`, `QUICKTUI_IMAGE`, `zig build -Dmodule-image=true`, and `addModuleImage` + `runImage` for applications, so a consumer builds from `app.tsx` with no Bun and runs with no checkout. Images start faster than the bundles (vanilla self-test 0.04 s against 0.31 s). CommonJS facades are now cached, so warm source-mode starts match the bundle.
+- Add module packs: `--build-pack`/`--run-pack`, `QUICKTUI_PACK`, `zig build -Dmodule-pack=true`, and `addModulePack` + `runPack` for applications, so a consumer builds from `app.tsx` with no Bun and runs with no checkout. Packs start faster than the bundles (vanilla self-test 0.04 s against 0.31 s). CommonJS facades are now cached, so warm source-mode starts match the bundle.
 
 ## Unreleased - 09/09/2026
 

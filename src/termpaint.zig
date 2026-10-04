@@ -1,13 +1,13 @@
 const std = @import("std");
 const runtime = @import("quicktui");
-/// `zig build -Dmodule-image=true` embeds js/termpaint-entry.ts precompiled.
-const embedded_image: ?[]const u8 = if (@import("quicktui_app_options").module_image) @embedFile("quicktui-termpaint-image") else null;
+/// `zig build -Dmodule-pack=true` embeds js/termpaint-entry.ts precompiled.
+const embedded_pack: ?[]const u8 = if (@import("quicktui_app_options").module_pack) @embedFile("quicktui-termpaint-pack") else null;
 pub fn main(init: std.process.Init) !void {
     const args = try init.minimal.args.toSlice(init.arena.allocator());
-    // QUICKTUI_IMAGE=<image> and/or QUICKTUI_SOURCE=<checkout> run termpaint
+    // QUICKTUI_PACK=<pack> and/or QUICKTUI_SOURCE=<checkout> run termpaint
     // from modules instead of the bundle.
-    if (std.c.getenv("QUICKTUI_IMAGE")) |path| runtime.modules.enableImage(try runtime.modules.readImage(std.mem.span(path))) else if (std.c.getenv("QUICKTUI_SOURCE") == null) {
-        if (embedded_image) |image| runtime.modules.enableImage(image);
+    if (std.c.getenv("QUICKTUI_PACK")) |path| runtime.modules.enablePack(try runtime.modules.readPack(std.mem.span(path))) else if (std.c.getenv("QUICKTUI_SOURCE") == null) {
+        if (embedded_pack) |pack| runtime.modules.enablePack(pack);
     }
     if (std.c.getenv("QUICKTUI_SOURCE")) |root| try runtime.modules.enable(init.arena.allocator(), .{
         .root = std.mem.span(root),

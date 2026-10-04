@@ -1,13 +1,13 @@
 // Source-module mode: QuickJS module loader glue.
 //
 // Modules come from one of two places:
-//  - a module image: precompiled bytecode plus a resolution table, built by
-//    quicktui_build_image() and usually embedded in the executable; or
+//  - a module pack: precompiled bytecode plus a resolution table, built by
+//    quicktui_build_pack() and usually embedded in the executable; or
 //  - the loader realm: a second JSContext in the application's runtime that
 //    holds Sucrase and js/loader/policy.js. It resolves specifiers and produces
 //    module source, which is compiled in the application realm and cached as
 //    bytecode by src/modules.zig. Only strings cross between the two realms.
-// With both configured, the image wins and the realm handles the rest.
+// With both configured, the pack wins and the realm handles the rest.
 // CommonJS packages run in js/loader/cjs.js behind ES module facades.
 #include <stdint.h>
 #include <stdio.h>
@@ -18,7 +18,7 @@
 
 typedef struct {
     int active;
-    const char *root;           // checkout for the loader realm; "" = image only
+    const char *root;           // checkout for the loader realm; "" = pack only
     const char *entry;
     int demo_assets;
     int hosted;
@@ -27,8 +27,8 @@ typedef struct {
     const char *commonjs; size_t commonjs_len;
     const char *cache_dir;
     int trace;
-    const uint8_t *image; size_t image_len; // must outlive every runtime
-    int record;                 // quicktui_build_image is running
+    const uint8_t *pack; size_t pack_len; // must outlive every runtime
+    int record;                 // quicktui_build_pack is running
     const char *depfile;        // build mode: Makefile depfile of every file read, or ""
     int quiet;                  // build mode: no summary line (zig build treats stderr as failure)
 } QtModuleConfig;
@@ -47,18 +47,18 @@ extern void qt_cache_put(const unsigned char key[32], const unsigned char *paylo
 
 #define ENGINE "quickjs " QUICKJS_LOADER_VERSION
 
-// ---- Module images ------------------------------------------------------------
+// ---- Module packs ------------------------------------------------------------
 //
 // Format (little-endian):
-//   "QTIMG\0\0\1"  u32 engine_len  engine  u32 pointer_size  u32 count
+//   "QTPACK\0\1"  u32 engine_len  engine  u32 pointer_size  u32 count
 //   count x { u8 tag  u32 a_len  a  u32 b_len  b }
 //   tag 1 module: a = id, b = module bytecode
 //   tag 2 cjs:    a = id, b = CommonJS wrapper bytecode
 //   tag 3 edge:   a = importer "\0" specifier, b = resolved id
-// Bytecode is read with JS_READ_OBJ_ROM_DATA, so the image must stay mapped.
+// Bytecode is read with JS_READ_OBJ_ROM_DATA, so the pack must stay mapped.
 
 enum { TAG_MODULE = 1, TAG_CJS = 2, TAG_EDGE = 3 };
-static const char image_magic[8] = { 'Q', 'T', 'I', 'M', 'G', 0, 0, 1 };
+static const char pack_magic[8] = { 'Q', 'T', 'P', 'A', 'C', 'K', 0, 1 };
 
 typedef struct { const char *key; size_t key_len; const uint8_t *value; size_t value_len; } Slot;
 typedef struct { Slot *slots; size_t cap; size_t used; } Table;
@@ -99,8 +99,8 @@ static const Slot *table_get(const Table *t, const char *key, size_t key_len) {
     return NULL;
 }
 
-typedef struct { Table modules, cjs, edges; int loaded; const char *error; } Image;
-static Image image; // parsed once; the bytes are immutable and live for the process
+typedef struct { Table modules, cjs, edges; int loaded; const char *error; } Pack;
+static Pack pack; // parsed once; the bytes are immutable and live for the process
 
 static int read_u32(const uint8_t **p, const uint8_t *end, uint32_t *out) {
     if (end - *p < 4) return -1;
@@ -108,49 +108,49 @@ static int read_u32(const uint8_t **p, const uint8_t *end, uint32_t *out) {
     *p += 4;
     return 0;
 }
-static const Image *image_get(void) {
+static const Pack *pack_get(void) {
     const QtModuleConfig *config = qt_modules_config();
-    if (!config->image) return NULL;
-    if (image.loaded) return image.error ? NULL : &image;
-    image.loaded = 1;
-    const uint8_t *p = config->image, *end = config->image + config->image_len;
+    if (!config->pack) return NULL;
+    if (pack.loaded) return pack.error ? NULL : &pack;
+    pack.loaded = 1;
+    const uint8_t *p = config->pack, *end = config->pack + config->pack_len;
     uint32_t engine_len, word, count;
-    if (end - p < 8 || memcmp(p, image_magic, 8)) { image.error = "bad magic"; return NULL; }
+    if (end - p < 8 || memcmp(p, pack_magic, 8)) { pack.error = "bad magic"; return NULL; }
     p += 8;
-    if (read_u32(&p, end, &engine_len) || (size_t)(end - p) < engine_len) { image.error = "truncated"; return NULL; }
-    if (engine_len != strlen(ENGINE) || memcmp(p, ENGINE, engine_len)) { image.error = "built for a different QuickJS"; return NULL; }
+    if (read_u32(&p, end, &engine_len) || (size_t)(end - p) < engine_len) { pack.error = "truncated"; return NULL; }
+    if (engine_len != strlen(ENGINE) || memcmp(p, ENGINE, engine_len)) { pack.error = "built for a different QuickJS"; return NULL; }
     p += engine_len;
-    if (read_u32(&p, end, &word) || word != sizeof(void *)) { image.error = "built for a different pointer size"; return NULL; }
-    if (read_u32(&p, end, &count)) { image.error = "truncated"; return NULL; }
+    if (read_u32(&p, end, &word) || word != sizeof(void *)) { pack.error = "built for a different pointer size"; return NULL; }
+    if (read_u32(&p, end, &count)) { pack.error = "truncated"; return NULL; }
     for (uint32_t i = 0; i < count; i++) {
-        if (p >= end) { image.error = "truncated"; return NULL; }
+        if (p >= end) { pack.error = "truncated"; return NULL; }
         uint8_t tag = *p++;
         uint32_t a_len, b_len;
-        if (read_u32(&p, end, &a_len) || (size_t)(end - p) < a_len) { image.error = "truncated"; return NULL; }
+        if (read_u32(&p, end, &a_len) || (size_t)(end - p) < a_len) { pack.error = "truncated"; return NULL; }
         const char *a = (const char *)p; p += a_len;
-        if (read_u32(&p, end, &b_len) || (size_t)(end - p) < b_len) { image.error = "truncated"; return NULL; }
+        if (read_u32(&p, end, &b_len) || (size_t)(end - p) < b_len) { pack.error = "truncated"; return NULL; }
         const uint8_t *b = p; p += b_len;
-        Table *t = tag == TAG_MODULE ? &image.modules : tag == TAG_CJS ? &image.cjs : tag == TAG_EDGE ? &image.edges : NULL;
-        if (!t) { image.error = "unknown entry"; return NULL; }
-        if (table_put(t, a, a_len, b, b_len) < 0) { image.error = "out of memory"; return NULL; }
+        Table *t = tag == TAG_MODULE ? &pack.modules : tag == TAG_CJS ? &pack.cjs : tag == TAG_EDGE ? &pack.edges : NULL;
+        if (!t) { pack.error = "unknown entry"; return NULL; }
+        if (table_put(t, a, a_len, b, b_len) < 0) { pack.error = "out of memory"; return NULL; }
     }
-    return &image;
+    return &pack;
 }
 
-// Resolution from the image: a recorded edge, or an id that is already canonical.
-static const char *image_resolve(const Image *img, const char *base, const char *name, size_t *len) {
+// Resolution from the pack: a recorded edge, or an id that is already canonical.
+static const char *pack_resolve(const Pack *pk, const char *base, const char *name, size_t *len) {
     size_t base_len = strlen(base), name_len = strlen(name);
     char stack_key[1024], *key = base_len + name_len + 1 <= sizeof(stack_key) ? stack_key : malloc(base_len + name_len + 1);
     if (!key) return NULL;
     memcpy(key, base, base_len); key[base_len] = 0; memcpy(key + base_len + 1, name, name_len);
-    const Slot *edge = table_get(&img->edges, key, base_len + name_len + 1);
+    const Slot *edge = table_get(&pk->edges, key, base_len + name_len + 1);
     if (key != stack_key) free(key);
     if (edge) { *len = edge->value_len; return (const char *)edge->value; }
-    if (table_get(&img->modules, name, name_len) || table_get(&img->cjs, name, name_len)) { *len = name_len; return name; }
+    if (table_get(&pk->modules, name, name_len) || table_get(&pk->cjs, name, name_len)) { *len = name_len; return name; }
     return NULL;
 }
 
-// ---- Recording (quicktui_build_image) ----------------------------------------------
+// ---- Recording (quicktui_build_pack) ----------------------------------------------
 
 typedef struct { uint8_t tag; char *a; size_t a_len; uint8_t *b; size_t b_len; } Record;
 typedef struct { Record *items; size_t count, cap; Table seen; Table read_set; char **reads; size_t read_count, read_cap; } Recorder;
@@ -212,13 +212,13 @@ static void recorder_free(Recorder *r) {
 // ---- Loader state --------------------------------------------------------------------
 
 typedef struct {
-    JSContext *realm;           // loader realm, NULL in image-only mode
+    JSContext *realm;           // loader realm, NULL in pack-only mode
     JSValue resolve, format, key, build, requires; // policy functions, owned by realm
     unsigned char salt[32];
     int trace;
-    unsigned hits, misses, uncached, from_image;
+    unsigned hits, misses, uncached, from_pack;
     QtCompileHook *hook;
-    const Image *image;
+    const Pack *pack;
     Recorder *recorder;
 } Loader;
 
@@ -303,7 +303,7 @@ static void forward_exception(JSContext *ctx, JSContext *realm, const char *what
 static const char *call_policy(JSContext *ctx, Loader *loader, JSValueConst fn, const char *a, const char *b, size_t *len, int *is_null, const char *what) {
     JSContext *realm = loader->realm;
     if (is_null) *is_null = 0;
-    if (!realm) { JS_ThrowReferenceError(ctx, "%s %s: not in the module image", what, a); return NULL; }
+    if (!realm) { JS_ThrowReferenceError(ctx, "%s %s: not in the module pack", what, a); return NULL; }
     JSRuntime *rt = JS_GetRuntime(realm);
     JSValue args[2] = { JS_NewString(realm, a), JS_NewString(realm, b) };
     JS_SetMaxStackSize(rt, QT_LOADER_STACK_SIZE);
@@ -318,7 +318,7 @@ static const char *call_policy(JSContext *ctx, Loader *loader, JSValueConst fn, 
     return text;
 }
 
-// ---- Compilation: image, then bytecode cache, then build ---------------------------
+// ---- Compilation: pack, then bytecode cache, then build ---------------------------
 
 static void record_value(JSContext *ctx, Loader *loader, uint8_t tag, const char *id, JSValueConst value) {
     if (!loader->recorder) return;
@@ -331,10 +331,10 @@ static void record_value(JSContext *ctx, Loader *loader, uint8_t tag, const char
 static JSValue obtain_uncounted(JSContext *ctx, Loader *loader, const char *id, const char *mode, int eval_type);
 // Compile module `id` for `mode` ("module" or "cjs") in ctx, compile-only.
 static JSValue obtain(JSContext *ctx, Loader *loader, const char *id, const char *mode, int eval_type) {
-    if (loader->image) {
-        const Slot *slot = table_get(mode[0] == 'm' ? &loader->image->modules : &loader->image->cjs, id, strlen(id));
+    if (loader->pack) {
+        const Slot *slot = table_get(mode[0] == 'm' ? &loader->pack->modules : &loader->pack->cjs, id, strlen(id));
         if (slot) {
-            loader->from_image++;
+            loader->from_pack++;
             return JS_ReadObject(ctx, slot->value, slot->value_len, JS_READ_OBJ_BYTECODE | JS_READ_OBJ_ROM_DATA);
         }
     }
@@ -391,8 +391,8 @@ static JSValue obtain_uncounted(JSContext *ctx, Loader *loader, const char *id, 
 // Resolve `name` imported from `base`; returns js_malloc'd storage in ctx.
 static char *resolve_to(JSContext *ctx, Loader *loader, const char *base, const char *name, size_t *out_len) {
     size_t len = 0;
-    if (loader->image) {
-        const char *hit = image_resolve(loader->image, base, name, &len);
+    if (loader->pack) {
+        const char *hit = pack_resolve(loader->pack, base, name, &len);
         if (hit) {
             char *copy = js_malloc(ctx, len + 1);
             if (copy) { memcpy(copy, hit, len); copy[len] = 0; if (out_len) *out_len = len; }
@@ -449,9 +449,9 @@ static JSValue app_format(JSContext *ctx, JSValueConst self, int argc, JSValueCo
     Loader *loader = loader_of(ctx);
     const char *id = JS_ToCString(ctx, argv[0]);
     if (!id) return JS_EXCEPTION;
-    if (loader->image) {
+    if (loader->pack) {
         size_t id_len = strlen(id);
-        const char *known = table_get(&loader->image->cjs, id, id_len) ? "cjs" : table_get(&loader->image->modules, id, id_len) ? "esm" : NULL;
+        const char *known = table_get(&loader->pack->cjs, id, id_len) ? "cjs" : table_get(&loader->pack->modules, id, id_len) ? "esm" : NULL;
         if (known) { JS_FreeCString(ctx, id); return JS_NewString(ctx, known); }
     }
     size_t len = 0;
@@ -561,7 +561,7 @@ static int install_realm(JSContext *ctx, Loader *loader) {
     const size_t word = sizeof(void *);
     qt_hash_update(hash, ENGINE, strlen(ENGINE));
     qt_hash_update(hash, &word, sizeof(word));
-    // Image builds strip function source (JS_STRIP_SOURCE); keep their cache entries apart.
+    // Pack builds strip function source (JS_STRIP_SOURCE); keep their cache entries apart.
     const char *strip = config->record ? "strip-source" : "full";
     qt_hash_update(hash, strip, strlen(strip));
     qt_hash_update(hash, config->sucrase, config->sucrase_len);
@@ -580,12 +580,12 @@ int qt_modules_install(JSContext *ctx, QtCompileHook *hook) {
     loader->hook = hook;
     loader->resolve = loader->format = loader->key = loader->build = loader->requires = JS_UNDEFINED;
     JS_SetRuntimeOpaque(rt, loader);
-    if (config->image) {
-        loader->image = image_get();
-        if (!loader->image) { JS_ThrowInternalError(ctx, "module image rejected: %s", image.error ? image.error : "unknown error"); return -1; }
+    if (config->pack) {
+        loader->pack = pack_get();
+        if (!loader->pack) { JS_ThrowInternalError(ctx, "module pack rejected: %s", pack.error ? pack.error : "unknown error"); return -1; }
     }
     if (config->root && config->root[0] && install_realm(ctx, loader) < 0) return -1;
-    if (!loader->image && !loader->realm) { JS_ThrowInternalError(ctx, "source mode needs a checkout or a module image"); return -1; }
+    if (!loader->pack && !loader->realm) { JS_ThrowInternalError(ctx, "source mode needs a checkout or a module pack"); return -1; }
 
     JS_SetModuleLoaderFunc2(rt, normalize, load_module, NULL, loader);
 
@@ -610,7 +610,7 @@ static const char entry_source[] = "import \"quicktui:entry\";\n";
 
 static void trace_counts(Loader *loader) {
     if (loader && loader->trace)
-        fprintf(stderr, "[modules] image=%u cache hits=%u misses=%u uncached=%u\n", loader->from_image, loader->hits, loader->misses, loader->uncached);
+        fprintf(stderr, "[modules] pack=%u cache hits=%u misses=%u uncached=%u\n", loader->from_pack, loader->hits, loader->misses, loader->uncached);
 }
 
 // Evaluate the entry graph. Settles top-level await before returning so the
@@ -658,14 +658,14 @@ void qt_modules_release(JSRuntime *rt) {
     free(loader);
 }
 
-// ---- Building an image -----------------------------------------------------------------
+// ---- Building a pack -----------------------------------------------------------------
 
 static void print_exception(JSContext *ctx, const char *what) {
     JSValue error = JS_GetException(ctx);
     const char *text = JS_ToCString(ctx, error);
     JSValue stack = JS_GetPropertyStr(ctx, error, "stack");
     const char *trace = JS_IsUndefined(stack) ? NULL : JS_ToCString(ctx, stack);
-    fprintf(stderr, "quicktui image: %s: %s\n%s", what, text ? text : "unknown error", trace ? trace : "");
+    fprintf(stderr, "quicktui pack: %s: %s\n%s", what, text ? text : "unknown error", trace ? trace : "");
     JS_FreeCString(ctx, text); JS_FreeCString(ctx, trace); JS_FreeValue(ctx, stack); JS_FreeValue(ctx, error);
 }
 
@@ -703,7 +703,7 @@ static int follow_requires(JSContext *ctx, Loader *loader) {
             JSValue v0 = JS_GetPropertyUint32(ctx, item, 0), v1 = JS_GetPropertyUint32(ctx, item, 1), v2 = JS_GetPropertyUint32(ctx, item, 2);
             const char *spec = JS_ToCString(ctx, v0), *target = JS_IsNull(v1) ? NULL : JS_ToCString(ctx, v1), *format = JS_ToCString(ctx, v2);
             if (!target) {
-                fprintf(stderr, "quicktui image: skipping require(\"%s\") in %s: %s\n", spec ? spec : "?", id, format ? format : "");
+                fprintf(stderr, "quicktui pack: skipping require(\"%s\") in %s: %s\n", spec ? spec : "?", id, format ? format : "");
             } else {
                 // Record the edge, as resolve_to would at run time.
                 char *resolved = resolve_to(ctx, loader, id, spec, NULL);
@@ -773,14 +773,14 @@ static int write_depfile(const char *depfile, const char *out_path, Recorder *r)
     }
     append(&buf, &len, &cap, "\n", 1);
     int failed = !buf || qt_fs_write(depfile, buf, len) != 0;
-    if (failed) fprintf(stderr, "quicktui image: cannot write %s\n", depfile);
+    if (failed) fprintf(stderr, "quicktui pack: cannot write %s\n", depfile);
     free(buf);
     return failed;
 }
 
-// Record every module reachable from the configured entry and write an image.
+// Record every module reachable from the configured entry and write a pack.
 // Nothing is evaluated: no application code runs at build time.
-int quicktui_build_image(const char *out_path) {
+int quicktui_build_pack(const char *out_path) {
     int result = 1;
     JSRuntime *rt = JS_NewRuntime();
     if (!rt) return 1;
@@ -793,8 +793,8 @@ int quicktui_build_image(const char *out_path) {
     Recorder recorder = { 0 };
     if (qt_modules_install(ctx, NULL) < 0) { print_exception(ctx, "setup"); goto done; }
     Loader *loader = loader_of(ctx);
-    if (!loader->realm) { fputs("quicktui image: building needs a checkout\n", stderr); goto done; }
-    loader->image = NULL; // never copy from an existing image
+    if (!loader->realm) { fputs("quicktui pack: building needs a checkout\n", stderr); goto done; }
+    loader->pack = NULL; // never copy from an existing pack
     loader->recorder = &recorder;
     if (load_graph(ctx, entry_source, sizeof(entry_source) - 1, "<quicktui>") < 0) { print_exception(ctx, "entry"); goto done; }
     if (follow_requires(ctx, loader) < 0) goto done;
@@ -802,7 +802,7 @@ int quicktui_build_image(const char *out_path) {
     uint8_t *buf = NULL; size_t len = 0, cap = 0;
     unsigned counts[4] = { 0 };
     size_t bytecode = 0;
-    int bad = append(&buf, &len, &cap, image_magic, 8)
+    int bad = append(&buf, &len, &cap, pack_magic, 8)
         || append_u32(&buf, &len, &cap, (uint32_t)strlen(ENGINE)) || append(&buf, &len, &cap, ENGINE, strlen(ENGINE))
         || append_u32(&buf, &len, &cap, (uint32_t)sizeof(void *)) || append_u32(&buf, &len, &cap, (uint32_t)recorder.count);
     for (size_t i = 0; i < recorder.count && !bad; i++) {
@@ -813,9 +813,9 @@ int quicktui_build_image(const char *out_path) {
             || append_u32(&buf, &len, &cap, (uint32_t)rec->a_len) || append(&buf, &len, &cap, rec->a, rec->a_len)
             || append_u32(&buf, &len, &cap, (uint32_t)rec->b_len) || append(&buf, &len, &cap, rec->b, rec->b_len);
     }
-    if (bad || qt_fs_write(out_path, buf, len) != 0) fprintf(stderr, "quicktui image: cannot write %s\n", out_path);
+    if (bad || qt_fs_write(out_path, buf, len) != 0) fprintf(stderr, "quicktui pack: cannot write %s\n", out_path);
     else {
-        if (!qt_modules_config()->quiet) fprintf(stderr, "quicktui image: %s: %u modules, %u CommonJS bodies, %u edges, %zu bytes of bytecode, %zu bytes total\n",
+        if (!qt_modules_config()->quiet) fprintf(stderr, "quicktui pack: %s: %u modules, %u CommonJS bodies, %u edges, %zu bytes of bytecode, %zu bytes total\n",
                 out_path, counts[TAG_MODULE], counts[TAG_CJS], counts[TAG_EDGE], bytecode, len);
         result = write_depfile(qt_modules_config()->depfile, out_path, &recorder);
     }
