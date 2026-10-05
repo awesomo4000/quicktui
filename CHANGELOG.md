@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased - 10/05/2026
+
+- Add pinned Bun/esbuild reference tests and a Bun-free selected-case runner.
+  Fix statement joining in identifier/member define replacements exposed by
+  the upstream regression fixture.
+
+- Use a pinned Sucrase parser adapter for scope-aware defines and literal
+  require discovery; test strings, comments, JSX, templates, and local bindings.
+
+- Resolve consumer-local packages and enforce package export boundaries and
+  wildcard precedence. Add source/pack fixtures and optional Bun comparisons.
+- Track remaining loader compatibility and robustness work in a checklist.
+
 ## Unreleased - 10/04/2026
 
 - Make module packs the default build and migrate standalone consumers to packs.

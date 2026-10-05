@@ -1,0 +1,180 @@
+{
+  "revision": "9bd19c98eacc01530a4e7609bc427abffa87d77e",
+  "sha256": {
+    "bundler_cjs2esm.test.ts": "58a7e2ebef088f6008d1ba3153a6c9d214613a3369ef2f66e2c6a37aa984ba02",
+    "esbuild/default.test.ts": "b39e5928b28cd50ac63bacb25564904949f09351a437bbff61476904bac3ca9e",
+    "esbuild/packagejson.test.ts": "e1dcc27e36d2419633ddbe265f5ba14b15d6a1f0bd60d296042905443196f15b"
+  },
+  "fixtures": [
+    {
+      "name": "packagejson/ExportsImportOverRequire",
+      "source": "esbuild/packagejson.test.ts",
+      "case": {
+        "files": {
+          "/Users/user/project/src/entry.js": "import 'pkg'",
+          "/Users/user/project/node_modules/pkg/package.json": "\n        {\n          \"exports\": {\n            \"require\": \"./require.js\",\n            \"import\": \"./import.js\",\n            \"default\": \"./default.js\"\n          }\n        }\n      ",
+          "/Users/user/project/node_modules/pkg/require.js": "console.log('FAILURE')",
+          "/Users/user/project/node_modules/pkg/import.js": "console.log('SUCCESS')"
+        },
+        "run": {
+          "stdout": "SUCCESS"
+        }
+      }
+    },
+    {
+      "name": "packagejson/ExportsDefaultOverImportAndRequire",
+      "source": "esbuild/packagejson.test.ts",
+      "case": {
+        "files": {
+          "/Users/user/project/src/entry.js": "import 'pkg'",
+          "/Users/user/project/node_modules/pkg/package.json": "\n        {\n          \"exports\": {\n            \"default\": \"./default.js\",\n            \"import\": \"./import.js\",\n            \"require\": \"./require.js\"\n          }\n        }\n      ",
+          "/Users/user/project/node_modules/pkg/require.js": "console.log('FAILURE')",
+          "/Users/user/project/node_modules/pkg/import.js": "console.log('FAILURE')",
+          "/Users/user/project/node_modules/pkg/default.js": "console.log('SUCCESS')"
+        },
+        "run": {
+          "stdout": "SUCCESS"
+        }
+      }
+    },
+    {
+      "name": "packagejson/ExportsBrowser",
+      "source": "esbuild/packagejson.test.ts",
+      "case": {
+        "files": {
+          "/Users/user/project/src/entry.js": "import 'pkg'",
+          "/Users/user/project/node_modules/pkg/package.json": "\n        {\n          \"exports\": {\n            \"node\": \"./node.js\",\n            \"browser\": \"./browser.js\",\n            \"default\": \"./default.js\"\n          }\n        }\n      ",
+          "/Users/user/project/node_modules/pkg/node.js": "console.log('FAILURE')",
+          "/Users/user/project/node_modules/pkg/browser.js": "console.log('SUCCESS')"
+        },
+        "target": "browser",
+        "outfile": "/Users/user/project/out.js",
+        "run": {
+          "stdout": "SUCCESS"
+        }
+      }
+    },
+    {
+      "name": "packagejson/ExportsRequireOverImport",
+      "source": "esbuild/packagejson.test.ts",
+      "case": {
+        "files": {
+          "/Users/user/project/src/entry.js": "require('pkg')",
+          "/Users/user/project/node_modules/pkg/package.json": "\n        {\n          \"exports\": {\n            \"import\": \"./import.js\",\n            \"require\": \"./require.js\",\n            \"default\": \"./default.js\"\n          }\n        }\n      ",
+          "/Users/user/project/node_modules/pkg/import.js": "console.log('FAILURE')",
+          "/Users/user/project/node_modules/pkg/require.js": "console.log('SUCCESS')"
+        },
+        "run": {
+          "stdout": "SUCCESS"
+        }
+      }
+    },
+    {
+      "name": "packagejson/ExportsErrorPackagePathNotExported",
+      "source": "esbuild/packagejson.test.ts",
+      "case": {
+        "files": {
+          "/Users/user/project/src/entry.js": "import 'pkg1/foo'",
+          "/Users/user/project/node_modules/pkg1/package.json": "{ \"exports\": { \".\": {} } }"
+        },
+        "bundleErrors": {
+          "/Users/user/project/src/entry.js": [
+            "Could not resolve: \"pkg1/foo\". Maybe you need to \"bun install\"?"
+          ]
+        }
+      }
+    },
+    {
+      "name": "packagejson/ExportsErrorModuleNotFound",
+      "source": "esbuild/packagejson.test.ts",
+      "case": {
+        "files": {
+          "/Users/user/project/src/entry.js": "import 'pkg1'",
+          "/Users/user/project/node_modules/pkg1/package.json": "{ \"exports\": { \".\": \"./foo.js\" } }"
+        },
+        "bundleErrors": {
+          "/Users/user/project/src/entry.js": [
+            "Could not resolve: \"pkg1\". Maybe you need to \"bun install\"?"
+          ]
+        }
+      }
+    },
+    {
+      "name": "packagejson/ExportsErrorUnsupportedDirectoryImport",
+      "source": "esbuild/packagejson.test.ts",
+      "case": {
+        "files": {
+          "/Users/user/project/src/entry.js": "\n        import 'pkg1'\n        import 'pkg2'\n      ",
+          "/Users/user/project/node_modules/pkg1/package.json": "{ \"exports\": { \".\": \"./foo/\" } }",
+          "/Users/user/project/node_modules/pkg2/package.json": "{ \"exports\": { \".\": \"./foo\" } }",
+          "/Users/user/project/node_modules/pkg2/foo/bar.js": "console.log(bar)"
+        },
+        "bundleErrors": {
+          "/Users/user/project/src/entry.js": [
+            "Could not resolve: \"pkg1\". Maybe you need to \"bun install\"?",
+            "Could not resolve: \"pkg2\". Maybe you need to \"bun install\"?"
+          ]
+        }
+      }
+    },
+    {
+      "name": "packagejson/ExportsNoConditionsMatch",
+      "source": "esbuild/packagejson.test.ts",
+      "case": {
+        "files": {
+          "/Users/user/project/src/entry.js": "\n        import 'pkg1'\n        import 'pkg1/foo.js'\n      ",
+          "/Users/user/project/node_modules/pkg1/package.json": "\n        {\n          \"exports\": {\n            \".\": {\n              \"what\": \"./foo.js\"\n            },\n            \"./foo.js\": {\n              \"what\": \"./foo.js\"\n            }\n          }\n        }\n      ",
+          "/Users/user/project/node_modules/pkg1/foo.js": "console.log('FAILURE')"
+        },
+        "bundleErrors": {
+          "/Users/user/project/src/entry.js": [
+            "Could not resolve: \"pkg1\". Maybe you need to \"bun install\"?",
+            "Could not resolve: \"pkg1/foo.js\". Maybe you need to \"bun install\"?"
+          ]
+        }
+      }
+    },
+    {
+      "name": "default/DefineInfiniteLoopESBuildIssue2407",
+      "source": "esbuild/default.test.ts",
+      "case": {
+        "files": {
+          "/entry.js": "\n        a.b()\n        x.y()\n      "
+        },
+        "define": {
+          "a.b": "b.c",
+          "b.c": "c.a",
+          "c.a": "a.b",
+          "x.y": "y"
+        },
+        "runtimeFiles": {
+          "/test.js": "\n        globalThis.b = { c: () => console.log('1') };\n        globalThis.y = () => console.log('2');\n        await import('./out.js');\n      "
+        },
+        "run": {
+          "file": "/test.js",
+          "stdout": "1\n2"
+        }
+      }
+    },
+    {
+      "name": "default/DefineOptionalChain",
+      "source": "esbuild/default.test.ts",
+      "case": {
+        "todo": true,
+        "files": {
+          "/entry.js": "\n        log([\n          a.b.c,\n          a?.b.c,\n          a.b?.c,\n        ], [\n          a['b']['c'],\n          a?.['b']['c'],\n          a['b']?.['c'],\n        ], [\n          a[b][c],\n          a?.[b][c],\n          a[b]?.[c],\n        ])\n      "
+        },
+        "define": {
+          "a.b.c": 1
+        },
+        "runtimeFiles": {
+          "/test.js": "\n        globalThis.log = (...args) => console.log(JSON.stringify(args));\n        globalThis.a = { B: { C: 2 } };\n        globalThis.b = \"B\";\n        globalThis.c = \"C\";\n        await import('./out.js');\n      "
+        },
+        "run": {
+          "file": "/test.js",
+          "stdout": "[[1,1,1],[1,1,1],[2,2,2]]"
+        }
+      }
+    }
+  ]
+}

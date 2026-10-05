@@ -83,25 +83,24 @@
     ["quicktui:fs", 'export function existsSync(){throw new Error("Filesystem access is unsupported")}; export function writeFileSync(){throw new Error("Filesystem access is unsupported")};'],
   ]);
 
-  // Bun's `define` equivalents, applied as text before the transform. The
-  // lookbehind keeps `declare const __X__: T` intact for the TypeScript pass.
+  // Parser-backed defines run only in the trusted loader realm.
   let defineValues;
   function defines() {
     if (defineValues) return defineValues;
     const picture = config.demoAssets ? host.readBase64(join(base, "assets/dragon.jpg")) : "";
     const frames = [];
     if (config.demoAssets) for (let i = 0; i < 8; i++) frames.push(host.readBase64(join(base, `assets/dragon-frames/${i}.rgba`)));
-    defineValues = [
-      [/(?<!declare\s+(?:const|let|var)\s+)\b__SPRITE_FRAMES_BASE64__\b/g, JSON.stringify(frames)],
-      [/(?<!declare\s+(?:const|let|var)\s+)\b__DEMO_PICTURE_BASE64__\b/g, JSON.stringify(picture)],
-      [/\bprocess\.env\.NODE_ENV\b/g, '"production"'],
-      [/\bprocess\.env\.DEV\b/g, '"false"'],
-    ];
+    defineValues = {
+      __SPRITE_FRAMES_BASE64__: JSON.stringify(frames),
+      __DEMO_PICTURE_BASE64__: JSON.stringify(picture),
+      "process.env.NODE_ENV": '"production"',
+      "process.env.DEV": '"false"',
+    };
     return defineValues;
   }
-  function applyDefines(text) {
-    for (const [pattern, value] of defines()) if (pattern.test(text)) { pattern.lastIndex = 0; text = text.replace(pattern, () => value); }
-    return text;
+  const parseOptions = kind => ({jsx: kind === "tsx", typescript: kind === "ts" || kind === "tsx"});
+  function applyDefines(text, kind) {
+    return sucrase.rewriteDefines(text, parseOptions(kind), defines());
   }
 
   // Source patches, mirroring the onLoad hooks in scripts/bundle-app.ts.
@@ -150,26 +149,33 @@
     for (const ext of extensions) if (host.isFile(join(path, "index" + ext))) return join(path, "index" + ext);
     return null;
   }
+  const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
   const conditions = new Set(["browser", "import", "module", "default"]);
   function exportTarget(target) {
+    if (target === null) return null;
     if (typeof target === "string") return target;
     if (Array.isArray(target)) { for (const item of target) { const found = exportTarget(item); if (found) return found; } return null; }
     if (target && typeof target === "object") {
-      for (const key of Object.keys(target)) if (conditions.has(key)) { const found = exportTarget(target[key]); if (found) return found; }
+      for (const key of Object.keys(target)) if (conditions.has(key)) { const found = exportTarget(target[key]); if (found !== undefined) return found; }
     }
-    return null;
+    return undefined;
   }
   function resolveExports(exportsField, subpath) {
+    if (exportsField === null) return null;
+    if (typeof exportsField !== "string" && typeof exportsField !== "object") throw new Error("Invalid package exports");
     if (typeof exportsField === "string" || Array.isArray(exportsField) || !Object.keys(exportsField).some((k) => k.startsWith(".")))
       return subpath === "." ? exportTarget(exportsField) : null;
-    if (subpath in exportsField) return exportTarget(exportsField[subpath]);
-    for (const key of Object.keys(exportsField)) {
+    if (hasOwn(exportsField, subpath)) return exportTarget(exportsField[subpath]);
+    // Most-specific pattern wins, independently of declaration order.
+    const patterns = Object.keys(exportsField).filter((key) => key.includes("*")).sort((a, b) =>
+      b.indexOf("*") - a.indexOf("*") || b.length - a.length);
+    for (const key of patterns) {
       const star = key.indexOf("*");
       if (star < 0) continue;
       const prefix = key.slice(0, star), suffix = key.slice(star + 1);
       if (subpath.startsWith(prefix) && subpath.endsWith(suffix) && subpath.length >= key.length - 1) {
         const target = exportTarget(exportsField[key]);
-        if (target) return target.split("*").join(subpath.slice(prefix.length, subpath.length - suffix.length));
+        return typeof target === "string" ? target.split("*").join(subpath.slice(prefix.length, subpath.length - suffix.length)) : target;
       }
     }
     return null;
@@ -182,16 +188,23 @@
       const packageDir = join(directory, "node_modules", name);
       const pkg = readPackageJson(packageDir);
       if (pkg) {
-        if (pkg.exports) {
+        if (hasOwn(pkg, "exports")) {
           const target = resolveExports(pkg.exports, subpath);
-          if (target) { const found = probe(join(packageDir, target)); if (found) return found; }
+          if (typeof target !== "string") throw new Error(`Package path ${spec} is not exported`);
+          if (!target.startsWith("./") || target.slice(2).split("/").some((part) => ["..", "node_modules"].includes(part)) || /[%\\]/.test(target))
+            throw new Error(`Invalid package export target for ${spec}: ${target}`);
+          // An export names a file, not a directory or an extension search.
+          const resolved = join(packageDir, target);
+          if (host.isFile(resolved)) return resolved;
+          throw new Error(`Cannot resolve exported target ${target} for ${spec}`);
         }
         const found = probe(join(packageDir, subpath));
         if (found) return found;
+        throw new Error(`Cannot resolve package path ${spec}`);
       }
       if (directory === "/") break;
     }
-    throw new Error(`Cannot resolve package ${JSON.stringify(spec)} from ${fromDirectory}`);
+    return null;
   }
 
   // ---- Resolution (mirrors the onResolve hook) ----------------------------
@@ -201,14 +214,23 @@
   function resolveFile(spec, importer) {
     if (spec === "quicktui:entry" || virtualSources.has(spec)) return spec;
     if (aliases.has(spec)) return aliases.get(spec);
-    if (spec === "react" || spec.startsWith("react/")) return resolvePackage(spec, vendorJs);
+    if (spec === "react" || spec.startsWith("react/")) {
+      const resolved = resolvePackage(spec, vendorJs);
+      if (resolved) return resolved;
+      throw new Error(`Cannot resolve shared package ${spec}`);
+    }
     if (spec === entry) return entry;
     if (["fs", "node:fs", "node:fs/promises"].includes(spec)) {
       if (!importer.startsWith(native + "/")) throw new Error(`Unsupported host import ${spec} from ${importer}`);
       return spec === "node:fs/promises" ? "quicktui:fs-promises" : "quicktui:fs";
     }
     if (spec.startsWith("node:") || spec.startsWith("bun:")) throw new Error(`Unsupported host import ${spec} from ${importer}`);
-    if (!spec.startsWith(".") && !spec.startsWith("/")) return resolvePackage(spec, vendorJs);
+    if (!spec.startsWith(".") && !spec.startsWith("/")) {
+      const local = importer.startsWith("/") ? resolvePackage(spec, dirname(importer)) : null;
+      const resolved = local || resolvePackage(spec, vendorJs);
+      if (resolved) return resolved;
+      throw new Error(`Cannot resolve package ${JSON.stringify(spec)} from ${importer}`);
+    }
     const directory = importer.startsWith("/") ? dirname(importer) : base;
     let resolved = resolvePath(directory, spec);
     if (resolved.endsWith(".js")) resolved = resolved.slice(0, -3) + ".ts";
@@ -256,7 +278,7 @@
       else if (ext === ".mjs") kind = "esm";
       else if (ext === ".cjs") kind = "cjs";
       else kind = packageType(path) === "module" || esmSyntax.test(text) ? "esm" : "cjs";
-      result = { kind, text: kind === "text" || kind === "json" ? text : applyDefines(text) };
+      result = { kind, text: kind === "text" || kind === "json" ? text : applyDefines(text, kind) };
     }
     sources.set(id, result);
     return result;
@@ -344,29 +366,24 @@
   }
   // ES modules that call require() (e.g. js/examples.ts) get a module-scoped
   // require on their first line, so line numbers are unchanged.
-  const callsRequire = /\brequire\s*\(/;
-  const declaresRequire = /\b(?:const|let|var|function|class)\s+require\b|\bimport\s+require\b/;
   function withRequire(id, code) {
-    if (!callsRequire.test(code) || declaresRequire.test(code)) return code;
+    if (!sucrase.inspectRequires(code).usesRequire) return code;
     return `const require = globalThis.__quicktuiRequireFrom(${JSON.stringify(id)}); ` + code;
   }
-  // Literal require("...") calls in built code. Dynamic requires are invisible
-  // here; images reject them at run time with "not in image".
-  const requireCall = /(?:^|[^.\w$])require\s*\(\s*(["'])((?:\\.|(?!\1)[^\\\n])*)\1\s*\)/g;
-  function requireSpecifiers(code) {
-    const specs = [];
-    for (const match of code.matchAll(requireCall)) specs.push(match[2]); // escapes in paths are not decoded
-    return specs;
+  function requireSpecifiers(id) {
+    const {kind, text} = source(id);
+    if (kind === "json" || kind === "text") return [];
+    return sucrase.inspectRequires(text, parseOptions(kind)).specifiers;
   }
   // Branches a build never takes (React's development builds) are left out of
-  // facade keys and images. Override with __loaderConfig.exclude (a RegExp source).
+  // facade keys and packs. Override with __loaderConfig.exclude (a RegExp source).
   const excluded = new RegExp(config.exclude || "\\.development\\.js$");
   // The static CommonJS closure discovery would execute: ids in load order.
   function commonJsClosure(id, seen = new Set()) {
     if (seen.has(id)) return [...seen];
     seen.add(id);
     if (source(id).kind !== "cjs") return [...seen];
-    for (const spec of requireSpecifiers(source(id).text)) {
+    for (const spec of requireSpecifiers(id)) {
       let target;
       try { target = resolve(spec, id); } catch { continue; }
       if (!excluded.test(target)) commonJsClosure(target, seen);
@@ -382,12 +399,12 @@
     return `${kind}\0${text}`;
   }
   // [specifier, resolved id or null, "cjs" | "esm" | error message] for every
-  // literal require in the built module; used to close module images over
+  // literal require in the source module; used to close module packs over
   // require() targets that static imports do not reach.
   function requires(id, mode) {
     if (mode === "module" && source(id).kind === "cjs") return JSON.stringify([[id, id, "cjs"]]);
     const out = [];
-    for (const spec of requireSpecifiers(build(id, mode))) {
+    for (const spec of requireSpecifiers(id)) {
       try {
         const target = resolve(spec, id);
         if (!excluded.test(target)) out.push([spec, target, format(target)]);

@@ -317,3 +317,37 @@ The x86-64 Zig test server hung when native code wrote to its stdout protocol.
 Native tests now use the stock test runner in standalone mode, with a Python
 wrapper checking its exit code and enforcing a 180-second timeout. This path
 passes on macOS too and preserves the stock runner's allocator leak checks.
+
+### Package-resolution follow-up
+
+Bare package imports search from the importing file before falling back to
+vendored dependencies. Explicit QuickTUI aliases and React remain shared.
+Consumer dependencies must still fit under the application root.
+Package exports block unlisted paths; matching conditions follow declaration
+order and wildcard matches prefer the most specific path. Export targets must
+name files, without directory or extension fallback.
+
+Run `python3 scripts/test-module-packages.py` for these fixtures, or add
+`--compare-bun` for an optional browser-bundler comparison. The remaining
+compatibility work is
+tracked in [the integration checklist](../specs/module-loader-integration.md).
+
+### Parser adapter
+
+The loader uses the existing vendored Sucrase parser for define replacement and
+literal `require()` discovery. It preserves strings, comments, regular expressions,
+JSX text, and local bindings while handling expressions inside JSX and templates.
+The small adapter source and regeneration instructions live in
+`vendor/sucrase/entry.js` and `vendor/sucrase/README.md`. It uses pinned internal
+Sucrase APIs; QuickJS itself is unchanged. Application code receives no new parser
+or native capabilities, and pack-only releases omit the adapter with the loader.
+
+`python3 scripts/test-module-syntax.py` checks both the adapter and actual
+source/pack execution. Computed requires still need their target present in the
+pack; they are not discovered automatically.
+
+Selected unchanged Bun/esbuild fixtures also run through
+`python3 scripts/test-bun-reference.py`. The pinned files, attribution, exact
+coverage, and expected failures are documented in
+[the reference README](../tests/reference/bun/README.md). Bun is needed only to
+regenerate the selected fixture data, not to run these checks.
