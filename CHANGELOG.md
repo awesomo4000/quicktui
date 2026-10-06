@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased - 10/06/2026
+
+- Add `zig build test-loader-contract` to run application import and upstream
+  reference checks directly against current build artifacts without Bun.
+
+- Define ES imports/exports as the application module contract. Reject external
+  CommonJS and require-conditioned packages with explicit errors while preserving
+  pinned React/runtime compatibility. Document dotted-only define substitution.
+- Add source/pack contract tests and update reference expectations to distinguish
+  supported-subset rejection from Bun compatibility.
+
 ## Unreleased - 10/05/2026
 
 - Add pinned Bun/esbuild reference tests and a Bun-free selected-case runner.

@@ -31,8 +31,8 @@ The optional Bun comparison and full QuickTUI test suite also passed on macOS.
 - [x] Replace regex `require()` discovery; decode escaped literal specifiers and
   distinguish real calls from text, property calls, and shadowed functions.
 - [x] Copy pinned Bun/esbuild reference files with attribution and run a selected
-  ten-case subset. See `tests/reference/bun/README.md` for coverage and two
-  expected failures. The define regression exposed and fixed a statement-joining
+  ten-case subset. See `tests/reference/bun/README.md` for coverage, deliberate
+  supported-subset rejections, and the remaining expected define failure. The define regression exposed and fixed a statement-joining
   bug in identifier/member replacements.
 - [ ] Expand reference coverage to shadowing, CommonJS interop, and source locations.
 
@@ -44,8 +44,10 @@ fixtures passed with the new adapter too.
 
 ## Remaining module semantics
 
-- [ ] Separate import/require condition sets. The current loader selects the
-  browser/import/module/default profile for both.
+- [x] Define a smaller application ES-module contract. Reject app CommonJS and
+  external require-conditioned packages explicitly; retain pinned internal CJS.
+- [ ] Optional future expansion: separate import/require conditions for external
+  packages. This is outside the supported contract for now.
 - [ ] Export arrays with invalid alternatives, invalid/mixed export objects,
   encoded targets, and package self references.
 - [ ] `package.json` imports, browser field remapping, and tsconfig path aliases:
@@ -90,3 +92,17 @@ It checks expected values and success/failure, not identical diagnostics.
 QuickTUI currently treats `exports: null` at the package root as blocked and
 conservatively rejects percent-encoded/backslash export targets. These cases
 are not claims of complete Bun/Node resolution compatibility.
+
+The 10/06/2026 contract tests replace the external runaway-CJS discovery fixture
+with an explicit pre-execution rejection check. The earlier compile-budget
+verification is historical; that fixture no longer exercises a timeout.
+
+The ES-import contract and updated reference checks passed on macOS and Linux
+x86-64 glibc. The macOS full suite, syntax fixtures, and cache/edge fixtures also
+passed. Reference results are nine successful checks, including three intentional
+contract rejections, and one expected optional/computed-define failure.
+
+Before pushing on 10/06/2026, `zig build test-loader-contract` passed using current
+build artifacts. The external pack-only consumer also passed after deleting its
+application source, including typing/paste/resize, rejection of unpacked imports,
+ignored loader overrides, and source-loader symbol exclusion.

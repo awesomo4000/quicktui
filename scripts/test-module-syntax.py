@@ -24,10 +24,6 @@ export const value=process.env.NODE_ENV;''')
     write('top.ts', '''const process={env:{NODE_ENV:"top"}};
 if(process.env.NODE_ENV!=="top")throw Error("top-level binding replaced");
 export const value=process.env.NODE_ENV;''')
-    write('value.cjs', 'module.exports=42;')
-    write('cjs.cjs', r'''// require("./missing-comment")
-const text='require("./missing-string")';
-module.exports=require('./val\u0075e.cjs');''')
     write('adapter.mjs', (root/'vendor/sucrase/sucrase.js').read_text())
     write('app.tsx', r'''
 import './adapter.mjs';
@@ -35,7 +31,7 @@ import {createApplication} from "quicktui/core";
 import {testApp} from "quicktui/testing";
 import {value as bound} from "./bound";
 import {value as top} from "./top";
-import cjs from "./cjs.cjs";
+
 function eq(actual:any, expected:any){if(actual!==expected)throw Error(JSON.stringify({actual,expected}));}
 declare const __DEMO_PICTURE_BASE64__: string;
 declare const process:any;
@@ -61,7 +57,7 @@ eq(escaped({env:{NODE_ENV:"escaped"}}),"escaped");
 function hoisted(){const read=()=>process.env.NODE_ENV; var process={env:{NODE_ENV:"hoisted"}};return read();}
 eq(hoisted(),"hoisted");
 const named=function process(){return process.env?.NODE_ENV ?? "named"};eq(named(),"named");
-eq(bound,"local");eq(top,"top");eq(cjs,42);
+eq(bound,"local");eq(top,"top");
 // require("./missing-comment")
 const fake='require("./missing-string")';
 const regex=/require\("missing-regex"\)/;
@@ -69,9 +65,7 @@ const template=`require("./missing-template")`;
 function local(require:any){return require("./missing-local");}
 eq(local(()=>17),17);
 const holder={require:()=>23};eq(holder.require("./missing-member"),23);
-eq(require('./val\u0075e.cjs'),42);
-eq(require('./value.cjs',),42);
-eq(`${require('./value.cjs')}`,"42");
+
 const adapter=(globalThis as any).__sucrase;
 const source = 'const text="FLAG"; /* FLAG */ const rx=/FLAG/; const value=FLAG;';
 eq(adapter.rewriteDefines(source,{}, {FLAG:'42'}),
@@ -102,7 +96,7 @@ testApp(async ui=>{await ui.resize(80,24)});
     run(command); run(command)
     run([tool,root,work/'app.tsx',work/'app.pack','--app-root',work])
     # The pack must run after its dependency sources are gone.
-    for name in ['value.cjs', 'cjs.cjs', 'local.ts', 'top.ts', 'bound.ts', 'app.tsx', 'adapter.mjs']:
+    for name in ['local.ts', 'top.ts', 'bound.ts', 'app.tsx', 'adapter.mjs']:
         (work/name).unlink()
     run([exe,'--run-pack',work/'app.pack','--self-test'])
     print('Syntax fixtures passed: defines, shadowing, JSX/templates and literal require discovery')

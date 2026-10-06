@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Run selected pinned Bun fixtures through QuickTUI; Bun is not required."""
 import hashlib
+import argparse
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -8,12 +9,17 @@ import subprocess
 import tempfile
 
 root = Path(__file__).resolve().parent.parent
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--quicktui', type=Path, default=root/'zig-out/bin/quicktui')
+parser.add_argument('--pack-tool', type=Path, default=root/'zig-out/bin/quicktui-pack')
+args = parser.parse_args()
+exe = args.quicktui.resolve()
+pack_tool = args.pack_tool.resolve()
 reference = root/'tests/reference/bun'
 manifest = json.loads((reference/'fixtures.json').read_text())
 for name, digest in manifest['sha256'].items():
     assert hashlib.sha256((reference/'upstream'/name).read_bytes()).hexdigest() == digest, name
 known_gaps = {
-    'packagejson/ExportsRequireOverImport': 'require condition selection',
     'default/DefineOptionalChain': 'optional/computed define access; upstream TODO',
 }
 failures = []
@@ -66,13 +72,21 @@ if(actual!=={json.dumps(expected)})throw Error("REFERENCE_MISMATCH: "+JSON.strin
 const app=createApplication();testApp(async ui=>{{await ui.resize(80,24)}});
 '''
         app = write(base, 'app.mjs', wrapper)
-        source = [root/'zig-out/bin/quicktui','--run',app,'--app-root',base,'--self-test']
+        source = [exe,'--run',app,'--app-root',base,'--self-test']
         pack = base/'test.pack'
-        build = [root/'zig-out/bin/quicktui-pack',root,app,pack,'--app-root',base]
+        build = [pack_tool,root,app,pack,'--app-root',base]
         results = [('source', *run(source, base)), ('pack-build', *run(build, base))]
         if results[-1][1] == 0:
-            results.append(('pack', *run([root/'zig-out/bin/quicktui','--run-pack',pack,'--self-test'], base)))
-        if 'bundleErrors' in case:
+            results.append(('pack', *run([exe,'--run-pack',pack,'--self-test'], base)))
+        contract_rejections = {
+            'packagejson/ExportsImportOverRequire': 'Unsupported conditional package exports',
+            'packagejson/ExportsDefaultOverImportAndRequire': 'Unsupported conditional package exports',
+            'packagejson/ExportsRequireOverImport': 'Unsupported application CommonJS',
+        }
+        if name in contract_rejections:
+            ok = len(results) == 2 and all(code != 0 and contract_rejections[name] in output for _, code, output in results)
+            status = 'PASS supported-subset rejection' if ok else 'FAIL'
+        elif 'bundleErrors' in case:
             ok = len(results) == 2 and all(code != 0 and ('not exported' in output or 'Cannot resolve exported target' in output)
                                           for _, code, output in results)
             status = 'PASS rejection' if ok else 'FAIL'
@@ -90,4 +104,4 @@ const app=createApplication();testApp(async ui=>{{await ui.resize(80,24)}});
                 print(f'{mode}: exit {code}\n{output[-3000:]}', flush=True)
 if failures:
     raise SystemExit(f'{len(failures)} unexpected reference results')
-print('Reference checks: 8 passed, 2 documented expected failures; 10 selected cases only')
+print('Reference checks: 9 passed (including 3 supported-subset rejections), 1 documented expected failure; 10 selected cases only')

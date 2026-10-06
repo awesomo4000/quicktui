@@ -283,7 +283,8 @@ the pack tool takes `--app-root`. None of these enable filesystem loading in a
 
 `python3 scripts/test-module-edges.py` covers sibling imports, changed dependency
 cache invalidation, corrupt cache recovery, import cycles, missing modules,
-truncated pack framing, path leakage, and nonterminating CommonJS discovery.
+truncated pack framing, path leakage, and rejection of application CommonJS
+before its body executes.
 All filesystem fixtures are temporary. It does not feed fabricated bytecode to
 QuickJS; packs remain trusted artifacts.
 
@@ -351,3 +352,46 @@ Selected unchanged Bun/esbuild fixtures also run through
 coverage, and expected failures are documented in
 [the reference README](../tests/reference/bun/README.md). Bun is needed only to
 regenerate the selected fixture data, not to run these checks.
+
+## Supported application imports
+
+Application modules use ES `import` and `export`, in JavaScript, TypeScript, or
+TSX. Plain `.js` files are treated as ES modules even without `package.json`.
+JSON and text imports remain supported.
+
+The source loader and pack builder reject application `.cjs`/`.cts` files and
+free uses of CommonJS `require`, `module`, or `exports`. This includes aliased
+require references and TypeScript import-equals forms. Local bindings with those
+names are ordinary JavaScript and remain allowed. Use `import value from
+"./module"` instead. Existing packs must be rebuilt to apply this policy.
+
+External packages with a `require` condition in their exports map are rejected
+with `Unsupported conditional package exports`. This is deliberately conservative:
+even an available import branch does not enable a dual-entry external package.
+Use a package with a single ES-module entry. External CommonJS packages are not
+part of the supported contract either.
+
+Pinned sources under QuickTUI's `js/` and `vendor/` retain internal CommonJS
+compatibility for React and the demo dispatchers. These directory exceptions are
+an implementation policy for trusted source builds, not a security boundary.
+This does not restrict JavaScript eval or turn the loader into a sandbox.
+
+Defines such as `process.env.NODE_ENV` support direct dotted access only.
+Optional chaining and computed/bracket access are not substituted. This limitation
+is documented rather than enforced as a syntax prohibition; those forms can
+therefore still produce ordinary runtime errors if no such object exists.
+
+Run `python3 scripts/test-module-contract.py` to check this contract, including
+source and pack-build rejections and retained React compatibility.
+
+Run both the application import contract and the selected upstream reference
+checks with `zig build test-loader-contract`. This step builds and uses the
+current QuickTUI and pack-tool artifacts directly, so it does not depend on a
+previous install or a particular `--prefix`. It is available with the default
+source-loader-enabled configuration and requires Python, not Bun.
+
+The pack-only distribution check is separate:
+`python3 scripts/test-pack-consumer.py`. It builds an external release consumer,
+removes its application source, and checks input, paste, resizing, closed imports,
+ignored loader overrides, and exclusion of the source loader. It accepts `--libc`
+and `--target` for the platform workarounds documented above.

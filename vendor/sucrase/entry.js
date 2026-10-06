@@ -85,4 +85,9 @@ function inspectRequires(code, options = {}) {
   }
   return {usesRequire, specifiers};
 }
-globalThis.__sucrase = {transform, version: getVersion(), rewriteDefines, inspectRequires};
+function commonJsNames(code, options = {}) {
+  const names = new Set(['require', 'module', 'exports']);
+  const {tokens, free} = analyze(code, options, names);
+  return [...new Set(tokens.filter(t => free(t) && names.has(identifier(code, t))).map(t => identifier(code, t)))];
+}
+globalThis.__sucrase = {transform, version: getVersion(), rewriteDefines, inspectRequires, commonJsNames};

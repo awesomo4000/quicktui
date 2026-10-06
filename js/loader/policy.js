@@ -44,6 +44,18 @@
   const vendorJs = join(base, "vendor/js");
   const entry = resolvePath(base, config.entry);
   const appRoot = config.appRoot ? normalize(config.appRoot) : dirname(entry);
+  // Compatibility for our pinned runtime sources only, not a sandbox boundary.
+  const internalSource = path => path.startsWith(join(base, "js") + "/") || path.startsWith(join(base, "vendor") + "/");
+  function assertApplicationModule(path, kind, text) {
+    if (internalSource(path) || kind === "json" || kind === "text") return;
+    if (/\.(?:cjs|cts)$/.test(path)) throw new Error(`Unsupported application CommonJS module ${path}; use ES import/export`);
+    const names = sucrase.commonJsNames(text, parseOptions(kind));
+    if (names.length) throw new Error(`Unsupported application CommonJS ${names.join(", ")} in ${path}; use ES import/export`);
+  }
+  function hasRequireCondition(value) {
+    return value && typeof value === "object" && (hasOwn(value, "require") || Object.values(value).some(hasRequireCondition));
+  }
+
   // Stable IDs belong to the library or application root, never the build machine.
   function moduleId(path) {
     if (!path.startsWith("/")) return path;
@@ -139,6 +151,8 @@
     for (const ext of extensions) if (host.isFile(path + ext)) return path + ext;
     const pkg = readPackageJson(path);
     if (pkg) {
+      if (!internalSource(path) && hasRequireCondition(pkg.exports))
+        throw new Error(`Unsupported conditional package exports for ${path}: require conditions; use a package with a single ES-module entry`);
       // Directory imports of packages (e.g. "../vendor/js/node_modules/marked")
       // follow `exports` first, as Bun does; marked's `browser` field is UMD.
       if (pkg.exports) { const target = resolveExports(pkg.exports, "."); if (target) { const found = probe(join(path, target)); if (found) return found; } }
@@ -189,6 +203,8 @@
       const pkg = readPackageJson(packageDir);
       if (pkg) {
         if (hasOwn(pkg, "exports")) {
+          if (!internalSource(packageDir) && hasRequireCondition(pkg.exports))
+            throw new Error(`Unsupported conditional package exports for ${spec}: require conditions; use a package with a single ES-module entry`);
           const target = resolveExports(pkg.exports, subpath);
           if (typeof target !== "string") throw new Error(`Package path ${spec} is not exported`);
           if (!target.startsWith("./") || target.slice(2).split("/").some((part) => ["..", "node_modules"].includes(part)) || /[%\\]/.test(target))
@@ -278,6 +294,8 @@
       else if (ext === ".mjs") kind = "esm";
       else if (ext === ".cjs") kind = "cjs";
       else kind = packageType(path) === "module" || esmSyntax.test(text) ? "esm" : "cjs";
+      assertApplicationModule(path, kind, text);
+      if (kind === "cjs" && !internalSource(path)) kind = "esm";
       result = { kind, text: kind === "text" || kind === "json" ? text : applyDefines(text, kind) };
     }
     sources.set(id, result);
@@ -368,6 +386,7 @@
   // require on their first line, so line numbers are unchanged.
   function withRequire(id, code) {
     if (!sucrase.inspectRequires(code).usesRequire) return code;
+    if (!internalSource(modulePath(id))) throw new Error(`Unsupported application CommonJS require in ${id}; use ES import/export`);
     return `const require = globalThis.__quicktuiRequireFrom(${JSON.stringify(id)}); ` + code;
   }
   function requireSpecifiers(id) {

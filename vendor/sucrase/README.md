@@ -2,7 +2,7 @@
 
 `sucrase.js` contains Sucrase 3.35.1 and its bundled dependencies, with licenses
 in `LICENSE`. The maintained `entry.js` adapter exposes `transform`, `version`,
-`rewriteDefines`, and `inspectRequires` as `globalThis.__sucrase` in the trusted
+`rewriteDefines`, `inspectRequires`, and `commonJsNames` as `globalThis.__sucrase` in the trusted
 loader realm. These helpers are not installed in application JavaScript, and
 pack-only releases exclude this bundle.
 

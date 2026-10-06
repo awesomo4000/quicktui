@@ -16,6 +16,8 @@ comments and attribution are preserved.
 
 ## What runs here
 
+`zig build test-loader-contract` runs these reference checks alongside the
+application import contract, using fresh build artifacts.
 `python3 scripts/test-bun-reference.py` runs ten selected cases using the checked-in
 `fixtures.json`. Normal testing does not require Bun, npm, or a network connection.
 The runner verifies SHA-256 hashes of the copied files. The rest of the upstream
@@ -24,10 +26,10 @@ for the next set of interoperability tests; none of its cases run yet.
 
 | Upstream case | QuickTUI check |
 | --- | --- |
-| ExportsImportOverRequire | source + pack output |
-| ExportsDefaultOverImportAndRequire | source + pack output |
+| ExportsImportOverRequire | deliberate rejection of external require conditions |
+| ExportsDefaultOverImportAndRequire | deliberate rejection of external require conditions |
 | ExportsBrowser | source + pack output |
-| ExportsRequireOverImport | expected failure: require conditions not separate yet |
+| ExportsRequireOverImport | deliberate rejection of application CommonJS |
 | ExportsErrorPackagePathNotExported | source + pack-build rejection |
 | ExportsErrorModuleNotFound | source + pack-build rejection |
 | ExportsErrorUnsupportedDirectoryImport | source + pack-build rejection |
@@ -65,3 +67,9 @@ object literals. It does not execute the full upstream suite. Its explicit case
 list and pinned revision should be reviewed whenever updating the reference.
 Do not silently add or execute arbitrary upstream fixtures; inspect their file
 operations and remap all paths into the temporary test directory first.
+
+On 10/06/2026 the supported contract was narrowed to application ES imports.
+The three import/require-condition cases now assert explicit source/pack-build
+rejection instead of upstream behavior. They are counted as contract checks,
+not Bun compatibility passes. Only DefineOptionalChain remains an expected
+failure. The original fixture data and copied upstream files are unchanged.

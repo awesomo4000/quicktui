@@ -163,6 +163,17 @@ pub fn build(b: *std.Build) void {
     b.step("test-consumer", "Build and run an external packed consumer, requires Python").dependOn(&consumer_test.step);
     const vanilla_test = b.addSystemCommand(&.{ "python3", "scripts/test-consumer.py", "--vanilla" });
     b.step("test-vanilla", "Build and exercise a React-free consumer").dependOn(&vanilla_test.step);
+    if (source_loader) {
+        const loader_contract = b.step("test-loader-contract", "Check ES import policy and selected Bun references, requires Python only");
+        for ([_][]const u8{ "scripts/test-module-contract.py", "scripts/test-bun-reference.py" }) |script| {
+            const check = b.addSystemCommand(&.{ "python3", script, "--quicktui" });
+            check.addArtifactArg(exe);
+            check.addArg("--pack-tool");
+            check.addArtifactArg(pack_tool);
+            check.has_side_effects = true;
+            loader_contract.dependOn(&check.step);
+        }
+    }
     const bundler_test = b.addSystemCommand(&.{ "bun", "test", "tests/bundler.test.ts" });
     b.step("test-bundler", "Check consumer imports and source maps, requires Bun").dependOn(&bundler_test.step);
     const input_suite = b.addExecutable(.{

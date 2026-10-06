@@ -55,9 +55,9 @@ testApp(async ui=>{await ui.resize(80,24);if(!ui.snapshot().includes("42"))throw
     run(source(app),False,'Cannot resolve')
     app.write_text('import "./loop.cjs";')
     (work/'src/loop.cjs').write_text('while(true){}')
-    # Both source loading and build-time CJS discovery must terminate themselves.
+    # Unsupported CJS must be rejected before executing the hostile body.
     with ThreadPoolExecutor(max_workers=2) as pool:
-        tasks=[pool.submit(run,source(app),False,None,40),
-               pool.submit(run,[tool,root,app,work/'loop.pack','--app-root',work],False,None,40)]
+        tasks=[pool.submit(run,source(app),False,"Unsupported application CommonJS",40),
+               pool.submit(run,[tool,root,app,work/'loop.pack','--app-root',work],False,"Unsupported application CommonJS",40)]
         for task in tasks: task.result()
-    print('Module edges: app roots, cache invalidation/corruption, cycles, pack framing and compilation budgets passed')
+    print('Module edges: app roots, cache invalidation/corruption, cycles, pack framing and CommonJS rejection passed')
